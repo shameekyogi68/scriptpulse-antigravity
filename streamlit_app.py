@@ -100,18 +100,18 @@ st.markdown("""
 # HEADER & SCOPE DISCLAIMER
 # =============================================================================
 
-st.title("ScriptPulse vNext.4")
-st.markdown("*A reflective instrument for first-pass audience cognitive experience*")
+st.title("ScriptPulse")
+st.markdown("*A quiet companion for thinking about how your screenplay might feel to watch*")
 
 st.markdown("""
 ---
-**What this tool does:**  
-ScriptPulse models the attentional demands and recovery patterns that a first-time viewer 
-might experience when encountering your screenplay. It reflects observations back to you 
-as questions, not judgments.
+**How this works:**  
+ScriptPulse reads your draft and considers how a first-time viewer might experience 
+its rhythm and flow. It reflects those observations back to you as questions—never as judgments.
 
-**What this tool does NOT do:**  
-This is not a quality evaluator. It does not recommend changes, rank scripts, or predict success.
+**What this is not:**  
+This is not a score, a grade, or a ranking. It does not tell you what to change. 
+It simply offers a mirror for one possible reading of your work.
 """)
 
 # =============================================================================
@@ -119,22 +119,22 @@ This is not a quality evaluator. It does not recommend changes, rank scripts, or
 # =============================================================================
 
 st.markdown("---")
-st.header("Your Script")
+st.header("Your Draft")
 
 script_input = st.text_area(
-    label="Paste your screenplay draft here",
+    label="Paste your screenplay here",
     height=300,
-    placeholder="Paste your current draft here — formatting does not need to be clean.\n\nINT. COFFEE SHOP - DAY\n\nJOHN sits alone...",
-    help="The system handles messy drafts, placeholders, and experimental formatting."
+    placeholder="Paste your draft here. Formatting does not need to be clean.\n\nINT. COFFEE SHOP - DAY\n\nJOHN sits alone...",
+    help="Messy drafts, placeholders, and experimental formatting are all fine."
 )
 
 # Intent Input (Optional)
-st.markdown("### Writer Intent (Optional)")
+st.markdown("### Your Intent (Optional)")
 st.markdown("""
-If you have deliberately designed certain sections to create specific effects, you can declare your intent here. 
-This will suppress alerts that align with your stated goals.
+If you have deliberately designed certain sections to create a particular effect, 
+you can tell us here. When your intent aligns with what we observe, we stay quiet.
 
-**Allowed intent labels only:**
+**Recognized intent labels:**
 - `intentionally exhausting`
 - `intentionally confusing`
 - `experimental structure`
@@ -142,7 +142,7 @@ This will suppress alerts that align with your stated goals.
 - `intentionally dense`
 """)
 
-intent_declared = st.checkbox("I want to declare intent for specific scenes")
+intent_declared = st.checkbox("I want to share my intent for specific scenes")
 
 writer_intent = None
 if intent_declared:
@@ -165,11 +165,11 @@ if intent_declared:
 # ANALYSIS EXECUTION
 # =============================================================================
 
-if st.button("Reflect", type="primary"):
+if st.button("Read My Draft", type="primary"):
     if not script_input or script_input.strip() == "":
-        st.warning("Please paste a script to analyze.")
+        st.info("Please paste your screenplay above.")
     else:
-        with st.spinner("Processing..."):
+        with st.spinner("Reading..."):
             try:
                 # Run the locked pipeline (no new logic)
                 report = runner.run_pipeline(script_input, writer_intent=writer_intent)
@@ -180,17 +180,17 @@ if st.button("Reflect", type="primary"):
                 intent_acks = report.get('intent_acknowledgments', [])
                 
                 st.markdown("---")
-                st.header("Possible First-Time Audience Experience")
+                st.header("What a First-Time Viewer Might Experience")
                 
                 # Display Intent Acknowledgments (if any)
                 if intent_acks:
-                    st.markdown("### Intent Alignment")
+                    st.markdown("### Where Your Intent Was Recognized")
                     for ack in intent_acks:
                         st.markdown(f"<div class='reflection-box'>{ack}</div>", unsafe_allow_html=True)
                 
                 # Display Reflections (if any)
                 if reflections:
-                    st.markdown("### Reflections")
+                    st.markdown("### Some Observations")
                     for ref in reflections:
                         scene_range = ref.get('scene_range', [0, 0])
                         reflection_text = ref.get('reflection', '')
@@ -203,17 +203,17 @@ if st.button("Reflect", type="primary"):
                 
                 # Display Silence Explanation (if no reflections)
                 elif silence:
-                    st.markdown("### Why you may be seeing silence")
+                    st.markdown("### Why You May Be Seeing Nothing Here")
                     st.markdown(f"<div class='silence-box'>{silence}</div>", unsafe_allow_html=True)
                 
                 else:
                     # This should not happen, but handle gracefully
-                    st.markdown("### System Response")
-                    st.markdown("<div class='silence-box'>No patterns detected. This does not indicate quality.</div>", unsafe_allow_html=True)
+                    st.markdown("### A Quiet Reading")
+                    st.markdown("<div class='silence-box'>No strong experiential patterns surfaced. This happens when the rhythm is stable, the structure is highly variable, or signals align with your intent. It does not mean anything about quality.</div>", unsafe_allow_html=True)
                 
             except Exception as e:
-                st.error(f"An error occurred during processing: {e}")
-                st.info("Please check that your script is readable text and try again.")
+                st.warning(f"Something went wrong: {e}")
+                st.markdown("Please check that your draft contains readable text and try again.")
 
 # =============================================================================
 # FOOTER DISCLAIMERS (Mandatory)
@@ -221,11 +221,11 @@ if st.button("Reflect", type="primary"):
 
 st.markdown("""
 <div class='disclaimer'>
-<strong>Mandatory Disclosures:</strong><br>
-• This is not a quality score.<br>
-• This is not a ranking or approval system.<br>
-• This tool does not recommend changes.<br>
-• Outputs describe first-pass audience experience only.<br>
-• Writer intent always overrides system observations.
+<strong>Please remember:</strong><br>
+• This is not a score or a grade.<br>
+• This does not rank or approve scripts.<br>
+• This does not tell you what to change.<br>
+• These are observations about one possible reading—nothing more.<br>
+• Your intent, stated or unstated, is always authoritative.
 </div>
 """, unsafe_allow_html=True)
