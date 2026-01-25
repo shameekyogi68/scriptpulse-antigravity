@@ -1,0 +1,78 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "ScriptPulse Experience Mediation Schema",
+    "description": "Writer-safe experiential translation output",
+    "version": "1.0.0",
+    "core_principle": "Translate internal signals into writer-safe language without judgment, prescription, or authority.",
+    "question_first_rule": "All insights must be framed as questions. Declarative statements imply false authority.",
+    "pattern_translations": {
+        "sustained_demand": "The audience may begin to feel mentally tired here.",
+        "limited_recovery": "There's little chance to catch their breath.",
+        "surprise_cluster": "The shifts may feel sudden on first exposure.",
+        "sequence_repetition": "This stretch may feel similar to what came just before.",
+        "constructive_strain": "This section asks for sustained focus from the audience.",
+        "degenerative_fatigue": "Attention may drift without recovery points."
+    },
+    "uncertainty_calibration": {
+        "high": "may",
+        "medium": "might",
+        "low": "could"
+    },
+    "silence_explanations": [
+        "The attentional flow appears stable with regular recovery.",
+        "Signals are low confidence due to draft variability.",
+        "All detected patterns align with your declared intent.",
+        "No persistent patterns were detected across the required scene threshold."
+    ],
+    "silence_rule": "Silence must NEVER imply approval, success, or quality.",
+    "forbidden_words": [
+        "good",
+        "bad",
+        "improve",
+        "fix",
+        "optimize",
+        "too long",
+        "too short",
+        "slow",
+        "fast",
+        "weak",
+        "strong",
+        "problem",
+        "issue",
+        "ideal",
+        "optimal",
+        "boring",
+        "exciting",
+        "should",
+        "must",
+        "need to",
+        "recommend",
+        "suggest"
+    ],
+    "forbidden_content": [
+        "Raw metrics or numbers",
+        "Thresholds or percentages",
+        "Internal signal names",
+        "Technical terms",
+        "Advice or suggestions"
+    ],
+    "output_format": {
+        "reflections": {
+            "required": [
+                "scene_range",
+                "question",
+                "experience",
+                "uncertainty",
+                "confidence_band"
+            ]
+        },
+        "silence_explanation": "string or null",
+        "intent_acknowledgments": {
+            "required": [
+                "scene_range",
+                "intent_label",
+                "acknowledgment"
+            ]
+        }
+    }
+}
