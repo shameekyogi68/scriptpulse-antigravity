@@ -1,0 +1,74 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "ScriptPulse Writer Intent & Immunity Schema",
+    "description": "Writer-declared intent annotations and alert suppression rules",
+    "version": "1.0.0",
+    "allowed_intent_labels": [
+        "intentionally_exhausting",
+        "intentionally_confusing",
+        "should_feel_smooth",
+        "should_feel_tense",
+        "experimental_anti_narrative"
+    ],
+    "absolute_authority_principle": "Writer intent ALWAYS overrides alerts. No exceptions. No conditions.",
+    "no_inference_principle": "Intent must NEVER be inferred from structure, patterns, or context. Only explicit declarations count.",
+    "suppression_vs_analysis": "Suppression affects alert eligibility only. Internal analysis is NEVER altered or deleted.",
+    "intent_annotation_format": {
+        "type": "object",
+        "required": [
+            "scene_range",
+            "intent_label"
+        ],
+        "properties": {
+            "scene_range": {
+                "type": "array",
+                "items": {
+                    "type": "integer"
+                },
+                "minItems": 2,
+                "maxItems": 2
+            },
+            "intent_label": {
+                "type": "string",
+                "enum": [
+                    "intentionally_exhausting",
+                    "intentionally_confusing",
+                    "should_feel_smooth",
+                    "should_feel_tense",
+                    "experimental_anti_narrative"
+                ]
+            },
+            "writer_note": {
+                "type": "string",
+                "description": "Optional writer explanation"
+            }
+        }
+    },
+    "suppressed_pattern_format": {
+        "required": [
+            "pattern_type",
+            "scene_range",
+            "suppressed_reason",
+            "intent_reference",
+            "alignment_note",
+            "internal_analysis_preserved"
+        ],
+        "properties": {
+            "suppressed_reason": {
+                "const": "writer_intent"
+            },
+            "internal_analysis_preserved": {
+                "const": true
+            }
+        }
+    },
+    "alignment_acknowledgment_template": "Writer marked scenes [X-Y] as [intent_label]. Detected [pattern_type] pattern (scenes [A-B]) aligns with declared intent.",
+    "forbidden_operations": [
+        "Suppress without explicit intent",
+        "Infer intent from patterns or structure",
+        "Question or challenge writer intent",
+        "Reframe intent as 'risky' or 'problematic'",
+        "Alter analysis due to intent",
+        "Create new intent labels"
+    ]
+}
