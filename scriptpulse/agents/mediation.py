@@ -1,124 +1,169 @@
 """Audience Experience Mediation Agent - Writer-Safe Language Translation"""
 
 
-# Pattern-to-description mappings (experiential, non-prescriptive)
-PATTERN_DESCRIPTIONS = {
-    'sustained_attentional_demand': {
-        'description': 'Sustained attentional demand observed',
-        'experiential': 'This region asks the audience to stay focused over multiple scenes',
-        'confidence_note': 'Based on signal persistence across scenes'
-    },
-    'limited_recovery': {
-        'description': 'Limited recovery opportunities observed',
-        'experiential': 'Few low-intensity moments appear in this stretch',
-        'confidence_note': 'Based on recovery credit analysis'
-    },
-    'repetition': {
-        'description': 'Repetitive pattern observed',
-        'experiential': 'Similar experiential weight repeats across scenes',
-        'confidence_note': 'Based on effort variance'
-    },
-    'surprise_cluster': {
-        'description': 'Surprise cluster observed',
-        'experiential': 'Multiple high-boundary scenes appear together',
-        'confidence_note': 'Based on structural boundaries'
-    },
-    'constructive_strain': {
-        'description': 'Constructive strain observed',
-        'experiential': 'High demand with visible recovery maintains engagement',
-        'confidence_note': 'Based on demand-recovery balance'
-    },
-    'degenerative_fatigue': {
-        'description': 'Degenerative fatigue observed',
-        'experiential': 'Accumulating demand without visible recovery',
-        'confidence_note': 'Based on signal drift patterns'
-    }
+# Allowed experiential translations (ONLY these mappings)
+EXPERIENTIAL_TRANSLATIONS = {
+    'sustained_attentional_demand': 'may feel mentally demanding',
+    'limited_recovery': 'there may be little chance to catch their breath',
+    'repetition': 'may feel similar to what came just before',
+    'surprise_cluster': 'the shift may feel sudden on first exposure',
+    'constructive_strain': 'may feel effortful but held together',
+    'degenerative_fatigue': 'may begin to feel tiring over time'
+}
+
+
+# Banned words (automatic failure if present)
+BANNED_WORDS = {
+    'good', 'bad', 'fix', 'improve', 'optimize', 'too long', 'too short',
+    'slow', 'fast', 'weak', 'strong', 'problem', 'issue', 'ideal', 'optimal',
+    'tips', 'suggestions', 'advice', 'should', 'must', 'need to'
 }
 
 
 def run(input_data):
     """
-    Translate patterns into writer-safe, experiential descriptions.
+    Translate patterns into writer-safe, question-first reflections.
     
-    No prescription. No judgment. No ranking.
+    No judgment. No advice. No authority.
     
     Args:
-        input_data: Dict with 'surfaced_patterns' and 'suppressed_patterns' 
-                   (from intent agent)
+        input_data: Dict with 'surfaced_patterns', 'suppressed_patterns', 
+                   'intent_alignment_notes' (from intent agent)
         
     Returns:
-        Dict with mediated_output containing writer-safe descriptions
+        Dict with reflections and acknowledgments
     """
     surfaced = input_data.get('surfaced_patterns', [])
     suppressed = input_data.get('suppressed_patterns', [])
     alignment_notes = input_data.get('intent_alignment_notes', [])
     
-    mediated = []
+    reflections = []
     
+    # Generate reflections for surfaced patterns
     for pattern in surfaced:
-        mediated_entry = mediate_pattern(pattern)
-        mediated.append(mediated_entry)
+        reflection = generate_reflection(pattern)
+        reflections.append(reflection)
     
-    # Include suppression acknowledgments
-    suppression_acknowledgments = []
+    # Handle silence (no patterns to surface)
+    silence_explanation = None
+    if not surfaced:
+        silence_explanation = generate_silence_explanation(suppressed, alignment_notes)
+    
+    # Generate intent acknowledgments
+    intent_acknowledgments = []
     for note in alignment_notes:
-        suppression_acknowledgments.append({
-            'scene_range': note.get('scene_range', []),
-            'acknowledgment': f"Writer intent acknowledged: {note.get('intent', 'unspecified')}",
-            'action': note.get('action', 'noted')
-        })
+        ack = generate_intent_acknowledgment(note)
+        intent_acknowledgments.append(ack)
     
     return {
-        'mediated_output': mediated,
-        'suppression_acknowledgments': suppression_acknowledgments,
+        'reflections': reflections,
+        'silence_explanation': silence_explanation,
+        'intent_acknowledgments': intent_acknowledgments,
         'total_surfaced': len(surfaced),
         'total_suppressed': len(suppressed)
     }
 
 
-def mediate_pattern(pattern):
+def generate_reflection(pattern):
     """
-    Translate a single pattern into writer-safe language.
+    Generate a question-first, experiential reflection.
     
     Rules:
-    - Describe experience, not quality
-    - No "should", "could", "might help"
-    - No ranking or prioritization
-    - Include scene range for reference
+    - Default to questions
+    - Include explicit uncertainty (may/might/could)
+    - Use only allowed translations
     """
     pattern_type = pattern.get('pattern_type', 'unknown')
     scene_range = pattern.get('scene_range', [0, 0])
     confidence = pattern.get('confidence', 'low')
     
-    # Get description template
-    template = PATTERN_DESCRIPTIONS.get(pattern_type, {
-        'description': f'{pattern_type} observed',
-        'experiential': 'Pattern detected in this region',
-        'confidence_note': 'Based on available signals'
-    })
+    # Get allowed translation
+    experience = EXPERIENTIAL_TRANSLATIONS.get(
+        pattern_type, 
+        'may have some experiential texture'
+    )
+    
+    # Format scene range
+    start, end = scene_range
+    scene_text = f"scenes {start} through {end}" if start != end else f"scene {start}"
+    
+    # Generate question-first framing with uncertainty
+    if confidence == 'high':
+        reflection = (
+            f"With moderate confidence, a first-time audience watching {scene_text} "
+            f"{experience}. Is that the level of attention you want here?"
+        )
+    elif confidence == 'medium':
+        reflection = (
+            f"There's a possibility that {scene_text} {experience} for a first-time viewer. "
+            f"Does that match your intention?"
+        )
+    else:  # low confidence
+        reflection = (
+            f"With low confidence, {scene_text} might {experience.replace('may ', '')}. "
+            f"This signal is uncertain."
+        )
     
     return {
         'scene_range': scene_range,
-        'description': template['description'],
-        'experiential_note': template['experiential'],
-        'confidence': confidence,
-        'confidence_explanation': get_confidence_explanation(confidence),
-        # Explicitly NO recommendation, NO action, NO judgment
+        'reflection': reflection,
+        'confidence': confidence
     }
 
 
-def get_confidence_explanation(confidence):
+def generate_silence_explanation(suppressed, alignment_notes):
     """
-    Explain confidence level in neutral terms.
+    Explain why no patterns surfaced.
     
-    Never implies that low confidence is bad or high is good.
+    Silence must NEVER imply quality or success.
     """
-    if confidence == 'high':
-        return 'Pattern persisted clearly across multiple analysis windows'
-    elif confidence == 'medium':
-        return 'Pattern detected with some signal variance'
+    if alignment_notes:
+        # Patterns exist but were suppressed due to intent
+        return (
+            "No patterns are surfaced here because they align with your declared intent. "
+            "The signals observed are consistent with what you indicated."
+        )
+    elif suppressed:
+        # Should not happen (suppressed without notes), but handle gracefully
+        return "Patterns were suppressed based on provided constraints."
     else:
-        return 'Pattern detected with high signal variance or limited persistence'
+        # No patterns detected at all
+        return (
+            "The attentional flow appears stable with regular recovery, "
+            "or signals are low confidence due to draft variability. "
+            "This does not indicate quality — only that no persistent patterns were detected."
+        )
+
+
+def generate_intent_acknowledgment(note):
+    """
+    Acknowledge writer intent explicitly.
+    
+    This is mandatory when patterns are suppressed due to intent.
+    """
+    intent = note.get('intent', 'your declared intent')
+    scene_range = note.get('scene_range', [0, 0])
+    
+    start, end = scene_range
+    scene_text = f"scenes {start} through {end}" if start != end else f"scene {start}"
+    
+    return (
+        f"You marked {scene_text} as '{intent}'. "
+        f"The signals here are consistent with that intent."
+    )
+
+
+def validate_no_banned_words(text):
+    """
+    Check that text contains no banned words.
+    
+    Used for testing compliance.
+    """
+    text_lower = text.lower()
+    for banned in BANNED_WORDS:
+        if banned in text_lower:
+            return False, banned
+    return True, None
 
 
 def format_for_display(mediated_output):
@@ -129,17 +174,20 @@ def format_for_display(mediated_output):
     """
     lines = []
     
-    for entry in mediated_output.get('mediated_output', []):
-        start, end = entry['scene_range']
-        lines.append(f"Scenes {start}-{end}: {entry['description']}")
-        lines.append(f"  → {entry['experiential_note']}")
-        lines.append(f"  Confidence: {entry['confidence']}")
+    for entry in mediated_output.get('reflections', []):
+        lines.append(entry['reflection'])
         lines.append("")
     
-    if mediated_output.get('suppression_acknowledgments'):
+    if mediated_output.get('silence_explanation'):
+        lines.append("—")
+        lines.append(mediated_output['silence_explanation'])
+        lines.append("")
+    
+    if mediated_output.get('intent_acknowledgments'):
         lines.append("Intent Acknowledgments:")
-        for ack in mediated_output['suppression_acknowledgments']:
-            lines.append(f"  {ack['acknowledgment']}")
+        for ack in mediated_output['intent_acknowledgments']:
+            lines.append(f"  {ack}")
     
     return '\n'.join(lines)
+
 

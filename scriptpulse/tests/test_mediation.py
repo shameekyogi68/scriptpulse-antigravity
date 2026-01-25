@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Tests for ExperienceMediationAgent
+Tests for AudienceExperienceMediationAgent
 """
 
 import sys
@@ -45,118 +45,132 @@ MOCK_ALIGNMENT_NOTES = [
 ]
 
 
-def test_experiential_language():
-    """Test that output uses experiential, not prescriptive language"""
+def test_question_first_framing():
+    """Test that output uses question-first framing"""
     result = mediation.run({
         'surfaced_patterns': MOCK_SURFACED,
         'suppressed_patterns': [],
         'intent_alignment_notes': []
     })
     
-    for entry in result['mediated_output']:
-        # Check no prescriptive language
-        desc = entry['description'].lower()
-        exp = entry['experiential_note'].lower()
-        
-        assert 'should' not in desc and 'should' not in exp, "No 'should' allowed"
-        assert 'must' not in desc and 'must' not in exp, "No 'must' allowed"
-        assert 'fix' not in desc and 'fix' not in exp, "No 'fix' allowed"
-        assert 'problem' not in desc and 'problem' not in exp, "No 'problem' allowed"
+    for entry in result['reflections']:
+        reflection = entry['reflection']
+        # Check for question mark in high/medium confidence
+        if entry['confidence'] in ['high', 'medium']:
+            assert '?' in reflection, f"Expected question in: {reflection}"
     
-    print("✓ Experiential language only (no prescription)")
+    print("✓ Question-first framing verified")
 
 
-def test_no_ranking():
-    """Test that patterns are not ranked or prioritized"""
+def test_explicit_uncertainty():
+    """Test that output contains uncertainty language"""
     result = mediation.run({
         'surfaced_patterns': MOCK_SURFACED,
         'suppressed_patterns': [],
         'intent_alignment_notes': []
     })
     
-    for entry in result['mediated_output']:
-        assert 'priority' not in entry
-        assert 'importance' not in entry
-        assert 'severity' not in entry
-        assert 'rank' not in entry
+    uncertainty_words = {'may', 'might', 'could', 'possibility', 'uncertain', 'confidence'}
     
-    print("✓ No ranking or prioritization")
+    for entry in result['reflections']:
+        reflection = entry['reflection'].lower()
+        has_uncertainty = any(word in reflection for word in uncertainty_words)
+        assert has_uncertainty, f"No uncertainty in: {entry['reflection']}"
+    
+    print("✓ Explicit uncertainty present")
 
 
-def test_suppression_acknowledgment():
-    """Test that suppressed patterns are acknowledged"""
-    result = mediation.run({
-        'surfaced_patterns': MOCK_SURFACED,
-        'suppressed_patterns': MOCK_SUPPRESSED,
-        'intent_alignment_notes': MOCK_ALIGNMENT_NOTES
-    })
-    
-    assert len(result['suppression_acknowledgments']) > 0
-    assert result['total_suppressed'] == len(MOCK_SUPPRESSED)
-    
-    # Check acknowledgment mentions writer intent
-    ack = result['suppression_acknowledgments'][0]
-    assert 'Writer intent acknowledged' in ack['acknowledgment']
-    
-    print("✓ Suppression acknowledged with writer intent")
-
-
-def test_confidence_explanation():
-    """Test confidence is explained neutrally"""
+def test_no_banned_words():
+    """Test that output contains no banned words"""
     result = mediation.run({
         'surfaced_patterns': MOCK_SURFACED,
         'suppressed_patterns': [],
         'intent_alignment_notes': []
     })
     
-    for entry in result['mediated_output']:
-        assert 'confidence' in entry
-        assert 'confidence_explanation' in entry
-        
-        # Explanation should not imply good/bad
-        exp = entry['confidence_explanation'].lower()
-        assert 'bad' not in exp and 'good' not in exp and 'better' not in exp
+    for entry in result['reflections']:
+        is_valid, banned = mediation.validate_no_banned_words(entry['reflection'])
+        assert is_valid, f"Banned word '{banned}' found in: {entry['reflection']}"
     
-    print("✓ Confidence explained neutrally")
+    print("✓ No banned words in output")
 
 
-def test_all_pattern_types_handled():
-    """Test that all 6 pattern types have descriptions"""
-    pattern_types = [
-        'sustained_attentional_demand',
-        'limited_recovery',
-        'repetition',
-        'surprise_cluster',
-        'constructive_strain',
-        'degenerative_fatigue'
-    ]
-    
-    for ptype in pattern_types:
-        result = mediation.run({
-            'surfaced_patterns': [{'pattern_type': ptype, 'scene_range': [0, 5], 'confidence': 'high'}],
-            'suppressed_patterns': [],
-            'intent_alignment_notes': []
-        })
-        
-        assert len(result['mediated_output']) == 1
-        assert result['mediated_output'][0]['description'] != ''
-    
-    print("✓ All 6 pattern types have descriptions")
-
-
-def test_empty_input():
-    """Test handling of empty input"""
+def test_silence_explanation():
+    """Test that silence is explained when no patterns"""
     result = mediation.run({
         'surfaced_patterns': [],
         'suppressed_patterns': [],
         'intent_alignment_notes': []
     })
     
-    assert result['mediated_output'] == []
-    assert result['total_surfaced'] == 0
-    assert result['total_suppressed'] == 0
+    assert result['silence_explanation'] is not None, "Silence must be explained"
+    assert len(result['silence_explanation']) > 0, "Silence explanation cannot be empty"
     
-    print("✓ Empty input handled correctly")
+    # Check silence does not imply quality
+    explanation = result['silence_explanation'].lower()
+    assert 'quality' not in explanation or 'not indicate quality' in explanation
+    
+    print("✓ Silence explained without implying quality")
+
+
+def test_intent_acknowledgment():
+    """Test that suppressed patterns acknowledge intent"""
+    result = mediation.run({
+        'surfaced_patterns': [],
+        'suppressed_patterns': MOCK_SUPPRESSED,
+        'intent_alignment_notes': MOCK_ALIGNMENT_NOTES
+    })
+    
+    assert len(result['intent_acknowledgments']) > 0, "Intent must be acknowledged"
+    
+    # Check acknowledgment mentions the intent
+    ack = result['intent_acknowledgments'][0]
+    assert 'intentionally exhausting' in ack, "Intent label must be mentioned"
+    
+    print("✓ Intent acknowledged explicitly")
+
+
+def test_experiential_translations():
+    """Test that only allowed translations are used"""
+    allowed_phrases = [
+        'may feel mentally demanding',
+        'there may be little chance to catch their breath',
+        'may feel similar to what came just before',
+        'the shift may feel sudden on first exposure',
+        'may feel effortful but held together',
+        'may begin to feel tiring over time'
+    ]
+    
+    for pattern_type in mediation.EXPERIENTIAL_TRANSLATIONS.keys():
+        result = mediation.run({
+            'surfaced_patterns': [{'pattern_type': pattern_type, 'scene_range': [0, 5], 'confidence': 'high'}],
+            'suppressed_patterns': [],
+            'intent_alignment_notes': []
+        })
+        
+        reflection = result['reflections'][0]['reflection']
+        has_allowed = any(phrase in reflection for phrase in allowed_phrases)
+        assert has_allowed, f"Non-allowed translation in: {reflection}"
+    
+    print("✓ All translations use allowed phrases")
+
+
+def test_no_advice_or_recommendations():
+    """Test that output never gives advice"""
+    result = mediation.run({
+        'surfaced_patterns': MOCK_SURFACED,
+        'suppressed_patterns': [],
+        'intent_alignment_notes': []
+    })
+    
+    advice_indicators = ['you should', 'consider', 'try', 'recommend', 'suggest']
+    
+    for entry in result['reflections']:
+        reflection = entry['reflection'].lower()
+        for indicator in advice_indicators:
+            assert indicator not in reflection, f"Advice '{indicator}' found in: {entry['reflection']}"
+    
+    print("✓ No advice or recommendations given")
 
 
 def test_determinism():
@@ -177,14 +191,15 @@ def test_determinism():
 
 def run_all_tests():
     """Run all mediation tests"""
-    print("Running ExperienceMediationAgent tests...\n")
+    print("Running AudienceExperienceMediationAgent tests...\n")
     
-    test_experiential_language()
-    test_no_ranking()
-    test_suppression_acknowledgment()
-    test_confidence_explanation()
-    test_all_pattern_types_handled()
-    test_empty_input()
+    test_question_first_framing()
+    test_explicit_uncertainty()
+    test_no_banned_words()
+    test_silence_explanation()
+    test_intent_acknowledgment()
+    test_experiential_translations()
+    test_no_advice_or_recommendations()
     test_determinism()
     
     print("\n✅ All experience mediation tests passed!")
