@@ -246,58 +246,58 @@ if st.button("Read My Draft", type="primary"):
             reflections = report.get('reflections', [])
             silence = report.get('silence_explanation')
             intent_acks = report.get('intent_acknowledgments', [])
-                
-                st.markdown("---")
-                st.header("What a First-Time Viewer Might Experience")
-                
-                # Display Intent Acknowledgments (if any)
-                if intent_acks:
-                    st.markdown("### Where Your Intent Was Recognized")
-                    for ack in intent_acks:
-                        st.markdown(f"<div class='reflection-box'>{ack}</div>", unsafe_allow_html=True)
-                
-                # Display Reflections (if any)
-                if reflections:
-                    st.markdown("### Some Observations")
-                    for ref in reflections:
-                        scene_range = ref.get('scene_range', [0, 0])
-                        reflection_text = ref.get('reflection', '')
-                        confidence = ref.get('confidence', 'low')
-                        
-                        scene_label = f"Scenes {scene_range[0]}–{scene_range[1]}" if scene_range[0] != scene_range[1] else f"Scene {scene_range[0]}"
-                        
-                        st.markdown(f"**{scene_label}** *(confidence: {confidence})*")
-                        st.markdown(f"<div class='reflection-box'>{reflection_text}</div>", unsafe_allow_html=True)
-                
-                # Display Silence Explanation (if no reflections)
-                elif silence:
-                    st.markdown("### Why You May Be Seeing Nothing Here")
-                    st.markdown(f"<div class='silence-box'>{silence}</div>", unsafe_allow_html=True)
-                
-                else:
-                    # This should not happen, but handle gracefully
-                    st.markdown("### A Quiet Reading")
-                    st.markdown("<div class='silence-box'>No strong experiential patterns surfaced. This happens when the rhythm is stable, the structure is highly variable, or signals align with your intent. It does not mean anything about quality.</div>", unsafe_allow_html=True)
-                
-            except Exception as e:
-                # Edge Case 5: Technical Errors (hide stack traces)
-                progress_bar.empty()
-                status_text.empty()
-                
-                error_msg = str(e)
-                if "timeout" in error_msg.lower() or "time" in error_msg.lower():
-                    st.error("⏱️ **Processing timeout detected.**")
-                    st.markdown("""
-                    Your script may be too large for Streamlit Cloud's free tier (60-second limit).
+            
+            st.markdown("---")
+            st.header("What a First-Time Viewer Might Experience")
+            
+            # Display Intent Acknowledgments (if any)
+            if intent_acks:
+                st.markdown("### Where Your Intent Was Recognized")
+                for ack in intent_acks:
+                    st.markdown(f"<div class='reflection-box'>{ack}</div>", unsafe_allow_html=True)
+            
+            # Display Reflections (if any)
+            if reflections:
+                st.markdown("### Some Observations")
+                for ref in reflections:
+                    scene_range = ref.get('scene_range', [0, 0])
+                    reflection_text = ref.get('reflection', '')
+                    confidence = ref.get('confidence', 'low')
                     
-                    **Options:**
-                    - Try a shorter section of your script
-                    - Split into multiple parts
-                    - Contact support for processing assistance
-                    """)
-                else:
-                    st.warning("Something went wrong while reading your draft.")
-                    st.markdown("This can happen with very unusual formatting. If the problem persists, the draft may need to be in a more standard text format.")
+                    scene_label = f"Scenes {scene_range[0]}–{scene_range[1]}" if scene_range[0] != scene_range[1] else f"Scene {scene_range[0]}"
+                    
+                    st.markdown(f"**{scene_label}** *(confidence: {confidence})*")
+                    st.markdown(f"<div class='reflection-box'>{reflection_text}</div>", unsafe_allow_html=True)
+            
+            # Display Silence Explanation (if no reflections)
+            elif silence:
+                st.markdown("### Why You May Be Seeing Nothing Here")
+                st.markdown(f"<div class='silence-box'>{silence}</div>", unsafe_allow_html=True)
+            
+            else:
+                # This should not happen, but handle gracefully
+                st.markdown("### A Quiet Reading")
+                st.markdown("<div class='silence-box'>No strong experiential patterns surfaced. This happens when the rhythm is stable, the structure is highly variable, or signals align with your intent. It does not mean anything about quality.</div>", unsafe_allow_html=True)
+            
+        except Exception as e:
+            # Edge Case 5: Technical Errors (hide stack traces)
+            progress_bar.empty()
+            status_text.empty()
+            
+            error_msg = str(e)
+            if "timeout" in error_msg.lower() or "time" in error_msg.lower():
+                st.error("⏱️ **Processing timeout detected.**")
+                st.markdown("""
+                Your script may be too large for Streamlit Cloud's free tier (60-second limit).
+                
+                **Options:**
+                - Try a shorter section of your script
+                - Split into multiple parts
+                - Contact support for processing assistance
+                """)
+            else:
+                st.warning("Something went wrong while reading your draft.")
+                st.markdown("This can happen with very unusual formatting. If the problem persists, the draft may need to be in a more standard text format.")
 
 # =============================================================================
 # FOOTER DISCLAIMERS (Mandatory)
