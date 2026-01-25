@@ -4,7 +4,7 @@ ScriptPulse Runner - Executes full pipeline deterministically
 """
 
 import sys
-from agents import parsing, segmentation, encoding, temporal, patterns, intent, mediation
+from .agents import parsing, segmentation, encoding, temporal, patterns, intent, mediation
 
 
 def run_pipeline(screenplay_text, writer_intent=None):
