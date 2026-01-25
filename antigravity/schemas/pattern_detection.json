@@ -1,0 +1,166 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "ScriptPulse Pattern Detection Schema",
+    "description": "Detected persistent experiential patterns without evaluation",
+    "version": "1.0.0",
+    "allowed_pattern_types": [
+        "sustained_demand",
+        "limited_recovery",
+        "sequence_repetition",
+        "surprise_cluster",
+        "constructive_strain",
+        "degenerative_fatigue"
+    ],
+    "pattern_definitions": {
+        "sustained_demand": {
+            "description": "Attentional signal remains elevated for multiple scenes",
+            "detection_criteria": "S[i] > 1.5 for ≥ 3 consecutive scenes",
+            "NOT_evaluation": "This is NOT 'too demanding' or 'exhausting'"
+        },
+        "limited_recovery": {
+            "description": "Low recovery credits while signal is elevated",
+            "detection_criteria": "R[i] < 0.2 while S[i] > 1.0 for ≥ 3 scenes",
+            "NOT_evaluation": "This is NOT 'no breathing room' or 'relentless'"
+        },
+        "sequence_repetition": {
+            "description": "Similar structural patterns recur at intervals",
+            "detection_criteria": "Feature vector similarity > 0.7 repeating every K scenes",
+            "NOT_evaluation": "This is NOT 'monotonous' or 'boring'"
+        },
+        "surprise_cluster": {
+            "description": "Frequent structural boundary spikes",
+            "detection_criteria": "Event boundary scores > 25 in ≥ 60% of window",
+            "NOT_evaluation": "This is NOT 'too choppy' or 'disorienting'"
+        },
+        "constructive_strain": {
+            "description": "High effort WITH recovery balance",
+            "detection_criteria": "S[i] > 1.5 AND mean(R[i]) > 0.2",
+            "NOT_evaluation": "This is NOT 'good stress' or quality judgment"
+        },
+        "degenerative_fatigue": {
+            "description": "High effort WITHOUT recovery balance",
+            "detection_criteria": "S[i] > 1.5 AND mean(R[i]) < 0.1 AND increasing",
+            "NOT_evaluation": "This is NOT 'bad pacing' or quality judgment"
+        }
+    },
+    "confidence_bands": {
+        "high": {
+            "criteria": [
+                "Clear persistence (≥ 5 scenes)",
+                "Stable signal (low variance)",
+                "High scene segmentation confidence (> 0.9)"
+            ]
+        },
+        "medium": {
+            "criteria": [
+                "Moderate persistence (3-4 scenes)",
+                "Some signal volatility",
+                "Medium scene confidence (0.7-0.9)"
+            ]
+        },
+        "low": {
+            "criteria": [
+                "Minimal persistence (exactly 3 scenes)",
+                "High signal volatility",
+                "Low scene confidence (< 0.7)"
+            ]
+        }
+    },
+    "persistence_requirement": {
+        "min_scenes": 3,
+        "rationale": "Single-scene anomalies are not actionable patterns",
+        "multi_window_agreement": "Patterns must be detectable across multiple temporal window sizes"
+    },
+    "confidence_downgrading_principle": "Confidence may ONLY decrease based on instability, NEVER increase.",
+    "pattern_output_structure": {
+        "type": "object",
+        "required": [
+            "pattern_type",
+            "scene_range",
+            "confidence_band",
+            "description"
+        ],
+        "properties": {
+            "pattern_type": {
+                "type": "string",
+                "enum": [
+                    "sustained_demand",
+                    "limited_recovery",
+                    "sequence_repetition",
+                    "surprise_cluster",
+                    "constructive_strain",
+                    "degenerative_fatigue"
+                ]
+            },
+            "scene_range": {
+                "type": "array",
+                "items": {
+                    "type": "integer"
+                },
+                "minItems": 2,
+                "maxItems": 2,
+                "description": "[start_scene, end_scene]"
+            },
+            "confidence_band": {
+                "type": "string",
+                "enum": [
+                    "high",
+                    "medium",
+                    "low"
+                ]
+            },
+            "description": {
+                "type": "string",
+                "description": "Purely descriptive statement using allowed language only"
+            },
+            "supporting_metrics": {
+                "type": "object",
+                "description": "Numeric metrics supporting the pattern detection"
+            }
+        }
+    },
+    "forbidden_language": [
+        "problem",
+        "issue",
+        "flaw",
+        "weakness",
+        "good",
+        "bad",
+        "better",
+        "worse",
+        "should",
+        "must",
+        "needs to",
+        "exhausting",
+        "boring",
+        "confusing",
+        "optimal",
+        "ideal",
+        "perfect",
+        "too much",
+        "too little",
+        "main issue",
+        "primary concern"
+    ],
+    "allowed_descriptive_terms": [
+        "elevated",
+        "sustained",
+        "persistent",
+        "limited",
+        "frequent",
+        "sparse",
+        "pattern detected",
+        "signal behavior",
+        "constructive",
+        "degenerative"
+    ],
+    "non_evaluative_principle": "Patterns describe SIGNAL BEHAVIOR, not writing quality. High/low patterns are neither good nor bad. They are experiential observations only.",
+    "no_ranking_principle": "All patterns are equal. No pattern is more important than another. Output must be flat lists without hierarchy.",
+    "validation_criteria": {
+        "all_patterns_persist": "Every pattern must span ≥ 3 scenes",
+        "no_evaluative_language": "No forbidden terms in descriptions",
+        "confidence_properly_assigned": "Confidence reflects stability, not importance",
+        "only_allowed_types": "Pattern types must be from approved list",
+        "constructive_degenerative_descriptive": "These terms describe signal dynamics only, not quality"
+    }
+}
