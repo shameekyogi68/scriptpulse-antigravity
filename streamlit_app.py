@@ -146,6 +146,8 @@ intent_declared = st.checkbox("I want to share my intent for specific scenes")
 
 writer_intent = None
 if intent_declared:
+    st.markdown("*Only the labels listed above are recognized. If your intent doesn't fit these categories, you can leave this blank.*")
+    
     col1, col2, col3 = st.columns(3)
     with col1:
         intent_start = st.number_input("Start Scene", min_value=0, value=0, step=1)
@@ -162,12 +164,77 @@ if intent_declared:
         writer_intent = [{'scene_range': [intent_start, intent_end], 'intent': intent_label}]
 
 # =============================================================================
+# MISUSE DETECTION & EDGE-CASE HANDLING
+# =============================================================================
+
+def detect_evaluative_language(text):
+    """Detect if input contains evaluative questions."""
+    text_lower = text.lower().strip()
+    
+    evaluative_patterns = [
+        "is this good", "is this bad", "is it good", "is it bad",
+        "does this work", "will this work", "which part works",
+        "will this get made", "will this sell", "is this marketable",
+        "should i", "what's wrong", "what is wrong"
+    ]
+    
+    for pattern in evaluative_patterns:
+        if pattern in text_lower:
+            return True
+    return False
+
+def detect_fix_prompts(text):
+    """Detect if input asks for prescriptive advice."""
+    text_lower = text.lower().strip()
+    
+    fix_patterns = [
+        "how do i fix", "how can i fix", "how to fix",
+        "what should i change", "how to improve", "how can i improve",
+        "what needs to change", "how do i make it better"
+    ]
+    
+    for pattern in fix_patterns:
+        if pattern in text_lower:
+            return True
+    return False
+
+def is_sufficient_input(text):
+    """Check if input has enough content to analyze."""
+    lines = [line.strip() for line in text.split('\n') if line.strip()]
+    
+    # Need at least 5 non-empty lines to have meaningful structure
+    if len(lines) < 5:
+        return False
+    
+    # Need at least 100 characters total
+    if len(text.strip()) < 100:
+        return False
+    
+    return True
+
+# =============================================================================
 # ANALYSIS EXECUTION
 # =============================================================================
 
 if st.button("Read My Draft", type="primary"):
     if not script_input or script_input.strip() == "":
         st.info("Please paste your screenplay above.")
+    
+    # Edge Case 1: Evaluative Questions
+    elif detect_evaluative_language(script_input):
+        st.markdown("---")
+        st.info("**This tool doesn't evaluate or predict outcomes.** It reflects possible audience experience instead. If you'd like to paste your screenplay, I can share observations about how it might feel to watch.")
+    
+    # Edge Case 2: "Fix This" Prompts
+    elif detect_fix_prompts(script_input):
+        st.markdown("---")
+        st.info("**I can't suggest changes or improvements.** But if you paste your screenplay, I can reflect how it might feel to a first-time audience. You decide what, if anything, to do with that.")
+    
+    # Edge Case 3: Insufficient Input
+    elif not is_sufficient_input(script_input):
+        st.markdown("---")
+        st.info("**There may not be enough material here yet.** Experiential patterns tend to emerge across multiple scenes. Feel free to paste more when you have it.")
+    
     else:
         with st.spinner("Reading..."):
             try:
@@ -212,8 +279,9 @@ if st.button("Read My Draft", type="primary"):
                     st.markdown("<div class='silence-box'>No strong experiential patterns surfaced. This happens when the rhythm is stable, the structure is highly variable, or signals align with your intent. It does not mean anything about quality.</div>", unsafe_allow_html=True)
                 
             except Exception as e:
-                st.warning(f"Something went wrong: {e}")
-                st.markdown("Please check that your draft contains readable text and try again.")
+                # Edge Case 5: Technical Errors (hide stack traces)
+                st.warning("Something went wrong while reading your draft.")
+                st.markdown("This can happen with very unusual formatting. If the problem persists, the draft may need to be in a more standard text format.")
 
 # =============================================================================
 # FOOTER DISCLAIMERS (Mandatory)
