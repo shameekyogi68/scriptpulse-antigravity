@@ -7,12 +7,13 @@ import sys
 from agents import parsing, segmentation, encoding, temporal, patterns, intent, mediation
 
 
-def run_pipeline(screenplay_text):
+def run_pipeline(screenplay_text, writer_intent=None):
     """
     Execute the full 7-agent pipeline.
     
     Args:
         screenplay_text: Raw screenplay text
+        writer_intent: Optional list of writer intent declarations
         
     Returns:
         Final output from mediation agent
@@ -24,16 +25,20 @@ def run_pipeline(screenplay_text):
     segmented = segmentation.run(parsed)
     
     # Agent 3: Structural Encoding
-    encoded = encoding.run(segmented)
+    encoded = encoding.run({'scenes': segmented, 'lines': parsed})
     
     # Agent 4: Temporal Dynamics
-    temporal_output = temporal.run(encoded)
+    temporal_output = temporal.run({'features': encoded})
     
     # Agent 5: Pattern Detection
-    patterns_output = patterns.run(temporal_output)
+    patterns_output = patterns.run({'temporal_signals': temporal_output})
     
     # Agent 6: Writer Intent & Immunity
-    filtered = intent.run(patterns_output)
+    intent_input = {
+        'patterns': patterns_output,
+        'writer_intent': writer_intent or []
+    }
+    filtered = intent.run(intent_input)
     
     # Agent 7: Audience-Experience Mediation
     final_output = mediation.run(filtered)
