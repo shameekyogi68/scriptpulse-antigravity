@@ -60,12 +60,46 @@ It simply offers a mirror for one possible reading of your work.
 st.markdown("---")
 st.header("Your Draft")
 
-script_input = st.text_area(
-    label="Paste your screenplay here",
-    height=300,
-    placeholder="Paste your draft here. Formatting does not need to be clean.\n\nINT. COFFEE SHOP - DAY\n\nJOHN sits alone...",
-    help="Messy drafts, placeholders, and experimental formatting are all fine."
+# File upload option
+uploaded_file = st.file_uploader(
+    "Upload a screenplay file (optional)",
+    type=['txt', 'pdf'],
+    help="Supports .txt and .pdf files. For large scripts (150+ pages), upload is recommended."
 )
+
+script_input = None
+
+if uploaded_file is not None:
+    try:
+        if uploaded_file.type == "application/pdf":
+            # Parse PDF
+            import PyPDF2
+            pdf_reader = PyPDF2.PdfReader(uploaded_file)
+            text_parts = []
+            for page in pdf_reader.pages:
+                text_parts.append(page.extract_text())
+            script_input = "\n".join(text_parts)
+            st.success(f"✓ Loaded {len(pdf_reader.pages)} pages from PDF")
+        else:
+            # Read text file
+            script_input = uploaded_file.read().decode('utf-8')
+            st.success("✓ File loaded successfully")
+    except Exception as e:
+        st.error(f"Could not read file: {e}")
+        script_input = None
+
+# Text area for pasting (only show if no file uploaded)
+if script_input is None:
+    script_input = st.text_area(
+        label="Or paste your screenplay here",
+        height=300,
+        placeholder="Paste your draft here. Formatting does not need to be clean.\n\nINT. COFFEE SHOP - DAY\n\nJOHN sits alone...",
+        help="Messy drafts, placeholders, and experimental formatting are all fine."
+    )
+else:
+    # Show preview of uploaded content
+    with st.expander("Preview uploaded script"):
+        st.text(script_input[:1000] + ("..." if len(script_input) > 1000 else ""))
 
 # Intent Input (Optional)
 st.markdown("### Your Intent (Optional)")
@@ -175,15 +209,43 @@ if st.button("Read My Draft", type="primary"):
         st.info("**There may not be enough material here yet.** Experiential patterns tend to emerge across multiple scenes. Feel free to paste more when you have it.")
     
     else:
-        with st.spinner("Reading..."):
-            try:
-                # Run the locked pipeline (no new logic)
-                report = runner.run_pipeline(script_input, writer_intent=writer_intent)
-                
-                # Extract results
-                reflections = report.get('reflections', [])
-                silence = report.get('silence_explanation')
-                intent_acks = report.get('intent_acknowledgments', [])
+        # Create progress tracking
+        progress_bar = st.progress(0)
+        status_text = st.empty()
+        
+        try:
+            # Stage 1: Parsing
+            status_text.text("📖 Parsing screenplay structure...")
+            progress_bar.progress(15)
+            
+            # Stage 2-7: Pipeline execution
+            status_text.text("🔄 Running analysis pipeline...")
+            progress_bar.progress(30)
+            
+            # Run the locked pipeline (no new logic)
+            import time
+            start_time = time.time()
+            
+            report = runner.run_pipeline(script_input, writer_intent=writer_intent)
+            
+            elapsed = time.time() - start_time
+            
+            # Check if we're approaching timeout (55 seconds on free tier)
+            if elapsed > 50:
+                st.warning("⏱️ Large script detected. Processing took longer than usual but completed successfully.")
+            
+            progress_bar.progress(100)
+            status_text.text("✓ Analysis complete")
+            
+            # Clear progress indicators
+            time.sleep(0.5)
+            progress_bar.empty()
+            status_text.empty()
+            
+            # Extract results
+            reflections = report.get('reflections', [])
+            silence = report.get('silence_explanation')
+            intent_acks = report.get('intent_acknowledgments', [])
                 
                 st.markdown("---")
                 st.header("What a First-Time Viewer Might Experience")
@@ -219,8 +281,23 @@ if st.button("Read My Draft", type="primary"):
                 
             except Exception as e:
                 # Edge Case 5: Technical Errors (hide stack traces)
-                st.warning("Something went wrong while reading your draft.")
-                st.markdown("This can happen with very unusual formatting. If the problem persists, the draft may need to be in a more standard text format.")
+                progress_bar.empty()
+                status_text.empty()
+                
+                error_msg = str(e)
+                if "timeout" in error_msg.lower() or "time" in error_msg.lower():
+                    st.error("⏱️ **Processing timeout detected.**")
+                    st.markdown("""
+                    Your script may be too large for Streamlit Cloud's free tier (60-second limit).
+                    
+                    **Options:**
+                    - Try a shorter section of your script
+                    - Split into multiple parts
+                    - Contact support for processing assistance
+                    """)
+                else:
+                    st.warning("Something went wrong while reading your draft.")
+                    st.markdown("This can happen with very unusual formatting. If the problem persists, the draft may need to be in a more standard text format.")
 
 # =============================================================================
 # FOOTER DISCLAIMERS (Mandatory)
