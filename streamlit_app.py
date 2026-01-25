@@ -24,74 +24,210 @@ st.set_page_config(
 )
 
 # =============================================================================
-# CUSTOM STYLING (Non-Streamlit-default, Research-Grade)
+# CUSTOM STYLING (Premium, Industry-Standard Design)
 # =============================================================================
 
 st.markdown("""
 <style>
+    /* Import premium fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Crimson+Pro:wght@400;600&display=swap');
+    
     /* Remove Streamlit branding */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
+    .stDeployButton {display: none;}
     
-    /* Calm, writer-friendly typography */
+    /* Global reset and premium base */
     .main {
-        background-color: #fafafa;
+        background: linear-gradient(135deg, #fdfbfb 0%, #f7f7f7 100%);
+        padding: 2rem 1rem;
     }
     
+    .block-container {
+        max-width: 900px;
+        padding: 3rem 2rem;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+    }
+    
+    /* Premium Typography */
     h1 {
-        font-family: 'Georgia', serif;
-        color: #2c3e50;
-        font-weight: 400;
-        margin-bottom: 0.5em;
+        font-family: 'Crimson Pro', serif;
+        font-size: 2.8rem;
+        font-weight: 600;
+        color: #1a1a1a;
+        letter-spacing: -0.02em;
+        margin-bottom: 0.5rem;
+        line-height: 1.2;
     }
     
     h2 {
-        font-family: 'Georgia', serif;
-        color: #34495e;
-        font-weight: 400;
-        font-size: 1.4em;
-        margin-top: 1.5em;
-        margin-bottom: 0.5em;
+        font-family: 'Inter', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 500;
+        color: #2d3748;
+        letter-spacing: -0.01em;
+        margin-top: 2.5rem;
+        margin-bottom: 1rem;
+        border-bottom: 2px solid #e2e8f0;
+        padding-bottom: 0.5rem;
     }
     
-    p, li {
-        font-family: 'Helvetica Neue', sans-serif;
-        font-size: 1.05em;
+    h3 {
+        font-family: 'Inter', sans-serif;
+        font-size: 1.1rem;
+        font-weight: 500;
+        color: #4a5568;
+        margin-top: 1.5rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    p, li, label {
+        font-family: 'Inter', sans-serif;
+        font-size: 1rem;
         line-height: 1.7;
-        color: #444;
+        color: #4a5568;
+        font-weight: 400;
     }
     
+    /* Subtitle styling */
+    .main > div:first-child p:first-of-type em {
+        font-family: 'Inter', sans-serif;
+        font-size: 1.1rem;
+        color: #718096;
+        font-weight: 300;
+        font-style: normal;
+    }
+    
+    /* Premium text input area */
     .stTextArea textarea {
-        font-family: 'Courier New', monospace;
-        font-size: 0.95em;
-        line-height: 1.5;
+        font-family: 'Monaco', 'Courier New', monospace;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        background: #f8fafc;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 1rem;
+        transition: all 0.2s ease;
     }
     
-    /* Reflection boxes */
+    .stTextArea textarea:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        background: white;
+    }
+    
+    /* Premium button styling */
+    .stButton button {
+        font-family: 'Inter', sans-serif;
+        font-size: 1rem;
+        font-weight: 500;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 0.75rem 2rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+    
+    .stButton button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+    
+    /* Checkbox styling */
+    .stCheckbox {
+        font-family: 'Inter', sans-serif;
+    }
+    
+    /* Number input and selectbox */
+    input[type="number"], select {
+        font-family: 'Inter', sans-serif;
+        border: 2px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 0.5rem;
+        transition: border-color 0.2s ease;
+    }
+    
+    input[type="number"]:focus, select:focus {
+        border-color: #667eea;
+        outline: none;
+    }
+    
+    /* Premium reflection boxes */
     .reflection-box {
-        background-color: #f9f9f9;
-        border-left: 3px solid #95a5a6;
-        padding: 1.2em;
-        margin: 1em 0;
-        border-radius: 4px;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border-left: 4px solid #667eea;
+        padding: 1.5rem;
+        margin: 1.25rem 0;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        transition: transform 0.2s ease;
+    }
+    
+    .reflection-box:hover {
+        transform: translateX(4px);
     }
     
     .silence-box {
-        background-color: #ecf0f1;
-        border-left: 3px solid #7f8c8d;
-        padding: 1.2em;
-        margin: 1em 0;
-        border-radius: 4px;
+        background: linear-gradient(135deg, #fefcfb 0%, #f7f6f5 100%);
+        border-left: 4px solid #a0aec0;
+        padding: 1.5rem;
+        margin: 1.25rem 0;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     }
     
+    /* Premium disclaimer box */
     .disclaimer {
-        font-size: 0.9em;
-        color: #7f8c8d;
-        font-style: italic;
-        margin-top: 2em;
-        padding: 1em;
-        background-color: #ecf0f1;
-        border-radius: 4px;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.9rem;
+        color: #718096;
+        font-weight: 400;
+        margin-top: 3rem;
+        padding: 1.5rem;
+        background: linear-gradient(135deg, #faf8f6 0%, #f5f3f1 100%);
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+    }
+    
+    /* Horizontal rules */
+    hr {
+        border: none;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
+        margin: 2rem 0;
+    }
+    
+    /* Info/warning boxes */
+    .stInfo, .stWarning {
+        border-radius: 8px;
+        padding: 1rem;
+        font-family: 'Inter', sans-serif;
+    }
+    
+    /* Spinner */
+    .stSpinner > div {
+        border-top-color: #667eea !important;
+    }
+    
+    /* Scene labels */
+    strong {
+        font-weight: 600;
+        color: #2d3748;
+    }
+    
+    /* Links */
+    a {
+        color: #667eea;
+        text-decoration: none;
+        transition: color 0.2s ease;
+    }
+    
+    a:hover {
+        color: #764ba2;
     }
 </style>
 """, unsafe_allow_html=True)
