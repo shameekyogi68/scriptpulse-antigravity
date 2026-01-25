@@ -1,1 +1,2 @@
-# Standard library only for now
+# Core dependencies
+streamlit>=1.30.0
