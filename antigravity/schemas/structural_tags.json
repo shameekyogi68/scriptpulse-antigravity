@@ -1,0 +1,140 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "ScriptPulse Structural Tags Schema",
+    "description": "Format-only classification tags for screenplay lines",
+    "version": "1.0.0",
+    "definitions": {
+        "tag": {
+            "type": "string",
+            "enum": [
+                "S",
+                "A",
+                "D",
+                "C",
+                "M"
+            ],
+            "description": "Single-character structural format tag"
+        }
+    },
+    "tags": {
+        "S": {
+            "name": "Scene Heading",
+            "description": "Sluglines indicating location and time (INT./EXT.)",
+            "examples": [
+                "INT. COFFEE SHOP - DAY",
+                "EXT. CITY STREET - NIGHT",
+                "INT./EXT. CAR - CONTINUOUS"
+            ],
+            "formatting_cues": [
+                "All caps",
+                "Left-aligned",
+                "Contains INT. or EXT.",
+                "Often includes time-of-day marker"
+            ]
+        },
+        "A": {
+            "name": "Action",
+            "description": "Stage directions and visual descriptions",
+            "examples": [
+                "Sarah enters, looking around nervously.",
+                "The coffee machine HISSES to life.",
+                "A beat of silence."
+            ],
+            "formatting_cues": [
+                "Mixed or sentence case",
+                "Left-aligned",
+                "Descriptive prose",
+                "No speaker attribution"
+            ]
+        },
+        "D": {
+            "name": "Dialogue",
+            "description": "Character speech lines",
+            "examples": [
+                "Have you seen him?",
+                "Not since yesterday.",
+                "I don't know what to tell you."
+            ],
+            "formatting_cues": [
+                "Follows character name",
+                "Indented from left margin",
+                "Mixed case",
+                "Quotation marks optional"
+            ]
+        },
+        "C": {
+            "name": "Character",
+            "description": "Character name cue before dialogue",
+            "examples": [
+                "SARAH",
+                "JOHN",
+                "WAITRESS"
+            ],
+            "formatting_cues": [
+                "All caps",
+                "Center-aligned or left-indented",
+                "Precedes dialogue",
+                "May include extension (V.O., O.S., CONT'D)"
+            ]
+        },
+        "M": {
+            "name": "Metadata",
+            "description": "Transitions, parentheticals, notes, and other formatting elements",
+            "examples": [
+                "FADE TO:",
+                "CUT TO:",
+                "(whispering)",
+                "(beat)",
+                "CONTINUED:"
+            ],
+            "formatting_cues": [
+                "Special formatting markers",
+                "Parentheticals",
+                "Transitions (often right-aligned)",
+                "Technical instructions"
+            ]
+        }
+    },
+    "output_format": {
+        "type": "array",
+        "items": {
+            "$ref": "#/definitions/tag"
+        },
+        "description": "Line-aligned sequence of tags, one per input line",
+        "constraints": {
+            "line_count": "Must match input line count exactly",
+            "format": "One tag per line, no additional text",
+            "determinism": "Same input must produce same output"
+        }
+    },
+    "validation_rules": {
+        "required": [
+            "Only valid tags (S, A, D, C, M)",
+            "Exact line count match with input",
+            "No prose or explanations",
+            "Deterministic output"
+        ],
+        "forbidden": [
+            "Confidence scores",
+            "Commentary or justifications",
+            "Semantic analysis",
+            "Multi-character tags",
+            "Empty lines (except matching empty input)"
+        ]
+    },
+    "boundary_compliance": {
+        "allowed_features": [
+            "Capitalization patterns",
+            "Indentation",
+            "Punctuation",
+            "Structural markers (INT., EXT., etc.)"
+        ],
+        "forbidden_features": [
+            "Semantic embeddings",
+            "Sentiment analysis",
+            "Dialogue quality metrics",
+            "Character relationship inference",
+            "Story structure interpretation"
+        ]
+    }
+}
