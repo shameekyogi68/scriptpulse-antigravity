@@ -1,0 +1,21 @@
+III. SYSTEM ARCHITECTURE
+
+ScriptPulse vNext.4 follows a deterministic, sequential pipeline architecture designed to ensure traceability and reproducibility. The system processes raw screenplay text (and optional writer-declared intent) through a series of seven distinct agents, each governed by fixed rules rather than stochastic inference.
+
+A. Pipeline Overview
+The pipeline operates strictly unidirectionally. Data flows from raw text to structural abstraction, then to temporal modeling, pattern recognition, and finally to writer-facing mediation. No feedback loops exist that would allow later stages to influence earlier structural parsing. This separation of concerns ensures that the identification of narrative evidence is never contaminated by the system's "interpretation" of that evidence.
+
+B. Agent Responsibilities
+1) Structural Parsing Agent: Responsible for classifying line-level elements (e.g., scene headings, dialogue, action, transitions) based on industry-standard formatting conventions. It assigns semantic tags without interpreting narrative content.
+2) Scene Segmentation Agent: Groups classified lines into coherent scene units. It employs conservative boundary detection logic, favoring under-segmentation to preserve narrative continuity rather than risking fragmented analysis.
+3) Structural Encoding Agent: Maps each scene unit to a vector of observable features (e.g., dialogue density, action pacing, character introduction rate). These features are rigorously defined to be non-evaluative; they measure magnitude and presence, not quality.
+4) Temporal Dynamics Agent: Applies accumulation functions to the sequence of scene vectors to model variables such as "cognitive load" or "attentional demand" over time. This stage introduces the dimension of reader fatigue and recovery.
+5) Interpretive Pattern Agent: Scans the temporal signal data for specific, sustained configurations that may correlate with particular audience experiences (e.g., prolonged high density). It enforces a persistence requirement, filtering out transient spikes to focus on sustained dynamic shifts.
+6) Writer Intent Immunity Agent: Integrating the writer's explicit declarations, this agent acts as a governance layer. It mandates that any detected pattern aligning with a stated artistic goal (e.g., "intentionally exhausting") is suppressed, ensuring the system never "corrects" a deliberate choice.
+7) Audience-Experience Mediation Agent: The final output layer translates the remaining, unsuppressed patterns into writer-facing language. It enforces strict rhetorical constraints: use of interrogative phrasing, explicit uncertainty markers (e.g., "may," "could"), and the absolute prohibition of evaluative descriptors.
+
+C. Determinism and Auditability
+Unlike neural networks, where the path from input to output passes through opaque hidden layers, every stage of the ScriptPulse pipeline is inspectable. The input text produces a fixed set of parsed lines, which produce a fixed set of scene vectors. Consequently, identical inputs will always yield identical outputs. This determinism is critical for building writer trust, as it guarantees that system behavior is the result of consistent logic rather than random variation or "hallucination."
+
+D. Separation of Analysis and Mediation
+A key architectural principle is the strict firewall between analytical processing and user interaction. The system segments the "understanding" of the script (Agents 1-6) from the "communication" of that understanding (Agent 7). This ensures that the core analysis remains purely structural and mathematical, while the delicate task of framing feedback for a creative user is handled by a specialized component designed specifically for writer safety and psychological neutrality.
