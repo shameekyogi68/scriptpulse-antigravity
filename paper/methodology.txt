@@ -1,0 +1,18 @@
+IV. METHODOLOGY
+
+The ScriptPulse methodology is grounded in deterministic signal processing rather than probabilistic inference. The system treats narrative structure as a measurable signal, applying consistent transformation rules to model the accumulation of cognitive load and attentional demand over time.
+
+A. Structural Feature Construction
+The system first converts raw screenplay text into a sequence of feature vectors. This process relies exclusively on observable structural characteristics. Five primary feature groups are extracted for each scene: (1) Linguistic Density (token count, sentence complexity); (2) Dialogue Dynamics (turn-taking frequency, monologue presence); (3) Visual Activity (action block density, capitalization frequency); (4) Referential Load (character introduction rate, entity recurrence); and (5) Structural Pacing (scene duration, transition frequency). Semantic content—such as the emotional valence of dialogue or the thematic relevance of action—is explicitly excluded to prevent subjectivity.
+
+B. Temporal Aggregation and Recovery
+Raw structural features provide only local snapshots. To model the reader's experience, the system applies temporal aggregation functions that account for carryover effects. A "fatigue" variable accumulates based on sustained high-density features, while "recovery" is modeled through lower-density scenes or explicit structural breaks. The system employs a decay function that allows accumulated load to dissipate over time, simulating the restoration of attentional resources. This mechanism ensures that a high-density scene is analyzed not in isolation, but in the context of the preceding narrative load.
+
+C. Pattern Persistence and Detection
+The system identifies patterns by scanning the aggregated temporal signals for sustained behaviors. A signal spike in a single scene is filtered as noise; a pattern is only registered if a specific configuration (e.g., high referential load with low dialogue) persists across a minimum threshold of consecutive scenes (typically 3-5). This persistence requirement stabilizes the analysis, ensuring that feedback is focused on structural trends rather than isolated anomalies.
+
+D. Confidence Assignment
+Every detected pattern is assigned a confidence score (Low, Medium, High). This assignment is conservative by design. Confidence is calculated based on the signal strength relative to a baseline and the consistency of the pattern across the window. High confidence requires strong, unambiguous signals sustained over the full window. If signals are mixed, borderline, or interrupted, the confidence is automatically downgraded. Importantly, the system defaults to "Low" or "None" in ambiguous cases, adhering to a "do no harm" principle where silence is preferred over potentially misleading feedback.
+
+E. Writer Intent Immunity
+To safeguard authorial agency, the methodology incorporates an explicit override mechanism. Writers may declare specific artistic goals for ranges of scenes (e.g., "intentionally confusing" or "intentionally exhausting"). The system cross-references these declarations against detected patterns. If a detected pattern (e.g., high cognitive load) aligns with a declared intent (e.g., "intentionally exhausting"), the pattern is suppressed from the final output. This suppression is absolute; no probabilistic weighing occurs. This ensures that the system functions as a support tool for the writer's vision, rather than a normative correction mechanism.
