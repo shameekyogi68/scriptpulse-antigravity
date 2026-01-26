@@ -1,0 +1,15 @@
+VI. VALIDATION PROTOCOL
+
+Validation of the ScriptPulse framework focuses on verifying behavioral correctness, boundary compliance, and ethical safety rather than quantifying predictive accuracy or user satisfaction. Given that the system does not produce "ground truth" judgments, validation methods are designed to ensure that outputs are consistent with the system's deterministic rules and stated constraints.
+
+A. Behavioral Correctness and Stress Testing
+The system is subjected to a diverse suite of input scenarios to verify robust parsing and signal accumulation. Testing corpora include: (1) Standard industry-formatted scripts; (2) Early drafts with significant formatting errors; (3) Dialogue-dense stage plays adapted for screen; (4) Action-heavy, minimal-dialogue visual narratives; and (5) Experimental or anti-narrative structures. "Stress testing" involves inputs with extreme characteristics—such as 100 consecutive pages of monologue or rapid-fire scene transitions—to ensure that accumulation functions degrade gracefully without producing anomalous spikes or system crashes.
+
+B. Worst-Case and Edge-Case Analysis
+Specific attention is paid to edge cases where structural signals are ambiguous or contradictory. Scenarios include scripts with effectively zero variance in pacing (checking for appropriate silence), scripts with extremely high sustained intensity (checking for fatigue saturation), and inputs with disjointed or non-sequential scene headers. In all cases, the validation criterion is "conservative failure": the system must either produce a stable, low-confidence reflection or return no output at all, rather than hallucinating pattern matches from noise.
+
+C. Misuse and Boundary Compliance
+A critical component of the validation protocol involves adversarial testing of the system's ethical boundaries. Test cases include inputs explicitly designed to solicit evaluation (e.g., "Is this scene good?"), requests for prescriptive advice (e.g., "How do I fix the pacing?"), and attempts to bypass intent immunity. The system is validated against these inputs to ensure it consistently triggers the correct refusal and redirection logic, never engaging in the requested evaluation or prescription.
+
+D. Determinism and Reproducibility Checks
+To verify the system's auditability, strict determinism tests are conducted. Identical input files are processed through the pipeline in independent runs, and the resulting feature vectors, signal accumulations, and mediated outputs are bitwise compared. Any deviation in output for identical input is treated as a critical failure. This ensures that the system's behavior remains entirely predictable and reproducible, free from stochastic variance or hidden state retention.
