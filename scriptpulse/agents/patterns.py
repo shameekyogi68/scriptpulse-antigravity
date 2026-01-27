@@ -184,16 +184,25 @@ def apply_cumulative_escalation(repetition_patterns, signals, length_factor, scr
         duration = end - start + 1
         
         # Check if repetition extends beyond the detected window
-        # by examining signals for continued similarity
+        # by examining signals for continued similarity across ENTIRE remaining script
         extended_end = end
+        base_effort =signals[start]['instantaneous_effort']
+        
+        # Scan entire remaining script for persistent similarity
         for i in range(end + 1, len(signals)):
-            if i >= end + 6:  # Don't extend more than 6 scenes
-                break
-            # Check if effort remains similar
-            if abs(signals[i]['instantaneous_effort'] - signals[end]['instantaneous_effort']) < 0.15:
+            # More lenient threshold for extension (0.2 instead of 0.15)
+            # Persistent repetition may drift slightly but still be repetitive
+            if abs(signals[i]['instantaneous_effort'] - base_effort) < 0.2:
                 extended_end = i
-            else:
-                break
+            # If break > 2 consecutive scenes, stop extending
+            elif i > end + 2:
+                consecutive_break = True
+                for j in range(i - 2, i):
+                    if abs(signals[j]['instantaneous_effort'] - base_effort) < 0.2:
+                        consecutive_break = False
+                        break
+                if consecutive_break:
+                    break
         
         total_duration = extended_end - start + 1
         
@@ -207,7 +216,7 @@ def apply_cumulative_escalation(repetition_patterns, signals, length_factor, scr
             
             escalated.append({
                 'pattern_type': 'sustained_attentional_demand',
-                'scene_range': [start, min(extended_end, start + 7)],
+                'scene_range': [start, min(extended_end, len(signals) - 1)],
                 'confidence': fatigue_confidence,
                 'supporting_signals': ['repetition_persistence', 'duration_fatigue']
             })
