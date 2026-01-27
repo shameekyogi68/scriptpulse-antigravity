@@ -73,8 +73,8 @@ def compute_script_contrast(signals):
     return {
         'contrast_score': contrast_score,
         'normalized_contrast': normalized_contrast,
-        'is_low_contrast': contrast_score < 0.5,
-        'is_high_contrast': contrast_score > 1.5
+        'is_low_contrast': contrast_score < 0.8,  # More lenient (was 0.5)
+        'is_high_contrast': contrast_score > 2.0  # More strict (was 1.5)
     }
 
 
@@ -147,7 +147,8 @@ def detect_sustained_demand(signals, length_factor=1.0, script_contrast=None):
     patterns = []
     
     # Scale threshold by script length (short scripts get higher tolerance)
-    DEMAND_THRESHOLD = 0.4 * length_factor
+    # Increased base from 0.4 to 0.6 for more conservative detection
+    DEMAND_THRESHOLD = 0.6 * length_factor
     
     in_pattern = False
     pattern_start = None
@@ -197,7 +198,8 @@ def detect_limited_recovery(signals, script_contrast=None):
     patterns = []
     
     # Look for low recovery credits over multiple scenes
-    LOW_RECOVERY_THRESHOLD = 0.1
+    # Reduced threshold from 0.1 to 0.05 for more conservative detection
+    LOW_RECOVERY_THRESHOLD = 0.05
     
     low_recovery_count = 0
     pattern_start = None
@@ -360,16 +362,16 @@ def compute_confidence(window_signals, pattern_context, script_contrast=None):
     Confidence can only DECREASE, never increase.
     Based on signal variance, recovery noise, and script-level contrast.
     """
-    # Base confidence
-    base_confidence = 0.8
+    # Base confidence - reduced from 0.8 to 0.7 for more conservative starting point
+    base_confidence = 0.7
     
     # Reduce confidence for low-contrast scripts
     # Patterns in stable environments are less diagnostically meaningful
     if script_contrast:
         if script_contrast['is_low_contrast']:
-            base_confidence -= 0.3  # Drop to 0.5
+            base_confidence -= 0.2  # Reduced penalty from 0.3
         elif script_contrast['normalized_contrast'] < 0.7:
-            base_confidence -= 0.2  # Drop to 0.6
+            base_confidence -= 0.15  # Reduced penalty from 0.2
     
     # Decrease based on variance
     signals_values = [s['attentional_signal'] for s in window_signals]
@@ -384,7 +386,7 @@ def compute_confidence(window_signals, pattern_context, script_contrast=None):
     
     # Small window reduces confidence
     if len(window_signals) < MIN_PERSISTENCE_SCENES + 2:
-        base_confidence -= 0.1
+        base_confidence -= 0.15  # Increased penalty from 0.1
     
     # Map to discrete bands
     if base_confidence >= HIGH_CONFIDENCE_THRESHOLD:
