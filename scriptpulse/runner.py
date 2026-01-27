@@ -16,7 +16,7 @@ def run_pipeline(screenplay_text, writer_intent=None):
         writer_intent: Optional list of writer intent declarations
         
     Returns:
-        Final output from mediation agent
+        Final output from mediation agent with scene info
     """
     # Agent 1: Structural Parsing
     parsed = parsing.run(screenplay_text)
@@ -45,6 +45,17 @@ def run_pipeline(screenplay_text, writer_intent=None):
     
     # Agent 7: Audience-Experience Mediation
     final_output = mediation.run(filtered)
+    
+    # Add scene info for UI visualization
+    final_output['scene_info'] = [
+        {
+            'scene_index': scene['scene_index'],
+            'heading': scene.get('heading', f"Scene {scene['scene_index'] + 1}"),
+            'preview': scene.get('preview', '')
+        }
+        for scene in segmented
+    ]
+    final_output['total_scenes'] = len(segmented)
     
     return final_output
 

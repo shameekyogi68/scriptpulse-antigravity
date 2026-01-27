@@ -73,10 +73,38 @@ def classify_line(line, index, all_lines):
 
 
 def is_scene_heading(line):
-    """Check if line is a scene heading by format"""
-    # Must start with INT., EXT., or INT/EXT
-    pattern = r'^(INT\.?/EXT\.?|INT\.?|EXT\.?)\s+'
-    return bool(re.match(pattern, line, re.IGNORECASE))
+    """
+    Check if line is a scene heading by format.
+    
+    IMPROVED: Added fallback patterns for non-standard formats.
+    """
+    # Standard patterns: INT./EXT.
+    standard_pattern = r'^(INT\.?/EXT\.?|INT\.?|EXT\.?)\s+'
+    if re.match(standard_pattern, line, re.IGNORECASE):
+        return True
+    
+    # Fallback patterns for non-standard formats
+    fallback_patterns = [
+        r'^INTERIOR\s+',        # Full word "INTERIOR"
+        r'^EXTERIOR\s+',        # Full word "EXTERIOR"
+        r'^I\.\s+',             # Abbreviated "I."
+        r'^E\.\s+',             # Abbreviated "E."
+        r'^SCENE\s*:',          # "SCENE:" prefix
+        r'^SCENE\s+\d+',        # "SCENE 1" format
+        r'^\d+\s*(INT|EXT)',    # Scene number before INT/EXT
+    ]
+    
+    for pattern in fallback_patterns:
+        if re.match(pattern, line, re.IGNORECASE):
+            return True
+    
+    # Check for location markers without INT/EXT (risky, lower priority)
+    # Must have a dash and time of day indicator
+    time_pattern = r'^[A-Z][A-Z\s]+\s*[-–—]\s*(DAY|NIGHT|DAWN|DUSK|MORNING|EVENING|CONTINUOUS|LATER|SAME)'
+    if re.match(time_pattern, line, re.IGNORECASE):
+        return True
+    
+    return False
 
 
 def is_metadata(line):

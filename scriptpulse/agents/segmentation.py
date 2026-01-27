@@ -14,7 +14,8 @@ def run(input_data):
         input_data: List of dicts from parsing agent with line_index, text, tag
         
     Returns:
-        List of scene dicts with scene_index, start_line, end_line, boundary_confidence
+        List of scene dicts with scene_index, start_line, end_line, 
+        boundary_confidence, heading, and preview
     """
     if not input_data:
         return []
@@ -33,6 +34,42 @@ def run(input_data):
     
     # Step 5: Re-index scenes
     scenes = reindex_scenes(scenes)
+    
+    # Step 6: Extract scene headings and previews for UI
+    scenes = extract_scene_info(scenes, input_data)
+    
+    return scenes
+
+
+def extract_scene_info(scenes, parsed_lines):
+    """
+    Extract scene heading and preview text for UI display.
+    """
+    for scene in scenes:
+        start = scene['start_line']
+        end = scene['end_line']
+        
+        # Get scene heading (first line, usually S tag)
+        heading = ""
+        preview_lines = []
+        
+        for i in range(start, min(end + 1, len(parsed_lines))):
+            line_data = parsed_lines[i]
+            text = line_data['text'].strip()
+            tag = line_data['tag']
+            
+            if not text:
+                continue
+            
+            # First non-empty line with S tag is the heading
+            if tag == 'S' and not heading:
+                heading = text
+            elif len(preview_lines) < 2:  # Get up to 2 preview lines
+                if text and text != heading:
+                    preview_lines.append(text[:60] + ('...' if len(text) > 60 else ''))
+        
+        scene['heading'] = heading if heading else f"Scene {scene['scene_index'] + 1}"
+        scene['preview'] = ' | '.join(preview_lines) if preview_lines else ""
     
     return scenes
 

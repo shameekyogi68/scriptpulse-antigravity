@@ -259,6 +259,15 @@ if st.button("Read My Draft", type="primary"):
             # Display Reflections (if any)
             if reflections:
                 st.markdown("### Some Observations")
+                
+                # Get scene info for display
+                scene_info = report.get('scene_info', [])
+                total_scenes = report.get('total_scenes', 0)
+                
+                # Show total scene count if available
+                if total_scenes > 0:
+                    st.caption(f"📊 Analyzed {total_scenes} scenes")
+                
                 for ref in reflections:
                     scene_range = ref.get('scene_range', [0, 0])
                     reflection_text = ref.get('reflection', '')
@@ -266,7 +275,23 @@ if st.button("Read My Draft", type="primary"):
                     
                     scene_label = f"Scenes {scene_range[0]}–{scene_range[1]}" if scene_range[0] != scene_range[1] else f"Scene {scene_range[0]}"
                     
+                    # Get scene headings for this range
+                    scene_headings = []
+                    for s in scene_info:
+                        if scene_range[0] <= s['scene_index'] <= scene_range[1]:
+                            if s.get('heading'):
+                                scene_headings.append(f"• {s['heading']}")
+                    
                     st.markdown(f"**{scene_label}** *(confidence: {confidence})*")
+                    
+                    # Show scene headings in an expander
+                    if scene_headings:
+                        with st.expander("🎬 View scenes in this range"):
+                            for heading in scene_headings[:5]:  # Limit to first 5
+                                st.text(heading)
+                            if len(scene_headings) > 5:
+                                st.caption(f"...and {len(scene_headings) - 5} more scenes")
+                    
                     st.markdown(f"<div class='reflection-box'>{reflection_text}</div>", unsafe_allow_html=True)
             
             # Display Silence Explanation (if no reflections)
