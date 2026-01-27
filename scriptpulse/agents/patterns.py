@@ -11,6 +11,9 @@ def run(input_data):
     """
     Detect persistent experiential patterns (non-evaluative).
     
+    NEW: Cumulative escalation — tracks repetition persistence and escalates
+    from similarity → fatigue → mental demand based on pattern duration.
+    
     Args:
         input_data: Dict with 'temporal_signals' (list from temporal agent)
                     and 'features' (list from encoding agent)
@@ -32,9 +35,23 @@ def run(input_data):
     patterns = []
     
     # Detect each pattern type (pass context for calibration)
+    repetition_patterns = detect_repetition(signals, features, script_contrast)
+    patterns.extend(repetition_patterns)
+    
+    # === CUMULATIVE ESCALATION ===
+    # NEW: If repetition persists, escalate to fatigue and mental demand
+    if repetition_patterns:
+        escalated = apply_cumulative_escalation(
+            repetition_patterns,
+            signals,
+            length_factor,
+            script_contrast
+        )
+        patterns.extend(escalated)
+    
+    # Continue with other pattern types
     patterns.extend(detect_sustained_demand(signals, length_factor, script_contrast))
     patterns.extend(detect_limited_recovery(signals, script_contrast))
-    patterns.extend(detect_repetition(signals, features, script_contrast))  # Now with features
     patterns.extend(detect_surprise_cluster(signals))
     patterns.extend(detect_constructive_strain(signals, script_contrast))
     patterns.extend(detect_degenerative_fatigue(signals, script_contrast))
@@ -140,6 +157,71 @@ def compute_feature_diversity(window_features):
     )
     
     return min(1.0, diversity_score)
+
+
+def apply_cumulative_escalation(repetition_patterns, signals, length_factor, script_contrast):
+    """
+    Apply cumulative escalation when repetition persists.
+    
+    Repetition → Fatigue → Mental Demand (duration-dependent)
+    
+    Escalation rules:
+    - Short repetition (3-5 scenes): Similarity only
+    - Medium repetition (6-8 scenes): + Fatigue (medium confidence)
+    - Long repetition (9+ scenes): + Mental demand (high confidence)
+    
+    Returns: List of escalated pattern descriptors
+    """
+    escalated = []
+    
+    for pattern in repetition_patterns:
+        if pattern['pattern_type'] != 'repetition':
+            continue
+        
+        scene_range = pattern['scene_range']
+        start = scene_range[0]
+        end = scene_range[1]
+        duration = end - start + 1
+        
+        # Check if repetition extends beyond the detected window
+        # by examining signals for continued similarity
+        extended_end = end
+        for i in range(end + 1, len(signals)):
+            if i >= end + 6:  # Don't extend more than 6 scenes
+                break
+            # Check if effort remains similar
+            if abs(signals[i]['instantaneous_effort'] - signals[end]['instantaneous_effort']) < 0.15:
+                extended_end = i
+            else:
+                break
+        
+        total_duration = extended_end - start + 1
+        
+        # === ESCALATION THRESHOLDS ===
+        
+        # Medium duration (6-8 scenes) → Add FATIGUE signal
+        if total_duration >= 6:
+            fatigue_confidence = 'medium'
+            if total_duration >= 8:
+                fatigue_confidence = 'high'
+            
+            escalated.append({
+                'pattern_type': 'sustained_attentional_demand',
+                'scene_range': [start, min(extended_end, start + 7)],
+                'confidence': fatigue_confidence,
+                'supporting_signals': ['repetition_persistence', 'duration_fatigue']
+            })
+        
+        # Long duration (9+ scenes) → Add MENTAL DEMAND signal
+        if total_duration >= 9:
+            escalated.append({
+                'pattern_type': 'limited_recovery',
+                'scene_range': [start, extended_end],
+                'confidence': 'high',
+                'supporting_signals': ['persistent_repetition', 'accumulated_strain']
+            })
+    
+    return escalated
 
 
 def detect_sustained_demand(signals, length_factor=1.0, script_contrast=None):
