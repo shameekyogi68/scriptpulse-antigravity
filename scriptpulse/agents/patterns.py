@@ -259,10 +259,19 @@ def detect_repetition(signals, features=None, script_contrast=None):
         
         # Only flag if BOTH effort AND function are similar
         if effort_variance < EFFORT_SIMILARITY_THRESHOLD and diversity < DIVERSITY_THRESHOLD:
+            # NEW: Calculate repetition density for confidence escalation
+            repetition_density = {
+                'is_early': start == 0,  # Repetition from scene 0
+                'effort_variance': effort_variance,
+                'diversity_score': diversity,
+                'is_extreme': effort_variance < 0.05 and diversity < 0.1  # Very tight repetition
+            }
+            
             confidence = compute_confidence(
                 window_signals, 
                 'repetition',
-                script_contrast
+                script_contrast,
+                repetition_density=repetition_density  # NEW
             )
             patterns.append({
                 'pattern_type': 'repetition',
@@ -355,19 +364,30 @@ def detect_degenerative_fatigue(signals, script_contrast=None):
     return patterns
 
 
-def compute_confidence(window_signals, pattern_context, script_contrast=None):
+def compute_confidence(window_signals, pattern_context, script_contrast=None, repetition_density=None):
     """
     Compute confidence conservatively.
     
     Confidence can only DECREASE, never increase.
-    Based on signal variance, recovery noise, and script-level contrast.
+    Based on signal variance, recovery noise, script-level contrast, and repetition density.
     """
     # Base confidence - reduced from 0.8 to 0.7 for more conservative starting point
     base_confidence = 0.7
     
+    # === REPETITION DENSITY ESCALATION ===
+    # NEW: Boost confidence for truly repetitive patterns (early + extreme similarity)
+    if repetition_density:
+        if repetition_density['is_extreme']:
+            # Extreme repetition (variance < 0.05, diversity < 0.1)
+            base_confidence += 0.25  # Escalate to high confidence
+        elif repetition_density['is_early'] and repetition_density['diversity_score'] < 0.15:
+            # Early-script repetition with very low diversity
+            base_confidence += 0.15  # Escalate to medium-high
+    
     # Reduce confidence for low-contrast scripts
     # Patterns in stable environments are less diagnostically meaningful
-    if script_contrast:
+    # BUT: Don't penalize if repetition density is high (genuine redundancy)
+    if script_contrast and not (repetition_density and repetition_density['is_extreme']):
         if script_contrast['is_low_contrast']:
             base_confidence -= 0.2  # Reduced penalty from 0.3
         elif script_contrast['normalized_contrast'] < 0.7:
@@ -379,10 +399,12 @@ def compute_confidence(window_signals, pattern_context, script_contrast=None):
     variance = sum((s - mean_signal) ** 2 for s in signals_values) / len(signals_values)
     
     # High variance reduces confidence
-    if variance > 0.2:
-        base_confidence -= 0.3
-    elif variance > 0.1:
-        base_confidence -= 0.2
+    # UNLESS it's repetition (variance already checked separately)
+    if not repetition_density:
+        if variance > 0.2:
+            base_confidence -= 0.3
+        elif variance > 0.1:
+            base_confidence -= 0.2
     
     # Small window reduces confidence
     if len(window_signals) < MIN_PERSISTENCE_SCENES + 2:
