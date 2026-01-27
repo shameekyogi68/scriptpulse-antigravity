@@ -13,34 +13,141 @@ def run(input_data):
     
     Args:
         input_data: Dict with 'temporal_signals' (list from temporal agent)
+                    and 'features' (list from encoding agent)
         
     Returns:
         List of pattern descriptors (pattern_type, scene_range, confidence)
     """
     signals = input_data.get('temporal_signals', [])
+    features = input_data.get('features', [])  # NEW: needed for functional differentiation
     
     if len(signals) < MIN_PERSISTENCE_SCENES:
         return []  # Cannot detect patterns with insufficient data
     
+    # Calculate script-level context for calibration
+    total_scenes = len(signals)
+    length_factor = compute_length_factor(total_scenes)
+    script_contrast = compute_script_contrast(signals)
+    
     patterns = []
     
-    # Detect each pattern type
-    patterns.extend(detect_sustained_demand(signals))
-    patterns.extend(detect_limited_recovery(signals))
-    patterns.extend(detect_repetition(signals))
+    # Detect each pattern type (pass context for calibration)
+    patterns.extend(detect_sustained_demand(signals, length_factor, script_contrast))
+    patterns.extend(detect_limited_recovery(signals, script_contrast))
+    patterns.extend(detect_repetition(signals, features, script_contrast))  # Now with features
     patterns.extend(detect_surprise_cluster(signals))
-    patterns.extend(detect_constructive_strain(signals))
-    patterns.extend(detect_degenerative_fatigue(signals))
+    patterns.extend(detect_constructive_strain(signals, script_contrast))
+    patterns.extend(detect_degenerative_fatigue(signals, script_contrast))
     
     return patterns
 
 
-def detect_sustained_demand(signals):
+def compute_length_factor(total_scenes):
+    """
+    Compute threshold scaling based on script length.
+    Same as temporal agent for consistency.
+    """
+    if total_scenes >= 50:
+        return 1.0
+    elif total_scenes >= 20:
+        return 1.0 + (50 - total_scenes) / (50 - 20) * 0.5
+    else:
+        return 2.0
+
+
+def compute_script_contrast(signals):
+    """
+    Calculate overall dynamic range of the script.
+    
+    Low-contrast scripts (minimal tonal variation) warrant lower confidence
+    for detected patterns, as patterns in stable environments are less
+    diagnostically meaningful.
+    """
+    all_signal_values = [s['attentional_signal'] for s in signals]
+    
+    contrast_score = max(all_signal_values) - min(all_signal_values)
+    
+    # Normalize to 0-1 range
+    normalized_contrast = min(1.0, contrast_score / 2.0)
+    
+    return {
+        'contrast_score': contrast_score,
+        'normalized_contrast': normalized_contrast,
+        'is_low_contrast': contrast_score < 0.5,
+        'is_high_contrast': contrast_score > 1.5
+    }
+
+
+def compute_feature_diversity(window_features):
+    """
+    Calculate how much narrative function changes across scenes.
+    
+    Returns: Diversity score (0.0 = identical, 1.0 = highly varied)
+    
+    Used to distinguish perceptual similarity (same tone/location)
+    from structural redundancy (same narrative purpose).
+    """
+    if len(window_features) < 2:
+        return 0.0
+    
+    # 1. Character Set Changes
+    character_counts = [
+        f['referential_load']['active_character_count']
+        for f in window_features
+    ]
+    # Normalize by max expected change
+    char_variance = sum(
+        abs(character_counts[i] - character_counts[i+1])
+        for i in range(len(character_counts) - 1)
+    ) / (len(window_features) * 5.0)
+    
+    # 2. Dialogue vs Action Balance Shift
+    dialogue_ratios = [
+        f['dialogue_dynamics']['turn_velocity']
+        for f in window_features
+    ]
+    ratio_changes = sum(
+        abs(dialogue_ratios[i] - dialogue_ratios[i+1])
+        for i in range(len(dialogue_ratios) - 1)
+    ) / len(dialogue_ratios)
+    
+    # 3. Structural Boundary Presence
+    boundary_scores = [
+        f['structural_change']['event_boundary_score']
+        for f in window_features
+    ]
+    boundary_diversity = (max(boundary_scores) - min(boundary_scores)) / 100.0
+    
+    # 4. Information Density Change (sentence count variation)
+    sentence_counts = [
+        f['linguistic_load']['sentence_count']
+        for f in window_features
+    ]
+    if len(sentence_counts) > 1:
+        mean_sentences = sum(sentence_counts) / len(sentence_counts)
+        density_variance = sum(
+            abs(s - mean_sentences) for s in sentence_counts
+        ) / (len(sentence_counts) * max(1, mean_sentences))
+    else:
+        density_variance = 0.0
+    
+    # Aggregate (weighted)
+    diversity_score = (
+        0.3 * char_variance +
+        0.25 * ratio_changes +
+        0.25 * boundary_diversity +
+        0.2 * density_variance
+    )
+    
+    return min(1.0, diversity_score)
+
+
+def detect_sustained_demand(signals, length_factor=1.0, script_contrast=None):
     """Detect sustained high attentional demand across multiple scenes"""
     patterns = []
     
-    # Look for windows where signal remains elevated
-    DEMAND_THRESHOLD = 0.4
+    # Scale threshold by script length (short scripts get higher tolerance)
+    DEMAND_THRESHOLD = 0.4 * length_factor
     
     in_pattern = False
     pattern_start = None
@@ -55,7 +162,11 @@ def detect_sustained_demand(signals):
                 # End of pattern
                 pattern_end = i - 1
                 if pattern_end - pattern_start + 1 >= MIN_PERSISTENCE_SCENES:
-                    confidence = compute_confidence(signals[pattern_start:pattern_end+1], 'sustained')
+                    confidence = compute_confidence(
+                        signals[pattern_start:pattern_end+1], 
+                        'sustained',
+                        script_contrast
+                    )
                     patterns.append({
                         'pattern_type': 'sustained_attentional_demand',
                         'scene_range': [pattern_start, pattern_end],
@@ -66,7 +177,11 @@ def detect_sustained_demand(signals):
     
     # Handle pattern extending to end
     if in_pattern and len(signals) - pattern_start >= MIN_PERSISTENCE_SCENES:
-        confidence = compute_confidence(signals[pattern_start:], 'sustained')
+        confidence = compute_confidence(
+            signals[pattern_start:], 
+            'sustained',
+            script_contrast
+        )
         patterns.append({
             'pattern_type': 'sustained_attentional_demand',
             'scene_range': [pattern_start, len(signals) - 1],
@@ -77,7 +192,7 @@ def detect_sustained_demand(signals):
     return patterns
 
 
-def detect_limited_recovery(signals):
+def detect_limited_recovery(signals, script_contrast=None):
     """Detect periods with limited recovery opportunities"""
     patterns = []
     
@@ -94,7 +209,11 @@ def detect_limited_recovery(signals):
             low_recovery_count += 1
         else:
             if low_recovery_count >= MIN_PERSISTENCE_SCENES:
-                confidence = compute_confidence(signals[pattern_start:i], 'limited_recovery')
+                confidence = compute_confidence(
+                    signals[pattern_start:i], 
+                    'limited_recovery',
+                    script_contrast
+                )
                 patterns.append({
                     'pattern_type': 'limited_recovery',
                     'scene_range': [pattern_start, i - 1],
@@ -106,32 +225,51 @@ def detect_limited_recovery(signals):
     return patterns
 
 
-def detect_repetition(signals):
-    """Detect repetitive effort patterns"""
+def detect_repetition(signals, features=None, script_contrast=None):
+    """
+    Detect repetitive STRUCTURE, not just similar tone.
+    
+    Requires both effort similarity AND functional similarity.
+    """
     patterns = []
     
-    # Look for similar effort values repeating
+    # Look for runs of similar instantaneous effort
     if len(signals) < MIN_PERSISTENCE_SCENES:
         return patterns
     
     # Check for runs of similar instantaneous effort
-    SIMILARITY_THRESHOLD = 0.1
+    EFFORT_SIMILARITY_THRESHOLD = 0.1
+    DIVERSITY_THRESHOLD = 0.2  # Below this = truly repetitive
     
     for start in range(len(signals) - MIN_PERSISTENCE_SCENES + 1):
-        window = signals[start:start + MIN_PERSISTENCE_SCENES]
-        efforts = [s['instantaneous_effort'] for s in window]
+        window_signals = signals[start:start + MIN_PERSISTENCE_SCENES]
+        efforts = [s['instantaneous_effort'] for s in window_signals]
         
         # Check if efforts are similar
         mean_effort = sum(efforts) / len(efforts)
-        variance = sum((e - mean_effort) ** 2 for e in efforts) / len(efforts)
+        effort_variance = sum((e - mean_effort) ** 2 for e in efforts) / len(efforts)
         
-        if variance < SIMILARITY_THRESHOLD:
-            confidence = compute_confidence(window, 'repetition')
+        # NEW: Also check functional diversity if features available
+        diversity = 1.0  # Default: assume diverse (no false positive)
+        if features and len(features) > start + MIN_PERSISTENCE_SCENES:
+            window_features = features[start:start + MIN_PERSISTENCE_SCENES]
+            diversity = compute_feature_diversity(window_features)
+        
+        # Only flag if BOTH effort AND function are similar
+        if effort_variance < EFFORT_SIMILARITY_THRESHOLD and diversity < DIVERSITY_THRESHOLD:
+            confidence = compute_confidence(
+                window_signals, 
+                'repetition',
+                script_contrast
+            )
             patterns.append({
                 'pattern_type': 'repetition',
                 'scene_range': [start, start + MIN_PERSISTENCE_SCENES - 1],
                 'confidence': confidence,
-                'supporting_signals': ['low_effort_variance']
+                'supporting_signals': [
+                    'low_effort_variance',
+                    'low_functional_diversity'  # NEW
+                ]
             })
             break  # Only report first instance
     
@@ -148,7 +286,7 @@ def detect_surprise_cluster(signals):
     return patterns
 
 
-def detect_constructive_strain(signals):
+def detect_constructive_strain(signals, script_contrast=None):
     """Detect high demand WITH recovery and stability (descriptive only)"""
     patterns = []
     
@@ -163,7 +301,11 @@ def detect_constructive_strain(signals):
         avg_recovery = sum(s['recovery_credit'] for s in window) / len(window)
         
         if avg_signal > HIGH_SIGNAL and avg_recovery > MIN_RECOVERY:
-            confidence = compute_confidence(window, 'constructive')
+            confidence = compute_confidence(
+                window, 
+                'constructive',
+                script_contrast
+            )
             patterns.append({
                 'pattern_type': 'constructive_strain',
                 'scene_range': [start, start + MIN_PERSISTENCE_SCENES - 1],
@@ -175,7 +317,7 @@ def detect_constructive_strain(signals):
     return patterns
 
 
-def detect_degenerative_fatigue(signals):
+def detect_degenerative_fatigue(signals, script_contrast=None):
     """Detect drift/collapse patterns (descriptive only)"""
     patterns = []
     
@@ -195,7 +337,11 @@ def detect_degenerative_fatigue(signals):
         if is_increasing:
             avg_recovery = sum(s['recovery_credit'] for s in window) / len(window)
             if avg_recovery < 0.1:  # Very low recovery
-                confidence = compute_confidence(window, 'degenerative')
+                confidence = compute_confidence(
+                    window, 
+                    'degenerative',
+                    script_contrast
+                )
                 patterns.append({
                     'pattern_type': 'degenerative_fatigue',
                     'scene_range': [start, start + MIN_PERSISTENCE_SCENES - 1],
@@ -207,15 +353,23 @@ def detect_degenerative_fatigue(signals):
     return patterns
 
 
-def compute_confidence(window_signals, pattern_context):
+def compute_confidence(window_signals, pattern_context, script_contrast=None):
     """
     Compute confidence conservatively.
     
     Confidence can only DECREASE, never increase.
-    Based on signal variance and recovery noise.
+    Based on signal variance, recovery noise, and script-level contrast.
     """
     # Base confidence
-    confidence_score = 0.8
+    base_confidence = 0.8
+    
+    # Reduce confidence for low-contrast scripts
+    # Patterns in stable environments are less diagnostically meaningful
+    if script_contrast:
+        if script_contrast['is_low_contrast']:
+            base_confidence -= 0.3  # Drop to 0.5
+        elif script_contrast['normalized_contrast'] < 0.7:
+            base_confidence -= 0.2  # Drop to 0.6
     
     # Decrease based on variance
     signals_values = [s['attentional_signal'] for s in window_signals]
@@ -224,18 +378,18 @@ def compute_confidence(window_signals, pattern_context):
     
     # High variance reduces confidence
     if variance > 0.2:
-        confidence_score -= 0.3
+        base_confidence -= 0.3
     elif variance > 0.1:
-        confidence_score -= 0.2
+        base_confidence -= 0.2
     
     # Small window reduces confidence
     if len(window_signals) < MIN_PERSISTENCE_SCENES + 2:
-        confidence_score -= 0.1
+        base_confidence -= 0.1
     
     # Map to discrete bands
-    if confidence_score >= HIGH_CONFIDENCE_THRESHOLD:
+    if base_confidence >= HIGH_CONFIDENCE_THRESHOLD:
         return 'high'
-    elif confidence_score >= MEDIUM_CONFIDENCE_THRESHOLD:
+    elif base_confidence >= MEDIUM_CONFIDENCE_THRESHOLD:
         return 'medium'
     else:
         return 'low'

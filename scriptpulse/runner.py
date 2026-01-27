@@ -31,7 +31,10 @@ def run_pipeline(screenplay_text, writer_intent=None):
     temporal_output = temporal.run({'features': encoded})
     
     # Agent 5: Pattern Detection
-    patterns_output = patterns.run({'temporal_signals': temporal_output})
+    patterns_output = patterns.run({
+        'temporal_signals': temporal_output,
+        'features': encoded  # NEW: pass features for functional differentiation
+    })
     
     # Agent 6: Writer Intent & Immunity
     intent_input = {

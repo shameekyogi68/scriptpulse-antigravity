@@ -32,7 +32,8 @@ def run(input_data):
             'dialogue_dynamics': extract_dialogue_dynamics(scene_lines),
             'visual_abstraction': extract_visual_abstraction(scene_lines),
             'referential_load': extract_referential_load(scene_lines),
-            'structural_change': extract_structural_change(scene, scenes)
+            'structural_change': extract_structural_change(scene, scenes),
+            'ambient_signals': extract_ambient_signals(scene_lines)  # NEW
         }
         
         feature_vectors.append(features)
@@ -224,5 +225,47 @@ def extract_structural_change(scene, all_scenes):
     
     return {
         'event_boundary_score': round(normalized_score * 100, 2)  # Scale to 0-100
+    }
+
+
+def extract_ambient_signals(scene_lines):
+    """
+    Detect ambient/observational scene qualities.
+    
+    Ambient scenes provide breathing space through:
+    - Stillness (low action density)
+    - Sparse dialogue (low turn velocity)
+    - Observational focus (simple, non-complex language)
+    
+    Returns: Ambient score (0.0-1.0) and component metrics
+    """
+    # Get existing metrics (reuse extraction functions)
+    dialogue = extract_dialogue_dynamics(scene_lines)
+    visual = extract_visual_abstraction(scene_lines)
+    linguistic = extract_linguistic_load(scene_lines)
+    
+    # Ambient indicators (all normalized 0-1)
+    stillness = 1.0 - min(1.0, visual['action_lines'] / 10.0)
+    sparse_dialogue = 1.0 - dialogue['turn_velocity']
+    low_complexity = 1.0 - min(1.0, linguistic['sentence_length_variance'] / 20.0)
+    short_sentences = 1.0 - min(1.0, linguistic['mean_sentence_length'] / 15.0)
+    
+    # Composite ambient score (weighted)
+    ambient_score = (
+        0.35 * stillness +           # Visual calm
+        0.30 * sparse_dialogue +     # Dialogue sparsity
+        0.20 * low_complexity +      # Linguistic simplicity
+        0.15 * short_sentences       # Brevity
+    )
+    
+    return {
+        'ambient_score': round(ambient_score, 3),
+        'is_ambient': ambient_score > 0.6,
+        'component_scores': {
+            'stillness': round(stillness, 3),
+            'sparse_dialogue': round(sparse_dialogue, 3),
+            'low_complexity': round(low_complexity, 3),
+            'short_sentences': round(short_sentences, 3)
+        }
     }
 
