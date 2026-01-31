@@ -7,11 +7,11 @@ BETA = 0.3     # Recovery rate from low effort
 GAMMA = 0.2    # Recovery from structural boundaries
 DELTA = 0.25   # Recovery from ambient/observational scenes
 R_MAX = 0.5    # Maximum recovery per scene
-R_MAX = 0.5    # Maximum recovery per scene
 E_THRESHOLD = 0.4  # Low-effort threshold for recovery
 
 from . import tam
 import random
+import statistics
 
 def simulate_consensus(input_data, lens_config=None, iterations=5):
     """
@@ -57,7 +57,10 @@ def simulate_consensus(input_data, lens_config=None, iterations=5):
                     'recovery_credit': s['recovery_credit'],
                     # fatigue_state will be re-computed after averaging
                     # tam_integral will be averaged
-                    'tam_integral': s['tam_integral']
+                    'tam_integral': s['tam_integral'],
+                    # v5.1 TEM metrics
+                    'expectation_strain': s.get('expectation_strain', 0.0), # Default 0 for safety
+                    'temporal_expectation': s.get('temporal_expectation', 0.5)
                 })
         else:
             for i, s in enumerate(signals):
@@ -65,19 +68,35 @@ def simulate_consensus(input_data, lens_config=None, iterations=5):
                 accumulated_signals[i]['attentional_signal'] += s['attentional_signal']
                 accumulated_signals[i]['recovery_credit'] += s['recovery_credit']
                 accumulated_signals[i]['tam_integral'] += s['tam_integral']
+                # Accumulate v5.1 metrics
+                accumulated_signals[i]['expectation_strain'] += s.get('expectation_strain', 0.0)
+                accumulated_signals[i]['temporal_expectation'] += s.get('temporal_expectation', 0.5)
                 
     # Average
+    all_efforts = []
     for sig in accumulated_signals:
         sig['instantaneous_effort'] = round(sig['instantaneous_effort'] / iterations, 3)
+        all_efforts.append(sig['instantaneous_effort'])
+        
         sig['attentional_signal'] = round(sig['attentional_signal'] / iterations, 3)
         sig['recovery_credit'] = round(sig['recovery_credit'] / iterations, 3)
         sig['tam_integral'] = round(sig['tam_integral'] / iterations, 3)
+        sig['expectation_strain'] = round(sig['expectation_strain'] / iterations, 3)
+        sig['temporal_expectation'] = round(sig['temporal_expectation'] / iterations, 3)
         
-        # Re-classify fatigue state based on averaged signal
-        # We need length_factor from run(). Accessing helper...
-        # Recalculate length factor (cheap)
-        length_factor = compute_length_factor(len(accumulated_signals))
-        sig['fatigue_state'] = classify_fatigue_state(sig['attentional_signal'], length_factor)
+    # CBN: Compute baseline factor for averaged signal
+    median_effort = statistics.median(all_efforts) if all_efforts else 0.5
+    baseline_factor = max(0.5, min(1.5, median_effort / 0.5)) # Clamp to [0.5, 1.5]
+    
+    length_factor = compute_length_factor(len(accumulated_signals))
+
+    # Re-classify
+    for sig in accumulated_signals:
+         sig['fatigue_state'] = classify_fatigue_state(
+             sig['attentional_signal'], 
+             length_factor, 
+             baseline_factor # v5.2 CBN
+         )
         
     return accumulated_signals
 
@@ -85,15 +104,11 @@ def simulate_consensus(input_data, lens_config=None, iterations=5):
 def run(input_data, lens_config=None):
     """
     Compute temporal dynamics with fatigue carryover.
+    Now includes TEM (Temporal Expectation Memory), ARAF (Authentic Recovery),
+    CBN (Cognitive Baseline Normalization), and AMHL (Memory Horizon Lock).
     
-    Canonical equation: S[i] = E[i] + λ·S[i-1] - R[i]
-    
-    Args:
-        input_data: Dict with 'features' (list of feature vectors from encoding)
-        lens_config: Optional specific weight configuration (see lenses.json)
-        
-    Returns:
-        List of temporal signal dicts with scene_index, effort, signal, recovery
+    AMHL: Horizon is locked to simple casual recursion + TEM alpha.
+    No forward lookups allowed. No long-term memory structs.
     """
     features = input_data.get('features', [])
     
@@ -104,8 +119,36 @@ def run(input_data, lens_config=None):
     total_scenes = len(features)
     length_factor = compute_length_factor(total_scenes)
     
+    # === CBN PRE-CALCULATION ===
+    # We need a baseline effort to normalize thresholds.
+    # This requires a "light" pass or just computing efforts first.
+    # We'll compute efforts first.
+    raw_efforts = []
+    for scene_features in features:
+        e = compute_instantaneous_effort(scene_features, lens_config)
+        
+        # Apply TAM modifiers (needed for accurate effort)
+        # Note: TAM requires effort, so we do it here.
+        # But `run_micro_integration` is deterministic per scene.
+        # To avoid duplicating TAM logic, we'll store effort and use it later?
+        # Actually, let's just make `run` two-pass logic or build the list locally.
+        # For efficiency, we can just estimate baseline from raw efforts (pre-TAM).
+        # TAM is minor redistribution.
+        raw_efforts.append(e)
+        
+    median_effort = statistics.median(raw_efforts) if raw_efforts else 0.5
+    # Clamp baseline factor to avoid extreme skew
+    # Range: 0.5 (very quiet) to 1.5 (very loud)
+    baseline_factor = max(0.5, min(1.5, median_effort / 0.5))
+    
     signals = []
     prev_signal = 0.0
+    prev_effort = 0.5 # Initial neutral expectation
+    
+    # TEM: Simple exponential moving average of expected effort
+    # Alpha = 0.1 means memory of ~10 scenes (AMHL Compliant)
+    expectation_alpha = 0.1 
+    rolling_expectation = 0.5
     
     for i, scene_features in enumerate(features):
         scene_idx = scene_features['scene_index']
@@ -119,9 +162,16 @@ def run(input_data, lens_config=None):
         # Apply effort refinement (Internal redistribution effect)
         effort = effort * tam_modifiers['effort_modifier']
         
+        # === TEM: Temporal Expectation Memory ===
+        # Calculate strain from expectation violation
+        expectation_strain = abs(effort - rolling_expectation)
+        # Update expectation for next scene
+        rolling_expectation = (1 - expectation_alpha) * rolling_expectation + expectation_alpha * effort
+        
         # Compute recovery credit R[i]
-        # Note: We compute base recovery using refined effort
-        recovery = compute_recovery(scene_features, effort)
+        # === ARAF: Attention Recovery Authenticity Filter ===
+        # Pass prev_effort to enforce continuous low-load requirement
+        recovery = compute_recovery(scene_features, effort, prev_effort)
         
         # Apply recovery refinement (Fragmented relief penalty)
         recovery = recovery * tam_modifiers['recovery_modifier']
@@ -135,8 +185,8 @@ def run(input_data, lens_config=None):
         # Ensure non-negative
         signal = max(0.0, signal)
         
-        # Classify fatigue state with duration normalization
-        fatigue_state = classify_fatigue_state(signal, length_factor)
+        # Classify fatigue state with duration normalization AND CBN
+        fatigue_state = classify_fatigue_state(signal, length_factor, baseline_factor)
         
         # Store signal
         signals.append({
@@ -145,10 +195,13 @@ def run(input_data, lens_config=None):
             'attentional_signal': round(signal, 3),
             'recovery_credit': round(recovery, 3),
             'fatigue_state': fatigue_state,
-            'tam_integral': tam_modifiers['micro_fatigue_integral'] # Internal invisible metric
+            'tam_integral': tam_modifiers['micro_fatigue_integral'],
+            'expectation_strain': round(expectation_strain, 3), # v5.1
+            'temporal_expectation': round(rolling_expectation, 3) # v5.1
         })
         
         prev_signal = signal
+        prev_effort = effort
     
     return signals
 
@@ -253,20 +306,24 @@ def compute_instantaneous_effort(scene_features, lens_config=None):
     return total_effort
 
 
-def compute_recovery(scene_features, effort):
+def compute_recovery(scene_features, effort, prev_effort=0.5):
     """
     Compute recovery credit R[i].
     
-    Recovery comes from:
-    1. Low-effort scenes
-    2. Structural boundaries
-    3. Ambient/observational scenes (NEW)
+    Refined with ARAF (Attention Recovery Authenticity Filter).
     """
     recovery = 0.0
     
     # 1. Low-effort recovery
     if effort < E_THRESHOLD:
         recovery += BETA * (E_THRESHOLD - effort)
+        
+        # === ARAF: Authenticity Check ===
+        # If previous scene was high effort, instant recovery is suspicious.
+        # Authentic recovery requires sustained low load or clear boundary.
+        if prev_effort > E_THRESHOLD * 1.5:
+            # "Fake Breather" penalty - recovery is dampened
+            recovery *= 0.6 
     
     # 2. Structural boundary recovery
     boundary_score = scene_features['structural_change']['event_boundary_score']
@@ -310,16 +367,18 @@ def compute_length_factor(total_scenes):
         return 2.0
 
 
-def classify_fatigue_state(signal, length_factor=1.0):
+def classify_fatigue_state(signal, length_factor=1.0, baseline_factor=1.0):
     """
     Classify fatigue state (descriptive, not evaluative).
     
-    Scales thresholds by script length to account for duration-dependent fatigue.
+    Scales thresholds by:
+    1. Script length (duration-dependent fatigue)
+    2. Cognitive Baseline (CBN) - normalizes against script's own density.
     """
-    # Base thresholds (for standard-length scripts)
-    threshold_elevated = 0.5 * length_factor
-    threshold_high = 1.0 * length_factor
-    threshold_extreme = 1.5 * length_factor
+    # Base thresholds
+    threshold_elevated = 0.5 * length_factor * baseline_factor
+    threshold_high = 1.0 * length_factor * baseline_factor
+    threshold_extreme = 1.5 * length_factor * baseline_factor
     
     if signal < threshold_elevated:
         return "normal"
@@ -329,4 +388,3 @@ def classify_fatigue_state(signal, length_factor=1.0):
         return "high"
     else:
         return "extreme"
-

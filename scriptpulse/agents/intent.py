@@ -18,18 +18,16 @@ def run(input_data):
     Writer intent ALWAYS overrides system patterns.
     No inference. No judgment.
     
-    Args:
-        input_data: Dict with 'patterns' (from pattern detection) and 
-                   'writer_intent' (optional list of intent declarations)
-        
-    Returns:
-        Dict with surfaced_patterns, suppressed_patterns, intent_alignment_notes
+    Includes WSICC (Writer Self-Intent Consistency Check).
     """
     patterns = input_data.get('patterns', [])
     writer_intents = input_data.get('writer_intent', [])
     
     # Validate intents
     validated_intents = validate_intents(writer_intents)
+    
+    # WSICC: Check internal consistency
+    consistency_warnings = check_internal_consistency(validated_intents)
     
     # If no intent declared, pass all patterns through unchanged
     if not validated_intents:
@@ -42,6 +40,9 @@ def run(input_data):
     surfaced = []
     suppressed = []
     alignment_notes = []
+    
+    # Add consistency warnings to alignment notes
+    alignment_notes.extend(consistency_warnings)
     
     for pattern in patterns:
         pattern_start, pattern_end = pattern['scene_range']
@@ -115,6 +116,38 @@ def validate_intents(writer_intents):
     return validated
 
 
+def check_internal_consistency(intents):
+    """
+    WSICC: Check for conflicting intent declarations.
+    e.g. "should feel smooth" overlapping with "intentionally exhausting"
+    """
+    warnings = []
+    if len(intents) < 2:
+        return warnings
+        
+    for i in range(len(intents)):
+        for j in range(i + 1, len(intents)):
+            intent_a = intents[i]
+            intent_b = intents[j]
+            
+            # Check overlap
+            start_a, end_a = intent_a['scene_range']
+            start_b, end_b = intent_b['scene_range']
+            
+            overlap_start = max(start_a, start_b)
+            overlap_end = min(end_a, end_b)
+            
+            if overlap_start <= overlap_end:
+                # Overlap detected
+                if intent_a['intent'] != intent_b['intent']:
+                     warnings.append({
+                         'warning_type': 'intent_conflict',
+                         'message': f"Conflicting intents declared for scenes {overlap_start}-{overlap_end}: '{intent_a['intent']}' vs '{intent_b['intent']}'",
+                         'scene_range': [overlap_start, overlap_end]
+                     })
+    return warnings
+
+
 def check_intent_overlap(pattern_start, pattern_end, intents):
     """
     Check if pattern range overlaps with any intent range.
@@ -177,4 +210,3 @@ def downgrade_confidence(current_confidence):
         return 'low'
     else:
         return 'low'
-

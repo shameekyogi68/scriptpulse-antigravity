@@ -1,5 +1,6 @@
 """Audience Experience Mediation Agent - Writer-Safe Language Translation"""
 
+import random
 
 # Allowed experiential translations (ONLY these mappings)
 EXPERIENTIAL_TRANSLATIONS = {
@@ -18,6 +19,17 @@ BANNED_WORDS = {
     'slow', 'fast', 'weak', 'strong', 'problem', 'issue', 'ideal', 'optimal',
     'tips', 'suggestions', 'advice', 'should', 'must', 'need to'
 }
+
+# ASL: Audience Scope Lock (Invariant)
+AUDIENCE_SCOPE_LOCK = "screenplay-literate first-pass reader"
+
+# ADS: Authority Diffusion Safeguard Disclaimers
+ADS_DISCLAIMERS = [
+    "This reflects one modeled first-pass experience.",
+    "Other readers may differ.",
+    "This is not a statement about effectiveness.",
+    "Attention varies by reader; this model tracks median structural load."
+]
 
 
 def run(input_data):
@@ -61,7 +73,8 @@ def run(input_data):
     
     # Generate reflections for surfaced patterns
     for pattern in surfaced:
-        reflection = generate_reflection(pattern, acd_states)
+        # Pass total_scenes for FPG normalization
+        reflection = generate_reflection(pattern, acd_states, total_scenes)
         reflections.append(reflection)
     
     # Handle silence (no patterns to surface)
@@ -85,7 +98,7 @@ def run(input_data):
     }
 
 
-def generate_reflection(pattern, acd_states=None):
+def generate_reflection(pattern, acd_states=None, total_scenes=100):
     """
     Generate a question-first, experiential reflection.
     
@@ -94,6 +107,7 @@ def generate_reflection(pattern, acd_states=None):
     - Include explicit uncertainty (may/might/could)
     - Use only allowed translations
     - NEW: Use ACD states to nuance 'tiring' vs 'wandering'
+    - NEW: FPG (False Precision Guard) for late-script signals
     """
     pattern_type = pattern.get('pattern_type', 'unknown')
     scene_range = pattern.get('scene_range', [0, 0])
@@ -129,21 +143,31 @@ def generate_reflection(pattern, acd_states=None):
     start, end = scene_range
     scene_text = f"scenes {start} through {end}" if start != end else f"scene {start}"
     
+    # === FPG: FALSE PRECISION GUARD ===
+    # Late script signals are inherently less certain due to accumulated drift.
+    # If the pattern ends in the last 20% of the script, soften language.
+    fpg_softener = ""
+    relative_pos = end / max(1, total_scenes)
+    if relative_pos > 0.8:
+        fpg_softener = ", though uncertainty increases late in the script"
+        # Downgrade confidence logic effectively (not label, but tone)
+    
     # Generate question-first framing with uncertainty
+    # UPDATED: Using AUDIENCE_SCOPE_LOCK and removing "important"
     if confidence == 'high':
         reflection = (
-            f"With moderate confidence, a first-time audience watching {scene_text} "
-            f"{experience}. Is that the level of attention you want here?"
+            f"With moderate confidence, a {AUDIENCE_SCOPE_LOCK} experiencing {scene_text} "
+            f"{experience}{fpg_softener}. Is that the level of attention you want here?"
         )
     elif confidence == 'medium':
         reflection = (
-            f"There's a possibility that {scene_text} {experience} for a first-time viewer. "
+            f"There's a possibility that {scene_text} {experience} for a {AUDIENCE_SCOPE_LOCK}{fpg_softener}. "
             f"Does that match your intention?"
         )
     else:  # low confidence
         reflection = (
             f"With low confidence, {scene_text} might {experience.replace('may ', '')}. "
-            f"This signal is uncertain."
+            f"This signal reflects persistent strain, though uncertainty is high{fpg_softener}."
         )
     
     return {
@@ -172,8 +196,9 @@ def generate_silence_explanation(suppressed, alignment_notes, ssf_analysis=None)
         explanation_key = ssf_analysis.get('explanation_key')
         
         if explanation_key == 'stable_continuity':
+             # UPDATED: Using AUDIENCE_SCOPE_LOCK
              return (
-                "Across this run, the audience experience remains relatively stable, "
+                f"Across this run, the {AUDIENCE_SCOPE_LOCK}'s experience remains relatively stable, "
                 "with natural effort and recovery balancing out. "
                 "No moments stood out as likely to strain first-pass attention."
              )
@@ -252,7 +277,10 @@ def format_for_display(mediated_output):
         lines.append("Intent Acknowledgments:")
         for ack in mediated_output['intent_acknowledgments']:
             lines.append(f"  {ack}")
+            
+    # ADS: Authority Diffusion Safeguard
+    # Append random disclaimer
+    lines.append("")
+    lines.append(f"({random.choice(ADS_DISCLAIMERS)})")
     
     return '\n'.join(lines)
-
-
