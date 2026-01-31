@@ -36,7 +36,8 @@ def run(input_data):
     surfaced = input_data.get('surfaced_patterns', [])
     suppressed = input_data.get('suppressed_patterns', [])
     alignment_notes = input_data.get('intent_alignment_notes', [])
-    acd_states = input_data.get('acd_states', []) # NEW
+    acd_states = input_data.get('acd_states', []) 
+    ssf_analysis = input_data.get('ssf_analysis', {}) # NEW
     
     reflections = []
     
@@ -48,7 +49,7 @@ def run(input_data):
     # Handle silence (no patterns to surface)
     silence_explanation = None
     if not surfaced:
-        silence_explanation = generate_silence_explanation(suppressed, alignment_notes)
+        silence_explanation = generate_silence_explanation(suppressed, alignment_notes, ssf_analysis)
     
     # Generate intent acknowledgments
     intent_acknowledgments = []
@@ -106,8 +107,6 @@ def generate_reflection(pattern, acd_states=None):
                 experience = "may feel mentally tiring"
     
     # Format scene range
-    
-    # Format scene range
     start, end = scene_range
     scene_text = f"scenes {start} through {end}" if start != end else f"scene {start}"
     
@@ -135,11 +134,12 @@ def generate_reflection(pattern, acd_states=None):
     }
 
 
-def generate_silence_explanation(suppressed, alignment_notes):
+def generate_silence_explanation(suppressed, alignment_notes, ssf_analysis=None):
     """
     Explain why no patterns surfaced.
     
     Silence must NEVER imply quality or success.
+    NEW: Use SSF analysis to explain stability.
     """
     if alignment_notes:
         # Patterns exist but were suppressed due to intent
@@ -147,11 +147,33 @@ def generate_silence_explanation(suppressed, alignment_notes):
             "No patterns are surfaced here because they align with your declared intent. "
             "The signals observed are consistent with what you indicated."
         )
-    elif suppressed:
+    
+    # Check SSF Analysis first for "Earned Silence"
+    if ssf_analysis and ssf_analysis.get('is_silent'):
+        explanation_key = ssf_analysis.get('explanation_key')
+        
+        if explanation_key == 'stable_continuity':
+             return (
+                "Across this run, the audience experience remains relatively stable, "
+                "with natural effort and recovery balancing out. "
+                "No moments stood out as likely to strain first-pass attention."
+             )
+        elif explanation_key == 'self_correcting':
+            return (
+                "While individual moments may require focus, they tend to resolve without "
+                "accumulating fatigue. The attentional flow appears self-correcting."
+            )
+        elif explanation_key == 'stable_but_drifting':
+             return (
+                 "The experience is stable, though low-variance. "
+                 "Attention is not strained, though it may not be heavily demanded."
+             )
+    
+    if suppressed:
         # Should not happen (suppressed without notes), but handle gracefully
         return "Patterns were suppressed based on provided constraints."
     else:
-        # No patterns detected at all
+        # No patterns detected at all (Low confidence fallback)
         return (
             "The attentional flow appears stable with regular recovery, "
             "or signals are low confidence due to draft variability. "

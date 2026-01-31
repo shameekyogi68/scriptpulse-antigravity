@@ -95,6 +95,23 @@ def run_verification():
     else:
         print("FAIL: Did not use 'tiring' phrasing for Collapse state.")
 
+    # === VERIFY SILENCE-AS-SIGNAL (SSF) LOGIC ===
+    print("\n=== Silence-as-Signal Verification ===")
+    
+    # Test Case: High Confidence Silence
+    ssf_high = {
+        'is_silent': True,
+        'explanation_key': 'stable_continuity'
+    }
+    
+    explanation_high = mediation.generate_silence_explanation([], [], ssf_high)
+    print(f"[High Conf Silence]: \"{explanation_high}\"")
+    
+    if "relatively stable" in explanation_high and "natural effort" in explanation_high:
+         print("PASS: High confidence silence explanation generated correctly.")
+    else:
+         print("FAIL: Incorrect silence explanation.")
+
     # Verification Logic
     print("\n=== Comparative Analysis ===")
     viewer = results['viewer']
