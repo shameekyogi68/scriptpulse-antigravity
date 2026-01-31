@@ -33,7 +33,8 @@ def run(input_data):
             'visual_abstraction': extract_visual_abstraction(scene_lines),
             'referential_load': extract_referential_load(scene_lines),
             'structural_change': extract_structural_change(scene, scenes),
-            'ambient_signals': extract_ambient_signals(scene_lines)  # NEW
+            'ambient_signals': extract_ambient_signals(scene_lines),  # NEW
+            'micro_structure': extract_micro_structure(scene_lines)   # NEW (v5 TAM)
         }
         
         feature_vectors.append(features)
@@ -258,6 +259,8 @@ def extract_ambient_signals(scene_lines):
         0.15 * short_sentences       # Brevity
     )
     
+
+    
     return {
         'ambient_score': round(ambient_score, 3),
         'is_ambient': ambient_score > 0.6,
@@ -268,4 +271,30 @@ def extract_ambient_signals(scene_lines):
             'short_sentences': round(short_sentences, 3)
         }
     }
+
+
+def extract_micro_structure(scene_lines):
+    """
+    Extract ordered sequence of line types and lengths for TAM.
+    
+    Used to model intra-scene attentional fluctuation.
+    Returns list of dicts with observable structural properties.
+    """
+    micro_structure = []
+    total_lines = len(scene_lines)
+    
+    for i, line in enumerate(scene_lines):
+        # Calculate raw word count
+        text = line['text'].strip()
+        word_count = len(text.split()) if text else 0
+        
+        micro_structure.append({
+            'tag': line['tag'],                # S, A, D, C, M
+            'word_count': word_count,
+            'rel_position': i / total_lines if total_lines > 0 else 0.0,
+            'line_index': line['line_index']
+        })
+        
+    return micro_structure
+
 

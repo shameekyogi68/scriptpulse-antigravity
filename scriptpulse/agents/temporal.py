@@ -7,7 +7,10 @@ BETA = 0.3     # Recovery rate from low effort
 GAMMA = 0.2    # Recovery from structural boundaries
 DELTA = 0.25   # Recovery from ambient/observational scenes
 R_MAX = 0.5    # Maximum recovery per scene
+R_MAX = 0.5    # Maximum recovery per scene
 E_THRESHOLD = 0.4  # Low-effort threshold for recovery
+
+from . import tam
 
 
 def run(input_data, lens_config=None):
@@ -41,8 +44,18 @@ def run(input_data, lens_config=None):
         # Compute instantaneous effort E[i] used selected lens
         effort = compute_instantaneous_effort(scene_features, lens_config)
         
+        # === NEW: Apply TAM Layer (Micro-Dynamics) ===
+        tam_modifiers = tam.run_micro_integration(scene_features, effort)
+        
+        # Apply effort refinement (Internal redistribution effect)
+        effort = effort * tam_modifiers['effort_modifier']
+        
         # Compute recovery credit R[i]
+        # Note: We compute base recovery using refined effort
         recovery = compute_recovery(scene_features, effort)
+        
+        # Apply recovery refinement (Fragmented relief penalty)
+        recovery = recovery * tam_modifiers['recovery_modifier']
         
         # Apply canonical equation: S[i] = E[i] + λ·S[i-1] - R[i]
         if i == 0:
@@ -62,7 +75,8 @@ def run(input_data, lens_config=None):
             'instantaneous_effort': round(effort, 3),
             'attentional_signal': round(signal, 3),
             'recovery_credit': round(recovery, 3),
-            'fatigue_state': fatigue_state
+            'fatigue_state': fatigue_state,
+            'tam_integral': tam_modifiers['micro_fatigue_integral'] # Internal invisible metric
         })
         
         prev_signal = signal
