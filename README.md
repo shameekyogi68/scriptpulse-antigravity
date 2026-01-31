@@ -1,4 +1,4 @@
-# ScriptPulse vNext.4 (Antigravity)
+# ScriptPulse vNext.5 (Antigravity)
 
 **A deterministic, non-evaluative screenplay analysis engine modeling first-pass audience cognitive experience.**
 

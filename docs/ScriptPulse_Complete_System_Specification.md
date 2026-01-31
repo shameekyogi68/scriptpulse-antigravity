@@ -1,4 +1,4 @@
-# ScriptPulse vNext.4 — Complete System Specification
+# ScriptPulse vNext.5 — Complete System Specification
 
 **A Comprehensive Technical Reference for Future Development**
 
@@ -28,7 +28,7 @@
 | Property | Value |
 |----------|-------|
 | **System Name** | ScriptPulse |
-| **Version** | vNext.4 (Antigravity) |
+| **Version** | vNext.5 (Antigravity) |
 | **Status** | Final, Locked, Non-Extensible |
 | **Role** | First-audience cognition simulator for screenplays |
 
@@ -767,4 +767,4 @@ intentionally exhausting, intentionally confusing, should feel smooth, should fe
 ---
 
 *Document generated: 2026-01-28*
-*Version: vNext.4 (Antigravity) — Final Locked*
+*Version: vNext.5 (Antigravity) — Initial*
