@@ -50,21 +50,29 @@ def run_verification():
         avg_effort = total_effort / len(signals)
         max_effort = max(s['instantaneous_effort'] for s in signals)
         
+        
         # Capture ACD stats
         avg_collapse = sum(a['collapse_likelihood'] for a in acd_states) / len(acd_states) if acd_states else 0
         avg_drift = sum(a['drift_likelihood'] for a in acd_states) / len(acd_states) if acd_states else 0
+        
+        # Test LRF output (emulated)
+        from scriptpulse.agents import lrf
+        lrf_signals = lrf.run({'temporal_signals': signals, 'features': encoded})
+        max_reserve = max(s.get('fatigue_reserve', 0) for s in lrf_signals)
         
         results[lens_id] = {
             'avg_effort': avg_effort,
             'max_effort': max_effort,
             'avg_acd_collapse': avg_collapse,
             'avg_acd_drift': avg_drift,
+            'max_lrf_reserve': max_reserve,
             'first_5_efforts': [s['instantaneous_effort'] for s in signals[:5]]
         }
         
         print(f"  Avg Effort: {avg_effort:.4f}")
         print(f"  Max Effort: {max_effort:.4f}")
         print(f"  Avg Collapse: {avg_collapse:.4f} | Avg Drift: {avg_drift:.4f}")
+        print(f"  Max Fatigue Reserve: {max_reserve:.4f}")
         print(f"  First 5 E[i]: {results[lens_id]['first_5_efforts']}")
 
     # === VERIFY MEDIATION PHRASING LOGIC ===

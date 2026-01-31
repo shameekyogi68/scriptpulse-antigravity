@@ -4,7 +4,7 @@ ScriptPulse Runner - Executes full pipeline deterministically
 """
 
 import sys
-from .agents import parsing, segmentation, encoding, temporal, patterns, intent, mediation, acd, ssf
+from .agents import parsing, segmentation, encoding, temporal, patterns, intent, mediation, acd, ssf, lrf
 from . import lenses
 
 
@@ -34,6 +34,13 @@ def run_pipeline(screenplay_text, writer_intent=None, lens='viewer'):
     
     # Agent 4: Temporal Dynamics
     temporal_output = temporal.run({'features': encoded}, lens_config=lens_config)
+    
+    # === NEW: Agent 4.4: Long-Range Fatigue (LRF) ===
+    # Refine signals with latent fatigue reserve
+    temporal_output = lrf.run({
+        'temporal_signals': temporal_output,
+        'features': encoded
+    })
     
     # === NEW: Agent 4.5: Attention Collapse vs Drift (ACD) ===
     acd_output = acd.run({
