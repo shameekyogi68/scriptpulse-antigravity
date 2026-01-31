@@ -17,14 +17,14 @@ from scriptpulse import runner
 # =============================================================================
 
 st.set_page_config(
-    page_title="ScriptPulse vNext.4",
+    page_title="ScriptPulse vNext.5",
     page_icon="📝",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"
 )
 
 # =============================================================================
-# MINIMAL STYLING (Streamlit Defaults)
+# MINIMAL STYLING & PROFESSIONAL THEME
 # =============================================================================
 
 st.markdown("""
@@ -32,8 +32,72 @@ st.markdown("""
     /* Only remove Streamlit branding */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
+    
+    /* Experiential Box Styling */
+    .reflection-box {
+        padding: 15px;
+        border-left: 4px solid #FF4B4B;
+        background-color: #f0f2f6;
+        border-radius: 4px;
+        margin-bottom: 15px;
+        font-style: italic;
+    }
+    
+    /* Earned Silence / Stability Styling (Green/Calm) */
+    .stability-box {
+        padding: 20px;
+        border-left: 4px solid #00CC66;
+        background-color: #e8f5e9;
+        border-radius: 4px;
+        margin-bottom: 15px;
+        color: #1b5e20;
+    }
+    
+    .silence-box {
+        padding: 15px;
+        border-left: 4px solid #888;
+        background-color: #f9f9f9;
+        border-radius: 4px;
+        color: #555;
+    }
+    
+    .disclaimer {
+        font-size: 0.8em;
+        color: #666;
+        margin-top: 50px;
+        padding-top: 20px;
+        border-top: 1px solid #ddd;
+    }
 </style>
 """, unsafe_allow_html=True)
+
+# =============================================================================
+# ONBOARDING & PHILOSOPHY SIDEBAR
+# =============================================================================
+
+with st.sidebar:
+    st.title("Orientation")
+    st.info(
+        "**ScriptPulse is a Reader Surrogate.**\n\n"
+        "It models first-pass attention. "
+        "It does not judge quality, marketability, or structure.\n\n"
+        "If it stays silent, that is a positive signal of stability."
+    )
+    
+    st.markdown("---")
+    st.markdown("### System Limits")
+    st.caption("❌ No grading or scoring")
+    st.caption("❌ No comparative ranking")
+    st.caption("❌ No 'bad writing' detection")
+    
+    st.markdown("---")
+    st.markdown("### How to Read This")
+    st.markdown(
+        "**If Patterns Surface:**\n"
+        "Ask yourself: *Did I intend for the audience to feel this strain here?*\n\n"
+        "**If Silence Surfaces:**\n"
+        "This means the experience is stable. You don't need to 'fix' anything."
+    )
 
 # =============================================================================
 # HEADER & SCOPE DISCLAIMER
@@ -246,9 +310,10 @@ if st.button("Read My Draft", type="primary"):
             reflections = report.get('reflections', [])
             silence = report.get('silence_explanation')
             intent_acks = report.get('intent_acknowledgments', [])
+            ssf_analysis = report.get('ssf_analysis', {})
             
             st.markdown("---")
-            st.header("What a First-Time Viewer Might Experience")
+            st.header("Audience Experience Reflection")
             
             # Display Intent Acknowledgments (if any)
             if intent_acks:
@@ -258,7 +323,8 @@ if st.button("Read My Draft", type="primary"):
             
             # Display Reflections (if any)
             if reflections:
-                st.markdown("### Some Observations")
+                st.markdown("### Observations of Strain")
+                st.markdown("These moments stood out as potentially demanding for a first-pass viewer.")
                 
                 # Get scene info for display
                 scene_info = report.get('scene_info', [])
@@ -282,7 +348,7 @@ if st.button("Read My Draft", type="primary"):
                             if s.get('heading'):
                                 scene_headings.append(f"• {s['heading']}")
                     
-                    st.markdown(f"**{scene_label}** *(confidence: {confidence})*")
+                    st.markdown(f"**{scene_label}**")
                     
                     # Show scene headings in an expander
                     if scene_headings:
@@ -294,10 +360,23 @@ if st.button("Read My Draft", type="primary"):
                     
                     st.markdown(f"<div class='reflection-box'>{reflection_text}</div>", unsafe_allow_html=True)
             
-            # Display Silence Explanation (if no reflections)
+            # Display Silence / Stability (if no reflections) 
             elif silence:
-                st.markdown("### Why You May Be Seeing Nothing Here")
-                st.markdown(f"<div class='silence-box'>{silence}</div>", unsafe_allow_html=True)
+                # Check for "Earned Silence" via SSF
+                if ssf_analysis.get('is_silent'):
+                    if ssf_analysis.get('explanation_key') == 'stable_continuity':
+                         st.markdown("### ✅ Experience Stable")
+                         st.markdown(f"<div class='stability-box'><strong>High Stability Detected.</strong><br>{silence}</div>", unsafe_allow_html=True)
+                    elif ssf_analysis.get('explanation_key') == 'stable_but_drifting':
+                         st.markdown("### ⚠️ Stable but Low Variance")
+                         st.markdown(f"<div class='silence-box'>{silence}</div>", unsafe_allow_html=True)
+                    else:
+                         st.markdown("### Stability Observed")
+                         st.markdown(f"<div class='stability-box'>{silence}</div>", unsafe_allow_html=True)
+                else:
+                    # Fallback for generic silence (low confidence)
+                    st.markdown("### Why You May Be Seeing Nothing Here")
+                    st.markdown(f"<div class='silence-box'>{silence}</div>", unsafe_allow_html=True)
             
             else:
                 # This should not happen, but handle gracefully

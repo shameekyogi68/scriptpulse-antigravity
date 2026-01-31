@@ -85,17 +85,31 @@ python3 final_validation.py
 
 ---
 
-## 🧩 System Architecture (The "Antigravity" Pipeline)
+## 🎭 The Philosophy: "Reader Surrogate"
+ScriptPulse is positioned as a **Reader Surrogate**, not a Critic.
 
-The system operates as a linear, deterministic pipeline of 7 specialized agents:
+*   **We don't fix.** We reflect structure back to you.
+*   **We don't judge.** We simulate cognitive cost.
+*   **We don't know better.** You are the authority on your intent.
 
-1.  **Structural Parsing (E-1):** Classifies lines by format (Scene, Action, Dialogue) – *No semantics.*
-2.  **Scene Segmentation (E-2):** Groups lines into scenes using conservative boundaries.
-3.  **Structural Encoding (E-3):** Converts scenes into numerical feature vectors based on observable data (counts, lengths).
-4.  **Temporal Dynamics (E-4):** Models fatigue `S(t)` using the canonical equation: `S_i = E_i + λ*S_{i-1} - R_i`.
-5.  **Pattern Detection (E-5):** Identifies persistent multi-scene trends (e.g., "sustained demand").
-6.  **Intent Immunity (E-6):** Checks patterns against writer intent; suppresses matches.
-7.  **Experience Mediation (E-7):** Translates raw patterns into writer-safe, question-based reflections (e.g., "The audience may feel tired here. Is that intended?").
+For a detailed guide on how to integrate and use this tool professionally, see [Professional Onboarding & Adoption Guide](docs/Professional_Onboarding_Guide.md).
+
+For the rigorous scientific validation behind the system, see [IEEE Experimental Validation Protocol](docs/IEEE_Validation_Protocol.md).
+
+---
+
+## 🧩 System Architecture (vNext.5 "Antigravity")
+
+The system operates as a linear, deterministic pipeline of specialized, research-validated agents:
+
+1.  **Structural Parsing & Segmentation:** Classifies lines by format (Scene, Action, Dialogue) – *No semantics.*
+2.  **Structural Encoding (TAM):** Converts scenes into feature vectors, now including **Temporal Attentional Microdynamics (TAM)** for intra-scene precision.
+3.  **Temporal Dynamics (LRF):** Models fatigue `S(t)` using the canonical equation, enhanced by **Long-Range Fatigue (LRF)** for delayed strain modeling.
+4.  **Multi-Modal Lenses:** Adjusts analysis for **Reader**, **Viewer**, or **Narrator** modalities.
+5.  **Failure Analysis (ACD):** Distinguishes between **Attention Collapse** (Overload) and **Drift** (Under-stimulation).
+6.  **Pattern Detection:** Identifies persistent multi-scene trends.
+7.  **Silence Formalization (SSF):** Validates "No Alerts" as "Earned Silence" (stability).
+8.  **Experience Mediation:** Translates raw patterns into writer-safe, question-based reflections, biased by ACD states for nuance.
 
 ---
 
