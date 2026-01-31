@@ -75,6 +75,9 @@ def run(input_data):
         
     max_alerts = max(3, int(total_scenes / 12))
     
+    # Deduplicate overlapping patterns (NEW v5.3)
+    surfaced = deduplicate_patterns(surfaced)
+    
     if len(surfaced) > max_alerts:
         conf_map = {'high': 3, 'medium': 2, 'low': 1}
         surfaced.sort(key=lambda x: conf_map.get(x.get('confidence'), 0), reverse=True)
@@ -106,12 +109,57 @@ def run(input_data):
     }
 
 
+def deduplicate_patterns(patterns):
+    """
+    Remove redundant patterns that cover the same ground.
+    Prioritize: Degenerative > Demand > Recovery > Repetition
+    """
+    if not patterns:
+        return []
+        
+    # Priority Map (Lower is better)
+    priority = {
+        'degenerative_fatigue': 1,
+        'sustained_attentional_demand': 2,
+        'limited_recovery': 3,
+        'surprise_cluster': 4,
+        'repetition': 5
+    }
+    
+    # Sort by priority
+    patterns.sort(key=lambda p: priority.get(p.get('pattern_type'), 10))
+    
+    unique_patterns = []
+    
+    for p in patterns:
+        is_redundant = False
+        p_start, p_end = p.get('scene_range', [0, 0])
+        p_len = p_end - p_start + 1
+        
+        for existing in unique_patterns:
+            e_start, e_end = existing.get('scene_range', [0, 0])
+            
+            # Check overlap
+            overlap_start = max(p_start, e_start)
+            overlap_end = min(p_end, e_end)
+            
+            if overlap_start <= overlap_end:
+                overlap_len = overlap_end - overlap_start + 1
+                # If overlap covers > 80% of the new pattern OR the existing pattern
+                # And existing pattern has higher/equal priority (already sorted)
+                if overlap_len / p_len > 0.8:
+                    is_redundant = True
+                    break
+        
+        if not is_redundant:
+            unique_patterns.append(p)
+            
+    return unique_patterns
+
+
 def generate_reflection(pattern, acd_states=None, total_scenes=100):
     """
     Generate a writer-native reflection.
-    
-    Uses terms like: Grip, Breath, Rhythm, Escalation.
-    Avoids system jargon.
     """
     pattern_type = pattern.get('pattern_type', 'unknown')
     scene_range = pattern.get('scene_range', [0, 0])
@@ -142,15 +190,14 @@ def generate_reflection(pattern, acd_states=None, total_scenes=100):
         reflection_text = WRITER_NATIVE_TRANSLATIONS[pattern_type]
     
     # === FPG: FALSE PRECISION GUARD (Writer-Friendly) ===
-    # Instead of "uncertainty increases", frame it as "Late-Script Fatigue" context.
-    start, end = scene_range
-    relative_pos = end / max(1, total_scenes)
-    
-    if relative_pos > 0.8:
-        # Append a context note about the "Third Act Effect"
-        # "Late in the script, this risk compounds with accumulated fatigue."
-        # Or simpler:
-        reflection_text += " (Deep in the script, this requires even more energy to sustain.)"
+    # Only apply "Deep in script" context for substantial scripts (> 30 scenes)
+    if total_scenes > 30:
+        start, end = scene_range
+        relative_pos = end / max(1, total_scenes)
+        
+        if relative_pos > 0.8:
+            # Append a context note about the "Third Act Effect"
+            reflection_text += " (Deep in the script, this requires even more energy to sustain.)"
 
     return {
         'scene_range': scene_range,
