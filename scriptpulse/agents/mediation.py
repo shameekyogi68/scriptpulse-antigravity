@@ -36,12 +36,13 @@ def run(input_data):
     surfaced = input_data.get('surfaced_patterns', [])
     suppressed = input_data.get('suppressed_patterns', [])
     alignment_notes = input_data.get('intent_alignment_notes', [])
+    acd_states = input_data.get('acd_states', []) # NEW
     
     reflections = []
     
     # Generate reflections for surfaced patterns
     for pattern in surfaced:
-        reflection = generate_reflection(pattern)
+        reflection = generate_reflection(pattern, acd_states)
         reflections.append(reflection)
     
     # Handle silence (no patterns to surface)
@@ -64,7 +65,7 @@ def run(input_data):
     }
 
 
-def generate_reflection(pattern):
+def generate_reflection(pattern, acd_states=None):
     """
     Generate a question-first, experiential reflection.
     
@@ -72,6 +73,7 @@ def generate_reflection(pattern):
     - Default to questions
     - Include explicit uncertainty (may/might/could)
     - Use only allowed translations
+    - NEW: Use ACD states to nuance 'tiring' vs 'wandering'
     """
     pattern_type = pattern.get('pattern_type', 'unknown')
     scene_range = pattern.get('scene_range', [0, 0])
@@ -82,6 +84,28 @@ def generate_reflection(pattern):
         pattern_type, 
         'may have some experiential texture'
     )
+    
+    # === ACD PHRASING BIAS ===
+    # For fatigue/demand patterns, check if it's Collapse (tiring) or Drift (wandering)
+    if pattern_type in ['sustained_attentional_demand', 'degenerative_fatigue'] and acd_states:
+        start, end = scene_range
+        # Check average drift/collapse in this window
+        window_acd = [state for state in acd_states 
+                     if start <= state['scene_index'] <= end]
+        
+        if window_acd:
+            avg_drift = sum(s['drift_likelihood'] for s in window_acd) / len(window_acd)
+            avg_collapse = sum(s['collapse_likelihood'] for s in window_acd) / len(window_acd)
+            
+            # Bias Phrasing
+            if avg_drift > 0.6 and avg_drift > avg_collapse:
+                # DRIFT DOMINANT -> "attention may begin to wander"
+                experience = "attention may begin to wander"
+            elif avg_collapse > 0.6:
+                # COLLAPSE DOMINANT -> "may feel mentally tiring"
+                experience = "may feel mentally tiring"
+    
+    # Format scene range
     
     # Format scene range
     start, end = scene_range

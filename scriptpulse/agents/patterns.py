@@ -22,7 +22,8 @@ def run(input_data):
         List of pattern descriptors (pattern_type, scene_range, confidence)
     """
     signals = input_data.get('temporal_signals', [])
-    features = input_data.get('features', [])  # NEW: needed for functional differentiation
+    features = input_data.get('features', [])
+    acd_states = input_data.get('acd_states', []) # NEW: ACD Context
     
     if len(signals) < MIN_PERSISTENCE_SCENES:
         return []  # Cannot detect patterns with insufficient data
@@ -54,7 +55,8 @@ def run(input_data):
     patterns.extend(detect_limited_recovery(signals, script_contrast))
     patterns.extend(detect_surprise_cluster(signals))
     patterns.extend(detect_constructive_strain(signals, script_contrast))
-    patterns.extend(detect_degenerative_fatigue(signals, script_contrast))
+    patterns.extend(detect_constructive_strain(signals, script_contrast))
+    patterns.extend(detect_degenerative_fatigue(signals, script_contrast, acd_states))
     
     return patterns
 
@@ -419,7 +421,7 @@ def detect_constructive_strain(signals, script_contrast=None):
     return patterns
 
 
-def detect_degenerative_fatigue(signals, script_contrast=None):
+def detect_degenerative_fatigue(signals, script_contrast=None, acd_states=None):
     """Detect drift/collapse patterns (descriptive only)"""
     patterns = []
     
@@ -444,6 +446,18 @@ def detect_degenerative_fatigue(signals, script_contrast=None):
                     'degenerative',
                     script_contrast
                 )
+                
+                # === ACD REFINEMENT ===
+                # If latent COLLAPSE is high, boost confidence
+                if acd_states and len(acd_states) > start:
+                    window_acd = acd_states[start:start + MIN_PERSISTENCE_SCENES]
+                    avg_collapse = sum(a['collapse_likelihood'] for a in window_acd) / len(window_acd)
+                    
+                    if avg_collapse > 0.6:
+                         # Strong corroboration from latent state
+                         if confidence == 'medium': confidence = 'high'
+                         elif confidence == 'low': confidence = 'medium'
+                
                 patterns.append({
                     'pattern_type': 'degenerative_fatigue',
                     'scene_range': [start, start + MIN_PERSISTENCE_SCENES - 1],

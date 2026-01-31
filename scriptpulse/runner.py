@@ -4,7 +4,7 @@ ScriptPulse Runner - Executes full pipeline deterministically
 """
 
 import sys
-from .agents import parsing, segmentation, encoding, temporal, patterns, intent, mediation
+from .agents import parsing, segmentation, encoding, temporal, patterns, intent, mediation, acd
 from . import lenses
 
 
@@ -35,20 +35,30 @@ def run_pipeline(screenplay_text, writer_intent=None, lens='viewer'):
     # Agent 4: Temporal Dynamics
     temporal_output = temporal.run({'features': encoded}, lens_config=lens_config)
     
+    # === NEW: Agent 4.5: Attention Collapse vs Drift (ACD) ===
+    acd_output = acd.run({
+        'temporal_signals': temporal_output,
+        'features': encoded
+    })
+    
     # Agent 5: Pattern Detection
     patterns_output = patterns.run({
         'temporal_signals': temporal_output,
-        'features': encoded  # NEW: pass features for functional differentiation
+        'features': encoded,
+        'acd_states': acd_output # NEW: Pass ACD states
     })
     
     # Agent 6: Writer Intent & Immunity
     intent_input = {
         'patterns': patterns_output,
-        'writer_intent': writer_intent or []
+        'writer_intent': writer_intent or [],
+        'acd_states': acd_output # Pass ACD to intent for potential filtering
     }
     filtered = intent.run(intent_input)
     
     # Agent 7: Audience-Experience Mediation
+    # Mediation needs ACD states for phrasing bias
+    filtered['acd_states'] = acd_output 
     final_output = mediation.run(filtered)
     
     # Add scene info for UI visualization
