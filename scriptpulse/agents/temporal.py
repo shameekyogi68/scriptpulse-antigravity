@@ -10,7 +10,7 @@ R_MAX = 0.5    # Maximum recovery per scene
 E_THRESHOLD = 0.4  # Low-effort threshold for recovery
 
 
-def run(input_data):
+def run(input_data, lens_config=None):
     """
     Compute temporal dynamics with fatigue carryover.
     
@@ -18,6 +18,7 @@ def run(input_data):
     
     Args:
         input_data: Dict with 'features' (list of feature vectors from encoding)
+        lens_config: Optional specific weight configuration (see lenses.json)
         
     Returns:
         List of temporal signal dicts with scene_index, effort, signal, recovery
@@ -37,8 +38,8 @@ def run(input_data):
     for i, scene_features in enumerate(features):
         scene_idx = scene_features['scene_index']
         
-        # Compute instantaneous effort E[i]
-        effort = compute_instantaneous_effort(scene_features)
+        # Compute instantaneous effort E[i] used selected lens
+        effort = compute_instantaneous_effort(scene_features, lens_config)
         
         # Compute recovery credit R[i]
         recovery = compute_recovery(scene_features, effort)
@@ -69,14 +70,34 @@ def run(input_data):
     return signals
 
 
-def compute_instantaneous_effort(scene_features):
+def compute_instantaneous_effort(scene_features, lens_config=None):
     """
     Compute instantaneous effort E[i] from feature vector.
     
     NEW: Splits into cognitive load and emotional attention channels.
-    
-    Uses fixed weights for observable features only.
+    Supports dynamic weight injection via lens_config.
     """
+    # Use default weights (Viewer) if no config provided
+    if not lens_config:
+        weights = {
+            "cognitive_mix": 0.55,
+            "emotional_mix": 0.45,
+            "cognitive_components": {
+                "ref_score": 0.30,
+                "ling_complexity": 0.30,
+                "struct_score": 0.25,
+                "dial_tracking": 0.15
+            },
+            "emotional_components": {
+                "dial_engagement": 0.35,
+                "visual_score": 0.30,
+                "ling_volume": 0.20,
+                "stillness_factor": 0.15
+            }
+        }
+    else:
+        weights = lens_config['effort_weights']
+
     # Extract normalized feature groups
     ling = scene_features['linguistic_load']
     dial = scene_features['dialogue_dynamics']
@@ -103,12 +124,13 @@ def compute_instantaneous_effort(scene_features):
     # Dialogue tracking (speaker switches)
     dial_tracking = dial['speaker_switches'] / 20.0
     
-    # Aggregate cognitive load
+    # Aggregate cognitive load using parameterized weights
+    cog_w = weights['cognitive_components']
     cognitive_effort = (
-        0.30 * ref_score +           # Character tracking
-        0.30 * ling_complexity +     # Parsing difficulty
-        0.25 * struct_score +        # Discontinuity inference
-        0.15 * dial_tracking         # Turn-taking tracking
+        cog_w['ref_score'] * ref_score +
+        cog_w['ling_complexity'] * ling_complexity +
+        cog_w['struct_score'] * struct_score +
+        cog_w['dial_tracking'] * dial_tracking
     )
     
     # === EMOTIONAL ATTENTION ===
@@ -129,19 +151,20 @@ def compute_instantaneous_effort(scene_features):
     # Stillness factor (low ambient = higher emotional focus needed)
     stillness_factor = 1.0 - ambient.get('ambient_score', 0.5)
     
-    # Aggregate emotional attention
+    # Aggregate emotional attention using parameterized weights
+    emo_w = weights['emotional_components']
     emotional_attention = (
-        0.35 * dial_engagement +     # Sustained dialogue
-        0.30 * visual_score +        # Visual density
-        0.20 * ling_volume +         # Information flow
-        0.15 * stillness_factor      # Non-ambient intensity
+        emo_w['dial_engagement'] * dial_engagement +
+        emo_w['visual_score'] * visual_score +
+        emo_w['ling_volume'] * ling_volume +
+        emo_w['stillness_factor'] * stillness_factor
     )
     
     # === TOTAL EFFORT ===
-    # Combine both channels (weighted toward cognitive for conservative estimates)
+    # Combine both channels
     total_effort = (
-        0.55 * cognitive_effort +
-        0.45 * emotional_attention
+        weights['cognitive_mix'] * cognitive_effort +
+        weights['emotional_mix'] * emotional_attention
     )
     
     return total_effort

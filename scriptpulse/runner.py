@@ -5,19 +5,24 @@ ScriptPulse Runner - Executes full pipeline deterministically
 
 import sys
 from .agents import parsing, segmentation, encoding, temporal, patterns, intent, mediation
+from . import lenses
 
 
-def run_pipeline(screenplay_text, writer_intent=None):
+def run_pipeline(screenplay_text, writer_intent=None, lens='viewer'):
     """
     Execute the full 7-agent pipeline.
     
     Args:
         screenplay_text: Raw screenplay text
         writer_intent: Optional list of writer intent declarations
+        lens: Analysis lens ID ('viewer', 'reader', 'narrator')
         
     Returns:
         Final output from mediation agent with scene info
     """
+    # Load lens config
+    lens_config = lenses.get_lens(lens)
+    
     # Agent 1: Structural Parsing
     parsed = parsing.run(screenplay_text)
     
@@ -28,7 +33,7 @@ def run_pipeline(screenplay_text, writer_intent=None):
     encoded = encoding.run({'scenes': segmented, 'lines': parsed})
     
     # Agent 4: Temporal Dynamics
-    temporal_output = temporal.run({'features': encoded})
+    temporal_output = temporal.run({'features': encoded}, lens_config=lens_config)
     
     # Agent 5: Pattern Detection
     patterns_output = patterns.run({
@@ -56,6 +61,12 @@ def run_pipeline(screenplay_text, writer_intent=None):
         for scene in segmented
     ]
     final_output['total_scenes'] = len(segmented)
+    
+    # Add metadata
+    final_output['meta'] = {
+        'lens': lens_config['lens_id'],
+        'lens_description': lens_config['description']
+    }
     
     return final_output
 
