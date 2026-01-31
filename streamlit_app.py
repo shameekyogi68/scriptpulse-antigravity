@@ -41,6 +41,7 @@ st.markdown("""
         border-radius: 4px;
         margin-bottom: 15px;
         font-style: italic;
+        color: #000000; /* Force Black Text for Contrast */
     }
     
     /* Earned Silence / Stability Styling (Green/Calm) */
@@ -50,7 +51,7 @@ st.markdown("""
         background-color: #e8f5e9;
         border-radius: 4px;
         margin-bottom: 15px;
-        color: #1b5e20;
+        color: #0d3b0d; /* Dark Green Text */
     }
     
     .silence-box {
@@ -58,7 +59,7 @@ st.markdown("""
         border-left: 4px solid #888;
         background-color: #f9f9f9;
         border-radius: 4px;
-        color: #555;
+        color: #333333; /* Dark Grey Text */
     }
     
     .disclaimer {
@@ -109,7 +110,7 @@ st.markdown("*A quiet companion for thinking about how your screenplay might fee
 st.markdown("""
 ---
 **How this works:**  
-ScriptPulse reads your draft and considers how a first-time viewer might experience 
+ScriptPulse reads your draft and considers how a **first-time viewer** might experience 
 its rhythm and flow. It reflects those observations back to you as questions—never as judgments.
 
 **What this is not:**  

@@ -2,14 +2,41 @@
 
 import random
 
-# Allowed experiential translations (ONLY these mappings)
-EXPERIENTIAL_TRANSLATIONS = {
-    'sustained_attentional_demand': 'may feel mentally demanding',
-    'limited_recovery': 'there may be little chance to catch their breath',
-    'repetition': 'may feel similar to what came just before',
-    'surprise_cluster': 'the shift may feel sudden on first exposure',
-    'constructive_strain': 'may feel effortful but held together',
-    'degenerative_fatigue': 'may begin to feel tiring over time'
+# WRITER-NATIVE TRANSLATIONS
+# Translates technical signal patterns into visceral, screenplay-native concepts:
+# Grip, Breath, Rhythm, Escalation, Release.
+WRITER_NATIVE_TRANSLATIONS = {
+    'sustained_attentional_demand': (
+        "This run of scenes stays intense without a release valve — "
+        "the audience may feel pushed without a moment to recover."
+    ),
+    'limited_recovery': (
+        "Fatigue accumulates here. "
+        "Without a clear breather, the audience's capacity to track detail may drop."
+    ),
+    'repetition': (
+        "This stretch risks feeling like more of the same — "
+        "the audience may stop registering escalation."
+    ),
+    'surprise_cluster': (
+        "The rhythm spikes sharply here. "
+        "Without setup, this intensity risks feeling jarring rather than impactful."
+    ),
+    'constructive_strain': (
+        "This section demands heavy lifting. "
+        "The audience is working hard to keep up — ensure the payoff is worth the effort."
+    ),
+    'degenerative_fatigue': {
+        # Split handled in logic: Drift vs. Collapse
+        'drift': (
+            "The audience may start to drift here — "
+            "this stretch risks losing grip unless something resets their focus."
+        ),
+        'collapse': (
+            "The mental load here is becoming heavy. "
+            "The audience may struggle to track new information effectively."
+        )
+    }
 }
 
 
@@ -19,9 +46,6 @@ BANNED_WORDS = {
     'slow', 'fast', 'weak', 'strong', 'problem', 'issue', 'ideal', 'optimal',
     'tips', 'suggestions', 'advice', 'should', 'must', 'need to'
 }
-
-# ASL: Audience Scope Lock (Invariant)
-AUDIENCE_SCOPE_LOCK = "screenplay-literate first-pass reader"
 
 # ADS: Authority Diffusion Safeguard Disclaimers
 ADS_DISCLAIMERS = [
@@ -35,49 +59,33 @@ ADS_DISCLAIMERS = [
 def run(input_data):
     """
     Translate patterns into writer-safe, question-first reflections.
-    
-    No judgment. No advice. No authority.
-    
-    Args:
-        input_data: Dict with 'surfaced_patterns', 'suppressed_patterns', 
-                   'intent_alignment_notes' (from intent agent)
-        
-    Returns:
-        Dict with reflections and acknowledgments
     """
     surfaced = input_data.get('surfaced_patterns', [])
     suppressed = input_data.get('suppressed_patterns', [])
     alignment_notes = input_data.get('intent_alignment_notes', [])
     acd_states = input_data.get('acd_states', []) 
-    ssf_analysis = input_data.get('ssf_analysis', {}) # NEW
+    ssf_analysis = input_data.get('ssf_analysis', {}) 
     
     reflections = []
     
     # === AEKS: Alert Escalation Kill-Switch (Constraint) ===
-    # Hard limit on alert density to prevent alarm fatigue.
-    # Max 1 alert per 12 scenes, minimum 3 allowed.
-    total_scenes = 100 # Default if unknown
+    total_scenes = 100 
     if acd_states:
         total_scenes = len(acd_states)
         
     max_alerts = max(3, int(total_scenes / 12))
     
-    # If too many alerts, prioritize high confidence and truncate
     if len(surfaced) > max_alerts:
-        # Sort key: High=3, Medium=2, Low=1
         conf_map = {'high': 3, 'medium': 2, 'low': 1}
         surfaced.sort(key=lambda x: conf_map.get(x.get('confidence'), 0), reverse=True)
-        
-        # Truncate
         surfaced = surfaced[:max_alerts]
     
-    # Generate reflections for surfaced patterns
+    # Generate reflections
     for pattern in surfaced:
-        # Pass total_scenes for FPG normalization
         reflection = generate_reflection(pattern, acd_states, total_scenes)
         reflections.append(reflection)
     
-    # Handle silence (no patterns to surface)
+    # Handle silence
     silence_explanation = None
     if not surfaced:
         silence_explanation = generate_silence_explanation(suppressed, alignment_notes, ssf_analysis)
@@ -92,163 +100,117 @@ def run(input_data):
         'reflections': reflections,
         'silence_explanation': silence_explanation,
         'intent_acknowledgments': intent_acknowledgments,
-        'total_surfaced': len(surfaced), # Reported post-AEKS
+        'total_surfaced': len(surfaced), 
         'total_suppressed': len(suppressed),
-        'aeks_active': len(input_data.get('surfaced_patterns', [])) > max_alerts # Telemetry flag
+        'aeks_active': len(input_data.get('surfaced_patterns', [])) > max_alerts 
     }
 
 
 def generate_reflection(pattern, acd_states=None, total_scenes=100):
     """
-    Generate a question-first, experiential reflection.
+    Generate a writer-native reflection.
     
-    Rules:
-    - Default to questions
-    - Include explicit uncertainty (may/might/could)
-    - Use only allowed translations
-    - NEW: Use ACD states to nuance 'tiring' vs 'wandering'
-    - NEW: FPG (False Precision Guard) for late-script signals
+    Uses terms like: Grip, Breath, Rhythm, Escalation.
+    Avoids system jargon.
     """
     pattern_type = pattern.get('pattern_type', 'unknown')
     scene_range = pattern.get('scene_range', [0, 0])
     confidence = pattern.get('confidence', 'low')
     
-    # Get allowed translation
-    experience = EXPERIENTIAL_TRANSLATIONS.get(
-        pattern_type, 
-        'may have some experiential texture'
-    )
-    
-    # === ACD PHRASING BIAS ===
-    # For fatigue/demand patterns, check if it's Collapse (tiring) or Drift (wandering)
-    if pattern_type in ['sustained_attentional_demand', 'degenerative_fatigue'] and acd_states:
+    # Default fallback
+    reflection_text = "This section creates a unique texture that may require specific audience tuning."
+
+    # Select Translation
+    if pattern_type == 'degenerative_fatigue' and acd_states:
+        # Nuance for Drift vs Collapse
         start, end = scene_range
-        # Check average drift/collapse in this window
         window_acd = [state for state in acd_states 
                      if start <= state['scene_index'] <= end]
         
+        avg_drift = 0.5
+        avg_collapse = 0.5
         if window_acd:
             avg_drift = sum(s['drift_likelihood'] for s in window_acd) / len(window_acd)
             avg_collapse = sum(s['collapse_likelihood'] for s in window_acd) / len(window_acd)
             
-            # Bias Phrasing
-            if avg_drift > 0.6 and avg_drift > avg_collapse:
-                # DRIFT DOMINANT -> "attention may begin to wander"
-                experience = "attention may begin to wander"
-            elif avg_collapse > 0.6:
-                # COLLAPSE DOMINANT -> "may feel mentally tiring"
-                experience = "may feel mentally tiring"
+        if avg_drift > avg_collapse:
+             reflection_text = WRITER_NATIVE_TRANSLATIONS['degenerative_fatigue']['drift']
+        else:
+             reflection_text = WRITER_NATIVE_TRANSLATIONS['degenerative_fatigue']['collapse']
     
-    # Format scene range
+    elif pattern_type in WRITER_NATIVE_TRANSLATIONS:
+        reflection_text = WRITER_NATIVE_TRANSLATIONS[pattern_type]
+    
+    # === FPG: FALSE PRECISION GUARD (Writer-Friendly) ===
+    # Instead of "uncertainty increases", frame it as "Late-Script Fatigue" context.
     start, end = scene_range
-    scene_text = f"scenes {start} through {end}" if start != end else f"scene {start}"
-    
-    # === FPG: FALSE PRECISION GUARD ===
-    # Late script signals are inherently less certain due to accumulated drift.
-    # If the pattern ends in the last 20% of the script, soften language.
-    fpg_softener = ""
     relative_pos = end / max(1, total_scenes)
+    
     if relative_pos > 0.8:
-        fpg_softener = ", though uncertainty increases late in the script"
-        # Downgrade confidence logic effectively (not label, but tone)
-    
-    # Generate question-first framing with uncertainty
-    # UPDATED: Using AUDIENCE_SCOPE_LOCK and removing "important"
-    if confidence == 'high':
-        reflection = (
-            f"With moderate confidence, a {AUDIENCE_SCOPE_LOCK} experiencing {scene_text} "
-            f"{experience}{fpg_softener}. Is that the level of attention you want here?"
-        )
-    elif confidence == 'medium':
-        reflection = (
-            f"There's a possibility that {scene_text} {experience} for a {AUDIENCE_SCOPE_LOCK}{fpg_softener}. "
-            f"Does that match your intention?"
-        )
-    else:  # low confidence
-        reflection = (
-            f"With low confidence, {scene_text} might {experience.replace('may ', '')}. "
-            f"This signal reflects persistent strain, though uncertainty is high{fpg_softener}."
-        )
-    
+        # Append a context note about the "Third Act Effect"
+        # "Late in the script, this risk compounds with accumulated fatigue."
+        # Or simpler:
+        reflection_text += " (Deep in the script, this requires even more energy to sustain.)"
+
     return {
         'scene_range': scene_range,
-        'reflection': reflection,
+        'reflection': reflection_text,
         'confidence': confidence
     }
 
 
 def generate_silence_explanation(suppressed, alignment_notes, ssf_analysis=None):
     """
-    Explain why no patterns surfaced.
-    
-    Silence must NEVER imply quality or success.
-    NEW: Use SSF analysis to explain stability.
+    Explain silence using writer-native terms: Stability, Flow, Alignment.
     """
     if alignment_notes:
-        # Patterns exist but were suppressed due to intent
         return (
-            "No patterns are surfaced here because they align with your declared intent. "
-            "The signals observed are consistent with what you indicated."
+            "Silence here means the system sees exactly what you intended. "
+            "Your declared intent matches the audience load."
         )
     
-    # Check SSF Analysis first for "Earned Silence"
     if ssf_analysis and ssf_analysis.get('is_silent'):
         explanation_key = ssf_analysis.get('explanation_key')
         
         if explanation_key == 'stable_continuity':
-             # UPDATED: Using AUDIENCE_SCOPE_LOCK
              return (
-                f"Across this run, the {AUDIENCE_SCOPE_LOCK}'s experience remains relatively stable, "
-                "with natural effort and recovery balancing out. "
-                "No moments stood out as likely to strain first-pass attention."
+                "The experience here is rock stable. "
+                "Effort and recovery are balanced—the audience is breathing naturally."
              )
         elif explanation_key == 'self_correcting':
             return (
-                "While individual moments may require focus, they tend to resolve without "
-                "accumulating fatigue. The attentional flow appears self-correcting."
+                "The flow feels self-correcting. "
+                "Whenever tension rises, a release valve opens naturally."
             )
         elif explanation_key == 'stable_but_drifting':
              return (
-                 "The experience is stable, though low-variance. "
-                 "Attention is not strained, though it may not be heavily demanded."
+                 "The experience is stable, though the water is very still. "
+                 "No strain, but also low demand."
              )
     
     if suppressed:
-        # Should not happen (suppressed without notes), but handle gracefully
         return "Patterns were suppressed based on provided constraints."
     else:
-        # No patterns detected at all (Low confidence fallback)
         return (
-            "The attentional flow appears stable with regular recovery, "
-            "or signals are low confidence due to draft variability. "
-            "This does not indicate quality — only that no persistent patterns were detected."
+            "The attentional flow is stable. "
+            "No red flags, no drag, no exhaustion. A clean reading."
         )
 
 
 def generate_intent_acknowledgment(note):
-    """
-    Acknowledge writer intent explicitly.
-    
-    This is mandatory when patterns are suppressed due to intent.
-    """
     intent = note.get('intent', 'your declared intent')
     scene_range = note.get('scene_range', [0, 0])
     
     start, end = scene_range
-    scene_text = f"scenes {start} through {end}" if start != end else f"scene {start}"
+    scene_text = f"scenes {start}–{end}"
     
     return (
         f"You marked {scene_text} as '{intent}'. "
-        f"The signals here are consistent with that intent."
+        f"This matches the signal perfectly."
     )
 
 
 def validate_no_banned_words(text):
-    """
-    Check that text contains no banned words.
-    
-    Used for testing compliance.
-    """
     text_lower = text.lower()
     for banned in BANNED_WORDS:
         if banned in text_lower:
@@ -259,8 +221,6 @@ def validate_no_banned_words(text):
 def format_for_display(mediated_output):
     """
     Format mediated output for display.
-    
-    Optional helper - not part of core pipeline.
     """
     lines = []
     
@@ -278,8 +238,6 @@ def format_for_display(mediated_output):
         for ack in mediated_output['intent_acknowledgments']:
             lines.append(f"  {ack}")
             
-    # ADS: Authority Diffusion Safeguard
-    # Append random disclaimer
     lines.append("")
     lines.append(f"({random.choice(ADS_DISCLAIMERS)})")
     
