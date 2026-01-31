@@ -41,6 +41,24 @@ def run(input_data):
     
     reflections = []
     
+    # === AEKS: Alert Escalation Kill-Switch (Constraint) ===
+    # Hard limit on alert density to prevent alarm fatigue.
+    # Max 1 alert per 12 scenes, minimum 3 allowed.
+    total_scenes = 100 # Default if unknown
+    if acd_states:
+        total_scenes = len(acd_states)
+        
+    max_alerts = max(3, int(total_scenes / 12))
+    
+    # If too many alerts, prioritize high confidence and truncate
+    if len(surfaced) > max_alerts:
+        # Sort key: High=3, Medium=2, Low=1
+        conf_map = {'high': 3, 'medium': 2, 'low': 1}
+        surfaced.sort(key=lambda x: conf_map.get(x.get('confidence'), 0), reverse=True)
+        
+        # Truncate
+        surfaced = surfaced[:max_alerts]
+    
     # Generate reflections for surfaced patterns
     for pattern in surfaced:
         reflection = generate_reflection(pattern, acd_states)
@@ -61,8 +79,9 @@ def run(input_data):
         'reflections': reflections,
         'silence_explanation': silence_explanation,
         'intent_acknowledgments': intent_acknowledgments,
-        'total_surfaced': len(surfaced),
-        'total_suppressed': len(suppressed)
+        'total_surfaced': len(surfaced), # Reported post-AEKS
+        'total_suppressed': len(suppressed),
+        'aeks_active': len(input_data.get('surfaced_patterns', [])) > max_alerts # Telemetry flag
     }
 
 

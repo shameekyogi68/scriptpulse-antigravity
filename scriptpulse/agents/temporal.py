@@ -11,6 +11,75 @@ R_MAX = 0.5    # Maximum recovery per scene
 E_THRESHOLD = 0.4  # Low-effort threshold for recovery
 
 from . import tam
+import random
+
+def simulate_consensus(input_data, lens_config=None, iterations=5):
+    """
+    MRCS: Multi-Reader Consensus Simulator
+    Runs the temporal model multiple times with slight parameter jitter
+    to simulate a 'room' of readers with varying sensitivities.
+    Returns the averaged signal.
+    """
+    if not input_data.get('features'):
+        return []
+        
+    accumulated_signals = None
+    
+    # Base Config (Deep copy to avoid mutation)
+    import copy
+    base_lens = copy.deepcopy(lens_config) if lens_config else {}
+    
+    # We need to run the model multiple times
+    # Since run() is in the same module, we can call it.
+    
+    for _ in range(iterations):
+        # Jitter sensitivity +/- 5%
+        jitter_lens = copy.deepcopy(base_lens)
+        
+        # Jitter weights if they exist
+        if 'effort_weights' in jitter_lens:
+            w = jitter_lens['effort_weights']
+            w['cognitive_mix'] *= random.uniform(0.95, 1.05)
+            w['emotional_mix'] *= random.uniform(0.95, 1.05)
+            
+        # Run single pass
+        signals = run(input_data, lens_config=jitter_lens)
+        
+        # Accumulate
+        if accumulated_signals is None:
+            # Initialize with first run structure
+            accumulated_signals = []
+            for s in signals:
+                accumulated_signals.append({
+                    'scene_index': s['scene_index'],
+                    'instantaneous_effort': s['instantaneous_effort'],
+                    'attentional_signal': s['attentional_signal'],
+                    'recovery_credit': s['recovery_credit'],
+                    # fatigue_state will be re-computed after averaging
+                    # tam_integral will be averaged
+                    'tam_integral': s['tam_integral']
+                })
+        else:
+            for i, s in enumerate(signals):
+                accumulated_signals[i]['instantaneous_effort'] += s['instantaneous_effort']
+                accumulated_signals[i]['attentional_signal'] += s['attentional_signal']
+                accumulated_signals[i]['recovery_credit'] += s['recovery_credit']
+                accumulated_signals[i]['tam_integral'] += s['tam_integral']
+                
+    # Average
+    for sig in accumulated_signals:
+        sig['instantaneous_effort'] = round(sig['instantaneous_effort'] / iterations, 3)
+        sig['attentional_signal'] = round(sig['attentional_signal'] / iterations, 3)
+        sig['recovery_credit'] = round(sig['recovery_credit'] / iterations, 3)
+        sig['tam_integral'] = round(sig['tam_integral'] / iterations, 3)
+        
+        # Re-classify fatigue state based on averaged signal
+        # We need length_factor from run(). Accessing helper...
+        # Recalculate length factor (cheap)
+        length_factor = compute_length_factor(len(accumulated_signals))
+        sig['fatigue_state'] = classify_fatigue_state(sig['attentional_signal'], length_factor)
+        
+    return accumulated_signals
 
 
 def run(input_data, lens_config=None):

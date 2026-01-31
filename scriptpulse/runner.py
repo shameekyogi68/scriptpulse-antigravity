@@ -4,8 +4,9 @@ ScriptPulse Runner - Executes full pipeline deterministically
 """
 
 import sys
+import random
 from .agents import parsing, segmentation, encoding, temporal, patterns, intent, mediation, acd, ssf, lrf
-from . import lenses
+from . import lenses, fingerprint, governance
 
 
 def run_pipeline(screenplay_text, writer_intent=None, lens='viewer'):
@@ -20,6 +21,9 @@ def run_pipeline(screenplay_text, writer_intent=None, lens='viewer'):
     Returns:
         Final output from mediation agent with scene info
     """
+    # === GPBL: Governance Check ===
+    governance.validate_request(screenplay_text)
+    
     # Load lens config
     lens_config = lenses.get_lens(lens)
     
@@ -29,11 +33,28 @@ def run_pipeline(screenplay_text, writer_intent=None, lens='viewer'):
     # Agent 2: Scene Segmentation
     segmented = segmentation.run(parsed)
     
+    # === SFE: Structural Fingerprint ===
+    struct_fingerprint = fingerprint.generate_structural_fingerprint(parsed, segmented)
+    
+    # === DRL: Deterministic Run ID ===
+    lens_id = lens if lens else 'viewer'
+    run_id, version = fingerprint.generate_run_id(struct_fingerprint, lens_id, writer_intent)
+    
+    # === REPRODUCIBILITY LOCK ===
+    # Seed the RNG with the RunID to ensure MRCS (Jitter) is deterministic per input
+    # Convert hex to int for seeding
+    random.seed(int(run_id[:16], 16))
+    
     # Agent 3: Structural Encoding
     encoded = encoding.run({'scenes': segmented, 'lines': parsed})
     
-    # Agent 4: Temporal Dynamics
-    temporal_output = temporal.run({'features': encoded}, lens_config=lens_config)
+    # Agent 4: Temporal Dynamics (with MRCS)
+    # Uses Multi-Reader Consensus Simulator for robustness
+    temporal_output = temporal.simulate_consensus(
+        {'features': encoded}, 
+        lens_config=lens_config,
+        iterations=5 # 5 simulated readers
+    )
     
     # === NEW: Agent 4.4: Long-Range Fatigue (LRF) ===
     # Refine signals with latent fatigue reserve
@@ -77,6 +98,14 @@ def run_pipeline(screenplay_text, writer_intent=None, lens='viewer'):
     filtered['ssf_analysis'] = ssf_output # NEW
     final_output = mediation.run(filtered)
     
+    # Add Enterprise Audit Metadata
+    final_output['meta'] = {
+        'run_id': run_id,
+        'fingerprint': struct_fingerprint,
+        'version': version,
+        'lens': lens_id
+    }
+    
     # Add scene info for UI visualization
     final_output['scene_info'] = [
         {
@@ -89,10 +118,10 @@ def run_pipeline(screenplay_text, writer_intent=None, lens='viewer'):
     final_output['total_scenes'] = len(segmented)
     
     # Add metadata
-    final_output['meta'] = {
+    final_output['meta'].update({
         'lens': lens_config['lens_id'],
         'lens_description': lens_config['description']
-    }
+    })
     
     return final_output
 
