@@ -823,31 +823,9 @@ if script_input and st.button("Analyze Rhythm", type="primary"):
             
         df = pd.DataFrame(chart_data)
         
-        # Create Layered Chart
-        # Base
-        base = alt.Chart(df).encode(x='Scene')
+        # Use Streamlit native chart (simpler, no altair dependency)
+        st.line_chart(df.set_index('Scene'))
         
-        # Area: Net Tension (Red Gradient)
-        tension_area = base.mark_area(
-            color='red', 
-            opacity=0.3, 
-            line={'color':'darkred'}
-        ).encode(
-            y=alt.Y('Net Tension', title='Attentional Load'),
-            tooltip=['Scene', 'Net Tension']
-        )
-        
-        # Line: Recovery (Blue)
-        recovery_line = base.mark_line(color='#00CC66').encode(
-            y='Recovery'
-        )
-        
-        chart = (tension_area + recovery_line).properties(
-            height=250,
-            width='container'
-        ).interactive()
-        
-        st.altair_chart(chart, use_container_width=True)
         st.caption("RED AREA: Net Tension (Accumulated Strain) | GREEN LINE: Recovery Opportunities")
     
     
