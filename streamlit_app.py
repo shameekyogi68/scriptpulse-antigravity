@@ -500,10 +500,12 @@ if script_input and st.button("Analyze Rhythm", type="primary"):
     ])
     
     with tab1:
-        xai_data = report.get('xai_attribution', {})
-        if xai_data:
-            st.markdown(f"**Primary Driver:** {xai_data.get('dominant_driver', 'Unknown').title()}")
-            attr = xai_data.get('attribution', {})
+        xai_attribution = report.get('xai_attribution', {}) # Keep as dict for overall summary
+        if xai_attribution:
+            dominant_driver = xai_attribution.get('dominant_driver', 'Unknown')
+            st.markdown(f"**Primary Driver:** {dominant_driver.title() if isinstance(dominant_driver, str) else 'Unknown'}")
+            
+            attr = xai_attribution.get('attribution', {})
             # Rename keys for display
             display_attr = {
                  'Linguistic Load' if k=='linguistic_load' else 
