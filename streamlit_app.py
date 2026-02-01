@@ -405,8 +405,58 @@ if script_input and st.button("Analyze Rhythm", type="primary"):
     status.empty()
     bar.empty()
     
-    # === RESEARCH COMPARISONS (HCI Layer) ===
-    if comparator:
+    # === TOP STATS CARD (v21.0 - Clean UI) ===
+    st.markdown("---")
+    st.markdown("### 📊 Quick Summary")
+    
+    # Calculate key metrics
+    trace = report.get('temporal_trace', [])
+    avg_intensity = sum(p.get('attentional_signal', 0) for p in trace) / len(trace) if trace else 0
+    intensity_score = int(avg_intensity * 10)
+    
+    valence_scores = report.get('valence_scores', [])
+    avg_valence = sum(valence_scores) / len(valence_scores) if valence_scores else 0
+    if avg_valence > 0.1:
+        tone_label = "Positive"
+        tone_emoji = "😊"
+    elif avg_valence < -0.1:
+        tone_label = "Serious"
+        tone_emoji = "😐"
+    else:
+        tone_label = "Balanced"
+        tone_emoji = "⚖️"
+    
+    runtime = report.get('runtime_estimate', {})
+    runtime_min = runtime.get('avg_minutes', 0)
+    
+    # Display in 3 columns with colored boxes
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.metric(
+            label="🎯 Intensity Score",
+            value=f"{intensity_score}/10",
+            help="Overall cognitive demand (0=light, 10=intense)"
+        )
+    
+    with col2:
+        st.metric(
+            label=f"{tone_emoji} Emotional Tone",
+            value=tone_label,
+            help="Overall emotional quality of the script"
+        )
+    
+    with col3:
+        st.metric(
+            label="⏱️ Runtime",
+            value=f"~{runtime_min} min",
+            help="Estimated screen time"
+        )
+    
+    # === COLLAPSIBLE SECTIONS (v21.0) ===
+    
+    # Hide research comparisons in expander
+    with st.expander("🔬 Advanced Comparisons", expanded=False):
         with st.expander("🔬 Research Comparison (Longitudinal & Target)", expanded=True):
             cols = st.columns(2)
             
@@ -476,16 +526,16 @@ if script_input and st.button("Analyze Rhythm", type="primary"):
             repair_strategies = []
         
         if repair_strategies:
-            st.markdown("### 💡 Creative Repair Strategies (Mixed-Initiative)")
-            for sugg in repair_strategies:
-                # Ensure sugg is a dict
-                if isinstance(sugg, dict):
-                    scene_num = sugg.get('scene', 'Unknown')
-                    diagnosis = sugg.get('diagnosis', 'No diagnosis')
-                    with st.expander(f"Scene {scene_num}: {diagnosis}", expanded=True):
-                        st.markdown(f"**Strategy:** {sugg.get('strategy', 'N/A')}")
-                        for tactic in sugg.get('tactics', []):
-                            st.markdown(f"- {tactic}")
+            with st.expander("💡 Repair Strategies", expanded=False):
+                st.caption("Suggested improvements based on structural analysis")
+                for sugg in repair_strategies:
+                    # Ensure sugg is a dict
+                    if isinstance(sugg, dict):
+                        scene_num = sugg.get('scene', 'Unknown')
+                        diagnosis = sugg.get('diagnosis', 'No diagnosis')
+                        st.markdown(f"**Scene {scene_num}**: {diagnosis}")
+                        st.markdown(f"→ {sugg.get('strategy', 'N/A')}")
+                        st.markdown("")  # spacing
                     
                     
     # === DEEP ANALYSIS & ETHICS (Tabs) ===
