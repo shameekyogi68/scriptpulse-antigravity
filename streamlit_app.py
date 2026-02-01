@@ -463,16 +463,30 @@ if script_input and st.button("Analyze Rhythm", type="primary"):
                      st.caption("Upload a Reference Script in Sidebar to compare styles.")
     
     # === CO-CREATIVITY ENGINE (v8.0) ===
-    suggestions = report.get('suggestions', [])
+    suggestions = report.get('suggestions', {})
+    
+    # Handle both dict and list formats safely
     if suggestions:
-        st.markdown("### 💡 Creative Repair Strategies (Mixed-Initiative)")
-        for sugg in suggestions:
-            scene_num = sugg.get('scene', 'Unknown')
-            diagnosis = sugg.get('diagnosis', 'No diagnosis')
-            with st.expander(f"Scene {scene_num}: {diagnosis}", expanded=True):
-                st.markdown(f"**Strategy:** {sugg['strategy']}")
-                for tactic in sugg.get('tactics', []):
-                    st.markdown(f"- {tactic}")
+        # Check if it's a dict with 'structural_repair_strategies' key
+        if isinstance(suggestions, dict):
+            repair_strategies = suggestions.get('structural_repair_strategies', [])
+        elif isinstance(suggestions, list):
+            repair_strategies = suggestions
+        else:
+            repair_strategies = []
+        
+        if repair_strategies:
+            st.markdown("### 💡 Creative Repair Strategies (Mixed-Initiative)")
+            for sugg in repair_strategies:
+                # Ensure sugg is a dict
+                if isinstance(sugg, dict):
+                    scene_num = sugg.get('scene', 'Unknown')
+                    diagnosis = sugg.get('diagnosis', 'No diagnosis')
+                    with st.expander(f"Scene {scene_num}: {diagnosis}", expanded=True):
+                        st.markdown(f"**Strategy:** {sugg.get('strategy', 'N/A')}")
+                        for tactic in sugg.get('tactics', []):
+                            st.markdown(f"- {tactic}")
+                    
                     
     # === DEEP ANALYSIS & ETHICS (Tabs) ===
     st.markdown("### 🔬 Deep Insights")
