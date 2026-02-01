@@ -922,18 +922,6 @@ if script_input and st.button("Analyze Rhythm", type="primary"):
                     css = "signal-tension"
                     # Signal display code would go here
                 
-                
-                        emotion = "Happy 😊"
-                    elif avg_valence < -0.1:
-                        emotion = "Serious 😐"
-                    else:
-                        emotion = "Balanced ⚖️"
-                    st.metric(
-                        "Overall Tone",
-                        emotion,
-                        help="The general feeling of your script."
-                    )
-                    
                 with col3:
                     st.metric(
                         "Estimated Length",
