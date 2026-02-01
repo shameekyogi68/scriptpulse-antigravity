@@ -869,17 +869,9 @@ if script_input and st.button("Analyze Rhythm", type="primary"):
                 
                 # Only show if not mundane
                 if affect in ['Excitement', 'Anxiety', 'Melancholy']:
-                   css = "signal-tension"
-                 # Run the Pipeline
-                report = runner.run_pipeline(
-                    script_text, 
-                    lens=lens_choice,
-                    genre=genre,
-                    audience_profile=audience,
-                    high_res_mode=high_res,
-                    pre_parsed_lines=pre_parsed_lines,
-                    character_context=char_tags # v10.0
-                )
+                    css = "signal-tension"
+                    # Signal display code would go here
+                
                 
                 # v13.0: Simple Summary Card (Non-Technical)
                 st.markdown("---")
