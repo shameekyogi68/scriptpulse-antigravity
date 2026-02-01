@@ -926,7 +926,8 @@ if script_input and st.button("Analyze Rhythm", type="primary"):
                 # v11.0: Custom Reader Notes
                 user_notes = st.sidebar.text_area("Add Reader Notes:", height=100, placeholder="E.g., 'Pass. Dialogue is weak.'")
                 
-                html_report = studio_report.generate_report(report, script_title=uploaded_file.name, user_notes=user_notes)
+                script_title = uploaded_file.name if uploaded_file and hasattr(uploaded_file, 'name') else "Untitled_Script"
+            html_report = studio_report.generate_report(report, script_title=script_title, user_notes=user_notes)
                 st.sidebar.download_button(
                     label="Export Producer Report",
                     data=html_report,
