@@ -974,14 +974,6 @@ if script_input and st.button("Analyze Rhythm", type="primary"):
                             st.warning(f"**Scene {sc_idx+1}:** {notes[0]['suggestion']}")
                             count += 1
                 
-                # Continue with existing code below
-                # (The corruption was here - line 937 had misplaced code)
-                       
-                   msg = f"{emoji} **Scene {idx}**: {affect.upper()} (Valence: {val})"
-                   # Deduplicate: simple check if we already showed this index or similar?
-                   # For now, just show top 3 distinct
-                   st.markdown(f"<div class='signal-box {css}'>{msg}</div>", unsafe_allow_html=True)
-
         # 3. Reflections (Structure)
         if reflections:
              st.markdown("---")
