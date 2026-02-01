@@ -922,13 +922,6 @@ if script_input and st.button("Analyze Rhythm", type="primary"):
                     css = "signal-tension"
                     # Signal display code would go here
                 
-                with col3:
-                    st.metric(
-                        "Estimated Length",
-                        runtime_text,
-                        help="How long your movie will be."
-                    )
-                
                 st.markdown("---")
                 
                 # Tabs for detailed analysis
