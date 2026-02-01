@@ -1,53 +1,49 @@
 """Temporal Dynamics Agent - Fatigue Carryover and Recovery Modeling"""
 
-
-# Fixed parameters (not learned)
-LAMBDA = 0.85  # Fatigue carryover coefficient
-BETA = 0.3     # Recovery rate from low effort
-GAMMA = 0.2    # Recovery from structural boundaries
-DELTA = 0.25   # Recovery from ambient/observational scenes
-R_MAX = 0.5    # Maximum recovery per scene
-E_THRESHOLD = 0.4  # Low-effort threshold for recovery
+# Standard Defaults (Fallback)
+DEFAULT_LAMBDA = 0.85 
+DEFAULT_BETA = 0.3    
+DEFAULT_GAMMA = 0.2    
+DEFAULT_DELTA = 0.25   
+R_MAX = 0.5    
+E_THRESHOLD = 0.4 
 
 from . import tam
 import random
 import statistics
 
-def simulate_consensus(input_data, lens_config=None, iterations=5):
+def simulate_consensus(input_data, lens_config=None, genre='drama', profile_params=None, iterations=5):
     """
     MRCS: Multi-Reader Consensus Simulator
-    Runs the temporal model multiple times with slight parameter jitter
-    to simulate a 'room' of readers with varying sensitivities.
-    Returns the averaged signal.
+    Runs the temporal model multiple times with slight parameter jitter.
+    Includes Genre Context & Cognitive Profile.
     """
     if not input_data.get('features'):
         return []
         
+    # Use Profile Params or Defaults
+    if not profile_params:
+        profile_params = {
+            'lambda_base': DEFAULT_LAMBDA,
+            'beta_recovery': DEFAULT_BETA,
+            'fatigue_threshold': 1.0,
+            'coherence_weight': 0.15 # Default sensitivity
+        }
+        
     accumulated_signals = None
-    
-    # Base Config (Deep copy to avoid mutation)
     import copy
     base_lens = copy.deepcopy(lens_config) if lens_config else {}
     
-    # We need to run the model multiple times
-    # Since run() is in the same module, we can call it.
-    
     for _ in range(iterations):
-        # Jitter sensitivity +/- 5%
         jitter_lens = copy.deepcopy(base_lens)
-        
-        # Jitter weights if they exist
         if 'effort_weights' in jitter_lens:
             w = jitter_lens['effort_weights']
             w['cognitive_mix'] *= random.uniform(0.95, 1.05)
             w['emotional_mix'] *= random.uniform(0.95, 1.05)
             
-        # Run single pass
-        signals = run(input_data, lens_config=jitter_lens)
+        signals = run(input_data, lens_config=jitter_lens, genre=genre, profile_params=profile_params)
         
-        # Accumulate
         if accumulated_signals is None:
-            # Initialize with first run structure
             accumulated_signals = []
             for s in signals:
                 accumulated_signals.append({
@@ -55,12 +51,11 @@ def simulate_consensus(input_data, lens_config=None, iterations=5):
                     'instantaneous_effort': s['instantaneous_effort'],
                     'attentional_signal': s['attentional_signal'],
                     'recovery_credit': s['recovery_credit'],
-                    # fatigue_state will be re-computed after averaging
-                    # tam_integral will be averaged
                     'tam_integral': s['tam_integral'],
-                    # v5.1 TEM metrics
-                    'expectation_strain': s.get('expectation_strain', 0.0), # Default 0 for safety
-                    'temporal_expectation': s.get('temporal_expectation', 0.5)
+                    'expectation_strain': s.get('expectation_strain', 0.0), 
+                    'temporal_expectation': s.get('temporal_expectation', 0.5),
+                    'valence_score': s.get('valence_score', 0.0),
+                    'coherence_penalty': s.get('coherence_penalty', 0.0) # NEW
                 })
         else:
             for i, s in enumerate(signals):
@@ -68,9 +63,10 @@ def simulate_consensus(input_data, lens_config=None, iterations=5):
                 accumulated_signals[i]['attentional_signal'] += s['attentional_signal']
                 accumulated_signals[i]['recovery_credit'] += s['recovery_credit']
                 accumulated_signals[i]['tam_integral'] += s['tam_integral']
-                # Accumulate v5.1 metrics
                 accumulated_signals[i]['expectation_strain'] += s.get('expectation_strain', 0.0)
                 accumulated_signals[i]['temporal_expectation'] += s.get('temporal_expectation', 0.5)
+                accumulated_signals[i]['valence_score'] += s.get('valence_score', 0.0)
+                accumulated_signals[i]['coherence_penalty'] += s.get('coherence_penalty', 0.0)
                 
     # Average
     all_efforts = []
@@ -83,121 +79,116 @@ def simulate_consensus(input_data, lens_config=None, iterations=5):
         sig['tam_integral'] = round(sig['tam_integral'] / iterations, 3)
         sig['expectation_strain'] = round(sig['expectation_strain'] / iterations, 3)
         sig['temporal_expectation'] = round(sig['temporal_expectation'] / iterations, 3)
+        sig['valence_score'] = round(sig['valence_score'] / iterations, 3)
+        sig['coherence_penalty'] = round(sig['coherence_penalty'] / iterations, 3)
         
-    # CBN: Compute baseline factor for averaged signal
     median_effort = statistics.median(all_efforts) if all_efforts else 0.5
-    baseline_factor = max(0.5, min(1.5, median_effort / 0.5)) # Clamp to [0.5, 1.5]
-    
+    baseline_factor = max(0.5, min(1.5, median_effort / 0.5))
     length_factor = compute_length_factor(len(accumulated_signals))
 
-    # Re-classify
+    # Re-classify with GENRE & PROFILE
     for sig in accumulated_signals:
          sig['fatigue_state'] = classify_fatigue_state(
              sig['attentional_signal'], 
              length_factor, 
-             baseline_factor # v5.2 CBN
+             baseline_factor,
+             genre,
+             profile_params['fatigue_threshold'] # Profile adjustment
+         )
+         sig['affective_state'] = classify_affective_state(
+             sig['attentional_signal'],
+             sig['valence_score'],
+             length_factor * baseline_factor
          )
         
     return accumulated_signals
 
 
-def run(input_data, lens_config=None):
+def run(input_data, lens_config=None, genre='drama', profile_params=None):
     """
-    Compute temporal dynamics with fatigue carryover.
-    Now includes TEM (Temporal Expectation Memory), ARAF (Authentic Recovery),
-    CBN (Cognitive Baseline Normalization), and AMHL (Memory Horizon Lock).
-    
-    AMHL: Horizon is locked to simple casual recursion + TEM alpha.
-    No forward lookups allowed. No long-term memory structs.
+    Compute temporal dynamics with FULL RESEARCH LAYER (v6.6).
     """
     features = input_data.get('features', [])
+    semantic_scores = input_data.get('semantic_scores', [])
+    syntax_scores = input_data.get('syntax_scores', [])
+    visual_scores = input_data.get('visual_scores', [])
+    social_scores = input_data.get('social_scores', [])
+    valence_scores = input_data.get('valence_scores', []) 
+    coherence_scores = input_data.get('coherence_scores', []) # NEW
     
     if not features:
         return []
     
-    # Calculate script length for duration normalization
-    total_scenes = len(features)
-    length_factor = compute_length_factor(total_scenes)
-    
-    # === CBN PRE-CALCULATION ===
-    # We need a baseline effort to normalize thresholds.
-    # This requires a "light" pass or just computing efforts first.
-    # We'll compute efforts first.
-    raw_efforts = []
-    for scene_features in features:
-        e = compute_instantaneous_effort(scene_features, lens_config)
-        
-        # Apply TAM modifiers (needed for accurate effort)
-        # Note: TAM requires effort, so we do it here.
-        # But `run_micro_integration` is deterministic per scene.
-        # To avoid duplicating TAM logic, we'll store effort and use it later?
-        # Actually, let's just make `run` two-pass logic or build the list locally.
-        # For efficiency, we can just estimate baseline from raw efforts (pre-TAM).
-        # TAM is minor redistribution.
-        raw_efforts.append(e)
-        
-    median_effort = statistics.median(raw_efforts) if raw_efforts else 0.5
-    # Clamp baseline factor to avoid extreme skew
-    # Range: 0.5 (very quiet) to 1.5 (very loud)
-    baseline_factor = max(0.5, min(1.5, median_effort / 0.5))
+    # Profile Defaults
+    if not profile_params:
+         profile_params = {'lambda_base':0.85, 'beta_recovery':0.3, 'fatigue_threshold':1.0, 'coherence_weight':0.15}
+         
+    length_factor = compute_length_factor(len(features))
     
     signals = []
     prev_signal = 0.0
-    prev_effort = 0.5 # Initial neutral expectation
-    
-    # TEM: Simple exponential moving average of expected effort
-    # Alpha = 0.1 means memory of ~10 scenes (AMHL Compliant)
-    expectation_alpha = 0.1 
+    prev_effort = 0.5 
     rolling_expectation = 0.5
     
-    for i, scene_features in enumerate(features):
-        scene_idx = scene_features['scene_index']
+    for i, scene in enumerate(features):
+        sem = semantic_scores[i] if i < len(semantic_scores) else 0.0
+        syn = syntax_scores[i] if i < len(syntax_scores) else 0.0
+        vis = visual_scores[i] if i < len(visual_scores) else 0.0
+        soc = social_scores[i] if i < len(social_scores) else 0.0
+        val = valence_scores[i] if i < len(valence_scores) else 0.0
+        coh = coherence_scores[i] if i < len(coherence_scores) else 0.0 # Switching Disorientation
         
-        # Compute instantaneous effort E[i] used selected lens
-        effort = compute_instantaneous_effort(scene_features, lens_config)
+        # 1. Base Holistic Effort
+        effort = compute_instantaneous_effort(scene, lens_config, sem, syn, vis, soc)
         
-        # === NEW: Apply TAM Layer (Micro-Dynamics) ===
-        tam_modifiers = tam.run_micro_integration(scene_features, effort)
+        # 2. Add Coherence Penalty (Switching Cost)
+        # Weight depends on profile (Distracted viewers hurt more)
+        # Coh is 0.0-1.0. Weight 0.15 -> max penalty 0.15 effort boost.
+        disorientation = coh * profile_params['coherence_weight']
+        effort += disorientation
         
-        # Apply effort refinement (Internal redistribution effect)
+        # TAM
+        tam_modifiers = tam.run_micro_integration(scene, effort)
         effort = effort * tam_modifiers['effort_modifier']
         
-        # === TEM: Temporal Expectation Memory ===
-        # Calculate strain from expectation violation
+        # TEM
         expectation_strain = abs(effort - rolling_expectation)
-        # Update expectation for next scene
-        rolling_expectation = (1 - expectation_alpha) * rolling_expectation + expectation_alpha * effort
+        rolling_expectation = 0.9 * rolling_expectation + 0.1 * effort
         
-        # Compute recovery credit R[i]
-        # === ARAF: Attention Recovery Authenticity Filter ===
-        # Pass prev_effort to enforce continuous low-load requirement
-        recovery = compute_recovery(scene_features, effort, prev_effort)
-        
-        # Apply recovery refinement (Fragmented relief penalty)
+        # Recovery (Use Profile Beta)
+        recovery = compute_recovery(scene, effort, prev_effort, profile_params['beta_recovery'])
         recovery = recovery * tam_modifiers['recovery_modifier']
         
-        # Apply canonical equation: S[i] = E[i] + λ·S[i-1] - R[i]
+        # === HYSTERETIC DECAY (Use Profile Lambda) ===
+        adaptive_lambda = profile_params['lambda_base']
+        if prev_signal > 1.0: # High Strain
+            hysteresis_factor = min(1.0, (prev_signal - 1.0))
+            adaptive_lambda += 0.10 * hysteresis_factor
+            
+        # S[i]
         if i == 0:
-            signal = effort  # First scene has no carryover
+            signal = effort
         else:
-            signal = effort + LAMBDA * prev_signal - recovery
+            signal = effort + adaptive_lambda * prev_signal - recovery
         
-        # Ensure non-negative
         signal = max(0.0, signal)
         
-        # Classify fatigue state with duration normalization AND CBN
-        fatigue_state = classify_fatigue_state(signal, length_factor, baseline_factor)
+        # use profile threshold
+        fatigue = classify_fatigue_state(signal, length_factor, 1.0, genre, profile_params['fatigue_threshold'])
+        affect = classify_affective_state(signal, val, length_factor)
         
-        # Store signal
         signals.append({
-            'scene_index': scene_idx,
+            'scene_index': scene['scene_index'],
             'instantaneous_effort': round(effort, 3),
             'attentional_signal': round(signal, 3),
             'recovery_credit': round(recovery, 3),
-            'fatigue_state': fatigue_state,
+            'fatigue_state': fatigue,
+            'affective_state': affect, 
+            'valence_score': val,
+            'coherence_penalty': round(disorientation, 3), # Track this
             'tam_integral': tam_modifiers['micro_fatigue_integral'],
-            'expectation_strain': round(expectation_strain, 3), # v5.1
-            'temporal_expectation': round(rolling_expectation, 3) # v5.1
+            'expectation_strain': round(expectation_strain, 3), 
+            'temporal_expectation': round(rolling_expectation, 3) 
         })
         
         prev_signal = signal
@@ -206,35 +197,18 @@ def run(input_data, lens_config=None):
     return signals
 
 
-def compute_instantaneous_effort(scene_features, lens_config=None):
-    """
-    Compute instantaneous effort E[i] from feature vector.
-    
-    NEW: Splits into cognitive load and emotional attention channels.
-    Supports dynamic weight injection via lens_config.
-    """
-    # Use default weights (Viewer) if no config provided
+def compute_instantaneous_effort(scene_features, lens_config=None, sem=0.0, syn=0.0, vis=0.0, soc=0.0):
+    """Computes Holistic Cognitive Load."""
     if not lens_config:
         weights = {
             "cognitive_mix": 0.55,
             "emotional_mix": 0.45,
-            "cognitive_components": {
-                "ref_score": 0.30,
-                "ling_complexity": 0.30,
-                "struct_score": 0.25,
-                "dial_tracking": 0.15
-            },
-            "emotional_components": {
-                "dial_engagement": 0.35,
-                "visual_score": 0.30,
-                "ling_volume": 0.20,
-                "stillness_factor": 0.15
-            }
+            "cognitive_components": {"ref_score":0.3,"ling_complexity":0.3,"struct_score":0.25,"dial_tracking":0.15},
+            "emotional_components": {"dial_engagement":0.35,"visual_score":0.3,"ling_volume":0.2,"stillness_factor":0.15}
         }
     else:
         weights = lens_config['effort_weights']
 
-    # Extract normalized feature groups
     ling = scene_features['linguistic_load']
     dial = scene_features['dialogue_dynamics']
     visual = scene_features['visual_abstraction']
@@ -242,149 +216,76 @@ def compute_instantaneous_effort(scene_features, lens_config=None):
     struct = scene_features['structural_change']
     ambient = scene_features.get('ambient_signals', {})
     
-    # === COGNITIVE LOAD ===
-    # Tracking, memory, parsing complexity, inference
+    lc = ling['sentence_length_variance'] / 20.0
+    rs = (ref['active_character_count']/10.0 + ref['character_reintroductions']/5.0)
+    ss = struct['event_boundary_score'] / 100.0
+    dt = dial['speaker_switches'] / 20.0
     
-    # Linguistic complexity (variance = parsing difficulty)
-    ling_complexity = ling['sentence_length_variance'] / 20.0
-    
-    # Referential tracking (character count, reintroductions)
-    ref_score = (
-        ref['active_character_count'] / 10.0 +
-        ref['character_reintroductions'] / 5.0
-    )
-    
-    # Structural discontinuity (boundaries = inference load)
-    struct_score = struct['event_boundary_score'] / 100.0
-    
-    # Dialogue tracking (speaker switches)
-    dial_tracking = dial['speaker_switches'] / 20.0
-    
-    # Aggregate cognitive load using parameterized weights
     cog_w = weights['cognitive_components']
-    cognitive_effort = (
-        cog_w['ref_score'] * ref_score +
-        cog_w['ling_complexity'] * ling_complexity +
-        cog_w['struct_score'] * struct_score +
-        cog_w['dial_tracking'] * dial_tracking
-    )
+    base_struct_load = (cog_w['ref_score']*rs + cog_w['ling_complexity']*lc + cog_w['struct_score']*ss + cog_w['dial_tracking']*dt)
     
-    # === EMOTIONAL ATTENTION ===
-    # Sustained engagement, empathetic presence
+    # 5-Channel Mind
+    final_cognitive_load = (0.50 * base_struct_load + 0.15 * sem + 0.10 * syn + 0.15 * vis + 0.10 * soc)
     
-    # Dialogue continuity (turns = sustained engagement)
-    dial_engagement = dial['dialogue_turns'] / 50.0
+    dial_en = dial['dialogue_turns'] / 50.0
+    vis_sc = (visual['action_lines']/50.0 + visual['continuous_action_runs']/10.0)
+    ling_vol = ling['sentence_count'] / 50.0
+    still = 1.0 - ambient.get('ambient_score', 0.5)
     
-    # Visual continuity (action density)
-    visual_score = (
-        visual['action_lines'] / 50.0 +
-        visual['continuous_action_runs'] / 10.0
-    )
-    
-    # Linguistic volume (sentence count = information flow)
-    ling_volume = ling['sentence_count'] / 50.0
-    
-    # Stillness factor (low ambient = higher emotional focus needed)
-    stillness_factor = 1.0 - ambient.get('ambient_score', 0.5)
-    
-    # Aggregate emotional attention using parameterized weights
     emo_w = weights['emotional_components']
-    emotional_attention = (
-        emo_w['dial_engagement'] * dial_engagement +
-        emo_w['visual_score'] * visual_score +
-        emo_w['ling_volume'] * ling_volume +
-        emo_w['stillness_factor'] * stillness_factor
-    )
+    emotional_attention = (emo_w['dial_engagement']*dial_en + emo_w['visual_score']*vis_sc + emo_w['ling_volume']*ling_vol + emo_w['stillness_factor']*still)
     
-    # === TOTAL EFFORT ===
-    # Combine both channels
-    total_effort = (
-        weights['cognitive_mix'] * cognitive_effort +
-        weights['emotional_mix'] * emotional_attention
-    )
-    
+    total_effort = (weights['cognitive_mix'] * final_cognitive_load + weights['emotional_mix'] * emotional_attention)
     return total_effort
 
 
-def compute_recovery(scene_features, effort, prev_effort=0.5):
-    """
-    Compute recovery credit R[i].
-    
-    Refined with ARAF (Attention Recovery Authenticity Filter).
-    """
+def compute_recovery(scene_features, effort, prev_effort=0.5, beta=DEFAULT_BETA):
+    # Dynamic Beta from Profile
     recovery = 0.0
-    
-    # 1. Low-effort recovery
     if effort < E_THRESHOLD:
-        recovery += BETA * (E_THRESHOLD - effort)
-        
-        # === ARAF: Authenticity Check ===
-        # If previous scene was high effort, instant recovery is suspicious.
-        # Authentic recovery requires sustained low load or clear boundary.
-        if prev_effort > E_THRESHOLD * 1.5:
-            # "Fake Breather" penalty - recovery is dampened
-            recovery *= 0.6 
-    
-    # 2. Structural boundary recovery
+        recovery += beta * (E_THRESHOLD - effort)
+        if prev_effort > E_THRESHOLD * 1.5: recovery *= 0.6 
     boundary_score = scene_features['structural_change']['event_boundary_score']
-    if boundary_score > 0.5:
-        recovery += GAMMA * (boundary_score / 100.0)
-    
-    # 3. Ambient scene recovery (NEW)
+    if boundary_score > 0.5: recovery += DEFAULT_GAMMA * (boundary_score / 100.0)
     ambient = scene_features.get('ambient_signals', {})
-    ambient_score = ambient.get('ambient_score', 0.0)
-    is_ambient = ambient.get('is_ambient', False)
-    
-    if is_ambient:  # High ambient quality
-        # Bonus recovery for reflective/observational space
-        recovery += DELTA * ambient_score
-    
-    # Cap recovery
-    recovery = min(recovery, R_MAX)
-    
-    return recovery
+    if ambient.get('is_ambient'): recovery += DEFAULT_DELTA * ambient.get('ambient_score', 0.0)
+    return min(recovery, R_MAX)
 
 
 def compute_length_factor(total_scenes):
-    """
-    Compute threshold scaling based on script length.
-    
-    Returns multiplier for thresholds:
-    - 1.0 = standard (50+ scenes)
-    - 1.5 = relaxed (20-50 scenes)
-    - 2.0 = very relaxed (<20 scenes)
-    
-    Rationale: Short films have higher acceptable attention density.
-    Fatigue is duration-dependent.
-    """
-    if total_scenes >= 50:
-        return 1.0  # Standard (feature-length)
-    elif total_scenes >= 20:
-        # Linear interpolation: 20 scenes → 1.5x, 50 scenes → 1.0x
-        return 1.0 + (50 - total_scenes) / (50 - 20) * 0.5
-    else:
-        # Very short: 2x threshold (double tolerance)
-        return 2.0
+    if total_scenes >= 50: return 1.0
+    elif total_scenes >= 20: return 1.0 + (50 - total_scenes) / 30 * 0.5
+    else: return 2.0
 
 
-def classify_fatigue_state(signal, length_factor=1.0, baseline_factor=1.0):
+def classify_fatigue_state(signal, length_factor=1.0, baseline_factor=1.0, genre='drama', profile_threshold=1.0):
     """
-    Classify fatigue state (descriptive, not evaluative).
-    
-    Scales thresholds by:
-    1. Script length (duration-dependent fatigue)
-    2. Cognitive Baseline (CBN) - normalizes against script's own density.
+    Classify fatigue using GENRE + LENGTH + BASELINE + PROFILE metrics.
     """
-    # Base thresholds
-    threshold_elevated = 0.5 * length_factor * baseline_factor
-    threshold_high = 1.0 * length_factor * baseline_factor
-    threshold_extreme = 1.5 * length_factor * baseline_factor
+    genre_map = {
+        'drama': 1.0, 'action': 1.25, 'thriller': 1.3, 'horror': 1.4, 
+        'sci-fi': 1.2, 'comedy': 0.85, 'family': 0.8, 'romance': 0.9
+    }
+    g_factor = genre_map.get(genre.lower(), 1.0)
     
-    if signal < threshold_elevated:
-        return "normal"
-    elif signal < threshold_high:
-        return "elevated"
-    elif signal < threshold_extreme:
-        return "high"
+    # Scale adjusts the definition of 'normal' based on user capacity
+    scale = length_factor * baseline_factor * g_factor * profile_threshold
+    
+    if signal < 0.5 * scale: return "normal"
+    elif signal < 1.0 * scale: return "elevated"
+    elif signal < 1.5 * scale: return "high"
+    else: return "extreme"
+
+def classify_affective_state(arousal_signal, valence_score, scale_factor=1.0):
+    high_arousal = arousal_signal > (0.8 * scale_factor)
+    positive_valence = valence_score > 0.1
+    negative_valence = valence_score < -0.1
+    
+    if high_arousal:
+        if positive_valence: return "Excitement"
+        elif negative_valence: return "Anxiety"
+        else: return "Intense"
     else:
-        return "extreme"
+        if positive_valence: return "Relaxation"
+        elif negative_valence: return "Melancholy"
+        else: return "Calm"

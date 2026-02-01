@@ -1,138 +1,82 @@
-# ScriptPulse vNext.5 (Antigravity)
+# ScriptPulse v8.0 (Research Edition)
 
-**A deterministic, non-evaluative screenplay analysis engine modeling first-pass audience cognitive experience.**
+**"From Toy to Instrument"**
 
----
-
-## 🚀 Overview
-
-ScriptPulse is a sophisticated tool designed to simulate the *cognitive load*, *fatigue*, and *attentional demand* experienced by a first-time viewer of a screenplay.
-
-**It does NOT:**
-*   Evaluate quality ("good/bad")
-*   Infer semantic meaning or emotion
-*   Offer suggestions or "fixes"
-*   Judge writer intent
-
-**It DOES:**
-*   Track structural density and pacing
-*   Model attentional resources over time
-*   Detect persistent patterns (e.g., continuous strain, lack of recovery)
-*   Reflect observations back to the writer using experiential, question-first language
+A deterministic, empirical, and ethical computational cinematography engine for analyzing screenplay rhythm, cognitive load, and affective dynamics.
 
 ---
 
-## 🛠️ Installation
+## 🚀 Research Capabilities (v8.0)
 
-ScriptPulse is built with standard Python 3 libraries to ensure stability and reproducibility. No external heavy dependencies are required.
-
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/your-org/scriptpulse-antigravity.git
-    cd scriptpulse-antigravity
-    ```
-
-2.  **Verify environment:**
-    ```bash
-    python3 --version  # Requires Python 3.8+
-    ```
-
-3.  **Set PYTHONPATH (Runtime):**
-    ```bash
-    export PYTHONPATH=$PYTHONPATH:.
-    ```
+ScriptPulse v8.0 integrates **11 Specialized Research Agents** to model the complete human reading experience:
+1.  **Temporal Dynamics** (`temporal.py`): Models biological attention decay and recovery.
+2.  **Semantic Entropy** (`semantic.py`): Measures information density (Shannon Entropy).
+3.  **Syntactic Depth** (`syntax.py`): Estimates processing load via clause structure.
+4.  **Explainability (XAI)** (`xai.py`): Attributes strain to specific factors (Visual vs Verbal).
+5.  **Macro-Structure** (`templates.py`): Maps narrative arcs against canonical shapes (Vonnegut).
+6.  **Comparative Analysis** (`comparator.py`): Longitudinal tracking and normative baselining (DTW).
+7.  **Cinematic/Social** (`imagery.py`, `social.py`): Multimodal analysis of Visual Load and Social Tension.
+8.  **Affective Computing** (`valence.py`): Emotion classification (Excitement vs Anxiety) via Russell's Circumplex.
+9.  **Cognitive Profiling** (`profiler.py`): Simulates diverse audiences (Critic, Child, Distracted).
+10. **Empirical Lab** (`beat.py`, `biometrics.py`): High-Res Micro-Pacing and Physiological Ground Truth validation.
+11. **Ethical Co-Creativity** (`fairness.py`, `suggestion.py`): Audits algorithmic bias and generates structural repair tactics.
 
 ---
 
 ## 🚦 Usage
 
-### 1. Basic Execution (Pipeline)
-The core runner processes a script string and returns a JSON report.
+### 1. The Research Lab (Streamlit UI)
+The primary interface for interaction and visualization.
+```bash
+streamlit run streamlit_app.py
+```
+**Features:**
+*   **Pulse Line**: Real-time visualization of attentional strain.
+*   **Affective Signals**: Purple (Excitement) vs Red (Anxiety) indicators.
+*   **Co-Creativity Engine**: Generative strategies for repairing weak scenes.
+*   **Fairness Audit**: Checks for stereotyping risks.
+*   **Biometric Lab**: Import real heart-rate CSVs to validate the model.
 
+### 2. Python API
 ```python
 from scriptpulse import runner
 
-# Load your screenplay
-with open("my_script.txt", "r") as f:
-    script_text = f.read()
+report = runner.run_pipeline(
+    script_text, 
+    lens='viewer',
+    genre='thriller',
+    audience_profile='cinephile', # v6.6
+    high_res_mode=True            # v7.0
+)
 
-# Run the pipeline
-report = runner.run_pipeline(script_text)
-
-# View results
-print(report['mediated_output'])
-```
-
-### 2. With Writer Intent (Authority)
-You can explicitly declare intent for specific scene ranges. The system will **suppress** alerts that match your intent, honoring your authority.
-
-```python
-intent = [
-    {
-        'scene_range': [10, 20], 
-        'intent': 'intentionally exhausting'
-    }
-]
-
-report = runner.run_pipeline(script_text, writer_intent=intent)
-```
-
-### 3. Running Validation
-To verify system integrity and determinism:
-```bash
-python3 final_validation.py
+# Access deep metrics
+print(report['fairness_audit'])
+print(report['suggestions'])
 ```
 
 ---
 
-## 🎭 The Philosophy: "Reader Surrogate"
-ScriptPulse is positioned as a **Reader Surrogate**, not a Critic.
+## ⚖️ Ethics & Limitations
 
-*   **We don't fix.** We reflect structure back to you.
-*   **We don't judge.** We simulate cognitive cost.
-*   **We don't know better.** You are the authority on your intent.
+### 1. Deterministic Heuristics
+This system uses distinct, explainable heuristics rather than "Black Box" LLMs. This ensures **Scientific Reproducibility** but means the system calculates *Structure*, not *Subtext*. It may miss sarcasm.
 
-For a detailed guide on how to integrate and use this tool professionally, see [Professional Onboarding & Adoption Guide](docs/Professional_Onboarding_Guide.md).
+### 2. Algorithmic Fairness
+The `fairness_audit` module (v8.0) actively monitors for bias. However, the system relies on English-language lexicons and Western narrative templates.
 
-For the rigorous scientific validation behind the system, see [IEEE Experimental Validation Protocol](docs/IEEE_Validation_Protocol.md).
-
----
-
-## 🧩 System Architecture (vNext.5 "Antigravity")
-
-The system operates as a linear, deterministic pipeline of specialized, research-validated agents:
-
-1.  **Structural Parsing & Segmentation:** Classifies lines by format (Scene, Action, Dialogue) – *No semantics.*
-2.  **Structural Encoding (TAM):** Converts scenes into feature vectors, now including **Temporal Attentional Microdynamics (TAM)** for intra-scene precision.
-3.  **Temporal Dynamics (LRF):** Models fatigue `S(t)` using the canonical equation, enhanced by **Long-Range Fatigue (LRF)** for delayed strain modeling.
-4.  **Multi-Modal Lenses:** Adjusts analysis for **Reader**, **Viewer**, or **Narrator** modalities.
-5.  **Failure Analysis (ACD):** Distinguishes between **Attention Collapse** (Overload) and **Drift** (Under-stimulation).
-6.  **Pattern Detection:** Identifies persistent multi-scene trends.
-7.  **Silence Formalization (SSF):** Validates "No Alerts" as "Earned Silence" (stability).
-8.  **Experience Mediation:** Translates raw patterns into writer-safe, question-based reflections, biased by ACD states for nuance.
-
----
-
-## ⚖️ Ethical Safeguards
-
-This system adheres to strict ethical boundaries defined in `docs/ScriptPulse_Misuse_Prevention_and_Ethics.md`.
-
-*   **No Evaluation:** Words like "good", "bad", "fix", "improve" are hard-banned.
-*   **Writer Authority:** Writer declarations override system signals 100% of the time.
-*   **Determinism:** Identical inputs yield identical outputs.
-*   **Misuse Resistance:** The system refuses to rank scripts or offer comparative scores.
+### 3. Writer Authority
+The system is a **Surrogate**, not a Critic. It predicts *Cost*, not *Quality*.
 
 ---
 
 ## 📂 Project Structure
+*   `scriptpulse/`
+    *   `agents/` - The 11 Research Agents.
+    *   `rubrics/` - Interpretation logic.
+    *   `runner.py` - Orchestrator.
+*   `research/`
+    *   `biometrics.py` - Physiological correlation.
+    *   `calibrate.py` - Hill-climbing optimizer.
+    *   `validate.py` - K-Fold cross-validation.
 
-*   `scriptpulse/` - Core source code
-    *   `agents/` - Individual agent implementations
-    *   `runner.py` - Pipeline orchestrator
-*   `tests/` - Unit tests for each agent
-*   `docs/` - Authoritative specifications and contracts
-*   `final_validation.py` - End-to-end system verification script
-
----
-
-*Verified Compliance Audit: 2026-01-25*
+*Audit Date: 2026-02-01 (v8.0 Release)*

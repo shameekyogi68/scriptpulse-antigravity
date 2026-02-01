@@ -16,14 +16,17 @@ def run(input_data):
     scenes = input_data.get('scenes', [])
     lines = input_data.get('lines', [])
     
-    if not scenes or not lines:
+    if not scenes:
         return []
     
     feature_vectors = []
     
-    for scene in scenes:
-        # Get lines for this scene
-        scene_lines = get_scene_lines(scene, lines)
+    for i, scene in enumerate(scenes):
+        # Get lines for this scene (Polymorphic: Beat or Scene)
+        if 'lines' in scene:
+            scene_lines = scene['lines']
+        else:
+            scene_lines = get_scene_lines(scene, lines)
         
         # Extract features
         features = {
@@ -32,7 +35,7 @@ def run(input_data):
             'dialogue_dynamics': extract_dialogue_dynamics(scene_lines),
             'visual_abstraction': extract_visual_abstraction(scene_lines),
             'referential_load': extract_referential_load(scene_lines),
-            'structural_change': extract_structural_change(scene, scenes),
+            'structural_change': extract_structural_change(scene, scenes, i), # Pass index
             'ambient_signals': extract_ambient_signals(scene_lines),  # NEW
             'micro_structure': extract_micro_structure(scene_lines)   # NEW (v5 TAM)
         }
@@ -201,27 +204,29 @@ def extract_referential_load(scene_lines):
     }
 
 
-def extract_structural_change(scene, all_scenes):
+def extract_structural_change(scene, all_scenes, current_index):
     """
     Extract structural change features (observable boundary delta).
     
     Features:
     - event_boundary_score: normalized position change from previous scene
     """
-    scene_idx = scene['scene_index']
-    
-    # First scene has boundary score of 0 (no previous scene to compare)
-    if scene_idx == 0:
+    # First item has boundary score of 0
+    if current_index == 0:
         return {'event_boundary_score': 0.0}
     
     # Calculate normalized position delta
-    prev_scene = all_scenes[scene_idx - 1]
+    prev_scene = all_scenes[current_index - 1]
     
     # Line delta between scenes
-    line_gap = scene['start_line'] - prev_scene['end_line']
+    # Polymorphic safety: Ensure start/end lines act as numbers
+    curr_start = scene.get('start_line', 0)
+    prev_end = prev_scene.get('end_line', 0)
+    
+    line_gap = curr_start - prev_end
     
     # Normalize by script length (approximate)
-    total_lines = max(s['end_line'] for s in all_scenes) + 1
+    total_lines = max(s.get('end_line', 0) for s in all_scenes) + 1
     normalized_score = line_gap / total_lines if total_lines > 0 else 0.0
     
     return {
