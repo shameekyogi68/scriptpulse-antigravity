@@ -5,7 +5,7 @@ ScriptPulse Runner - Executes full pipeline deterministically
 
 import sys
 import random
-from .agents import parsing, segmentation, encoding, temporal, patterns, intent, mediation, acd, ssf, lrf, semantic, syntax, xai, imagery, social, valence, profiler, coherence, beat, fairness, suggestion
+from .agents import parsing, segmentation, encoding, temporal, patterns, intent, mediation, acd, ssf, lrf, semantic, syntax, xai, imagery, social, valence, profiler, coherence, beat, fairness, suggestion, embeddings
 from . import lenses, fingerprint, governance
 
 
@@ -63,6 +63,9 @@ def run_pipeline(screenplay_text, writer_intent=None, lens='viewer', genre='dram
     # === NEW: Agent 3.6: Cinematic & Social Layers (v6.4) ===
     visual_scores = imagery.run({'scenes': segmented})
     social_scores = social.run({'scenes': segmented})
+    
+    # === NEW: Agent 9.1: Hybrid NLP (Embeddings) ===
+    semantic_flux = embeddings.run({'scenes': segmented})
     
     # === NEW: Agent 3.7: Affective Valence (v6.5) ===
     valence_scores = valence.run({'scenes': segmented})
@@ -152,6 +155,11 @@ def run_pipeline(screenplay_text, writer_intent=None, lens='viewer', genre='dram
         'surfaced_patterns': filtered['surfaced_patterns']
     })
     
+    # === NEW: Agent 9.0: Comparative Baselines (IEEE) ===
+    # Using 'lazy import' for research module to avoid circular deps if needed
+    from research import baselines
+    baseline_trace = baselines.run_baseline_sentiment(segmented)
+    
     # Agent 7: Audience-Experience Mediation
     # Mediation needs ACD states and SSF analysis
     filtered['acd_states'] = acd_output 
@@ -189,6 +197,8 @@ def run_pipeline(screenplay_text, writer_intent=None, lens='viewer', genre='dram
     # Add Ethics & Generative Data (v8.0)
     final_output['fairness_audit'] = fairness_audit
     final_output['suggestions'] = suggestions
+    final_output['baseline_trace'] = baseline_trace # v9.0
+    final_output['semantic_flux'] = semantic_flux # v9.1
     
     # Add metadata
     final_output['meta'].update({

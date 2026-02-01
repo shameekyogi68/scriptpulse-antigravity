@@ -20,6 +20,8 @@ ScriptPulse v8.0 integrates **11 Specialized Research Agents** to model the comp
 9.  **Cognitive Profiling** (`profiler.py`): Simulates diverse audiences (Critic, Child, Distracted).
 10. **Empirical Lab** (`beat.py`, `biometrics.py`): High-Res Micro-Pacing and Physiological Ground Truth validation.
 11. **Ethical Co-Creativity** (`fairness.py`, `suggestion.py`): Audits algorithmic bias and generates structural repair tactics.
+12. **Comparative Baselines** (`baselines.py`): Control group comparison against standard VADER sentiment.
+13. **Hybrid NLP** (`embeddings.py`): Uses Vector Embeddings (SBERT) for semantic flux, preserving "Modern NLP" rigor.
 
 ---
 

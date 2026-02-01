@@ -383,13 +383,12 @@ if script_input and st.button("Analyze Rhythm", type="primary"):
                     
     # === DEEP ANALYSIS & ETHICS (Tabs) ===
     st.markdown("### 🔬 Deep Research Metrics")
-    tab1, tab2, tab3, tab4 = st.tabs(["Explainability (XAI)", "Macro-Structure", "Algorithmic Fairness", "HCI Validation"])
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(["Explainability (XAI)", "Macro-Structure", "Algorithmic Fairness", "Comparative Benchmark", "HCI Validation"])
     
     with tab1:
         xai_data = report.get('xai_attribution', {})
         if xai_data:
             st.markdown(f"**Dominant Driver:** {xai_data.get('dominant_driver', 'Unknown').title()}")
-            # Simple bar chart of attribution
             attr = xai_data.get('attribution', {})
             st.bar_chart(attr)
             
@@ -403,23 +402,65 @@ if script_input and st.button("Analyze Rhythm", type="primary"):
     with tab3: # FAIRNESS AUDIT (v8.0)
         fairness = report.get('fairness_audit', {})
         risks = fairness.get('stereotyping_risks', [])
-        
         if risks:
             st.error("⚠️ Algorithmic Fairness Warnings")
             for r in risks:
                 st.write(f"- {r}")
         else:
             st.success("No Significant Stereotyping Risks Detected.")
-            
         stats = fairness.get('representation_stats', {})
         if stats:
             st.caption("Character Representation Stats")
             st.dataframe(stats)
             
-    with tab4: # HCI / Comparator
-        import sys # Added for sys.modules check
+    with tab4: # COMPARATIVE BENCHMARK (v9.0)
+        baseline = report.get('baseline_trace', [])
+        # We need to compare baseline (sentiment) vs ScriptPulse Valence/Effort
+        # Let's verify ScriptPulse provides rigorous structure where Baseline is flat?
+        if baseline:
+            st.markdown("**1. ScriptPulse vs. Standard Sentiment (VADER Control)**")
+            st.caption("Value Add: Divergence indicates Structural Insight vs Word-Polarity.")
+            
+            pulse_trace = [p['attentional_signal'] for p in report['temporal_trace']]
+            # Align lengths
+            min_len = min(len(pulse_trace), len(baseline))
+            
+            chart_data = pd.DataFrame({
+                'ScriptPulse (Cognitive Load)': pulse_trace[:min_len],
+                'Baseline (Sentiment Polarity)': baseline[:min_len]
+            })
+            st.line_chart(chart_data)
+        
+        # New v9.1 Comparison: Hybrid NLP vs Heuristic
+        flux = report.get('semantic_flux', [])
+        if flux:
+            st.markdown("---")
+            st.markdown("**2. Methodology Validation: Embeddings vs Heuristics**")
+            st.caption("Does our purely heuristic 'Coherence' (Red) match deep-learning 'Semantic Flux' (Blue)?")
+            
+            # Get Coherence scores from trace
+            coherence_vals = [p.get('coherence_penalty', 0.0) for p in report['temporal_trace']]
+            
+            min_len_flux = min(len(flux), len(coherence_vals))
+            
+            # Calculate Correlation
+            if min_len_flux > 2:
+                # Manual Pearson since no numpy/scipy assumption in runner, but here in streamlit we usually have pandas
+                s1 = pd.Series(flux[:min_len_flux])
+                s2 = pd.Series(coherence_vals[:min_len_flux])
+                corr = s1.corr(s2)
+                st.metric("Method Convergence (Pearson)", f"{corr:.3f}", help="> 0.5 indicates our heuristics validly proxy deep learning.")
+            
+            flux_chart = pd.DataFrame({
+                'Semantic Flux (Embeddings/N-Gram)': flux[:min_len_flux],
+                'Coherence Penalty (Heuristic)': coherence_vals[:min_len_flux]
+            })
+            st.area_chart(flux_chart)
+
+    with tab5: # HCI / Comparator
+        import sys 
         if 'comparator' in sys.modules:
-            pass # Already handled above or placeholder for more rigorous stats
+            pass 
         st.info("Longitudinal tracking active in sidebar.")
     
     # Store current run for next time

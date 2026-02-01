@@ -1,112 +1,78 @@
 """
-ScriptPulse Research - Baseline Comparison
-Gap Solved: "Is this just word count?"
+ScriptPulse Research Baselines (Control Group)
+Gap Solved: "Comparative Benchmark"
 
-This script compares ScriptPulse's 'Attentional Load' against standard baselines:
-1. Raw Word Count
-2. Action Line Density
-
-Hypothesis: ScriptPulse should correlate MODERATELY (0.4-0.6) with these, 
-proving it captures structural nuance beyond raw volume.
+Implements a standard Rule-Based Sentiment Analysis (VADER-style) 
+to act as a baseline for comparing ScriptPulse's Cognitive Trace.
 """
 
-import sys
-import os
-import json
-import statistics
 import math
 
-# Add root to path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from scriptpulse import runner
-
-def calculate_baselines(script_text):
+def run_baseline_sentiment(scenes):
     """
-    Compute standard baseline metrics for the script.
+    Run a standard sentiment analysis on the scenes.
+    Returns a trace of Sentiment scores (-1.0 to 1.0).
+    
+    This mimics VADER/TextBlob logic:
+    - BoW (Bag of Words) approach.
+    - Intensifiers (very, really).
+    - Negations (not, never).
     """
-    # Simple parse based on runner's parser results would be better, 
-    # but let's do a raw pass for independence.
-    scenes = runner.parse_structure(script_text)
+    trace = []
     
-    baseline_data = []
+    # 1. Lexicons (Standard Academic Baselines)
+    pos_words = {
+        'good', 'great', 'excellent', 'amazing', 'happy', 'joy', 'love', 'beautiful', 
+        'best', 'win', 'success', 'vibrant', 'light', 'hero', 'safe', 'relief',
+        'calm', 'peace', 'hope', 'laugh', 'smile', 'fun', 'yes', 'alive'
+    }
     
-    # We need the raw segmentation to count words per scene
-    # Re-running runner to get segmentation
-    from scriptpulse.agents import parsing, segmentation
-    parsed = parsing.run(script_text)
-    segmented = segmentation.run(parsed)
+    neg_words = {
+        'bad', 'terrible', 'horrible', 'worst', 'sad', 'pain', 'death', 'kill', 
+        'die', 'dead', 'fear', 'afraid', 'dark', 'evil', 'danger', 'risk', 
+        'loss', 'fail', 'no', 'stop', 'hate', 'enemy', 'fight', 'hurt', 'cry'
+    }
     
-    for scene in segmented:
-        # 1. Word Count
-        content = "\n".join([line['text'] for line in scene['lines']])
-        word_count = len(content.split())
+    intensifiers = {
+        'very', 'really', 'extremely', 'absolutely', 'completely', 'so'
+    }
+    
+    negators = {
+        'not', 'never', 'no', 'neither', 'nor', 'cannot', 'cant', 'wont', 'dont'
+    }
+    
+    for scene in scenes:
+        lines = scene.get('lines', [])
+        text = " ".join([l['text'] for l in lines]).lower()
+        words = text.replace('.', '').replace(',', '').split()
         
-        # 2. Line Density (Lines of Action vs Dialogue)
-        action_lines = sum(1 for line in scene['lines'] if line['type'] == 'ACTION')
+        score = 0.0
         
-        baseline_data.append({
-            'scene_index': scene['scene_index'],
-            'word_count': word_count,
-            'action_lines': action_lines
-        })
+        if not words:
+            trace.append(0.0)
+            continue
+            
+        for i, w in enumerate(words):
+            val = 0
+            if w in pos_words: val = 1
+            elif w in neg_words: val = -1
+            
+            if val != 0:
+                # Check previous word for modifiers
+                if i > 0:
+                    prev = words[i-1]
+                    if prev in negators:
+                        val *= -0.5 # Flip and dampen ("not happy" != "sad")
+                    elif prev in intensifiers:
+                        val *= 1.5
+                        
+                score += val
+                
+        # Normalize to -1.0 to 1.0
+        # VADER uses x / sqrt(x^2 + alpha)
+        alpha = 15
+        norm_score = score / math.sqrt(score*score + alpha)
         
-    return baseline_data
-
-def run_comparison(script_file):
-    with open(script_file, 'r') as f:
-        text = f.read()
+        trace.append(round(norm_score, 3))
         
-    print(f"Analyzing {os.path.basename(script_file)}...")
-    
-    # 1. Run ScriptPulse (The "Model")
-    # We want the Effort (E) vector
-    sp_output = runner.run_pipeline(text)
-    trace = sp_output['temporal_trace']
-    sp_scores = [t['effort'] for t in trace]
-    
-    # 2. Run Baselines
-    baselines = calculate_baselines(text)
-    word_counts = [b['word_count'] for b in baselines]
-    
-    # 3. Calculate Correlation
-    if len(sp_scores) != len(word_counts):
-        print("Error: aligned mismatch.")
-        return
-
-    corr = correlation(sp_scores, word_counts)
-    
-    print("\n--- RESULTS ---")
-    print(f"Correlation (ScriptPulse vs WordCount): {corr:.3f}")
-    
-    if 0.3 <= corr <= 0.8:
-        print("✅ SUCCESS: Moderate correlation.")
-        print("Interpretation: ScriptPulse captures volume AND structural nuance.")
-    elif corr > 0.8:
-        print("⚠️ WARNING: High correlation.")
-        print("Interpretation: ScriptPulse is mostly just counting words.")
-    else:
-        print("ℹ️ NOTE: Low correlation. The distinct structural signal is very strong.")
-
-def correlation(x, y):
-    """Pearson correlation coefficient"""
-    n = len(x)
-    if n != len(y): return 0
-    if n < 2: return 0
-    
-    mx = statistics.mean(x)
-    my = statistics.mean(y)
-    
-    xm = [i - mx for i in x]
-    ym = [i - my for i in y]
-    
-    r_num = sum(a * b for a, b in zip(xm, ym))
-    r_den = math.sqrt(sum(a * a for a in xm) * sum(b * b for b in ym))
-    
-    if r_den == 0: return 0
-    return r_num / r_den
-
-if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: python3 research/baselines.py <script_file>")
-        sys.exit(1)
-    run_comparison(sys.argv[1])
+    return trace

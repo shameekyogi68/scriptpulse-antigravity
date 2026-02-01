@@ -74,7 +74,13 @@ class TestResearchLayers(unittest.TestCase):
         self.assertIn('suggestions', report)
         print("  > Suggestions: OK")
         
-        print("v8.0 Pipeline Success.")
+        # Check v9.0 (Research Hardening)
+        self.assertIn('baseline_trace', report)
+        self.assertIn('semantic_flux', report)
+        print(f"  > Baselines: {len(report['baseline_trace'])} points")
+        print(f"  > Semantic Flux: {len(report['semantic_flux'])} points")
+        
+        print("v8.0/v9.0 Pipeline Success.")
 
 if __name__ == '__main__':
     unittest.main()
