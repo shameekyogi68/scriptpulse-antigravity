@@ -500,20 +500,22 @@ if script_input and st.button("Analyze Rhythm", type="primary"):
     ])
     
     with tab1:
-        xai_attribution = report.get('xai_attribution', {}) # Keep as dict for overall summary
-        if xai_attribution:
-            dominant_driver = xai_attribution.get('dominant_driver', 'Unknown')
+        # xai_attribution is a LIST of dicts (one per scene)
+        xai_attribution = report.get('xai_attribution', [])
+        
+        if xai_attribution and len(xai_attribution) > 0:
+            # Show overall dominant driver (from first scene or aggregate)
+            first_scene_xai = xai_attribution[0] if isinstance(xai_attribution[0], dict) else {}
+            dominant_driver = first_scene_xai.get('dominant_driver', 'Unknown')
+            
             st.markdown(f"**Primary Driver:** {dominant_driver.title() if isinstance(dominant_driver, str) else 'Unknown'}")
             
-            attr = xai_attribution.get('attribution', {})
-            # Rename keys for display
-            display_attr = {
-                 'Linguistic Load' if k=='linguistic_load' else 
-                 'Visual Impact' if k=='visual_abstraction' else
-                 'Dialogue Dynamics' if k=='dialogue_dynamics' else k: v 
-                 for k,v in attr.items()
-            }
-            st.bar_chart(display_attr)
+            # Show driver breakdown (from first scene)
+            drivers = first_scene_xai.get('drivers', {})
+            if drivers:
+                st.caption("Contribution breakdown:")
+                for driver, pct in drivers.items():
+                    st.progress(pct, text=f"{driver}: {int(pct*100)}%")
             
         # v10.1: Voice Distinctiveness Map
         voice_data = report.get('voice_fingerprints', {})
