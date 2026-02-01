@@ -678,8 +678,9 @@ if script_input and st.button("Analyze Rhythm", type="primary"):
             act_data = []
             for name, scenes in acts.items():
                 if not scenes: continue
-                avg_t = sum(s['attentional_signal'] for s in scenes) / len(scenes)
-                avg_v = sum(report['valence_scores'][s['scene_index']] for s in scenes if s['scene_index'] < len(report['valence_scores'])) / len(scenes)
+                avg_t = sum(s.get('attentional_signal', 0) for s in scenes) / len(scenes) if scenes else 0
+                valence_scores = report.get('valence_scores', [])
+                avg_v = sum(valence_scores[s['scene_index']] for s in scenes if s.get('scene_index', 0) < len(valence_scores)) / len(scenes) if scenes and valence_scores else 0
                 act_data.append({
                     "Act": name,
                     "Avg Tension": avg_t,
@@ -716,7 +717,7 @@ if script_input and st.button("Analyze Rhythm", type="primary"):
         selected_benchmark = st.selectbox("Compare to Classic:", benchmark_options, help="Overlay your script against classic narrative structures")
         
         chart_data = pd.DataFrame({
-            'Your Script': [p['attentional_signal'] for p in report['temporal_trace']]
+            'Your Script': [p.get('attentional_signal', 0) for p in report.get('temporal_trace', [])]
         })
         
         if selected_benchmark != "None":
@@ -731,7 +732,7 @@ if script_input and st.button("Analyze Rhythm", type="primary"):
         st.caption("Your script as Index Cards. Color = Tension (Red=Intense, Gray=Calm)")
         
         # Create cards
-        trace = report['temporal_trace']
+        trace = report.get('temporal_trace', [])
         cols_per_row = 5
         for row_start in range(0, len(trace), cols_per_row):
             cols = st.columns(cols_per_row)
@@ -741,7 +742,7 @@ if script_input and st.button("Analyze Rhythm", type="primary"):
                     break
                     
                 point = trace[idx]
-                tension = point['attentional_signal']
+                tension = point.get('attentional_signal', 0)
                 state = point.get('affective_state', 'Normal')
                 
                 # Color mapping
@@ -777,7 +778,7 @@ if script_input and st.button("Analyze Rhythm", type="primary"):
             st.caption("Comparision of 'Thematic Focus' (Blue) vs 'Structural Coherence' (Red).")
             
             # Get Coherence scores from trace
-            coherence_vals = [p.get('coherence_penalty', 0.0) for p in report['temporal_trace']]
+            coherence_vals = [p.get('coherence_penalty', 0.0) for p in report.get('temporal_trace', [])]
             
             min_len_flux = min(len(flux), len(coherence_vals))
             
@@ -873,11 +874,11 @@ if script_input and st.button("Analyze Rhythm", type="primary"):
         # Simple aggregator: separate Anxiety vs Excitement
         if trace:
             # Find peaks (top 10% strain)
-            sorted_trace = sorted(trace, key=lambda x: x['attentional_signal'], reverse=True)
+            sorted_trace = sorted(trace, key=lambda x: x.get('attentional_signal', 0), reverse=True)
             top_points = sorted_trace[:max(1, len(trace)//10)]
             
             for p in top_points:
-                idx = p['scene_index']
+                idx = p.get('scene_index', 0)
                 affect = p.get('affective_state', 'Intense')
                 val = p.get('valence_score', 0.0)
                 
@@ -902,8 +903,8 @@ if script_input and st.button("Analyze Rhythm", type="primary"):
                 col1, col2, col3 = st.columns(3)
                 
                 # Calculate simple metrics
-                trace = report['temporal_trace']
-                avg_intensity = sum(p['attentional_signal'] for p in trace) / len(trace) if trace else 0
+                trace = report.get('temporal_trace', [])
+                avg_intensity = sum(p.get('attentional_signal', 0) for p in trace) / len(trace) if trace else 0
                 intensity_score = int(avg_intensity * 10)  # 0-10 scale
                 
                 valence_scores = report.get('valence_scores', [])
