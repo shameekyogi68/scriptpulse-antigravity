@@ -467,7 +467,9 @@ if script_input and st.button("Analyze Rhythm", type="primary"):
     if suggestions:
         st.markdown("### 💡 Creative Repair Strategies (Mixed-Initiative)")
         for sugg in suggestions:
-            with st.expander(f"Scene {sugg['scene']}: {sugg['diagnosis']}", expanded=True):
+            scene_num = sugg.get('scene', 'Unknown')
+            diagnosis = sugg.get('diagnosis', 'No diagnosis')
+            with st.expander(f"Scene {scene_num}: {diagnosis}", expanded=True):
                 st.markdown(f"**Strategy:** {sugg['strategy']}")
                 for tactic in sugg.get('tactics', []):
                     st.markdown(f"- {tactic}")
