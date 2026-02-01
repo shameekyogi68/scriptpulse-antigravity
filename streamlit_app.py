@@ -206,7 +206,7 @@ scene_list = []
 if uploaded_file is not None:
     # READ FILE
     try:
-        file_ext = uploaded_file.name.split('.')[-1].lower()
+        file_ext = uploaded_file.name.split('.')[-1].lower() if uploaded_file and hasattr(uploaded_file, 'name') else 'txt'
 
         if file_ext == 'fdx':
             # FDX Handling
@@ -956,7 +956,7 @@ if script_input and st.button("Analyze Rhythm", type="primary"):
                 st.sidebar.download_button(
                     label="Print Summary (1-page)",
                     data=print_html,
-                    file_name=f"{uploaded_file.name}_summary.html",
+                    file_name=f"{script_title}_summary.html",
                     mime="text/html",
                     help="Concise printable summary"
                 )
