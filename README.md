@@ -36,6 +36,11 @@ ScriptPulse v8.0 integrates **11 Specialized Research Agents** to model the comp
 25. **Scene-Level Feedback** (`agents/scene_notes.py`): Actionable notes for each scene (e.g., "Add conflict").
 26. **Print Summary** (`reporters/print_summary.py`): 1-page printable summary (Top 5 problems + strengths).
 27. **Save/Load Analysis** (Backend): Export/import analysis as JSON to resume later.
+28. **ML Feature Engineering** (`research/features.py`): 7-feature vector extraction (dialogue_ratio, sentiment_variance, etc.).
+29. **ML Model Training** (`research/ml_models.py`): Random Forest/Gradient Boosting for tension prediction.
+30. **Quantitative Evaluation** (`research/evaluation.py`): MAE, RMSE, R² metrics with baseline comparison.
+31. **Cross-Validation** (`research/ml_models.py`): 5-fold validation with mean±std reporting.
+32. **Ablation Study** (`research/ablation.py`): Feature importance analysis via systematic removal.
 
 ---
 
