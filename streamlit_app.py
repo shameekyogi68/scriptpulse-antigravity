@@ -712,8 +712,7 @@ if script_input and st.button("Analyze Rhythm", type="primary"):
         st.subheader("📈 Cognitive Intensity Over Time")
         
         # v12.0: Benchmark Overlay
-        from scriptpulse.research import imprints
-        benchmark_options = ["None"] + list(imprints.IMPRINTS.keys())
+        benchmark_options = ["None", "Linear Rise", "Three-Act", "Hero's Journey"]
         selected_benchmark = st.selectbox("Compare to Classic:", benchmark_options, help="Overlay your script against classic narrative structures")
         
         chart_data = pd.DataFrame({
@@ -721,8 +720,16 @@ if script_input and st.button("Analyze Rhythm", type="primary"):
         })
         
         if selected_benchmark != "None":
-            benchmark_trace = imprints.get_imprint(selected_benchmark, len(chart_data))
-            chart_data[selected_benchmark] = benchmark_trace
+            # Simple benchmark patterns
+            n = len(chart_data)
+            if selected_benchmark == "Linear Rise":
+                chart_data['Classic Pattern'] = [i/n for i in range(n)]
+            elif selected_benchmark == "Three-Act":
+                chart_data['Classic Pattern'] = [0.3 if i < n*0.25 else 0.7 if i < n*0.75 else 0.9 for i in range(n)]
+            elif selected_benchmark == "Hero's Journey":
+                # This pattern is a simplified example, ensure it matches the length of chart_data
+                hero_pattern = [0.2, 0.4, 0.5, 0.3, 0.6, 0.8, 0.9, 0.7, 0.5]
+                chart_data['Classic Pattern'] = (hero_pattern * (n // len(hero_pattern) + 1))[:n]
             
         st.line_chart(chart_data)
         
