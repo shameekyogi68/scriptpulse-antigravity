@@ -41,6 +41,11 @@ ScriptPulse v8.0 integrates **11 Specialized Research Agents** to model the comp
 30. **Quantitative Evaluation** (`research/evaluation.py`): MAE, RMSE, R² metrics with baseline comparison.
 31. **Cross-Validation** (`research/ml_models.py`): 5-fold validation with mean±std reporting.
 32. **Ablation Study** (`research/ablation.py`): Feature importance analysis via systematic removal.
+33. **Error Analysis** (`research/advanced_analysis.py`): Pattern identification in prediction errors.
+34. **Learning Curves** (`research/advanced_analysis.py`): Performance vs training data size visualization.
+35. **Statistical Significance** (`research/advanced_analysis.py`): Wilcoxon test + Cohen's d effect size.
+36. **Hyperparameter Tuning** (`research/hyperparameter_tuning.py`): GridSearch for optimal model parameters.
+37. **Visualization Suite** (`research/advanced_analysis.py`): Prediction scatter plots, correlation heatmaps.
 
 ---
 
