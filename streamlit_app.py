@@ -923,32 +923,6 @@ if script_input and st.button("Analyze Rhythm", type="primary"):
                     # Signal display code would go here
                 
                 
-                # v13.0: Simple Summary Card (Non-Technical)
-                st.markdown("---")
-                st.markdown("## 📋 Your Script in 3 Numbers")
-                
-                col1, col2, col3 = st.columns(3)
-                
-                # Calculate simple metrics
-                trace = report.get('temporal_trace', [])
-                avg_intensity = sum(p.get('attentional_signal', 0) for p in trace) / len(trace) if trace else 0
-                intensity_score = int(avg_intensity * 10)  # 0-10 scale
-                
-                valence_scores = report.get('valence_scores', [])
-                avg_valence = sum(valence_scores) / len(valence_scores) if valence_scores else 0
-                
-                runtime_info = report.get('runtime_estimate', {})
-                runtime_text = f"~{runtime_info.get('avg_minutes', 0)} minutes"
-                
-                with col1:
-                    st.metric(
-                        "Story Intensity", 
-                        f"{intensity_score}/10",
-                        help="How gripping your story is. Higher = more intense."
-                    )
-                    
-                with col2:
-                    if avg_valence > 0.1:
                         emotion = "Happy 😊"
                     elif avg_valence < -0.1:
                         emotion = "Serious 😐"
