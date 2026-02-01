@@ -944,15 +944,15 @@ if script_input and st.button("Analyze Rhythm", type="primary"):
                 report_json = json.dumps(report, indent=2, default=str)
                 st.sidebar.download_button(
                     label="Save Analysis (JSON)",
-                    data=report_json,
-                    file_name=f"{uploaded_file.name}_analysis.json",
+                    data=json.dumps(report, indent=2),
+                    file_name=f"{script_title}_analysis.json",
                     mime="application/json",
-                    help="Save analysis to resume later"
+                    help="Download raw analysis data for external processing"
                 )
                 
                 # Print Summary
                 from scriptpulse.reporters import print_summary
-                print_html = print_summary.generate_print_summary(report, script_title=uploaded_file.name)
+                print_html = print_summary.generate_print_summary(report, script_title=script_title)
                 st.sidebar.download_button(
                     label="Print Summary (1-page)",
                     data=print_html,
