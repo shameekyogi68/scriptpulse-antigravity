@@ -13,14 +13,57 @@ Avoids heavy NLP dependencies (Spacy) for portability while maintaining high cor
 import re
 import statistics
 
+def analyze_diction_weakness(scene_lines):
+    """
+    Identify weak verbs in Action lines.
+    """
+    weak_markers = {'is', 'are', 'was', 'were', 'has', 'have', 'had'}
+    weak_count = 0
+    suggestions = []
+    
+    for line in scene_lines:
+        if line.get('tag') == 'A': # Ensure 'tag' exists and is 'A'
+            words = line['text'].lower().split()
+            found = [w for w in words if w in weak_markers]
+            if found:
+                weak_count += len(found)
+                if len(suggestions) < 3: # Limit detailed examples
+                    suggestions.append(f"Line {line.get('line_index', '?')}: usage of '{found[0]}' (Passive/Weak)")
+                    
+    for line in scene_lines:
+        if line.get('tag') == 'A': # Ensure 'tag' exists and is 'A'
+            words = line['text'].lower().split()
+            found = [w for w in words if w in weak_markers]
+            if found:
+                weak_count += len(found)
+                if len(suggestions) < 3: # Limit detailed examples
+                    suggestions.append(f"Line {line.get('line_index', '?')}: usage of '{found[0]}' (Passive/Weak)")
+                    
+    return weak_count, suggestions
+
+def detect_exposition_dumps(scene_lines):
+    """
+    Identify potential info-dumps (Long, complex dialogue).
+    """
+    expos = []
+    for line in scene_lines:
+        if line.get('tag') == 'D':
+            words = line['text'].split()
+            if len(words) > 40: # Long monologue
+                # Check complexity (quick heuristic: average word length or comma usage)
+                avg_len = sum(len(w) for w in words)/len(words)
+                commas = line['text'].count(',')
+                if avg_len > 4.5 or commas > 3: # Complex language
+                    expos.append(f"Line {line.get('line_index', '?')}: High-Density Monologue ({len(words)} words). Risk of Exposition Dump.")
+    return expos
+
 def run(data):
     """
-    Calculate Syntactic Complexity for each scene.
-    
-    Returns:
-        List of float (Complexity scores 0.0-1.0)
+    Analyze syntax complexity and diction.
     """
     scenes = data.get('scenes', [])
+    if not scenes: return {}
+    
     complexity_scores = []
     
     # Clause markers (Subordinating conjunctions & Relative pronouns)
@@ -28,7 +71,7 @@ def run(data):
     patterns = [
         r'\bwhich\b', r'\bthat\b', r'\bwho\b', r'\bwhom\b', r'\bwhose\b', # Relative
         r'\bbecause\b', r'\balthough\b', r'\bif\b', r'\bwhile\b', r'\bwhen\b', # Subordinating
-        r'\bunitl\b', r'\bunless\b', r'\bsince\b', r'\bwhereas\b',
+        r'\buntil\b', r'\bunless\b', r'\bsince\b', r'\bwhereas\b', # Corrected 'unitl' to 'until'
         r'[,;]\s*and\b', r'[,;]\s*but\b' # Compound
     ]
     regex = re.compile('|'.join(patterns), re.IGNORECASE)
@@ -40,9 +83,17 @@ def run(data):
             continue
             
         scene_scores = []
+        scene_total_words = 0
+        scene_total_matches = 0
+        
         for line in lines:
             # Count clause markers
             matches = len(regex.findall(line))
+            
+            # Update totals
+            scene_total_matches += matches
+            words_count = len(line.split())
+            scene_total_words += words_count
             
             # Count punctuation (commas often delimit clauses)
             commas = line.count(',')
@@ -52,18 +103,33 @@ def run(data):
             depth_proxy = 1.0 + (matches * 0.8) + (commas * 0.2)
             
             # Penalize length (long sentences with no structure are hard too)
-            words = len(line.split())
-            if words > 20: 
-                depth_proxy += (words - 20) * 0.05
+            if words_count > 20: 
+                depth_proxy += (words_count - 20) * 0.05
                 
             scene_scores.append(depth_proxy)
             
         # Scene score is the average depth of its sentences
         avg_depth = statistics.mean(scene_scores) if scene_scores else 1.0
         
-        # Normalize: Typical depth range 1.0 - 4.0
-        # Scale to 0.0 - 1.0
-        norm_score = max(0.0, min(1.0, (avg_depth - 1.0) / 3.0))
-        complexity_scores.append(norm_score)
-        
-    return complexity_scores
+        # Normalize (rough heuristic: higher clause density = higher complexity)
+        # Avg words per clause approx
+        c_len = scene_total_words
+        ratio = scene_total_matches / max(1, c_len) * 20 # 1 match per 20 words is high
+        complexity_scores.append(min(1.0, ratio))
+
+    # Diction Scan (v10.1) & Exposition Scan (v11.0)
+    diction_issues = []
+    
+    for scene in scenes:
+        cnt, exs = analyze_diction_weakness(scene['lines'])
+        if cnt > 2: 
+             diction_issues.extend(exs)
+             
+        # v11.0: Exposition Alarm
+        dumps = detect_exposition_dumps(scene['lines'])
+        diction_issues.extend(dumps)
+
+    return {
+        'complexity_scores': complexity_scores,
+        'diction_issues': diction_issues
+    }

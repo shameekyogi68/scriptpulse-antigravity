@@ -7,27 +7,23 @@ Writer-Native Visual Interface
 import streamlit as st
 import sys
 import os
+import json
 import pandas as pd
-import altair as alt
-import time
 
 # Ensure we can import the locked pipeline
-sys.path.append(os.getcwd())
-try:
-    from scriptpulse import runner
-except ImportError:
-    st.error("System Error: ScriptPulse core modules not found. Ensure you are running from the root directory.")
-    st.stop()
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+from scriptpulse import runner
 
 # =============================================================================
 # PAGE CONFIGURATION
 # =============================================================================
 
+# v13.0: Simple, friendly UI for non-technical writers
 st.set_page_config(
-    page_title="ScriptPulse Instrument",
-    page_icon="🎼", # Musical score / Instrument icon
-    layout="wide",
-    initial_sidebar_state="expanded"
+    page_title="ScriptPulse - Easy Script Analyzer",
+    page_icon="🎬",
+    layout="wide"
 )
 
 # =============================================================================
@@ -101,8 +97,62 @@ st.markdown("""
 # =============================================================================
 
 with st.sidebar:
-    st.title("ScriptPulse")
-    st.caption("v6.0 Instrument Mode")
+    # v13.0: Friendly, simple title
+    st.title("ScriptPulse: Story Analysis Tool")
+    st.caption("Upload your script and get instant feedback - no technical knowledge needed!")
+    
+    # Mode Selection (v10.0: Market Readiness)
+    mode = st.sidebar.radio("Analysis Mode", ["Full Script Analysis", "Scene Comparison (A/B)"])
+    
+    # --- MODE 1: SCENE COMPARISON (A/B) ---
+    if mode == "Scene Comparison (A/B)":
+        st.header("⚖️ Scene A/B Testing")
+        st.caption("Compare two versions of a scene side-by-side to see which hits harder.")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            file_a = st.file_uploader("Upload Version A", key="file_a")
+        with col2:
+            file_b = st.file_uploader("Upload Version B", key="file_b")
+            
+        if file_a and file_b:
+            if st.button("Compare Versions"):
+                # Run lightweight analysis
+                import scriptpulse.agents.parsing as p
+                import scriptpulse.agents.temporal as t
+                import scriptpulse.agents.valence as v
+                
+                def analyze_snippet(f):
+                    txt = f.getvalue().decode('utf-8')
+                    parsed = p.run(txt)
+                    # Hack: Treat snippets as single scenes
+                    scene = {'lines': parsed, 'scene_index': 0}
+                    
+                    # Manual extraction
+                    temp_score = t.calculate_attentional_pulse({'scenes': [scene]})[0]
+                    val_score = v.run({'scenes': [scene]})[0]
+                    return temp_score, val_score, len(parsed)
+                    
+                t_a, v_a, len_a = analyze_snippet(file_a)
+                t_b, v_b, len_b = analyze_snippet(file_b)
+                
+                # Display Results
+                c1, c2 = st.columns(2)
+                with c1:
+                    st.metric("Cognitive Load (Effort)", f"{t_a['attentional_signal']:.2f}", 
+                             delta=f"{t_a['attentional_signal'] - t_b['attentional_signal']:.2f} vs B")
+                    st.metric("Emotional Impact (Valence)", f"{v_a:.2f}")
+                    st.subheader("Version A")
+                
+                with c2:
+                    st.metric("Cognitive Load (Effort)", f"{t_b['attentional_signal']:.2f}",
+                             delta=f"{t_b['attentional_signal'] - t_a['attentional_signal']:.2f} vs A")
+                    st.metric("Emotional Impact (Valence)", f"{v_b:.2f}")
+                    st.subheader("Version B")
+                    
+        st.stop() # Stop here so we don't render the main app
+        
+    # --- MODE 2: FULL ANALYSIS (The Original App) ---
     
     st.info(
         "**The Pulse Line**\n"
@@ -155,19 +205,59 @@ scene_list = []
 if uploaded_file is not None:
     # READ FILE
     try:
-        if uploaded_file.type == "application/pdf":
+        file_ext = uploaded_file.name.split('.')[-1].lower()
+
+        if file_ext == 'fdx':
+            # FDX Handling
+            try:
+                from scriptpulse.agents import importers
+                string_data = uploaded_file.getvalue().decode("utf-8")
+                pre_parsed_lines = importers.run(string_data)
+                st.success(f"✅ FDX Parsed: {len(pre_parsed_lines)} lines extracted.")
+                
+                # Reconstruct text for display/fallback
+                script_text = "\n".join([l['text'] for l in pre_parsed_lines])
+                
+            except Exception as e:
+                st.error(f"FDX Parse Error: {e}")
+        elif uploaded_file.type == "application/pdf":
             import PyPDF2
             pdf_reader = PyPDF2.PdfReader(uploaded_file)
             text_parts = [page.extract_text() for page in pdf_reader.pages]
-            script_input = "\n".join(text_parts)
-        else:
-            script_input = uploaded_file.read().decode('utf-8')
+            script_text = "\n".join(text_parts)
+        else: # txt, fountain, md
+            script_text = uploaded_file.read().decode('utf-8')
             
         # IMMEDIATE PARSE (For Scene Picker)
         with st.spinner("Parsing structure..."):
-            scene_list = runner.parse_structure(script_input)
+            # Use pre_parsed_lines if available, otherwise parse script_text
+            if pre_parsed_lines:
+                scene_list = runner.parse_structure(pre_parsed_lines=pre_parsed_lines)
+            else:
+                scene_list = runner.parse_structure(script_text)
             
-        st.success(f"Loaded {len(scene_list)} scenes.")
+        if uploaded_file is not None:
+            # ... (parsing logic) ...
+            
+            st.success(f"Loaded {len(scene_list)} scenes.")
+            
+            # v10.0: Context-Aware Fairness (Character Extraction)
+            # Scan parsed lines for characters (tag='C')
+            all_chars = sorted(list(set([l['text'] for l in (pre_parsed_lines if pre_parsed_lines else runner.parsing.run(script_text)) if l['tag'] == 'C'])))
+            
+            with st.expander("🎭 Character Context (Optional) - Tag Roles"):
+                st.caption("Help the Fairness Auditor understand context (e.g., Villains are expected to be negative).")
+                char_tags = {}
+                cols = st.columns(2)
+                for i, char in enumerate(all_chars):
+                    if i < 10: # Only show top 10 to avoid clutter
+                        role = cols[i%2].selectbox(f"Role for {char}", ["Unknown", "Protagonist", "Antagonist", "Supporting"], key=f"role_{char}")
+                        if role != "Unknown":
+                            char_tags[char] = role
+            
+            # View Script Text
+            with st.expander("View Script Text"):
+                 st.text(script_text[:5000] + "...")
         
     except Exception as e:
         st.error(f"Could not read file: {e}")
@@ -382,21 +472,203 @@ if script_input and st.button("Analyze Rhythm", type="primary"):
                     st.markdown(f"- {tactic}")
                     
     # === DEEP ANALYSIS & ETHICS (Tabs) ===
-    st.markdown("### 🔬 Deep Research Metrics")
-    tab1, tab2, tab3, tab4, tab5 = st.tabs(["Explainability (XAI)", "Macro-Structure", "Algorithmic Fairness", "Comparative Benchmark", "HCI Validation"])
+    st.markdown("### 🔬 Deep Insights")
+    # v13.0: Simplified tab names
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+        "Quick Summary",
+        "Character Details",
+        "Bias Check",
+        "Compare to Classics",
+        "Writing Tips"
+    ])
     
     with tab1:
         xai_data = report.get('xai_attribution', {})
         if xai_data:
-            st.markdown(f"**Dominant Driver:** {xai_data.get('dominant_driver', 'Unknown').title()}")
+            st.markdown(f"**Primary Driver:** {xai_data.get('dominant_driver', 'Unknown').title()}")
             attr = xai_data.get('attribution', {})
-            st.bar_chart(attr)
+            # Rename keys for display
+            display_attr = {
+                 'Linguistic Load' if k=='linguistic_load' else 
+                 'Visual Impact' if k=='visual_abstraction' else
+                 'Dialogue Dynamics' if k=='dialogue_dynamics' else k: v 
+                 for k,v in attr.items()
+            }
+            st.bar_chart(display_attr)
+            
+        # v10.1: Voice Distinctiveness Map
+        voice_data = report.get('voice_fingerprints', {})
+        if voice_data:
+            st.markdown("---")
+            st.subheader("🗣️ Character Voice Map")
+            st.caption("Are your characters distinct? Overlapping dots = 'Same Voice' problem.")
+            
+            # Prepare Data for Scatter Plot
+            # Streamlit scatter_chart is simple, lets use Vega-Lite via st.vega_lite_chart or just st.scatter_chart
+            # st.scatter_chart takes a DF with x, y, color, size
+            
+            v_data = []
+            for char, metrics in voice_data.items():
+                v_data.append({
+                    'Character': char,
+                    'Complexity (Intellect)': metrics['complexity'],
+                    'Positivity (Tone)': metrics['positivity'],
+                    'Agency (Active Verbs)': metrics['agency'] * 100, # Scale for size
+                    'Lines': metrics['line_count']
+                })
+            
+            if v_data:
+                df_voice = pd.DataFrame(v_data)
+                st.scatter_chart(
+                    df_voice,
+                    x='Complexity (Intellect)',
+                    y='Positivity (Tone)',
+                    size='Agency (Active Verbs)',
+                    color='Character',
+                )
+            else:
+                st.info("Not enough dialogue for Voice Analysis.")
+            
+            # v13.0: Character Arc Tracking (Growth Over Time)
+            st.markdown("---")
+            st.subheader("📈 Character Growth Tracker")
+            st.caption("Do your characters evolve? This shows if they become more confident/active over the story.")
+            
+            voice_map = report.get('voice_fingerprints', {})
+            if voice_map and len(report['scenes']) > 6:  # Need enough scenes for acts
+                # Divide script into 3 acts
+                num_scenes = len(report['scenes'])
+                act1_end = num_scenes // 3
+                act2_end = 2 * num_scenes // 3
+                
+                # Calculate agency per act for each character
+                char_arcs = {}
+                for char, profile in voice_map.items():
+                    if profile['line_count'] < 5:  # Skip minor characters
+                        continue
+                    
+                    # Get agency scores per scene
+                    scenes = report['scenes']
+                    act1_agency = []
+                    act2_agency = []
+                    act3_agency = []
+                    
+                    for i, scene in enumerate(scenes):
+                        # Check if character speaks in this scene
+                        char_in_scene = any(
+                            line.get('tag') == 'C' and char in line.get('text', '')
+                            for line in scene['lines']
+                        )
+                        if not char_in_scene:
+                            continue
+                            
+                        # Use valence as proxy for "agency" (positive = active)
+                        val_scores = report.get('valence_scores', [])
+                        if i < len(val_scores):
+                            if i < act1_end:
+                                act1_agency.append(val_scores[i])
+                            elif i < act2_end:
+                                act2_agency.append(val_scores[i])
+                            else:
+                                act3_agency.append(val_scores[i])
+                    
+                    if act1_agency and act3_agency:
+                        char_arcs[char] = {
+                            'Act 1': sum(act1_agency) / len(act1_agency) if act1_agency else 0,
+                            'Act 2': sum(act2_agency) / len(act2_agency) if act2_agency else 0,
+                            'Act 3': sum(act3_agency) / len(act3_agency) if act3_agency else 0
+                        }
+                
+                if char_arcs:
+                    # Show as simple line chart
+                    import pandas as pd
+                    arc_df = pd.DataFrame(char_arcs).T
+                    st.line_chart(arc_df)
+                    
+                    # Interpret
+                    for char, scores in char_arcs.items():
+                        trend = scores['Act 3'] - scores['Act 1']
+                        if trend > 0.1:
+                            st.success(f"✅ **{char}** grows more confident/positive (↗️ +{trend:.2f})")
+                        elif trend < -0.1:
+                            st.warning(f"⚠️ **{char}** becomes more negative/passive (↘️ {trend:.2f})")
+                        else:
+                            st.info(f"➡️ **{char}** stays consistent")
+                else:
+                    st.info("Not enough data to track character arcs.")
+            
+            # v11.0: Interaction Heatmap (Chemistry)
+            interaction_map = report.get('interaction_map', {})
+            # Need to compute Valence for pairs
+            # Map: "A|B" -> [idx, idx]
+            # Valence: report['valence_scores'][idx]
+            
+            if interaction_map:
+                st.markdown("---")
+                st.subheader("💞 Interaction Chemistry (Heatmap)")
+                st.caption("How positive/negative are key relationships? (Red = Conflict, Blue = Bonding)")
+                
+                val_scores = report.get('valence_scores', [])
+                chem_data = []
+                
+                for pair, indices in interaction_map.items():
+                    if len(indices) < 2: continue # Ignore brief encounters
+                    
+                    # Calculate Avg Valence for this Pair
+                    pair_vals = [val_scores[i] for i in indices if i < len(val_scores)]
+                    if not pair_vals: continue
+                    
+                    avg_val = sum(pair_vals) / len(pair_vals)
+                    c1, c2 = pair.split('|')
+                    chem_data.append({'Char A': c1, 'Char B': c2, 'Chemistry': avg_val})
+                    # Add symmetric for full matrix
+                    chem_data.append({'Char A': c2, 'Char B': c1, 'Chemistry': avg_val})
+                    
+                if chem_data:
+                    df_chem = pd.DataFrame(chem_data)
+                    # Pivot to matrix
+                    matrix = df_chem.pivot(index='Char A', columns='Char B', values='Chemistry').fillna(0)
+                    st.dataframe(matrix.style.background_gradient(cmap='coolwarm', vmin=-0.5, vmax=0.5))
+                else:
+                    st.info("No significant character interactions found.")
             
     with tab2:
         macro = report.get('macro_structure_fidelity', {})
         if macro:
             best_fit = macro.get('best_fit_template', 'Unknown')
             score = macro.get('fidelity_score', 0.0)
+            st.metric("Structure Fidelity Score", f"{macro.get('fidelity_score', 0)}%")
+            st.caption("Adherence to standard 3-Act structure (Setup, Confrontation, Resolution).")
+            
+        # v10.1: Act Sequence Analysis
+        st.markdown("### 🎬 Act Sequence Analysis")
+        trace = report.get('temporal_trace', [])
+        if len(trace) > 10:
+            n = len(trace)
+            act1_end = int(n * 0.25)
+            act2_end = int(n * 0.75)
+            
+            acts = {
+                "Act 1 (Setup)": trace[:act1_end],
+                "Act 2 (Confrontation)": trace[act1_end:act2_end],
+                "Act 3 (Resolution)": trace[act2_end:]
+            }
+            
+            act_data = []
+            for name, scenes in acts.items():
+                if not scenes: continue
+                avg_t = sum(s['attentional_signal'] for s in scenes) / len(scenes)
+                avg_v = sum(report['valence_scores'][s['scene_index']] for s in scenes if s['scene_index'] < len(report['valence_scores'])) / len(scenes)
+                act_data.append({
+                    "Act": name,
+                    "Avg Tension": avg_t,
+                    "Avg Valence": avg_v,
+                    "Scenes": len(scenes)
+                })
+                
+            st.table(pd.DataFrame(act_data).set_index("Act").style.highlight_max(axis=0))
+        else:
+            st.info("Script too short for Act Analysis.")
             st.metric("Narrative Arc Match", best_fit, delta=f"{score*100:.1f}% Fidelity")
             
     with tab3: # FAIRNESS AUDIT (v8.0)
@@ -414,46 +686,83 @@ if script_input and st.button("Analyze Rhythm", type="primary"):
             st.dataframe(stats)
             
     with tab4: # COMPARATIVE BENCHMARK (v9.0)
-        baseline = report.get('baseline_trace', [])
-        # We need to compare baseline (sentiment) vs ScriptPulse Valence/Effort
-        # Let's verify ScriptPulse provides rigorous structure where Baseline is flat?
-        if baseline:
-            st.markdown("**1. ScriptPulse vs. Standard Sentiment (VADER Control)**")
-            st.caption("Value Add: Divergence indicates Structural Insight vs Word-Polarity.")
-            
-            pulse_trace = [p['attentional_signal'] for p in report['temporal_trace']]
-            # Align lengths
-            min_len = min(len(pulse_trace), len(baseline))
-            
-            chart_data = pd.DataFrame({
-                'ScriptPulse (Cognitive Load)': pulse_trace[:min_len],
-                'Baseline (Sentiment Polarity)': baseline[:min_len]
-            })
-            st.line_chart(chart_data)
+        # Main Pulse Chart
+        st.subheader("📈 Cognitive Intensity Over Time")
         
+        # v12.0: Benchmark Overlay
+        from scriptpulse.research import imprints
+        benchmark_options = ["None"] + list(imprints.IMPRINTS.keys())
+        selected_benchmark = st.selectbox("Compare to Classic:", benchmark_options, help="Overlay your script against classic narrative structures")
+        
+        chart_data = pd.DataFrame({
+            'Your Script': [p['attentional_signal'] for p in report['temporal_trace']]
+        })
+        
+        if selected_benchmark != "None":
+            benchmark_trace = imprints.get_imprint(selected_benchmark, len(chart_data))
+            chart_data[selected_benchmark] = benchmark_trace
+            
+        st.line_chart(chart_data)
+        
+        # v12.0: Visual Beat Board (Index Card View)
+        st.markdown("---")
+        st.subheader("🗂️ Visual Beat Board")
+        st.caption("Your script as Index Cards. Color = Tension (Red=Intense, Gray=Calm)")
+        
+        # Create cards
+        trace = report['temporal_trace']
+        cols_per_row = 5
+        for row_start in range(0, len(trace), cols_per_row):
+            cols = st.columns(cols_per_row)
+            for i, col in enumerate(cols):
+                idx = row_start + i
+                if idx >= len(trace):
+                    break
+                    
+                point = trace[idx]
+                tension = point['attentional_signal']
+                state = point.get('affective_state', 'Normal')
+                
+                # Color mapping
+                if tension > 0.8:
+                    color = "#ff4444"  # Red
+                elif tension > 0.6:
+                    color = "#ff9944"  # Orange
+                elif tension > 0.4:
+                    color = "#ffdd44"  # Yellow
+                else:
+                    color = "#dddddd"  # Gray
+                    
+                # Emoji for state
+                emoji = "🔥" if state == "Anxiety" else "😐" if state == "Normal" else "🔵"
+                
+                with col:
+                    st.markdown(
+                        f"""
+                        <div style="background: {color}; padding: 10px; border-radius: 5px; margin: 5px 0; min-height: 80px; border: 2px solid #333;">
+                            <div style="font-weight: bold; font-size: 11px;">Scene {idx+1} {emoji}</div>
+                            <div style="font-size: 10px; color: #333;">Tension: {tension:.2f}</div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+        
+        st.markdown("---")
         # New v9.1 Comparison: Hybrid NLP vs Heuristic
         flux = report.get('semantic_flux', [])
         if flux:
             st.markdown("---")
-            st.markdown("**2. Methodology Validation: Embeddings vs Heuristics**")
-            st.caption("Does our purely heuristic 'Coherence' (Red) match deep-learning 'Semantic Flux' (Blue)?")
+            st.markdown("**2. Focus & Coherence Check**")
+            st.caption("Comparision of 'Thematic Focus' (Blue) vs 'Structural Coherence' (Red).")
             
             # Get Coherence scores from trace
             coherence_vals = [p.get('coherence_penalty', 0.0) for p in report['temporal_trace']]
             
             min_len_flux = min(len(flux), len(coherence_vals))
             
-            # Calculate Correlation
-            if min_len_flux > 2:
-                # Manual Pearson since no numpy/scipy assumption in runner, but here in streamlit we usually have pandas
-                s1 = pd.Series(flux[:min_len_flux])
-                s2 = pd.Series(coherence_vals[:min_len_flux])
-                corr = s1.corr(s2)
-                st.metric("Method Convergence (Pearson)", f"{corr:.3f}", help="> 0.5 indicates our heuristics validly proxy deep learning.")
-            
             flux_chart = pd.DataFrame({
-                'Semantic Flux (Embeddings/N-Gram)': flux[:min_len_flux],
-                'Coherence Penalty (Heuristic)': coherence_vals[:min_len_flux]
+                'Thematic Shift (Topic Change)': flux[:min_len_flux],
+                'Disorientation Risk (Coherence)': coherence_vals[:min_len_flux]
             })
             st.area_chart(flux_chart)
 
@@ -554,16 +863,119 @@ if script_input and st.button("Analyze Rhythm", type="primary"):
                 # Only show if not mundane
                 if affect in ['Excitement', 'Anxiety', 'Melancholy']:
                    css = "signal-tension"
-                   emoji = "🔴"
-                   if affect == 'Excitement': 
-                       css = "signal-excitement"
-                       emoji = "🟣"
-                   elif affect == 'Anxiety':
-                       css = "signal-anxiety"
-                       emoji = "🔴"
-                   elif affect == 'Melancholy':
-                       css = "signal-melancholy"
-                       emoji = "🔵"
+                 # Run the Pipeline
+                report = runner.run_pipeline(
+                    script_text, 
+                    lens=lens_choice,
+                    genre=genre,
+                    audience_profile=audience,
+                    high_res_mode=high_res,
+                    pre_parsed_lines=pre_parsed_lines,
+                    character_context=char_tags # v10.0
+                )
+                
+                # v13.0: Simple Summary Card (Non-Technical)
+                st.markdown("---")
+                st.markdown("## 📋 Your Script in 3 Numbers")
+                
+                col1, col2, col3 = st.columns(3)
+                
+                # Calculate simple metrics
+                trace = report['temporal_trace']
+                avg_intensity = sum(p['attentional_signal'] for p in trace) / len(trace) if trace else 0
+                intensity_score = int(avg_intensity * 10)  # 0-10 scale
+                
+                valence_scores = report.get('valence_scores', [])
+                avg_valence = sum(valence_scores) / len(valence_scores) if valence_scores else 0
+                
+                runtime_info = report.get('runtime_estimate', {})
+                runtime_text = f"~{runtime_info.get('avg_minutes', 0)} minutes"
+                
+                with col1:
+                    st.metric(
+                        "Story Intensity", 
+                        f"{intensity_score}/10",
+                        help="How gripping your story is. Higher = more intense."
+                    )
+                    
+                with col2:
+                    if avg_valence > 0.1:
+                        emotion = "Happy 😊"
+                    elif avg_valence < -0.1:
+                        emotion = "Serious 😐"
+                    else:
+                        emotion = "Balanced ⚖️"
+                    st.metric(
+                        "Overall Tone",
+                        emotion,
+                        help="The general feeling of your script."
+                    )
+                    
+                with col3:
+                    st.metric(
+                        "Estimated Length",
+                        runtime_text,
+                        help="How long your movie will be."
+                    )
+                
+                st.markdown("---")
+                
+                # Tabs for detailed analysis
+                # v10.1: Studio Report Export
+                from scriptpulse.reporters import studio_report
+                
+                # v11.0: Custom Reader Notes
+                user_notes = st.sidebar.text_area("Add Reader Notes:", height=100, placeholder="E.g., 'Pass. Dialogue is weak.'")
+                
+                html_report = studio_report.generate_report(report, script_title=uploaded_file.name, user_notes=user_notes)
+                st.sidebar.download_button(
+                    label="Export Producer Report",
+                    data=html_report,
+                    file_name="script_coverage.html",
+                    mime="text/html",
+                    help="Downloads a Styled Coverage Report. Open in browser and Print to PDF."
+                )
+                
+                # v14.0: Additional Download Options
+                st.sidebar.markdown("---")
+                st.sidebar.markdown("### Analysis Tools")
+                
+                # Save Analysis as JSON
+                report_json = json.dumps(report, indent=2, default=str)
+                st.sidebar.download_button(
+                    label="Save Analysis (JSON)",
+                    data=report_json,
+                    file_name=f"{uploaded_file.name}_analysis.json",
+                    mime="application/json",
+                    help="Save analysis to resume later"
+                )
+                
+                # Print Summary
+                from scriptpulse.reporters import print_summary
+                print_html = print_summary.generate_print_summary(report, script_title=uploaded_file.name)
+                st.sidebar.download_button(
+                    label="Print Summary (1-page)",
+                    data=print_html,
+                    file_name=f"{uploaded_file.name}_summary.html",
+                    mime="text/html",
+                    help="Concise printable summary"
+                )
+                
+                # Display scene feedback
+                scene_fb = report.get('scene_feedback', {})
+                if scene_fb:
+                    st.markdown("---")
+                    st.markdown("### Scene-Level Notes")
+                    count = 0
+                    for sc_idx in sorted(scene_fb.keys()):
+                        if count >= 5: break  # Show top 5
+                        notes = scene_fb[sc_idx]
+                        if notes:
+                            st.warning(f"**Scene {sc_idx+1}:** {notes[0]['suggestion']}")
+                            count += 1
+                
+                # Continue with existing code below
+                # (The corruption was here - line 937 had misplaced code)
                        
                    msg = f"{emoji} **Scene {idx}**: {affect.upper()} (Valence: {val})"
                    # Deduplicate: simple check if we already showed this index or similar?

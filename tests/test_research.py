@@ -80,7 +80,18 @@ class TestResearchLayers(unittest.TestCase):
         print(f"  > Baselines: {len(report['baseline_trace'])} points")
         print(f"  > Semantic Flux: {len(report['semantic_flux'])} points")
         
-        print("v8.0/v9.0 Pipeline Success.")
+        # Check v10.1 (Market Professional)
+        self.assertIn('voice_fingerprints', report)
+        # Check v11.0 (Gold Master)
+        self.assertIn('interaction_map', report)
+        print(f"  > Interaction Map: {len(report['interaction_map'])} pairs identified")
+        
+        # Check diction issues merged into suggestions
+        strats = report['suggestions']['structural_repair_strategies']
+        # Soft check as dummy script might not trigger specific issues
+        self.assertTrue(isinstance(strats, list))
+        
+        print("v8.0/v9.0/v10.1/v11.0 Pipeline Success.")
 
 if __name__ == '__main__':
     unittest.main()

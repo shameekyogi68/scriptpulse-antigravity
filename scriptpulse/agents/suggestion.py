@@ -62,4 +62,6 @@ def run(temporal_trace):
             
     # Sort by urgency (extreme efforts first)
     # Return top 3
-    return suggestions[:3]
+    return {
+        'structural_repair_strategies': suggestions[:3]
+    }

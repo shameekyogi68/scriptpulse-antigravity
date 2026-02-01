@@ -21,7 +21,21 @@ ScriptPulse v8.0 integrates **11 Specialized Research Agents** to model the comp
 10. **Empirical Lab** (`beat.py`, `biometrics.py`): High-Res Micro-Pacing and Physiological Ground Truth validation.
 11. **Ethical Co-Creativity** (`fairness.py`, `suggestion.py`): Audits algorithmic bias and generates structural repair tactics.
 12. **Comparative Baselines** (`baselines.py`): Control group comparison against standard VADER sentiment.
-13. **Hybrid NLP** (`embeddings.py`): Uses Vector Embeddings (SBERT) for semantic flux, preserving "Modern NLP" rigor.
+13. **Hybrid NLP** (`embeddings.py`): Uses Vector Embeddings (SBERT) for semantic flux.
+14. **Voice Fingerprinting** (`voice.py`): Linguistic scatter plot to detect "Same Voice" issues.
+15. **Studio Reporting** (`reporters/studio_report.py`): Professional HTML/PDF coverage generation with user notes.
+16. **FDX Native Support** (`importers.py`): Final Draft XML Parsing.
+17. **Chemistry HeatMap** (`social.py`): Pairwise character valence interaction matrix.
+18. **Exposition Alarm** (`syntax.py`): Detection of high-density info-dump monologues.
+19. **Hall of Fame Benchmarks** (`research/imprints.py`): Compare your script to classic narrative structures.
+20. **Visual Beat Board** (UI): Index Card visualization with color-coded tension.
+21. **Genre Calibration** (`fairness.py`): Genre-aware thresholds for Horror, Comedy, Thriller.
+22. **Runtime Estimator** (`utils/runtime.py`): Predict film length based on dialogue/action density.
+23. **Character Arc Tracking** (UI): Visualize character growth across acts (Act 1 → 3).
+24. **Simplified UI** (v13.0): Plain language, emoji labels, tooltips for non-technical users.
+25. **Scene-Level Feedback** (`agents/scene_notes.py`): Actionable notes for each scene (e.g., "Add conflict").
+26. **Print Summary** (`reporters/print_summary.py`): 1-page printable summary (Top 5 problems + strengths).
+27. **Save/Load Analysis** (Backend): Export/import analysis as JSON to resume later.
 
 ---
 

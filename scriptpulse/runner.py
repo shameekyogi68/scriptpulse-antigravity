@@ -5,30 +5,34 @@ ScriptPulse Runner - Executes full pipeline deterministically
 
 import sys
 import random
-from .agents import parsing, segmentation, encoding, temporal, patterns, intent, mediation, acd, ssf, lrf, semantic, syntax, xai, imagery, social, valence, profiler, coherence, beat, fairness, suggestion, embeddings
+from .agents import parsing, segmentation, encoding, temporal, patterns, intent, mediation, acd, ssf, lrf, semantic, syntax, xai, imagery, social, valence, profiler, coherence, beat, fairness, suggestion, embeddings, voice, scene_notes # v14.0
 from . import lenses, fingerprint, governance
+from .utils import runtime  # v13.0
 
 
-def run_pipeline(screenplay_text, writer_intent=None, lens='viewer', genre='drama', audience_profile='general', high_res_mode=False):
+def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama', audience_profile='general', high_res_mode=False, pre_parsed_lines=None, character_context=None):
     """
-    Execute the full pipeline with Research Layers (v7.0).
+    Orchestrate the ScriptPulse Analysis Pipeline.
     
     Args:
-        screenplay_text: Raw screenplay text
-        writer_intent: Optional list of writer intent declarations
+        script_content: Raw screenplay text
         lens: Analysis lens ID
         genre: Genre context for adaptive thresholds ('thriller', 'comedy', etc.)
         audience_profile: 'general', 'cinephile', 'distracted', 'child'
         high_res_mode: If True, sub-segments scenes into beats (HD Analysis).
+        pre_parsed_lines: Optional pre-parsed lines (e.g., from FDX import)
     """
     # === GPBL: Governance Check ===
-    governance.validate_request(screenplay_text)
+    governance.validate_request(script_content) # Changed screenplay_text to script_content
     
     # Load lens config
     lens_config = lenses.get_lens(lens)
     
     # Agent 1: Structural Parsing
-    parsed = parsing.run(screenplay_text)
+    if pre_parsed_lines:
+        parsed = pre_parsed_lines
+    else:
+        parsed = parsing.run(script_content)
     
     # Agent 2: Scene Segmentation
     segmented = segmentation.run(parsed)
@@ -58,14 +62,23 @@ def run_pipeline(screenplay_text, writer_intent=None, lens='viewer', genre='dram
     
     # === Agent 3.5: Research Layers (Semantic & Syntax) ===
     semantic_scores = semantic.run({'scenes': segmented})
-    syntax_scores = syntax.run({'scenes': segmented}) # NEW v6.1
     
     # === NEW: Agent 3.6: Cinematic & Social Layers (v6.4) ===
     visual_scores = imagery.run({'scenes': segmented})
-    social_scores = social.run({'scenes': segmented})
+    social_data = social.run({'scenes': segmented})
+    social_scores = social_data.get('centrality_entropy', [])
+    interaction_map = social_data.get('interaction_map', {})
+    
+    # === NEW: Agent 10.1: Diction/Syntax (v10.1) ===
+    syntax_data = syntax.run({'scenes': segmented})
+    syntax_scores = syntax_data.get('complexity_scores', [])
+    diction_issues = syntax_data.get('diction_issues', [])
     
     # === NEW: Agent 9.1: Hybrid NLP (Embeddings) ===
     semantic_flux = embeddings.run({'scenes': segmented})
+    
+    # === NEW: Agent 10.1: Voice Fingerprinting (Market) ===
+    voice_map = voice.run({'scenes': segmented})
     
     # === NEW: Agent 3.7: Affective Valence (v6.5) ===
     valence_scores = valence.run({'scenes': segmented})
@@ -124,14 +137,21 @@ def run_pipeline(screenplay_text, writer_intent=None, lens='viewer', genre='dram
         'features': encoded
     })
     
-    # === NEW: Agent 8.0: Ethical & Generative Layers ===
-    fairness_audit = fairness.run({
-        'scenes': segmented, 
-        'valence_scores': valence_scores
-    })
+    # === NEW: Agent 8: Fairness Audit (v8.0) ===
+    fairness_report = fairness.run(
+        {'scenes': segmented, 'valence_scores': valence_scores},
+        context=character_context,
+        genre=genre  # v12.0
+    )
     
     suggestions = suggestion.run(temporal_output)
     
+    # v10.1: Merge Diction Issues into Suggestions
+    if diction_issues:
+        # Prioritize top 5
+        for issue in diction_issues[:5]:
+            suggestions['structural_repair_strategies'].append(issue)
+            
     # Agent 5: Pattern Detection
     patterns_output = patterns.run({
         'temporal_signals': temporal_output,
@@ -195,10 +215,25 @@ def run_pipeline(screenplay_text, writer_intent=None, lens='viewer', genre='dram
     final_output['macro_structure_fidelity'] = macro_fidelity
     
     # Add Ethics & Generative Data (v8.0)
-    final_output['fairness_audit'] = fairness_audit
     final_output['suggestions'] = suggestions
+    final_output['fairness_audit'] = fairness_report  # Fixed v12.0
     final_output['baseline_trace'] = baseline_trace # v9.0
     final_output['semantic_flux'] = semantic_flux # v9.1
+    final_output['voice_fingerprints'] = voice_map # v10.1
+    final_output['interaction_map'] = interaction_map # v11.0
+    
+    # v13.0: Runtime Estimation (User-Friendly)
+    runtime_info = runtime.estimate_runtime(segmented)
+    final_output['runtime_estimate'] = runtime_info
+    
+    # v14.0: Scene-Level Actionable Notes
+    scene_feedback = scene_notes.run({
+        'scenes': segmented,
+        'temporal_trace': temporal_output,
+        'valence_scores': valence_scores,
+        'syntax_scores': syntax_scores
+    })
+    final_output['scene_feedback'] = scene_feedback
     
     # Add metadata
     final_output['meta'].update({
