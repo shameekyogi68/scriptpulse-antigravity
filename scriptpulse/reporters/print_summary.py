@@ -34,7 +34,7 @@ def generate_print_summary(report_data, script_title="Untitled Script"):
     # Get strengths (scenes with high tension + positive valence)
     strengths = []
     for i, point in enumerate(trace):
-        if point['attentional_signal'] > 0.7 and valence_scores[i] > 0.1:
+        if point.get('attentional_signal', 0) > 0.7 and i < len(valence_scores) and valence_scores[i] > 0.1:
             strengths.append(f"Scene {i+1}: High energy, positive tone")
     
     html = f"""
