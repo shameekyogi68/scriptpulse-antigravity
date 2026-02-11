@@ -1,14 +1,4 @@
-import sys
-import os
-try:
-    import torch
-    import numpy as np
-    from transformers import pipeline
-except ImportError:
-    torch = None
-    np = None
-    pipeline = None
-    print("[Warning] ML libraries not found. Running in Heuristic Fallback Mode.")
+from ..utils.model_manager import manager
 
 class BertParserAgent:
     """
@@ -19,19 +9,12 @@ class BertParserAgent:
     """
     
     def __init__(self, model_name="facebook/bart-large-mnli"):
-        self.device = -1
-        if torch and torch.cuda.is_available():
-            self.device = 0
-            
-        try:
-            print(f"[ML] Loading Transformer Pipeline: {model_name}...")
-            self.classifier = pipeline("zero-shot-classification", model=model_name, device=self.device)
-            self.labels = ["Dialogue", "Action", "Scene Heading", "Character Name", "Transition", "Parenthetical"]
-            self.is_mock = False
-        except Exception as e:
-            print(f"[Warning] Failed to load ML model: {e}. Falling back to Heuristics.")
-            self.classifier = None
-            self.is_mock = True
+        self.classifier = manager.get_pipeline("zero-shot-classification", model_name)
+        self.labels = ["Dialogue", "Action", "Scene Heading", "Character Name", "Transition", "Parenthetical"]
+        self.is_mock = self.classifier is None
+        
+        if self.is_mock:
+              print(f"[Warning] Failed to load ML model. Falling back to Heuristics.")
             
         self.tag_map = {
             "Dialogue": "D",
@@ -98,8 +81,8 @@ class BertParserAgent:
         lines = script_text.split('\n')
         results = []
         
-        print(f"--- Running vNext.11 ML Parser on {len(lines)} lines ---")
         
+        # Context Management
         context = []
         # Batching could happen here for performance
         

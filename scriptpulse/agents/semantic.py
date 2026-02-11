@@ -10,21 +10,17 @@ Rationale:
 Implementation: Sentence-Transformers (SBERT).
 """
 
+from ..utils.model_manager import manager
 import math
 import numpy as np
 
 class SemanticAgent:
-    def __init__(self):
-        self.model = None
-        try:
-            from sentence_transformers import SentenceTransformer
-            # Load a lightweight but effective model
-            self.model = SentenceTransformer('all-MiniLM-L6-v2')
+    def __init__(self, model_name='all-MiniLM-L6-v2'):
+        self.model = manager.get_sentence_transformer(model_name)
+        if self.model:
             print("[ML] Loaded SBERT for Semantic Analysis.")
-        except ImportError:
-            print("[Warning] sentence_transformers not found. Falling back to Mock.")
-        except Exception as e:
-            print(f"[Error] Failed to load SBERT: {e}")
+        else:
+             print("[Warning] Semantic ML failed to load. Using Entropy Fallback.")
             
     def run(self, data):
         """

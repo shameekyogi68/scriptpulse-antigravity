@@ -148,26 +148,41 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
         res_agent = resonance.ResonanceAgent()
         # 2. Insight Agent
         insight_agent = insight.InsightAgent()
-        # 3. Silicon Stanislavski
+        # 3. Silicon Stanislavski (Batch Processing)
         try:
             stanislavski = silicon_stanislavski.SiliconStanislavski()
         except:
             stanislavski = None
+            
+        # Collect all scene texts for batching
+        all_scene_texts = []
+        for i, scene in enumerate(temporal_output):
+            original_scene = segmented[i] if i < len(segmented) else {}
+            scene_text = " ".join([l.get('text', '') for l in original_scene.get('lines', [])])
+            if not scene_text:
+                scene_text = scene.get('preview', '')
+            all_scene_texts.append(scene_text)
+            
+        # Batch Run
+        stan_batch_results = []
+        if stanislavski:
+            print(f"[Performance] Running Batch Inference on {len(all_scene_texts)} scenes...")
+            stan_batch_results = stanislavski.analyze_script(all_scene_texts)
         
         moonshot_trace = []
         for i, scene in enumerate(temporal_output):
-            # Resonance
-            scene_text = scene.get('preview', '') # Using preview as proxy for full text
+            scene_text = all_scene_texts[i]
+
+            # Resonance (Still sequential for now)
             res_data = res_agent.analyze_scene(scene_text, scene['attentional_signal'])
             
             # Insight
-            ins_data = insight_agent.detect_cascade(scene['temporal_expectation']) # Using expectation as entropy proxy
+            ins_data = insight_agent.detect_cascade(scene['temporal_expectation']) 
             
-            # Stanislavski
-            if stanislavski:
-                stan_data = stanislavski.act_scene(scene_text)
-            else:
-                stan_data = {'internal_state': {}, 'felt_emotion': 'N/A (Module Missing)'}
+            # Stanislavski (Lookup from batch)
+            stan_data = stan_batch_results[i] if i < len(stan_batch_results) else {}
+            if not stan_data:
+                 stan_data = {'internal_state': {}, 'felt_emotion': 'N/A (Module Missing)'}
             
             # Fuse data
             moonshot_trace.append({
@@ -273,8 +288,12 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
     final_output = mediation.run(filtered)
     
     # Add Enterprise Audit Metadata
+    from .utils.model_manager import manager
+    ml_status = "ML_Active" if (manager.get_pipeline and hasattr(manager, 'device') and manager.device != -1) else "Heuristic_Fallback"
+    
     final_output['meta'] = {
         'run_id': run_id,
+        'execution_mode': ml_status,
         'fingerprint': struct_fingerprint,
         'version': version,
         'lens': lens_id

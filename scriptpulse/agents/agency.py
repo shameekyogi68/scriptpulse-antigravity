@@ -12,9 +12,7 @@ def run(input_data):
     vNext.9 Agency Analysis Agent.
     
     Objective: Measure Character Agency (Power/Influence) rather than just Presence (Line Counts).
-    Method: Network Graph Centrality + Decision Verb Analysis.
     """
-    print("--- Running vNext.9 Agency Analysis ---")
     
     # 1. Construct Interaction Graph (Global)
     # Using simple dict for fallback if NX missing

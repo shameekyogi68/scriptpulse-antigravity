@@ -1,87 +1,93 @@
-"""
-ScriptPulse vNext.11 - "Silicon Stanislavski" Agent (Real ML)
-Objective: Simulate internal emotional state using Zero-Shot Classification (Active Inference).
-"""
-
-try:
-    from transformers import pipeline
-    import torch
-except ImportError:
-    pipeline = None
-    torch = None
+from ..utils.model_manager import manager
 
 class SiliconStanislavski:
     def __init__(self):
-        # Internal Belief State
         self.belief_state = {
             'safety': 0.8,
             'trust': 0.8,
             'agency': 0.5
         }
         
-        try:
-            device = -1
-            if torch and torch.cuda.is_available():
-                device = 0
-                
-            # Using a fast zero-shot model
-            self.classifier = pipeline("zero-shot-classification", model="valhalla/distilbart-mnli-12-3", device=device)
-            self.labels = ["danger", "safety", "deception", "trust", "helplessness", "control"]
-            self.is_ml = True
-            print("[ML] Silicon Stanislavski initialized (Zero-Shot).")
-        except Exception as e:
-            print(f"[Warning] Failed to load Stanislavski ML: {e}")
-            self.is_ml = False
+        # Use centralized manager
+        self.classifier = manager.get_pipeline(
+            "zero-shot-classification", 
+            "valhalla/distilbart-mnli-12-3"
+        )
+        self.labels = ["danger", "safety", "deception", "trust", "helplessness", "control"]
+        self.is_ml = self.classifier is not None
         
-    def act_scene(self, scene_text):
+    def analyze_script(self, scenes_text):
         """
-        Simulate the agent 'living' through the scene using ML.
+        Batch process all scenes for massive speedup.
+        Args:
+            scenes_text (List[str]): List of texts for each scene.
+        Returns:
+            List[dict]: List of state updates per scene.
         """
-        if not scene_text or len(scene_text) < 10:
-             return {'internal_state': self.belief_state.copy(), 'felt_emotion': "Neutral"}
-
-        # ML Update
-        if self.is_ml:
+        results = []
+        current_state = self.belief_state.copy()
+        
+        # Filter valid texts to avoid errors
+        valid_indices = [i for i, t in enumerate(scenes_text) if t and len(t) > 10]
+        valid_texts = [scenes_text[i][:1000] for i in valid_indices] # Truncate for speed
+        
+        ml_outputs = []
+        if self.is_ml and valid_texts:
             try:
-                # Truncate for speed/memory if needed
-                text_sample = scene_text[:1000] 
-                result = self.classifier(text_sample, self.labels, multi_label=True)
-                
-                scores = {label: score for label, score in zip(result['labels'], result['scores'])}
-                
-                # Active Inference Update Rule (Bayesian-ish)
-                # Safety: Decrease by Danger, Increase by Safety
-                safety_delta = (scores.get('safety', 0) - scores.get('danger', 0)) * 0.2
-                self.belief_state['safety'] = max(0.0, min(1.0, self.belief_state['safety'] + safety_delta))
-                
-                # Trust: Decrease by Deception, Increase by Trust
-                trust_delta = (scores.get('trust', 0) - scores.get('deception', 0)) * 0.2
-                self.belief_state['trust'] = max(0.0, min(1.0, self.belief_state['trust'] + trust_delta))
-                
-                # Agency: Decrease by Helplessness, Increase by Control
-                agency_delta = (scores.get('control', 0) - scores.get('helplessness', 0)) * 0.2
-                self.belief_state['agency'] = max(0.0, min(1.0, self.belief_state['agency'] + agency_delta))
-                
+                # BATCH INFERENCE
+                # This runs all texts through the GPU/CPU in one go
+                ml_outputs = self.classifier(valid_texts, self.labels, multi_label=True, batch_size=4)
             except Exception as e:
-                print(f"[Error] Stanislavski Inference Failed: {e}")
+                print(f"[Error] Batch Inference Failed: {e}")
+                self.is_ml = False # Fallback for this run
+                
+        # Map outputs back to original indices
+        output_map = {idx: out for idx, out in zip(valid_indices, ml_outputs)}
         
-        # Fallback Logic (if ML failed or didn't run)
-        else:
-            lower_text = scene_text.lower()
-            if 'gun' in lower_text or 'kill' in lower_text:
-                self.belief_state['safety'] *= 0.9
-        
-        # Determine Felt Emotion
-        emotion = "Neutral"
-        if self.belief_state['safety'] < 0.4:
-            emotion = "Fear/Anxiety"
-        elif self.belief_state['trust'] < 0.4:
-            emotion = "Suspicion/Paranoia"
-        elif self.belief_state['agency'] > 0.8:
-            emotion = "Empowered/Determined"
+        for i, text in enumerate(scenes_text):
+            # Process State Update
+            step_data = self._update_state(current_state, text, output_map.get(i))
+            current_state = step_data['internal_state'] # Carry over state
+            results.append(step_data)
             
+        return results
+
+    def _update_state(self, state, text, ml_result=None):
+        """Helper to update state based on ML or Heuristic"""
+        new_state = state.copy()
+        method = "Keyword Heuristic"
+        
+        if ml_result:
+            method = "Batch Active Inference v2.0"
+            scores = {label: score for label, score in zip(ml_result['labels'], ml_result['scores'])}
+            
+            # Active Inference Update Rule
+            safety_delta = (scores.get('safety', 0) - scores.get('danger', 0)) * 0.2
+            new_state['safety'] = max(0.0, min(1.0, new_state['safety'] + safety_delta))
+            
+            trust_delta = (scores.get('trust', 0) - scores.get('deception', 0)) * 0.2
+            new_state['trust'] = max(0.0, min(1.0, new_state['trust'] + trust_delta))
+            
+            agency_delta = (scores.get('control', 0) - scores.get('helplessness', 0)) * 0.2
+            new_state['agency'] = max(0.0, min(1.0, new_state['agency'] + agency_delta))
+        else:
+            # Fallback
+            lower_text = (text or "").lower()
+            if 'gun' in lower_text or 'kill' in lower_text:
+                new_state['safety'] *= 0.9
+                
+        # Determine Emotion
+        emotion = "Neutral"
+        if new_state['safety'] < 0.4: emotion = "Fear/Anxiety"
+        elif new_state['trust'] < 0.4: emotion = "Suspicion/Paranoia"
+        elif new_state['agency'] > 0.8: emotion = "Empowered/Determined"
+        
         return {
-            'internal_state': self.belief_state.copy(),
+            'internal_state': new_state,
             'felt_emotion': emotion,
-            'method_acting_depth': "Zero-Shot Active Inference v1.0"
+            'method_acting_depth': method
         }
+
+    def act_scene(self, scene_text):
+        """Legacy wrapper for single scene."""
+        return self._update_state(self.belief_state, scene_text)
