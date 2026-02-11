@@ -112,6 +112,46 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
     profile_params = profiler.get_profile(audience_profile)
     # Get Disorientation Penalty
     coherence_scores = coherence.run({'scenes': segmented})
+    # === NEW: Agent 3.9: Silicon Stanislavski (Prior to Temporal) ===
+    # We must run this HERE to feed emotional data into the Temporal Simulation
+    try:
+        stanislavski = silicon_stanislavski.SiliconStanislavski()
+    except:
+        stanislavski = None
+        
+    # Collect all scene texts for batching
+    all_scene_texts = []
+    for scene in segmented:
+        scene_text = " ".join([l.get('text', '') for l in scene.get('lines', [])])
+        if not scene_text:
+            scene_text = scene.get('heading', '')
+        all_scene_texts.append(scene_text)
+        
+    # Batch Run
+    stan_batch_results = []
+    ml_tension_scores = []
+    
+    if stanislavski:
+        if experimental_mode or moonshot_mode: # Only run if enabled
+            print(f"[Performance] Running Batch Inference on {len(all_scene_texts)} scenes...")
+            stan_batch_results = stanislavski.analyze_script(all_scene_texts)
+            
+            # Extract Tension Scores for Temporal Agent
+            for res in stan_batch_results:
+                raw = res.get('raw_scores', {})
+                if raw:
+                    # Instantaneous Tension = Max(Danger, Helplessness)
+                    tension = max(raw.get('danger', 0), raw.get('helplessness', 0))
+                else:
+                    # Fallback to damped state
+                    safety = res.get('internal_state', {}).get('safety', 0.8)
+                    tension = 1.0 - safety
+                
+                ml_tension_scores.append(round(tension, 3))
+    
+    # Fill gaps if no ML
+    if not ml_tension_scores:
+        ml_tension_scores = [None] * len(segmented)
 
     # Agent 4: Temporal Dynamics (with MRCS)
     temporal_output = temporal.simulate_consensus(
@@ -122,7 +162,8 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
             'visual_scores': visual_scores, 
             'social_scores': social_scores, 
             'valence_scores': valence_scores,
-            'coherence_scores': coherence_scores # NEW v6.6
+            'coherence_scores': coherence_scores,
+            'ml_tension_scores': ml_tension_scores # NEW
         }, 
         lens_config=lens_config,
         genre=genre,
@@ -148,41 +189,22 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
         res_agent = resonance.ResonanceAgent()
         # 2. Insight Agent
         insight_agent = insight.InsightAgent()
-        # 3. Silicon Stanislavski (Batch Processing)
-        try:
-            stanislavski = silicon_stanislavski.SiliconStanislavski()
-        except:
-            stanislavski = None
-            
-        # Collect all scene texts for batching
-        all_scene_texts = []
-        for i, scene in enumerate(temporal_output):
-            original_scene = segmented[i] if i < len(segmented) else {}
-            scene_text = " ".join([l.get('text', '') for l in original_scene.get('lines', [])])
-            if not scene_text:
-                scene_text = scene.get('preview', '')
-            all_scene_texts.append(scene_text)
-            
-        # Batch Run
-        stan_batch_results = []
-        if stanislavski:
-            print(f"[Performance] Running Batch Inference on {len(all_scene_texts)} scenes...")
-            stan_batch_results = stanislavski.analyze_script(all_scene_texts)
-        
         moonshot_trace = []
         for i, scene in enumerate(temporal_output):
-            scene_text = all_scene_texts[i]
-
-            # Resonance (Still sequential for now)
-            res_data = res_agent.analyze_scene(scene_text, scene['attentional_signal'])
-            
-            # Insight
-            ins_data = insight_agent.detect_cascade(scene['temporal_expectation']) 
-            
-            # Stanislavski (Lookup from batch)
+            # Lookup from batch (now calculated earlier)
             stan_data = stan_batch_results[i] if i < len(stan_batch_results) else {}
             if not stan_data:
                  stan_data = {'internal_state': {}, 'felt_emotion': 'N/A (Module Missing)'}
+            
+            # Resonance (Still sequential for now)
+            # Need scene text again if not preserved?
+            # We have all_scene_texts from earlier block
+            scene_text = all_scene_texts[i] if i < len(all_scene_texts) else ""
+
+            res_data = res_agent.analyze_scene(scene_text, scene['attentional_signal'])
+            
+            # Insight
+            ins_data = insight_agent.detect_cascade(scene['temporal_expectation'])
             
             # Fuse data
             moonshot_trace.append({
@@ -289,7 +311,7 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
     
     # Add Enterprise Audit Metadata
     from .utils.model_manager import manager
-    ml_status = "ML_Active" if (manager.get_pipeline and hasattr(manager, 'device') and manager.device != -1) else "Heuristic_Fallback"
+    ml_status = "ML_Active" if (manager.get_pipeline and hasattr(manager, 'device')) else "Heuristic_Fallback"
     
     final_output['meta'] = {
         'run_id': run_id,

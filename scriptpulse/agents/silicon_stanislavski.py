@@ -1,7 +1,7 @@
 from ..utils.model_manager import manager
 
 class SiliconStanislavski:
-    def __init__(self):
+    def __init__(self, model_name="valhalla/distilbart-mnli-12-3"):
         self.belief_state = {
             'safety': 0.8,
             'trust': 0.8,
@@ -9,10 +9,7 @@ class SiliconStanislavski:
         }
         
         # Use centralized manager
-        self.classifier = manager.get_pipeline(
-            "zero-shot-classification", 
-            "valhalla/distilbart-mnli-12-3"
-        )
+        self.classifier = manager.get_pipeline("zero-shot-classification", model_name)
         self.labels = ["danger", "safety", "deception", "trust", "helplessness", "control"]
         self.is_ml = self.classifier is not None
         
@@ -85,7 +82,8 @@ class SiliconStanislavski:
         return {
             'internal_state': new_state,
             'felt_emotion': emotion,
-            'method_acting_depth': method
+            'method_acting_depth': method,
+            'raw_scores': scores if ml_result else {}
         }
 
     def act_scene(self, scene_text):

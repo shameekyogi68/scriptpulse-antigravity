@@ -8,7 +8,7 @@ class BertParserAgent:
     to classify lines into Scene, Action, Dialogue, Character, etc.
     """
     
-    def __init__(self, model_name="facebook/bart-large-mnli"):
+    def __init__(self, model_name="valhalla/distilbart-mnli-12-3"):
         self.classifier = manager.get_pipeline("zero-shot-classification", model_name)
         self.labels = ["Dialogue", "Action", "Scene Heading", "Character Name", "Transition", "Parenthetical"]
         self.is_mock = self.classifier is None
@@ -40,23 +40,27 @@ class BertParserAgent:
         
         # 2. Heuristic Filter for obvious Dialogue/Character
         # If it's short, centered-ish (cant check centering in txt), and all caps -> Character
+        # 1. Optimistic Heuristics (100% Safe)
+        line = line.strip()
+        if not line: return None
+        if line.startswith(("INT.", "EXT.", "INT ", "EXT ")): return "S"
+        if line.endswith(("CUT TO:", "FADE OUT.")): return "T" 
+        
+        # 2. Contextual Heuristics (90% Safe - Optimistic Efficiency)
+        prev_tag = context_window[-1] if context_window else "A"
+        
+        # If previous was Character, this is likely Dialogue (unless it's paren)
+        if prev_tag == "C": 
+            if line.startswith("("): return "M"
+            return "D"
+            
+        # Uppercase short line is likely Character (if not Scene header, which is caught above)
         if line.isupper() and len(line) < 40 and not line.endswith((".", "?", "!")):
-             # Check if next line is likely dialogue? 
-             # For now, let the ML decide if it's Character or Action (e.g. "SOUND OF DRUMS")
-             pass 
+            return "C"
 
-        # 3. ML Inference
+        # 3. ML Inference (Only for Ambiguous Lines: Action vs Character vs Transition)
         if not self.is_mock and self.classifier:
             try:
-                # Context helps distinction. 
-                # E.g. "JOHN" -> Character vs "RUNS" -> Action
-                # Zero-shot is heavy, so we might batch in production. For now, line by line.
-                
-                # We can inject context into the hypothesis or sequence?
-                # Zero shot treats sequence as premise.
-                
-                result = self.classifier(line, self.labels)
-                top_label = result['labels'][0]
                 confidence = result['scores'][0]
                 
                 if confidence > 0.4: # Threshold

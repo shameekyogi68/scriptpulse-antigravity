@@ -1,0 +1,500 @@
+[MLOps] Model Cache: /Users/shameekyogi/.scriptpulse/models
+[MLOps] Acceleration: CPU
+[MLOps] Loading Pipeline: valhalla/distilbart-mnli-12-3...
+[Experimental] Running Polyglot Validator...
+[MLOps] Loading Sentence Transformer: all-MiniLM-L6-v2...
+[ML] Loaded SBERT for Semantic Analysis.
+[MLOps] Loading Pipeline: valhalla/distilbart-mnli-12-3...
+[Performance] Running Batch Inference on 5 scenes...
+[Experimental] Running Multimodal Fusion...
+[Moonshot] Running Cognitive Resonance Layer...
+{
+  "reflections": [
+    {
+      "scene_range": [
+        0,
+        2
+      ],
+      "reflection": "This stretch risks feeling like more of the same \u2014 the audience may stop registering escalation.",
+      "confidence": "medium"
+    }
+  ],
+  "silence_explanation": null,
+  "intent_acknowledgments": [],
+  "total_surfaced": 1,
+  "total_suppressed": 0,
+  "aeks_active": false,
+  "meta": {
+    "run_id": "a99c9147b7fe5e546bb312f35fddde6547543e3b02ca67cc711c9324e15b8b04",
+    "execution_mode": "ML_Active",
+    "fingerprint": "fa824be8b8bb5b8dafdc0e3552a5b31eee127e070643b6e5c6bae1166a0554c8",
+    "version": "5.0.0-phase3",
+    "lens": "viewer",
+    "lens_description": "Balanced simulation of watching the film (Default)."
+  },
+  "scene_info": [
+    {
+      "scene_index": 0,
+      "heading": "EXT. MEADOW - DAY",
+      "preview": "The sun shines brightly. Birds chirp in the trees. A gentle ..."
+    },
+    {
+      "scene_index": 1,
+      "heading": "INT. LIBRARY - DAY",
+      "preview": "A student reads a book. The room is quiet. Dust motes dance ..."
+    },
+    {
+      "scene_index": 2,
+      "heading": "EXT. BATTLEFIELD - NIGHT",
+      "preview": "Explosions everywhere! Soldiers scream in pain. Blood soaks ..."
+    },
+    {
+      "scene_index": 3,
+      "heading": "INT. BURNING BUILDING - NIGHT",
+      "preview": "Fire consumes the room. Smoke fills the lungs. We are trappe..."
+    },
+    {
+      "scene_index": 4,
+      "heading": "EXT. MEADOW - DAY",
+      "preview": "The sun shines again. The war is over. Peace returns. A gent..."
+    }
+  ],
+  "total_scenes": 5,
+  "temporal_trace": [
+    {
+      "scene_index": 0,
+      "instantaneous_effort": 0.054,
+      "attentional_signal": 0.176,
+      "recovery_credit": 0.152,
+      "tam_integral": 1.627,
+      "expectation_strain": 0.446,
+      "temporal_expectation": 0.455,
+      "valence_score": 1.0,
+      "coherence_penalty": 0.0,
+      "fatigue_state": "normal",
+      "affective_state": "Relaxation",
+      "multimodal_source": true,
+      "fatigue_reserve": 0.0
+    },
+    {
+      "scene_index": 1,
+      "instantaneous_effort": 0.21,
+      "attentional_signal": 0.307,
+      "recovery_credit": 0.133,
+      "tam_integral": 1.627,
+      "expectation_strain": 0.246,
+      "temporal_expectation": 0.431,
+      "valence_score": 1.0,
+      "coherence_penalty": 0.06,
+      "fatigue_state": "normal",
+      "affective_state": "Relaxation",
+      "multimodal_source": true,
+      "fatigue_reserve": 0.0
+    },
+    {
+      "scene_index": 2,
+      "instantaneous_effort": 0.425,
+      "attentional_signal": 0.449,
+      "recovery_credit": 0.107,
+      "tam_integral": 1.627,
+      "expectation_strain": 0.006,
+      "temporal_expectation": 0.43,
+      "valence_score": -1.0,
+      "coherence_penalty": 0.09,
+      "fatigue_state": "normal",
+      "affective_state": "Melancholy",
+      "multimodal_source": true,
+      "fatigue_reserve": 0.018
+    },
+    {
+      "scene_index": 3,
+      "instantaneous_effort": 0.448,
+      "attentional_signal": 0.864,
+      "recovery_credit": 0.108,
+      "tam_integral": 1.627,
+      "expectation_strain": 0.018,
+      "temporal_expectation": 0.432,
+      "valence_score": -1.0,
+      "coherence_penalty": 0.06,
+      "fatigue_state": "elevated",
+      "affective_state": "Melancholy",
+      "multimodal_source": true,
+      "fatigue_reserve": 0.03
+    },
+    {
+      "scene_index": 4,
+      "instantaneous_effort": 0.205,
+      "attentional_signal": 0.878,
+      "recovery_credit": 0.137,
+      "tam_integral": 1.627,
+      "expectation_strain": 0.227,
+      "temporal_expectation": 0.409,
+      "valence_score": 1.0,
+      "coherence_penalty": 0.09,
+      "fatigue_state": "elevated",
+      "affective_state": "Relaxation",
+      "multimodal_source": true,
+      "fatigue_reserve": 0.023
+    }
+  ],
+  "xai_attribution": [
+    {
+      "scene_index": 0,
+      "drivers": {
+        "Structure": 0.34,
+        "Syntax": 0.0,
+        "Semantics": 0.16,
+        "Motion": 0.31,
+        "Dialogue": 0.18
+      },
+      "dominant_driver": "Structure"
+    },
+    {
+      "scene_index": 1,
+      "drivers": {
+        "Structure": 0.22,
+        "Syntax": 0.0,
+        "Semantics": 0.54,
+        "Motion": 0.15,
+        "Dialogue": 0.09
+      },
+      "dominant_driver": "Semantics"
+    },
+    {
+      "scene_index": 2,
+      "drivers": {
+        "Structure": 0.14,
+        "Syntax": 0.0,
+        "Semantics": 0.62,
+        "Motion": 0.15,
+        "Dialogue": 0.1
+      },
+      "dominant_driver": "Semantics"
+    },
+    {
+      "scene_index": 3,
+      "drivers": {
+        "Structure": 0.18,
+        "Syntax": 0.0,
+        "Semantics": 0.49,
+        "Motion": 0.17,
+        "Dialogue": 0.16
+      },
+      "dominant_driver": "Semantics"
+    },
+    {
+      "scene_index": 4,
+      "drivers": {
+        "Structure": 0.19,
+        "Syntax": 0.0,
+        "Semantics": 0.56,
+        "Motion": 0.16,
+        "Dialogue": 0.09
+      },
+      "dominant_driver": "Semantics"
+    }
+  ],
+  "macro_structure_fidelity": {
+    "best_match": "Thriller_Escalation",
+    "fidelity_score": 0.637,
+    "all_scores": {
+      "Freytag": 0.245,
+      "Man_in_Hole": 0.193,
+      "Cinderella": 0.16,
+      "Thriller_Escalation": 0.637
+    }
+  },
+  "suggestions": {
+    "structural_repair_strategies": [
+      {
+        "scene": 3,
+        "diagnosis": "Low Arousal (Risk of Boredom)",
+        "strategy": "Inject Kinetic Energy",
+        "tactics": [
+          "Cut sentence length by 20% to increase tempo.",
+          "Add 3 'Visual' words (Colors/Motion) to spike Imagery Load.",
+          "Have a character interrupt another."
+        ]
+      },
+      "Line 14: usage of 'are' (Passive/Weak)",
+      "Line 14: usage of 'are' (Passive/Weak)"
+    ]
+  },
+  "agency_analysis": {
+    "agency_metrics": []
+  },
+  "baseline_trace": [
+    0.25,
+    0.459,
+    -0.25,
+    -0.459,
+    0.25
+  ],
+  "semantic_flux": [
+    0.0,
+    0.729,
+    0.828,
+    0.571,
+    0.694
+  ],
+  "voice_fingerprints": {},
+  "interaction_map": {},
+  "uncertainty_quantification": [
+    {
+      "scene_index": 0,
+      "mean": 0.16,
+      "std_dev": 0.064,
+      "lower_bound_95": 0.033,
+      "upper_bound_95": 0.288
+    },
+    {
+      "scene_index": 1,
+      "mean": 0.318,
+      "std_dev": 0.062,
+      "lower_bound_95": 0.195,
+      "upper_bound_95": 0.441
+    },
+    {
+      "scene_index": 2,
+      "mean": 0.48,
+      "std_dev": 0.068,
+      "lower_bound_95": 0.345,
+      "upper_bound_95": 0.615
+    },
+    {
+      "scene_index": 3,
+      "mean": 0.85,
+      "std_dev": 0.078,
+      "lower_bound_95": 0.695,
+      "upper_bound_95": 1
+    },
+    {
+      "scene_index": 4,
+      "mean": 0.88,
+      "std_dev": 0.073,
+      "lower_bound_95": 0.734,
+      "upper_bound_95": 1
+    }
+  ],
+  "polyglot_analysis": {
+    "detected_structure": "3-Act (Western Standard)",
+    "cultural_bias_check": "WARNING: Non-Standard"
+  },
+  "moonshot_resonance": [
+    {
+      "scene_index": 0,
+      "resonance": {
+        "resonance_score": 0.17597189628790072,
+        "detected_themes": [],
+        "thematic_weight": 0.0
+      },
+      "insight": {
+        "entropy_delta": 0.044999999999999984,
+        "is_insight": false,
+        "label": "Stable"
+      },
+      "stanislavski_state": {
+        "internal_state": {
+          "safety": 0.9078287346754224,
+          "trust": 0.8954266507178545,
+          "agency": 0.6253616284579039
+        },
+        "felt_emotion": "Neutral",
+        "method_acting_depth": "Batch Active Inference v2.0",
+        "raw_scores": {
+          "control": 0.6431350708007812,
+          "safety": 0.5418637990951538,
+          "trust": 0.5077928304672241,
+          "deception": 0.030659576877951622,
+          "helplessness": 0.01632692851126194,
+          "danger": 0.0027201257180422544
+        }
+      }
+    },
+    {
+      "scene_index": 1,
+      "resonance": {
+        "resonance_score": 0.3073782438711794,
+        "detected_themes": [],
+        "thematic_weight": 0.0
+      },
+      "insight": {
+        "entropy_delta": 0.02400000000000002,
+        "is_insight": false,
+        "label": "Stable"
+      },
+      "stanislavski_state": {
+        "internal_state": {
+          "safety": 1.0,
+          "trust": 0.9687923640012741,
+          "agency": 0.7314314153045416
+        },
+        "felt_emotion": "Neutral",
+        "method_acting_depth": "Batch Active Inference v2.0",
+        "raw_scores": {
+          "safety": 0.9747022986412048,
+          "control": 0.5533055663108826,
+          "trust": 0.38723239302635193,
+          "helplessness": 0.02295663207769394,
+          "deception": 0.020403826609253883,
+          "danger": 0.0073113832622766495
+        }
+      }
+    },
+    {
+      "scene_index": 2,
+      "resonance": {
+        "resonance_score": 0.4489981650326162,
+        "detected_themes": [],
+        "thematic_weight": 0.0
+      },
+      "insight": {
+        "entropy_delta": 0.0010000000000000009,
+        "is_insight": false,
+        "label": "Stable"
+      },
+      "stanislavski_state": {
+        "internal_state": {
+          "safety": 0.8515778245404363,
+          "trust": 0.9828044211491942,
+          "agency": 0.7295380312949419
+        },
+        "felt_emotion": "Neutral",
+        "method_acting_depth": "Batch Active Inference v2.0",
+        "raw_scores": {
+          "danger": 0.747871994972229,
+          "trust": 0.08396986126899719,
+          "helplessness": 0.06335671246051788,
+          "control": 0.053889792412519455,
+          "deception": 0.013909575529396534,
+          "safety": 0.005761117674410343
+        }
+      }
+    },
+    {
+      "scene_index": 3,
+      "resonance": {
+        "resonance_score": 1.0272535260653988,
+        "detected_themes": [
+          "Death"
+        ],
+        "thematic_weight": 0.2
+      },
+      "insight": {
+        "entropy_delta": -0.0020000000000000018,
+        "is_insight": false,
+        "label": "Stable"
+      },
+      "stanislavski_state": {
+        "internal_state": {
+          "safety": 0.6837566884234547,
+          "trust": 1.0,
+          "agency": 0.7023327309638262
+        },
+        "felt_emotion": "Neutral",
+        "method_acting_depth": "Batch Active Inference v2.0",
+        "raw_scores": {
+          "danger": 0.9993715286254883,
+          "helplessness": 0.9984903931617737,
+          "control": 0.8624638915061951,
+          "trust": 0.618265688419342,
+          "deception": 0.3477731943130493,
+          "safety": 0.16026584804058075
+        }
+      }
+    },
+    {
+      "scene_index": 4,
+      "resonance": {
+        "resonance_score": 0.871702313702126,
+        "detected_themes": [],
+        "thematic_weight": 0.0
+      },
+      "insight": {
+        "entropy_delta": 0.02300000000000002,
+        "is_insight": false,
+        "label": "Stable"
+      },
+      "stanislavski_state": {
+        "internal_state": {
+          "safety": 0.8667026644572615,
+          "trust": 1.0,
+          "agency": 0.8517077416181564
+        },
+        "felt_emotion": "Empowered/Determined",
+        "method_acting_depth": "Batch Active Inference v2.0",
+        "raw_scores": {
+          "safety": 0.9358816742897034,
+          "control": 0.7728226780891418,
+          "trust": 0.6387734413146973,
+          "deception": 0.19549639523029327,
+          "helplessness": 0.025947624817490578,
+          "danger": 0.021151794120669365
+        }
+      }
+    }
+  ],
+  "runtime_estimate": {
+    "min_minutes": 1,
+    "max_minutes": 5,
+    "avg_minutes": 0,
+    "dialogue_ratio": 0.0
+  },
+  "scene_feedback": {
+    "0": [
+      {
+        "severity": "warning",
+        "issue": "\u26a0\ufe0f Low Conflict",
+        "suggestion": "Add an obstacle, argument, or decision point to raise stakes."
+      },
+      {
+        "severity": "info",
+        "issue": "\ud83d\udd07 Silent Scene",
+        "suggestion": "Pure visual scene. If intentional, great! Otherwise, add dialogue for clarity."
+      }
+    ],
+    "1": [
+      {
+        "severity": "info",
+        "issue": "\ud83d\udd07 Silent Scene",
+        "suggestion": "Pure visual scene. If intentional, great! Otherwise, add dialogue for clarity."
+      }
+    ],
+    "2": [
+      {
+        "severity": "info",
+        "issue": "\ud83d\ude10 Heavy Tone",
+        "suggestion": "Scene feels dark. If intentional, ignore. Otherwise, add a moment of relief or hope."
+      },
+      {
+        "severity": "info",
+        "issue": "\ud83d\udd07 Silent Scene",
+        "suggestion": "Pure visual scene. If intentional, great! Otherwise, add dialogue for clarity."
+      }
+    ],
+    "3": [
+      {
+        "severity": "info",
+        "issue": "\ud83d\ude10 Heavy Tone",
+        "suggestion": "Scene feels dark. If intentional, ignore. Otherwise, add a moment of relief or hope."
+      },
+      {
+        "severity": "info",
+        "issue": "\ud83d\udd07 Silent Scene",
+        "suggestion": "Pure visual scene. If intentional, great! Otherwise, add dialogue for clarity."
+      }
+    ],
+    "4": [
+      {
+        "severity": "info",
+        "issue": "\ud83d\udd07 Silent Scene",
+        "suggestion": "Pure visual scene. If intentional, great! Otherwise, add dialogue for clarity."
+      },
+      {
+        "severity": "info",
+        "issue": "\ud83c\udfa2 Tonal Mismatch?",
+        "suggestion": "High tension but positive tone. Check if emotions match the conflict."
+      }
+    ]
+  }
+}

@@ -130,11 +130,13 @@ def run(input_data, lens_config=None, genre='drama', profile_params=None):
     visual_scores = input_data.get('visual_scores', [])
     social_scores = input_data.get('social_scores', [])
     valence_scores = input_data.get('valence_scores', []) 
-    coherence_scores = input_data.get('coherence_scores', []) # NEW
+    coherence_scores = input_data.get('coherence_scores', []) 
+    ml_tension_scores = input_data.get('ml_tension_scores', []) # NEW
     
     if not features:
         return []
     
+    # ... (Profile defaults omitted for brevity, logic unchanged) ...
     # Profile Defaults with Schema Injection (vNext.6)
     if not profile_params:
          config = get_genre_config(genre)
@@ -158,10 +160,11 @@ def run(input_data, lens_config=None, genre='drama', profile_params=None):
         vis = visual_scores[i] if i < len(visual_scores) else 0.0
         soc = social_scores[i] if i < len(social_scores) else 0.0
         val = valence_scores[i] if i < len(valence_scores) else 0.0
-        coh = coherence_scores[i] if i < len(coherence_scores) else 0.0 # Switching Disorientation
+        coh = coherence_scores[i] if i < len(coherence_scores) else 0.0 
+        ml_t = ml_tension_scores[i] if i < len(ml_tension_scores) else None # NEW
         
         # 1. Base Holistic Effort
-        effort = compute_instantaneous_effort(scene, lens_config, sem, syn, vis, soc)
+        effort = compute_instantaneous_effort(scene, lens_config, sem, syn, vis, soc, ml_tension=ml_t)
         
         # 2. Add Coherence Penalty (Switching Cost)
         # Weight depends on profile (Distracted viewers hurt more)
@@ -225,7 +228,7 @@ def run(input_data, lens_config=None, genre='drama', profile_params=None):
     return signals
 
 
-def compute_instantaneous_effort(scene_features, lens_config=None, sem=0.0, syn=0.0, vis=0.0, soc=0.0):
+def compute_instantaneous_effort(scene_features, lens_config=None, sem=0.0, syn=0.0, vis=0.0, soc=0.0, ml_tension=None):
     """Computes Holistic Cognitive Load."""
     if not lens_config:
         weights = {
@@ -262,6 +265,16 @@ def compute_instantaneous_effort(scene_features, lens_config=None, sem=0.0, syn=
     
     emo_w = weights['emotional_components']
     emotional_attention = (emo_w['dial_engagement']*dial_en + emo_w['visual_score']*vis_sc + emo_w['ling_volume']*ling_vol + emo_w['stillness_factor']*still)
+    
+    # === ML OVERRIDE ===
+    # If we have real ML tension (Stanislavski), blend it in.
+    if ml_tension is not None:
+        # Heuristics are good for pacing (volume), ML is good for intensity (semantics).
+        # We blend 50/50? Or 70% ML?
+        # Let's say ML tension (0.0-1.0) creates a baseline of "Emotional Load"
+        # and Volume modulates it.
+        # Hybrid Approach:
+        emotional_attention = (0.4 * emotional_attention) + (0.6 * ml_tension)
     
     total_effort = (weights['cognitive_mix'] * final_cognitive_load + weights['emotional_mix'] * emotional_attention)
     return total_effort
