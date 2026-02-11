@@ -1,28 +1,33 @@
 """
 Organizational Drift Monitor (ODD)
-vNext.5 Market Upgrade - Governance
+vNext.11 Market Upgrade - Statistical Governance
 
-Detects and flags when an organization begins drifting towards 
-evaluative misuse (e.g., using the tool as a filter).
-
-Includes AOI (Anti-Optimization Immunity).
+Detects:
+1. "Optimization Drift" (Gaming the system)
+2. "Data Drift" (Input distribution shift) uses KS-Test.
 """
 
 import time
+import numpy as np
 from collections import deque
+try:
+    from scipy import stats
+except ImportError:
+    stats = None
 
 class DriftMonitor:
     """
-    Tracks usage patterns to detect 'Evaluative Drift'.
+    Tracks usage patterns and data distributions to detect drift.
     """
     
     def __init__(self):
         # Rolling window of recent runs (Simulated storage)
         self.recent_runs = deque(maxlen=100)
+        self.entropy_baseline = deque(maxlen=500) # Baseline data for KS-Test
         self.drift_score = 0.0
-        self.aoi_active = False # AOI: Anti-Optimization Immunity
+        self.aoi_active = False 
         
-    def log_run(self, run_metadata):
+    def log_run(self, run_metadata, entropy_scores=None):
         """
         Ingest run metadata to sanity check usage health.
         """
@@ -30,25 +35,47 @@ class DriftMonitor:
             'timestamp': time.time(),
             'meta': run_metadata
         })
+        
+        # Ingest data for statistical monitoring
+        if entropy_scores:
+            self.entropy_baseline.extend(entropy_scores)
+            
         self.analyze_drift()
+        
+    def check_distribution_drift(self, current_scores):
+        """
+        Check if current script's entropy distribution matches the baseline.
+        Uses Kolmogorov-Smirnov Test (KS-Test).
+        """
+        if len(self.entropy_baseline) < 50 or len(current_scores) < 10:
+            return False, 1.0 # Not enough data
+            
+        # KS Test
+        # If scipy is missing, return no drift
+        if stats is None:
+            return False, 1.0
+            
+        # Mull Hypothesis: Samples are drawn from same distribution.
+        # If p < 0.05, we reject null -> DRIFT DETECTED.
+        statistic, p_value = stats.ks_2samp(list(self.entropy_baseline), current_scores)
+        
+        if p_value < 0.01:
+            print(f"[ML Monitor] Distribution Drift Detected (p={p_value:.4f}). Script is statistically anomalous.")
+            return True, p_value
+            
+        return False, p_value
         
     def analyze_drift(self):
         """
-        Check for drift signals:
-        1. Rapid Reruns (Fishing for alerts)
-        2. Mass Batching (Running 50 scripts in 1 hour)
-        3. Exclusionary Silence (Rejecting scripts that are silent) - Hard to detect here without outcome data
+        Check for drift signals (Repetition/Gaming).
         """
         if len(self.recent_runs) < 5:
             return
             
         # 1. Check Repetition (Fishing / Optimization)
-        # Same script name/fingerprint, rapid succession
         fingerprints = [r['meta'].get('fingerprint') for r in self.recent_runs]
-        unique_fps = set(fingerprints)
         
         # Simple heuristic: If we see the same script fingerprint > 80% of last 10 runs
-        # It implies optimization loop.
         repetition_count = 0
         current_fp = fingerprints[-1]
         for fp in fingerprints:
@@ -58,7 +85,6 @@ class DriftMonitor:
         repetition_ratio = repetition_count / len(fingerprints)
         
         if repetition_ratio > 0.6 and len(fingerprints) > 5:
-            # High repetition -> Writer is likely "optimizing for green" (AOI Trigger)
             self.drift_score = 0.8
             self.aoi_active = True
         else:
@@ -72,17 +98,25 @@ class DriftMonitor:
             return "DRIFT_DETECTED: High Repetition/optimization behavior observed."
         return "NORMAL: Usage compliant with creative support model."
 
-    def get_dampening_factor(self):
+    def check_domain_adherence(self, script_lines):
         """
-        AOI: If optimization detected, reduce system sensitivity.
+        Risk R-01: Domain Drift Check.
+        """
+        if not script_lines: return True
         
-        Returns:
-            float: 1.0 (Normal) to 0.5 (Heavily Dampened)
-        """
-        if self.aoi_active:
-            # Dampen sensitivity to discourage gaming
-            return 0.7 
-        return 1.0
+        headers = sum(1 for line in script_lines if line.strip().upper().startswith(("INT.", "EXT.")))
+        
+        ratio_headers = headers / len(script_lines)
+        
+        if headers == 0:
+            print("[Warning] Risk R-01: Domain Drift. No Scene Headings detected.")
+            return False
+            
+        if ratio_headers > 0.5:
+             print("[Warning] Risk R-01: Domain Drift. Header Density > 50%.")
+             return False
+             
+        return True
 
-# Global singleton for demonstration
+# Global singleton
 monitor = DriftMonitor()

@@ -14,6 +14,12 @@ class UseContext(Enum):
     ACADEMIC = "academic_research"
     DEVELOPMENT = "development_exploration"
 
+class Role(Enum):
+    RESEARCHER = "researcher"
+    WRITER = "writer"
+    PRODUCER = "producer"
+    AUDITOR = "auditor"
+
 class PolicyViolationError(Exception):
     pass
 

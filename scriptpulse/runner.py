@@ -5,12 +5,15 @@ ScriptPulse Runner - Executes full pipeline deterministically
 
 import sys
 import random
-from .agents import parsing, segmentation, encoding, temporal, patterns, intent, mediation, acd, ssf, lrf, semantic, syntax, xai, imagery, social, valence, profiler, coherence, beat, fairness, suggestion, embeddings, voice, scene_notes # v14.0
+from .agents import parsing, segmentation, encoding, temporal, patterns, intent, mediation, acd, ssf, lrf, semantic, syntax, xai, imagery, social, valence, profiler, coherence, beat, fairness, suggestion, embeddings, voice, scene_notes, bert_parser, agency, ensemble_uncertainty, multimodal, polyglot_validator # vNext.10 Experimental
 from . import lenses, fingerprint, governance
 from .utils import runtime  # v13.0
 
 
-def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama', audience_profile='general', high_res_mode=False, pre_parsed_lines=None, character_context=None):
+# vNext.11 Experimental
+from .agents import resonance, insight, silicon_stanislavski
+
+def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama', audience_profile='general', high_res_mode=False, pre_parsed_lines=None, character_context=None, experimental_mode=False, moonshot_mode=False):
     """
     Orchestrate the ScriptPulse Analysis Pipeline.
     
@@ -21,9 +24,15 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
         audience_profile: 'general', 'cinephile', 'distracted', 'child'
         high_res_mode: If True, sub-segments scenes into beats (HD Analysis).
         pre_parsed_lines: Optional pre-parsed lines (e.g., from FDX import)
+        experimental_mode: Enable vNext.10 features (Multimodal, Polyglot)
+        moonshot_mode: Enable vNext.11 features (Resonance, Insight, Silicon Stanislavski)
     """
     # === GPBL: Governance Check ===
     governance.validate_request(script_content) # Changed screenplay_text to script_content
+    
+    # vNext.9 Safety: Drift Monitoring (Domain Adherence)
+    from . import drift_monitor, security
+    drift_monitor.monitor.check_domain_adherence(script_content.splitlines())
     
     # Load lens config
     lens_config = lenses.get_lens(lens)
@@ -32,10 +41,19 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
     if pre_parsed_lines:
         parsed = pre_parsed_lines
     else:
-        parsed = parsing.run(script_content)
+        # vNext.9 Upgrade: BERT Parser
+        parser = bert_parser.BertParserAgent()
+        parsed_output = parser.run(script_content)
+        parsed = parsed_output['lines']
     
     # Agent 2: Scene Segmentation
     segmented = segmentation.run(parsed)
+    
+    # === vNext.10 Experimental: Polyglot Validator ===
+    polyglot_data = {}
+    if experimental_mode:
+        print("[Experimental] Running Polyglot Validator...")
+        polyglot_data = polyglot_validator.CrossCulturalValidator().run({'scenes': segmented})
     
     # Hydrate scenes with lines (Data Unification)
     for scene in segmented:
@@ -52,6 +70,12 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
     
     # === REPRODUCIBILITY LOCK ===
     random.seed(int(run_id[:16], 16))
+    
+    # Log Run for Compliance (vNext.5 Enterprise)
+    security.ComplianceLog.log_run(run_id, governance.Role.RESEARCHER, "analyzed")
+    
+    # We will log the run *after* we have computed metrics to feed the statistical monitor
+    # drift_monitor.monitor.log_run({'run_id': run_id, 'fingerprint': struct_fingerprint})
     
     # === Agent 2.5: Beat Pacing (v7.0 Micro-Segmentation) ===
     if high_res_mode:
@@ -106,6 +130,55 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
         iterations=5
     )
     
+    # === vNext.10 Experimental: Multimodal Fusion ===
+    if experimental_mode:
+        print("[Experimental] Running Multimodal Fusion...")
+        fusion_agent = multimodal.MultimodalFusionAgent()
+        for i, scene in enumerate(temporal_output):
+            # Mock injection of visual density
+            fused = fusion_agent.run({'effort_score': scene['attentional_signal'], 'visual_density': random.random()})
+            scene['attentional_signal'] = fused['fused_effort']
+            scene['multimodal_source'] = True
+
+    # === vNext.11 Moonshot: Cognitive Resonance ===
+    moonshot_data = {}
+    if moonshot_mode:
+        print("[Moonshot] Running Cognitive Resonance Layer...")
+        # 1. Resonance Agent
+        res_agent = resonance.ResonanceAgent()
+        # 2. Insight Agent
+        insight_agent = insight.InsightAgent()
+        # 3. Silicon Stanislavski
+        try:
+            stanislavski = silicon_stanislavski.SiliconStanislavski()
+        except:
+            stanislavski = None
+        
+        moonshot_trace = []
+        for i, scene in enumerate(temporal_output):
+            # Resonance
+            scene_text = scene.get('preview', '') # Using preview as proxy for full text
+            res_data = res_agent.analyze_scene(scene_text, scene['attentional_signal'])
+            
+            # Insight
+            ins_data = insight_agent.detect_cascade(scene['temporal_expectation']) # Using expectation as entropy proxy
+            
+            # Stanislavski
+            if stanislavski:
+                stan_data = stanislavski.act_scene(scene_text)
+            else:
+                stan_data = {'internal_state': {}, 'felt_emotion': 'N/A (Module Missing)'}
+            
+            # Fuse data
+            moonshot_trace.append({
+                'scene_index': scene['scene_index'],
+                'resonance': res_data,
+                'insight': ins_data,
+                'stanislavski_state': stan_data
+            })
+        moonshot_data = moonshot_trace
+
+    
     # === NEW: Agent 4.5: XAI Decomposition (Research Layer) ===
     # Explains the "Why" behind the effort
     xai_data = xai.run({
@@ -137,13 +210,15 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
         'features': encoded
     })
     
-    # === NEW: Agent 8: Fairness Audit (v8.0) ===
-    fairness_report = fairness.run(
-        {'scenes': segmented, 'valence_scores': valence_scores},
-        context=character_context,
-        genre=genre  # v12.0
-    )
+    # === Agent 11: Agency Analysis (vNext.9) ===
+    # Replaces Fairness Agent
+    agency_report = agency.run({
+        'scenes': segmented
+    })
     
+    # Agent 6: Writer Intent & Immunity
+    # (Move suggestions creation after pattern detection if depend on it, 
+    # but suggestions.run depends on temporal_output so order is fine here)
     suggestions = suggestion.run(temporal_output)
     
     # v10.1: Merge Diction Issues into Suggestions
@@ -158,6 +233,17 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
         'features': encoded,
         'acd_states': acd_output # NEW: Pass ACD states
     })
+    
+    # === NEW: Agent 4.5b: Uncertainty Quantification (vNext.8) ===
+    # Bootstrap Ensemble (Report Section 6.3)
+    try:
+        uncertainty_trace = ensemble_uncertainty.run({
+            'base_trace': temporal_output,
+            'iterations': 20
+        })
+    except Exception as e:
+        print(f"[Warning] Uncertainty Agent failed: {e}")
+        uncertainty_trace = []
     
     # Agent 6: Writer Intent & Immunity
     intent_input = {
@@ -216,15 +302,27 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
     
     # Add Ethics & Generative Data (v8.0)
     final_output['suggestions'] = suggestions
-    final_output['fairness_audit'] = fairness_report  # Fixed v12.0
+    final_output['agency_analysis'] = agency_report  # vNext.9 Replacement
     final_output['baseline_trace'] = baseline_trace # v9.0
     final_output['semantic_flux'] = semantic_flux # v9.1
     final_output['voice_fingerprints'] = voice_map # v10.1
+    final_output['voice_fingerprints'] = voice_map # v10.1
     final_output['interaction_map'] = interaction_map # v11.0
+    final_output['uncertainty_quantification'] = uncertainty_trace # vNext.8 (Section 6.3)
+    final_output['polyglot_analysis'] = polyglot_data # vNext.10 Experimental
+    final_output['moonshot_resonance'] = moonshot_data # vNext.11 Moonshot
     
     # v13.0: Runtime Estimation (User-Friendly)
     runtime_info = runtime.estimate_runtime(segmented)
     final_output['runtime_estimate'] = runtime_info
+    
+    # === DRIFT MONITORING (Post-Analysis) ===
+    # Log run and update statistical baseline
+    drift_monitor.monitor.log_run(
+        {'run_id': run_id, 'fingerprint': struct_fingerprint},
+        entropy_scores=semantic_scores
+    )
+
     
     # v14.0: Scene-Level Actionable Notes
     scene_feedback = scene_notes.run({
@@ -255,6 +353,9 @@ def parse_structure(screenplay_text):
     # Agent 2: Scene Segmentation
     segmented = segmentation.run(parsed)
     
+    # Agent 2: Scene Segmentation
+    segmented = segmentation.run(parsed)
+    
     return [
         {
             'scene_index': s['scene_index'], 
@@ -266,18 +367,22 @@ def parse_structure(screenplay_text):
 
 
 def main():
-    if len(sys.argv) != 2:
-        print("Usage: python runner.py <screenplay_file>")
-        sys.exit(1)
+    import argparse
+    parser = argparse.ArgumentParser(description="ScriptPulse Runner")
+    parser.add_argument("screenplay_file", help="Path to screenplay file")
+    parser.add_argument("--experimental", action="store_true", help="Enable vNext.10 Experimental Features")
+    parser.add_argument("--moonshot", action="store_true", help="Enable vNext.11 Moonshot Features (Resonance, Insight)")
     
-    screenplay_file = sys.argv[1]
+    args = parser.parse_args()
+    
+    screenplay_file = args.screenplay_file
     
     # Load screenplay
     with open(screenplay_file, 'r') as f:
         screenplay_text = f.read()
     
     # Run pipeline
-    result = run_pipeline(screenplay_text)
+    result = run_pipeline(screenplay_text, experimental_mode=args.experimental, moonshot_mode=args.moonshot)
     
     # Print result
     import json

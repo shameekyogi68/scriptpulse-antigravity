@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ScriptPulse Gaze Collection Lab</title>
+    <!-- GazeCloudAPI Integration (Mock/Placeholder for Demo) -->
+    <!-- In real deployment, this would load the actual GazeCloudAPI.js -->
+    <style>
+        body { font-family: 'Inter', sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: #f4f4f9; }
+        #reader-container { background: white; padding: 40px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-radius: 8px; min-height: 500px; font-family: 'Courier Prime', monospace; font-size: 16px; line-height: 1.6; display: none; }
+        .slugline { font-weight: bold; text-transform: uppercase; margin-top: 20px; margin-bottom: 10px; }
+        .action { margin-bottom: 15px; }
+        .character { margin-top: 15px; margin-left: 180px; width: 200px; text-transform: uppercase; }
+        .dialogue { margin-left: 120px; width: 350px; margin-bottom: 15px; }
+        
+        #controls { text-align: center; margin-top: 50px; }
+        button { background: #ff4b4b; color: white; border: none; padding: 12px 24px; font-size: 16px; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #d43b3b; }
+        
+        #calibration-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); z-index: 1000; display: none; color: white; text-align: center; padding-top: 20%; }
+        .dot { width: 20px; height: 20px; background: red; border-radius: 50%; position: absolute; cursor: pointer; }
+        
+        #status { margin-bottom: 20px; color: #666; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+
+    <h1>ScriptPulse Human Ground Truth (HGT) Pilot</h1>
+    <div id="status">Status: Waiting for Calibration...</div>
+
+    <div id="controls">
+        <button id="start-btn" onclick="startCalibration()">Start Calibration</button>
+    </div>
+
+    <div id="calibration-overlay">
+        <h2>Follow the Red Dot</h2>
+        <div id="cal-dot" class="dot" style="top: 50%; left: 50%;"></div>
+    </div>
+
+    <div id="reader-container">
+        <!-- Sample Script Text -->
+        <div class="slugline">INT. COMMAND CENTER - DAY</div>
+        <div class="action">The room is silent. DOZENS of technicians hunch over consoles.</div>
+        <div class="character">DIRECTOR</div>
+        <div class="dialogue">Standard orbit established. Initialize phase two.</div>
+        <div class="action">A nervous technician fingers a switch. Sweat beads on his forehead.</div>
+        <div class="character">TECHNICIAN</div>
+        <div class="dialogue">Sir, I'm getting a variance in the alpha wave.</div>
+        <div class="action">The Director freezes. He turns slowly.</div>
+        <div class="character">DIRECTOR</div>
+        <div class="dialogue">How much variance?</div>
+        <!-- ... more script ... -->
+    </div>
+
+    <script>
+        // Mock Gaze Data Collection
+        let gazeData = [];
+        let isRecording = false;
+        let startTime = 0;
+
+        function startCalibration() {
+            document.getElementById('controls').style.display = 'none';
+            document.getElementById('calibration-overlay').style.display = 'block';
+            document.getElementById('status').innerText = "Status: Calibrating...";
+            
+            // Simulating Calibration Sequence
+            let dot = document.getElementById('cal-dot');
+            let positions = [
+                {top: '10%', left: '10%'}, {top: '10%', left: '90%'},
+                {top: '90%', left: '10%'}, {top: '90%', left: '90%'},
+                {top: '50%', left: '50%'}
+            ];
+            
+            let i = 0;
+            let interval = setInterval(() => {
+                if (i >= positions.length) {
+                    clearInterval(interval);
+                    startReading();
+                } else {
+                    dot.style.top = positions[i].top;
+                    dot.style.left = positions[i].left;
+                    i++;
+                }
+            }, 1000);
+        }
+
+        function startReading() {
+            document.getElementById('calibration-overlay').style.display = 'none';
+            document.getElementById('reader-container').style.display = 'block';
+            document.getElementById('status').innerText = "Status: Recording Gaze Data...";
+            
+            isRecording = true;
+            startTime = Date.now();
+            
+            // Mock Gaze Listener (In real app, GazeCloudAPI.OnResult = plotGaze)
+            setInterval(mockGazeStream, 100); 
+        }
+
+        function mockGazeStream() {
+            if (!isRecording) return;
+            
+            // Simulate random gaze coordinates + pupil data
+            let mockResult = {
+                timestamp: Date.now() - startTime,
+                GazeX: Math.random() * window.innerWidth,
+                GazeY: Math.random() * window.innerHeight,
+                PupilDiameter: 3.0 + Math.random() * 0.5 // Simulated Cognitive Load
+            };
+            
+            gazeData.push(mockResult);
+            console.log("Captured:", mockResult);
+            
+            // Stop after 10 seconds for demo
+            if (mockResult.timestamp > 10000 && isRecording) {
+                finishSession();
+            }
+        }
+
+        function finishSession() {
+            isRecording = false;
+            document.getElementById('reader-container').style.display = 'none';
+            document.getElementById('status').innerText = "Status: Session Complete. Data Downloaded.";
+            
+            // Download JSON
+            let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(gazeData));
+            let downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "hgt_gaze_data.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
+    </script>
+</body>
+</html>

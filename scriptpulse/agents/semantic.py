@@ -1,62 +1,92 @@
 """
-ScriptPulse Semantic Agent (IEEE Research Layer)
+ScriptPulse Semantic Agent (Real ML Layer)
 Gap Solved: "Semantic Blindness"
 
-Calculates Cognitive Load using Information Theoretic Entopy (Shannon Entropy).
-Rationale: Higher entropy = higher unpredictability = higher cognitive processing cost.
+Calculates Cognitive Load using Vector Embedding Variance.
+Rationale: 
+- High Variance/Flux = High Cognitive Load (Brain must re-orient).
+- Low Variance/Flux = Flow State.
 
-Pure Python implementation. Zero ML dependencies.
+Implementation: Sentence-Transformers (SBERT).
 """
 
 import math
-import collections
-import re
+import numpy as np
 
-def run(data):
-    """
-    Calculate Semantic Entropy for each scene.
-    
-    Args:
-        data: Dict containing 'scenes' (from segmentation)
+class SemanticAgent:
+    def __init__(self):
+        self.model = None
+        try:
+            from sentence_transformers import SentenceTransformer
+            # Load a lightweight but effective model
+            self.model = SentenceTransformer('all-MiniLM-L6-v2')
+            print("[ML] Loaded SBERT for Semantic Analysis.")
+        except ImportError:
+            print("[Warning] sentence_transformers not found. Falling back to Mock.")
+        except Exception as e:
+            print(f"[Error] Failed to load SBERT: {e}")
+            
+    def run(self, data):
+        """
+        Calculate Semantic Entropy/Flux for each scene based on embedding distance.
+        """
+        scenes = data.get('scenes', [])
+        scores = []
         
-    Returns:
-        List of float (Entropy scores 0.0-1.0)
-    """
-    scenes = data.get('scenes', [])
-    entropy_scores = []
-    
-    for scene in scenes:
+        if not scenes:
+            return []
+            
         # 1. Extract Text
-        lines = [l['text'] for l in scene['lines']]
-        text = " ".join(lines).lower()
+        scene_texts = [" ".join([l['text'] for l in s['lines']]) for s in scenes]
         
-        # 2. Tokenize (Simple regex)
-        tokens = re.findall(r'\b\w+\b', text)
-        
-        if not tokens:
-            entropy_scores.append(0.0)
-            continue
+        # 2. Encode if model exists
+        if self.model:
+            embeddings = self.model.encode(scene_texts)
             
-        # 3. Calculate Shannon Entropy
-        # H = -sum(p(x) * log2(p(x)))
-        total_tokens = len(tokens)
-        counts = collections.Counter(tokens)
-        
-        entropy = 0.0
-        for count in counts.values():
-            p = count / total_tokens
-            entropy -= p * math.log2(p)
+            # 3. Calculate "Entropy" as distance from the Narrative Centroid
+            # Or distance from previous scene (Flux).
+            # The original metric was "Entropy" (0-1).
+            # Let's use Cosine Distance from Previous Scene as a proxy for "Surprise" (Information Theory).
             
-        # 4. Normalize
-        # Max entropy for N unique tokens is log2(N)
-        # However, for text, we normalize against a theoretical max to keep it 0-1
-        # A very dense scene might have entropy ~5-6 bits/word. 
-        # We clamp/scale it.
-        
-        # Scale: 0.0 (Repetitive) -> 6.0 (High Density)
-        # We normalize to 0.0 -> 1.0 range based on typical prose max ~6.0
-        normalized_entropy = min(1.0, entropy / 6.0)
-        
-        entropy_scores.append(normalized_entropy)
-        
-    return entropy_scores
+            from sklearn.metrics.pairwise import cosine_similarity
+            
+            for i in range(len(embeddings)):
+                if i == 0:
+                    scores.append(0.1) # Exposition is low entropy
+                    continue
+                
+                # Reshape for sklearn [1, -1]
+                curr = embeddings[i].reshape(1, -1)
+                prev = embeddings[i-1].reshape(1, -1)
+                
+                sim = cosine_similarity(curr, prev)[0][0]
+                
+                # Flux/Entropy = 1 - Similarity
+                # High Similarity (0.9) -> Low Entropy (0.1) -> Predictable
+                # Low Similarity (0.2) -> High Entropy (0.8) -> Surprising
+                entropy = 1.0 - max(0.0, sim)
+                
+                scores.append(float(entropy))
+                
+        else:
+            # Fallback (Mock/Heuristic)
+            import collections
+            for text in scene_texts:
+                tokens = text.split()
+                if not tokens: 
+                    scores.append(0.0)
+                    continue
+                counts = collections.Counter(tokens)
+                entropy = 0.0
+                total = len(tokens)
+                for count in counts.values():
+                    p = count / total
+                    entropy -= p * math.log(p, 2)
+                scores.append(min(1.0, entropy / 6.0))
+
+        return scores
+
+# Shim for existing calls
+def run(data):
+    agent = SemanticAgent()
+    return agent.run(data)

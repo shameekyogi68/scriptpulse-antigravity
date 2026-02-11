@@ -540,14 +540,76 @@ if script_input and st.button("Analyze Rhythm", type="primary"):
                     
     # === DEEP ANALYSIS & ETHICS (Tabs) ===
     st.markdown("### 🔬 Deep Insights")
+    
     # v13.0: Simplified tab names
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+    tabs_list = [
         "Quick Summary",
         "Character Details",
         "Bias Check",
         "Compare to Classics",
         "Writing Tips"
-    ])
+    ]
+    
+    # vNext.11: Conditional Moonshot Tab
+    moonshot_data = report.get('moonshot_resonance', [])
+    if moonshot_data:
+        tabs_list.append("🚀 Moonshot: Cognitive Resonance")
+        
+    tabs = st.tabs(tabs_list)
+    
+    # Map tabs to variables for convenience
+    tab1 = tabs[0]
+    tab2 = tabs[1]
+    tab3 = tabs[2]
+    tab4 = tabs[3]
+    tab5 = tabs[4]
+    
+    if moonshot_data:
+         with tabs[-1]:
+            st.info("🧠 **vNext.11 Experimental Layer Active**")
+            st.markdown("Visualizing the 'internal state' of the agent (Silicon Stanislavski).")
+            
+            # Prepare Dataframes
+            ms_records = []
+            for scene in moonshot_data:
+                state = scene['stanislavski_state']['internal_state']
+                res = scene['resonance']
+                ins = scene['insight']
+                
+                rec = {
+                    'Scene': scene['scene_index'],
+                    'Safety': state.get('safety', 0),
+                    'Trust': state.get('trust', 0),
+                    'Agency': state.get('agency', 0),
+                    'Resonance': res.get('resonance_score', 0),
+                    'Entropy Delta': ins.get('entropy_delta', 0)
+                }
+                ms_records.append(rec)
+            
+            df_ms = pd.DataFrame(ms_records).set_index('Scene')
+            
+            # 1. Emotional Seismograph
+            st.subheader("💓 Emotional Seismograph (Internal State)")
+            st.caption("Tracking the agent's simulated feelings of Safety, Trust, and Agency.")
+            st.line_chart(df_ms[['Safety', 'Trust', 'Agency']])
+            
+            # 2. Resonance Heatmap
+            st.subheader("🔥 Thematic Resonance")
+            st.caption("Scenes where Structural Effort *multiplied* by Thematic Depth.")
+            st.bar_chart(df_ms['Resonance'])
+            
+            # 3. Insight Markers
+            st.subheader("💡 Insight Cacades (Aha! Moments)")
+            st.caption("Sudden drops in entropy signaling resolution or realization.")
+            
+            # Highlight insights
+            insights = [r for r in ms_records if r['Entropy Delta'] > 0.1] # Threshold
+            if insights:
+                for ins in insights:
+                    st.success(f"**Scene {ins['Scene']}**: Entropy Drop of {ins['Entropy Delta']:.3f} (Insight Event)")
+            else:
+                st.caption("No massive insight cascades detected in this run.")
+
     
     with tab1:
         # xai_attribution is a LIST of dicts (one per scene)
@@ -703,7 +765,7 @@ if script_input and st.button("Analyze Rhythm", type="primary"):
                 else:
                     st.info("No significant character interactions found.")
             
-    with tab2:
+    with tab2: # ACT Structure
         macro = report.get('macro_structure_fidelity', {})
         if macro:
             best_fit = macro.get('best_fit_template', 'Unknown')

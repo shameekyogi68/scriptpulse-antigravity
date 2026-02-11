@@ -1,6 +1,8 @@
 """Structural Encoding Agent - Observable Feature Extraction"""
 
 import re
+import math
+from collections import Counter
 
 
 def run(input_data):
@@ -37,7 +39,8 @@ def run(input_data):
             'referential_load': extract_referential_load(scene_lines),
             'structural_change': extract_structural_change(scene, scenes, i), # Pass index
             'ambient_signals': extract_ambient_signals(scene_lines),  # NEW
-            'micro_structure': extract_micro_structure(scene_lines)   # NEW (v5 TAM)
+            'micro_structure': extract_micro_structure(scene_lines),   # NEW (v5 TAM)
+            'entropy_score': extract_information_entropy(scene_lines) # NEW (v6 Research)
         }
         
         feature_vectors.append(features)
@@ -300,6 +303,38 @@ def extract_micro_structure(scene_lines):
             'line_index': line['line_index']
         })
         
+        
     return micro_structure
+
+
+def extract_information_entropy(scene_lines):
+    """
+    Calculate Shannon Entropy of the scene's lexical content.
+    Higher entropy = Unpredictable, information-dense dialogue (Sorkin-esque).
+    Lower entropy = Repetitive, simple patterns.
+    
+    Solves Peer Review Critique #3 (Dialogue Ratio Dependency).
+    """
+    # 1. Aggregate text
+    text = ' '.join([line['text'] for line in scene_lines]).lower()
+    
+    # 2. Tokenize (simple whitespace)
+    words = re.findall(r'\b\w+\b', text)
+    
+    if not words: 
+        return 0.0
+        
+    # 3. Frequency Distribution
+    counts = Counter(words)
+    total_words = len(words)
+    
+    # 4. Canonical Shannon Entropy Formula: H = -sum(p(x) * log2(p(x)))
+    entropy = 0.0
+    for count in counts.values():
+        p = count / total_words
+        if p > 0:
+            entropy -= p * math.log2(p)
+            
+    return round(entropy, 3)
 
 

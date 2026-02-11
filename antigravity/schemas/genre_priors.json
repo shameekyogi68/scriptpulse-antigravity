@@ -1,0 +1,55 @@
+{
+    "_meta": {
+        "version": "1.0",
+        "description": "Cognitive Priors map Genre to Fatigue Decay (Lambda) and Threat/Safety Expectations."
+    },
+    "default": {
+        "lambda_decay": 0.85,
+        "recovery_rate": 1.0,
+        "expectation_horizon": 5
+    },
+    "genres": {
+        "Horror": {
+            "lambda_decay": 0.92,
+            "description": "High threat retention. Audience expects danger, so tension lingers longer.",
+            "recovery_rate": 0.5,
+            "micro_penalty_weight": 1.5
+        },
+        "Thriller": {
+            "lambda_decay": 0.88,
+            "description": "Suspense requires sustained attention.",
+            "recovery_rate": 0.8,
+            "micro_penalty_weight": 1.2
+        },
+        "Action": {
+            "lambda_decay": 0.80,
+            "description": "Fast processing. Adrenaline flushes fatigue quickly to allow for the next set piece.",
+            "recovery_rate": 1.2,
+            "micro_penalty_weight": 1.0
+        },
+        "Comedy": {
+            "lambda_decay": 0.70,
+            "description": "Reset-heavy. Jokes require a clear buffer. Tension evaporates quickly.",
+            "recovery_rate": 1.5,
+            "micro_penalty_weight": 0.8
+        },
+        "Drama": {
+            "lambda_decay": 0.85,
+            "description": "Standard cognitive baseline.",
+            "recovery_rate": 1.0,
+            "micro_penalty_weight": 1.0
+        },
+        "Romance": {
+            "lambda_decay": 0.75,
+            "description": "Safety bias. Audience expects positive resolution.",
+            "recovery_rate": 1.3,
+            "micro_penalty_weight": 0.9
+        },
+        "Sci-Fi": {
+            "lambda_decay": 0.85,
+            "description": "High cognitive load baseline due to world-building is normalized.",
+            "recovery_rate": 0.9,
+            "micro_penalty_weight": 1.1
+        }
+    }
+}
