@@ -1,0 +1,23 @@
+{
+    "_version": "v13.1",
+    "_policy": "Exact match required. Mismatch is a hard fail.",
+    "models": {
+        "zero-shot-classification": {
+            "name": "valhalla/distilbart-mnli-12-3",
+            "task": "zero-shot-classification",
+            "revision": "main",
+            "notes": "Used by BertParserAgent for line tagging"
+        },
+        "sentence-transformer": {
+            "name": "sentence-transformers/all-MiniLM-L6-v2",
+            "task": "sentence-embedding",
+            "revision": "main",
+            "notes": "Used for semantic embeddings, coherence similarity"
+        }
+    },
+    "error_codes": {
+        "MODEL_NAME_MISMATCH": "Requested model name does not match required specification",
+        "MODEL_LOAD_FAILURE": "Model failed to load from cache or remote",
+        "MODEL_NOT_REGISTERED": "Model task not registered in required_model_versions.json"
+    }
+}

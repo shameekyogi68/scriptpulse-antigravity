@@ -6,6 +6,7 @@ ScriptPulse Runner - Executes full pipeline deterministically
 import sys
 import time
 import random
+import tracemalloc
 from .agents import parsing, segmentation, encoding, temporal, patterns, intent, mediation, acd, ssf, lrf, semantic, syntax, xai, imagery, social, valence, profiler, coherence, beat, fairness, suggestion, embeddings, voice, scene_notes, bert_parser, agency, ensemble_uncertainty, multimodal, polyglot_validator # vNext.10 Experimental
 from . import lenses, fingerprint, governance
 from .utils import runtime  # v13.0
@@ -13,6 +14,22 @@ from .utils import runtime  # v13.0
 
 # vNext.11 Experimental
 from .agents import resonance, insight, silicon_stanislavski
+
+# v13.1 Block 4: Resource guardrails
+_RESOURCE_LIMITS = {
+    'max_wall_time_s': 300,        # Per-run wall time limit
+    'max_memory_mb': 2048,         # Per-run peak memory
+    'max_runtime_per_scene_s': 3,  # Per-scene ceiling
+}
+_OVERSIZED_BUCKETS = set()  # Scene count buckets that exceeded limits
+
+def _scene_bucket(n):
+    """Bucket scene counts: 1-5, 6-20, 21-50, 51-100, 100+"""
+    if n <= 5: return '1-5'
+    if n <= 20: return '6-20'
+    if n <= 50: return '21-50'
+    if n <= 100: return '51-100'
+    return '100+'
 
 def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama', audience_profile='general', high_res_mode=False, pre_parsed_lines=None, character_context=None, experimental_mode=False, moonshot_mode=False, cpu_safe_mode=False, valence_stride=1, stanislavski_min_words=10, embeddings_batch_size=32):
     """
@@ -29,10 +46,21 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
         moonshot_mode: Enable vNext.11 features (Resonance, Insight, Silicon Stanislavski)
     """
     # === GPBL: Governance Check ===
-    governance.validate_request(script_content) # Changed screenplay_text to script_content
+    governance.validate_request(script_content)
+    
+    # v13.1 Block 4: Start resource measurement
+    _run_start = time.time()
+    tracemalloc.start()
+    
+    # v13.1 Block 4: Auto cpu_safe_mode for oversized buckets
+    estimated_scenes = script_content.count('INT.') + script_content.count('EXT.')
+    bucket = _scene_bucket(estimated_scenes)
+    if bucket in _OVERSIZED_BUCKETS and not cpu_safe_mode:
+        cpu_safe_mode = True
+        print(f"[Resource Guard] Auto-enabled cpu_safe_mode for bucket '{bucket}'")
     
     # vNext.9 Safety: Drift Monitoring (Domain Adherence)
-    from . import drift_monitor, security
+    from . import drift_monitor, security, telemetry # v13.1 Block 7
     drift_monitor.monitor.check_domain_adherence(script_content.splitlines())
     
     # Load lens config
@@ -443,6 +471,34 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
         'agent_timings': timings,
         'validation_errors': validation_errors,
     }
+    
+    # v13.1 Block 4: Resource measurement & guardrails
+    _wall_time_s = round(time.time() - _run_start, 2)
+    _current, _peak = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+    _peak_mb = round(_peak / (1024 * 1024), 1)
+    _runtime_per_scene = _wall_time_s / max(len(segmented), 1)
+    
+    resource_flag = None
+    if _wall_time_s > _RESOURCE_LIMITS['max_wall_time_s']:
+        resource_flag = 'exceeded'
+    elif _peak_mb > _RESOURCE_LIMITS['max_memory_mb']:
+        resource_flag = 'exceeded'
+    elif _runtime_per_scene > _RESOURCE_LIMITS['max_runtime_per_scene_s']:
+        resource_flag = 'exceeded'
+    
+    if resource_flag:
+        actual_bucket = _scene_bucket(len(segmented))
+        _OVERSIZED_BUCKETS.add(actual_bucket)
+        print(f"[Resource Guard] resource_flag=exceeded for bucket '{actual_bucket}' "
+              f"(wall={_wall_time_s}s, mem={_peak_mb}MB, per_scene={_runtime_per_scene:.1f}s)")
+    
+    final_output['meta']['resource_flag'] = resource_flag
+    final_output['meta']['wall_time_s'] = _wall_time_s
+    final_output['meta']['peak_memory_mb'] = _peak_mb
+    
+    # v13.1 Block 7: Log telemetry (hash-only)
+    telemetry.log_run(final_output)
     
     return final_output
 
