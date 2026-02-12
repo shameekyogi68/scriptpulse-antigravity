@@ -1,0 +1,10 @@
+{
+    "min_pass": 38,
+    "min_warn": 40,
+    "total_checks": 42,
+    "critical_sections": [
+        "S2",
+        "S14"
+    ],
+    "notes": "Score below min_pass fails CI. Score below min_warn triggers warning."
+}

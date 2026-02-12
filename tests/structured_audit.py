@@ -617,6 +617,103 @@ She sits down and reads the newspaper. Headlines about the economy."""
     log("S15", "ALL", "All meta fields present", len(missing) == 0, f"Missing: {missing}")
 
 
+def section_16_stress():
+    """v13.1 Phase 7: Abuse and Stress Tests"""
+    print("\n" + "="*60)
+    print("SECTION 16: Abuse and Stress Tests (v13.1)")
+    print("="*60)
+
+    # --- Stress 1: Random Unicode Noise ---
+    try:
+        unicode_script = """INT. CAFÉ - DAY
+
+HÉCTOR
+(ゆっくり)
+我不知道该怎么办 🎭🔥💀
+
+ANÏTA
+¿Qué estás diciendo? これは何ですか？
+
+ACTION: The 🌊 waves crash against the متعب shore. ♠♣♥♦
+Ελληνικά text mixed with العربية and 中文."""
+
+        r_uni, t_uni = timed_run(unicode_script)
+        log("S16", "STRESS1", "Unicode noise: no crash", True, f"Scenes={r_uni['total_scenes']}, Time={t_uni:.1f}s")
+
+        # Check bounded output
+        trace = r_uni.get('temporal_trace', [])
+        all_bounded = all(0 <= p.get('attentional_signal', 0) <= 1 for p in trace)
+        log("S16", "STRESS1", "Unicode noise: bounded output", all_bounded, "All signals in [0,1]")
+    except Exception as e:
+        log("S16", "STRESS1", "Unicode noise: no crash", False, str(e)[:120])
+
+    # --- Stress 2: Megascene (1 scene, 50K words) ---
+    try:
+        word_block = "The detective examined the evidence carefully. " * 10000  # ~50K words
+        mega_script = f"INT. WAREHOUSE - NIGHT\n\n{word_block}\n\nDETECTIVE\nCase closed."
+
+        r_mega, t_mega = timed_run(mega_script)
+        log("S16", "STRESS2", "Megascene (50K words): no crash", True, f"Scenes={r_mega['total_scenes']}, Time={t_mega:.1f}s")
+
+        trace = r_mega.get('temporal_trace', [])
+        all_bounded = all(0 <= p.get('attentional_signal', 0) <= 1 for p in trace)
+        log("S16", "STRESS2", "Megascene: bounded output", all_bounded, "All signals in [0,1]")
+    except Exception as e:
+        log("S16", "STRESS2", "Megascene (50K words): no crash", False, str(e)[:120])
+
+    # --- Stress 3: Dialogue Only (zero action lines) ---
+    try:
+        dialogue_script = """INT. ROOM - DAY
+
+ALICE
+Hello there.
+
+BOB
+Hi Alice.
+
+ALICE
+How are you?
+
+BOB
+Fine thanks.
+
+ALICE
+Good to hear.
+
+BOB
+Indeed.
+
+ALICE
+Well then.
+
+BOB
+Yes.
+
+ALICE
+Goodbye.
+
+BOB
+See you."""
+
+        r_dial, t_dial = timed_run(dialogue_script)
+        log("S16", "STRESS3", "Dialogue-only: no crash", True, f"Scenes={r_dial['total_scenes']}, Time={t_dial:.1f}s")
+
+        trace = r_dial.get('temporal_trace', [])
+        all_bounded = all(0 <= p.get('attentional_signal', 0) <= 1 for p in trace)
+        log("S16", "STRESS3", "Dialogue-only: bounded output", all_bounded, "All signals in [0,1]")
+
+        # Check uncertainty is elevated (weak structural signals)
+        uncertainty = r_dial.get('uncertainty_quantification', [])
+        if uncertainty:
+            avg_std = sum(u.get('std_dev', 0) for u in uncertainty) / len(uncertainty)
+            log("S16", "STRESS3", "Dialogue-only: uncertainty elevated", avg_std > 0.01,
+                f"Avg std_dev={avg_std:.4f}")
+        else:
+            log("S16", "STRESS3", "Dialogue-only: uncertainty elevated", True, "No uncertainty data (acceptable)")
+    except Exception as e:
+        log("S16", "STRESS3", "Dialogue-only: no crash", False, str(e)[:120])
+
+
 # ========== MAIN ==========
 if __name__ == "__main__":
     print()
@@ -642,6 +739,7 @@ if __name__ == "__main__":
     section_13()
     section_14()
     section_15([])
+    section_16_stress()
 
     total_elapsed = round(time.time() - total_start, 1)
 
@@ -656,10 +754,11 @@ if __name__ == "__main__":
     print("="*60)
 
     # Export JSON report
+    total = PASS_COUNT + FAIL_COUNT
     report_path = "tests/audit_report.json"
     with open(report_path, "w") as f:
         json.dump({
-            "summary": {"passed": PASS_COUNT, "failed": FAIL_COUNT, "total_time_s": total_elapsed},
+            "summary": {"passed": PASS_COUNT, "failed": FAIL_COUNT, "total": total, "total_time_s": total_elapsed},
             "checks": RESULTS
         }, f, indent=2)
     print(f"\n📄 Full report saved: {report_path}")

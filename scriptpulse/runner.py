@@ -4,6 +4,7 @@ ScriptPulse Runner - Executes full pipeline deterministically
 """
 
 import sys
+import time
 import random
 from .agents import parsing, segmentation, encoding, temporal, patterns, intent, mediation, acd, ssf, lrf, semantic, syntax, xai, imagery, social, valence, profiler, coherence, beat, fairness, suggestion, embeddings, voice, scene_notes, bert_parser, agency, ensemble_uncertainty, multimodal, polyglot_validator # vNext.10 Experimental
 from . import lenses, fingerprint, governance
@@ -13,7 +14,7 @@ from .utils import runtime  # v13.0
 # vNext.11 Experimental
 from .agents import resonance, insight, silicon_stanislavski
 
-def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama', audience_profile='general', high_res_mode=False, pre_parsed_lines=None, character_context=None, experimental_mode=False, moonshot_mode=False, cpu_safe_mode=False):
+def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama', audience_profile='general', high_res_mode=False, pre_parsed_lines=None, character_context=None, experimental_mode=False, moonshot_mode=False, cpu_safe_mode=False, valence_stride=1, stanislavski_min_words=10, embeddings_batch_size=32):
     """
     Orchestrate the ScriptPulse Analysis Pipeline.
     
@@ -37,7 +38,11 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
     # Load lens config
     lens_config = lenses.get_lens(lens)
     
+    # v13.1: Per-agent timing
+    timings = {}
+    
     # Agent 1: Structural Parsing
+    _t0 = time.time()
     if pre_parsed_lines:
         parsed = pre_parsed_lines
     else:
@@ -45,9 +50,12 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
         parser = bert_parser.BertParserAgent()
         parsed_output = parser.run(script_content)
         parsed = parsed_output['lines']
+    timings['parser_ms'] = round((time.time() - _t0) * 1000)
     
     # Agent 2: Scene Segmentation
+    _t0 = time.time()
     segmented = segmentation.run(parsed)
+    timings['segmentation_ms'] = round((time.time() - _t0) * 1000)
     
     # === vNext.10 Experimental: Polyglot Validator ===
     polyglot_data = {}
@@ -102,23 +110,28 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
     diction_issues = syntax_data.get('diction_issues', [])
     
     # === NEW: Agent 9.1: Hybrid NLP (Embeddings) ===
+    _t0 = time.time()
     semantic_flux = embeddings.run({'scenes': segmented})
+    timings['embeddings_ms'] = round((time.time() - _t0) * 1000)
     
     # === NEW: Agent 10.1: Voice Fingerprinting (Market) ===
     voice_map = voice.run({'scenes': segmented})
     
     # === NEW: Agent 3.7: Affective Valence (v6.5) ===
-    if cpu_safe_mode:
-        # v13.1: In CPU safe mode, run valence every 3rd scene
+    _t0 = time.time()
+    stride = valence_stride if cpu_safe_mode else 1
+    if stride > 1:
+        # v13.1: In CPU safe mode, run valence every Nth scene
         valence_scores = []
         for vi, sc in enumerate(segmented):
-            if vi % 3 == 0:
+            if vi % stride == 0:
                 vs = valence.run({'scenes': [sc]})
                 valence_scores.append(vs[0] if vs else 0.0)
             else:
                 valence_scores.append(valence_scores[-1] if valence_scores else 0.0)
     else:
         valence_scores = valence.run({'scenes': segmented})
+    timings['valence_ms'] = round((time.time() - _t0) * 1000)
     
     # === NEW: Agent 3.8: Cognitive Profiling & Coherence (v6.6) ===
     # Get Profile Params (lambda, beta, threshold)
@@ -146,14 +159,17 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
     
     if stanislavski:
         if experimental_mode or moonshot_mode: # Only run if enabled
+            _t0 = time.time()
             # v13.1: CPU safe mode — skip Stanislavski for very short scenes
-            if cpu_safe_mode:
-                filtered_texts = [t if len(t.split()) >= 10 else '' for t in all_scene_texts]
+            min_words = stanislavski_min_words if cpu_safe_mode else 0
+            if min_words > 0:
+                filtered_texts = [t if len(t.split()) >= min_words else '' for t in all_scene_texts]
                 print(f"[Performance/CPU-Safe] Running Batch Inference on {sum(1 for t in filtered_texts if t)} of {len(all_scene_texts)} scenes...")
                 stan_batch_results = stanislavski.analyze_script([t for t in filtered_texts if t])
             else:
                 print(f"[Performance] Running Batch Inference on {len(all_scene_texts)} scenes...")
                 stan_batch_results = stanislavski.analyze_script(all_scene_texts)
+            timings['stanislavski_ms'] = round((time.time() - _t0) * 1000)
             
             # Extract Tension Scores for Temporal Agent
             for res in stan_batch_results:
@@ -173,6 +189,7 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
         ml_tension_scores = [None] * len(segmented)
 
     # Agent 4: Temporal Dynamics (with MRCS)
+    _t0 = time.time()
     temporal_output = temporal.simulate_consensus(
         {
             'features': encoded, 
@@ -188,6 +205,12 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
         genre=genre,
         profile_params=profile_params, # NEW v6.6
         iterations=5
+    )
+    timings['temporal_ms'] = round((time.time() - _t0) * 1000)
+    
+    # v13.1: Internal numeric guard on temporal output
+    temporal_output, validation_errors = temporal.validate_temporal_output(
+        temporal_output, len(segmented)
     )
     
     # === vNext.10 Experimental: Multimodal Fusion ===
@@ -338,7 +361,8 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
         'fingerprint': struct_fingerprint,
         'content_fingerprint': content_fp,
         'version': version,
-        'lens': lens_id
+        'lens': lens_id,
+        'agent_timings': timings
     }
     
     # Add scene info for UI visualization
@@ -399,6 +423,26 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
         'lens': lens_config['lens_id'],
         'lens_description': lens_config['description']
     })
+    
+    # v13.1 Phase 6: Observability Debug Export
+    final_output['debug_export'] = {
+        'per_scene': [{
+            'scene_index': i,
+            'agent_vectors': {
+                'semantic': semantic_scores[i] if i < len(semantic_scores) else 0,
+                'valence': valence_scores[i] if i < len(valence_scores) else 0,
+                'visual': visual_scores[i] if i < len(visual_scores) else 0,
+                'syntax': syntax_scores[i] if i < len(syntax_scores) else 0,
+            },
+            'temporal': temporal_output[i] if i < len(temporal_output) else {},
+            'lrf_value': lrf_trace[i].get('attentional_signal') if i < len(lrf_trace) else None,
+            'coherence_penalty': temporal_output[i].get('coherence_penalty', 0) if i < len(temporal_output) else 0,
+        } for i in range(len(segmented))],
+        'lens_weights': lens_config,
+        'cpu_safe_mode': cpu_safe_mode,
+        'agent_timings': timings,
+        'validation_errors': validation_errors,
+    }
     
     return final_output
 

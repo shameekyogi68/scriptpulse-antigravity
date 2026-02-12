@@ -61,5 +61,12 @@ def run(input_data):
             'lower_bound_95': round(max(0, mean_val - 2 * std_dev), 3),
             'upper_bound_95': round(min(1, mean_val + 2 * std_dev), 3)
         })
+    
+    # v13.1: Internal guard — assert lower ≤ mean ≤ upper
+    for item in uncertainty_trace:
+        if not (item['lower_bound_95'] <= item['mean'] <= item['upper_bound_95']):
+            item['error_code'] = 'BOUNDS_INVERSION'
+            item['lower_bound_95'] = min(item['lower_bound_95'], item['mean'])
+            item['upper_bound_95'] = max(item['upper_bound_95'], item['mean'])
         
     return uncertainty_trace

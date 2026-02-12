@@ -1,0 +1,6 @@
+{
+    "max_rss_mb": 4096,
+    "warn_rss_mb": 2048,
+    "max_per_run_mb": 2048,
+    "notes": "Measured with tracemalloc. Models consume ~1.5GB baseline."
+}

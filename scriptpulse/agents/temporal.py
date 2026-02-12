@@ -338,3 +338,53 @@ def classify_affective_state(arousal_signal, valence_score, scale_factor=1.0):
         if positive_valence: return "Relaxation"
         elif negative_valence: return "Melancholy"
         else: return "Calm"
+
+
+def validate_temporal_output(trace, scene_count):
+    """
+    v13.1: Internal numeric guard for temporal agent output.
+    
+    Checks:
+        1. 0 ≤ attentional_signal ≤ 1
+        2. No NaN/None values
+        3. scene_count == len(trace)
+    
+    On failure: attaches error_code, continues with fallback weights.
+    
+    Returns:
+        (corrected_trace, errors)
+    """
+    import math
+    errors = []
+    
+    for i, point in enumerate(trace):
+        sig = point.get('attentional_signal')
+        
+        # NaN / None check
+        if sig is None or (isinstance(sig, float) and math.isnan(sig)):
+            errors.append({'scene': i, 'error_code': 'NAN_SIGNAL'})
+            point['attentional_signal'] = 0.5  # neutral fallback
+            
+        # Bounds check (0 ≤ pulse ≤ 1)
+        elif not (0 <= sig <= 1):
+            errors.append({'scene': i, 'error_code': 'OOB_SIGNAL', 'value': sig})
+            point['attentional_signal'] = max(0.0, min(1.0, sig))
+    
+    # Scene count mismatch
+    if len(trace) != scene_count:
+        errors.append({
+            'error_code': 'SCENE_COUNT_MISMATCH',
+            'expected': scene_count,
+            'got': len(trace)
+        })
+    
+    if errors:
+        for point in trace:
+            point.setdefault('validation_errors', [])
+        for err in errors:
+            idx = err.get('scene')
+            if idx is not None and idx < len(trace):
+                trace[idx]['validation_errors'].append(err['error_code'])
+    
+    return trace, errors
+

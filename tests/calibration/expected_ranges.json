@@ -1,0 +1,2402 @@
+{
+  "short_000_horror.txt": {
+    "category": "short",
+    "genre": "horror",
+    "num_scenes": 2,
+    "line_count": 56,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.4
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.05,
+        0.3
+      ]
+    }
+  },
+  "short_001_horror.txt": {
+    "category": "short",
+    "genre": "horror",
+    "num_scenes": 2,
+    "line_count": 52,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.4
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.05,
+        0.3
+      ]
+    }
+  },
+  "short_002_romance.txt": {
+    "category": "short",
+    "genre": "romance",
+    "num_scenes": 2,
+    "line_count": 39,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.4
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.05,
+        0.3
+      ]
+    }
+  },
+  "short_003_thriller.txt": {
+    "category": "short",
+    "genre": "thriller",
+    "num_scenes": 3,
+    "line_count": 54,
+    "labels": {
+      "boredom_risk": [
+        0,
+        0.3
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.05,
+        0.3
+      ]
+    }
+  },
+  "short_004_thriller.txt": {
+    "category": "short",
+    "genre": "thriller",
+    "num_scenes": 3,
+    "line_count": 83,
+    "labels": {
+      "boredom_risk": [
+        0,
+        0.3
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.05,
+        0.3
+      ]
+    }
+  },
+  "short_005_comedy.txt": {
+    "category": "short",
+    "genre": "comedy",
+    "num_scenes": 2,
+    "line_count": 44,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.4
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0,
+        0.2
+      ]
+    }
+  },
+  "short_006_romance.txt": {
+    "category": "short",
+    "genre": "romance",
+    "num_scenes": 3,
+    "line_count": 79,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.4
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.05,
+        0.3
+      ]
+    }
+  },
+  "short_007_horror.txt": {
+    "category": "short",
+    "genre": "horror",
+    "num_scenes": 1,
+    "line_count": 13,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.4
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.05,
+        0.3
+      ]
+    }
+  },
+  "short_008_comedy.txt": {
+    "category": "short",
+    "genre": "comedy",
+    "num_scenes": 2,
+    "line_count": 55,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.4
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0,
+        0.2
+      ]
+    }
+  },
+  "short_009_thriller.txt": {
+    "category": "short",
+    "genre": "thriller",
+    "num_scenes": 2,
+    "line_count": 56,
+    "labels": {
+      "boredom_risk": [
+        0,
+        0.3
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.05,
+        0.3
+      ]
+    }
+  },
+  "short_010_comedy.txt": {
+    "category": "short",
+    "genre": "comedy",
+    "num_scenes": 2,
+    "line_count": 39,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.4
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0,
+        0.2
+      ]
+    }
+  },
+  "short_011_comedy.txt": {
+    "category": "short",
+    "genre": "comedy",
+    "num_scenes": 1,
+    "line_count": 19,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.4
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0,
+        0.2
+      ]
+    }
+  },
+  "short_012_horror.txt": {
+    "category": "short",
+    "genre": "horror",
+    "num_scenes": 3,
+    "line_count": 59,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.4
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.05,
+        0.3
+      ]
+    }
+  },
+  "short_013_thriller.txt": {
+    "category": "short",
+    "genre": "thriller",
+    "num_scenes": 1,
+    "line_count": 19,
+    "labels": {
+      "boredom_risk": [
+        0,
+        0.3
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.05,
+        0.3
+      ]
+    }
+  },
+  "short_014_thriller.txt": {
+    "category": "short",
+    "genre": "thriller",
+    "num_scenes": 2,
+    "line_count": 40,
+    "labels": {
+      "boredom_risk": [
+        0,
+        0.3
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.05,
+        0.3
+      ]
+    }
+  },
+  "short_015_romance.txt": {
+    "category": "short",
+    "genre": "romance",
+    "num_scenes": 2,
+    "line_count": 34,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.4
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.05,
+        0.3
+      ]
+    }
+  },
+  "short_016_horror.txt": {
+    "category": "short",
+    "genre": "horror",
+    "num_scenes": 1,
+    "line_count": 19,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.4
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.05,
+        0.3
+      ]
+    }
+  },
+  "short_017_horror.txt": {
+    "category": "short",
+    "genre": "horror",
+    "num_scenes": 2,
+    "line_count": 44,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.4
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.05,
+        0.3
+      ]
+    }
+  },
+  "short_018_romance.txt": {
+    "category": "short",
+    "genre": "romance",
+    "num_scenes": 3,
+    "line_count": 90,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.4
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.05,
+        0.3
+      ]
+    }
+  },
+  "short_019_thriller.txt": {
+    "category": "short",
+    "genre": "thriller",
+    "num_scenes": 1,
+    "line_count": 31,
+    "labels": {
+      "boredom_risk": [
+        0,
+        0.3
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.05,
+        0.3
+      ]
+    }
+  },
+  "short_020_romance.txt": {
+    "category": "short",
+    "genre": "romance",
+    "num_scenes": 3,
+    "line_count": 52,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.4
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.05,
+        0.3
+      ]
+    }
+  },
+  "short_021_horror.txt": {
+    "category": "short",
+    "genre": "horror",
+    "num_scenes": 2,
+    "line_count": 51,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.4
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.05,
+        0.3
+      ]
+    }
+  },
+  "short_022_drama.txt": {
+    "category": "short",
+    "genre": "drama",
+    "num_scenes": 2,
+    "line_count": 51,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.4
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.05,
+        0.3
+      ]
+    }
+  },
+  "short_023_comedy.txt": {
+    "category": "short",
+    "genre": "comedy",
+    "num_scenes": 2,
+    "line_count": 56,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.4
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0,
+        0.2
+      ]
+    }
+  },
+  "short_024_drama.txt": {
+    "category": "short",
+    "genre": "drama",
+    "num_scenes": 2,
+    "line_count": 62,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.4
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.05,
+        0.3
+      ]
+    }
+  },
+  "short_025_comedy.txt": {
+    "category": "short",
+    "genre": "comedy",
+    "num_scenes": 3,
+    "line_count": 73,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.4
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0,
+        0.2
+      ]
+    }
+  },
+  "short_026_comedy.txt": {
+    "category": "short",
+    "genre": "comedy",
+    "num_scenes": 3,
+    "line_count": 55,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.4
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0,
+        0.2
+      ]
+    }
+  },
+  "short_027_comedy.txt": {
+    "category": "short",
+    "genre": "comedy",
+    "num_scenes": 1,
+    "line_count": 18,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.4
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0,
+        0.2
+      ]
+    }
+  },
+  "short_028_comedy.txt": {
+    "category": "short",
+    "genre": "comedy",
+    "num_scenes": 2,
+    "line_count": 43,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.4
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0,
+        0.2
+      ]
+    }
+  },
+  "short_029_thriller.txt": {
+    "category": "short",
+    "genre": "thriller",
+    "num_scenes": 1,
+    "line_count": 25,
+    "labels": {
+      "boredom_risk": [
+        0,
+        0.3
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.05,
+        0.3
+      ]
+    }
+  },
+  "short_030_horror.txt": {
+    "category": "short",
+    "genre": "horror",
+    "num_scenes": 1,
+    "line_count": 31,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.4
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.05,
+        0.3
+      ]
+    }
+  },
+  "short_031_horror.txt": {
+    "category": "short",
+    "genre": "horror",
+    "num_scenes": 3,
+    "line_count": 72,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.4
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.05,
+        0.3
+      ]
+    }
+  },
+  "short_032_comedy.txt": {
+    "category": "short",
+    "genre": "comedy",
+    "num_scenes": 3,
+    "line_count": 72,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.4
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0,
+        0.2
+      ]
+    }
+  },
+  "short_033_comedy.txt": {
+    "category": "short",
+    "genre": "comedy",
+    "num_scenes": 3,
+    "line_count": 43,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.4
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0,
+        0.2
+      ]
+    }
+  },
+  "short_034_horror.txt": {
+    "category": "short",
+    "genre": "horror",
+    "num_scenes": 3,
+    "line_count": 79,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.4
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.05,
+        0.3
+      ]
+    }
+  },
+  "short_035_comedy.txt": {
+    "category": "short",
+    "genre": "comedy",
+    "num_scenes": 1,
+    "line_count": 19,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.4
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0,
+        0.2
+      ]
+    }
+  },
+  "short_036_comedy.txt": {
+    "category": "short",
+    "genre": "comedy",
+    "num_scenes": 3,
+    "line_count": 70,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.4
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0,
+        0.2
+      ]
+    }
+  },
+  "short_037_horror.txt": {
+    "category": "short",
+    "genre": "horror",
+    "num_scenes": 2,
+    "line_count": 50,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.4
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.05,
+        0.3
+      ]
+    }
+  },
+  "short_038_comedy.txt": {
+    "category": "short",
+    "genre": "comedy",
+    "num_scenes": 2,
+    "line_count": 45,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.4
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0,
+        0.2
+      ]
+    }
+  },
+  "short_039_comedy.txt": {
+    "category": "short",
+    "genre": "comedy",
+    "num_scenes": 3,
+    "line_count": 60,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.4
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0,
+        0.2
+      ]
+    }
+  },
+  "short_040_comedy.txt": {
+    "category": "short",
+    "genre": "comedy",
+    "num_scenes": 2,
+    "line_count": 44,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.4
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0,
+        0.2
+      ]
+    }
+  },
+  "short_041_comedy.txt": {
+    "category": "short",
+    "genre": "comedy",
+    "num_scenes": 1,
+    "line_count": 13,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.4
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0,
+        0.2
+      ]
+    }
+  },
+  "short_042_romance.txt": {
+    "category": "short",
+    "genre": "romance",
+    "num_scenes": 2,
+    "line_count": 45,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.4
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.05,
+        0.3
+      ]
+    }
+  },
+  "short_043_romance.txt": {
+    "category": "short",
+    "genre": "romance",
+    "num_scenes": 1,
+    "line_count": 18,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.4
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.05,
+        0.3
+      ]
+    }
+  },
+  "short_044_comedy.txt": {
+    "category": "short",
+    "genre": "comedy",
+    "num_scenes": 2,
+    "line_count": 28,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.4
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0,
+        0.2
+      ]
+    }
+  },
+  "short_045_comedy.txt": {
+    "category": "short",
+    "genre": "comedy",
+    "num_scenes": 1,
+    "line_count": 13,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.4
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0,
+        0.2
+      ]
+    }
+  },
+  "short_046_horror.txt": {
+    "category": "short",
+    "genre": "horror",
+    "num_scenes": 2,
+    "line_count": 45,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.4
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.05,
+        0.3
+      ]
+    }
+  },
+  "short_047_thriller.txt": {
+    "category": "short",
+    "genre": "thriller",
+    "num_scenes": 3,
+    "line_count": 89,
+    "labels": {
+      "boredom_risk": [
+        0,
+        0.3
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.05,
+        0.3
+      ]
+    }
+  },
+  "short_048_comedy.txt": {
+    "category": "short",
+    "genre": "comedy",
+    "num_scenes": 1,
+    "line_count": 13,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.4
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0,
+        0.2
+      ]
+    }
+  },
+  "short_049_romance.txt": {
+    "category": "short",
+    "genre": "romance",
+    "num_scenes": 2,
+    "line_count": 34,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.4
+      ],
+      "confusion_risk": [
+        0.2,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.05,
+        0.3
+      ]
+    }
+  },
+  "medium_050_thriller.txt": {
+    "category": "medium",
+    "genre": "thriller",
+    "num_scenes": 6,
+    "line_count": 138,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.5
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.2,
+        0.6
+      ]
+    }
+  },
+  "medium_051_comedy.txt": {
+    "category": "medium",
+    "genre": "comedy",
+    "num_scenes": 4,
+    "line_count": 93,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.1,
+        0.5
+      ]
+    }
+  },
+  "medium_052_thriller.txt": {
+    "category": "medium",
+    "genre": "thriller",
+    "num_scenes": 9,
+    "line_count": 198,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.5
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.2,
+        0.6
+      ]
+    }
+  },
+  "medium_053_drama.txt": {
+    "category": "medium",
+    "genre": "drama",
+    "num_scenes": 7,
+    "line_count": 154,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.2,
+        0.6
+      ]
+    }
+  },
+  "medium_054_romance.txt": {
+    "category": "medium",
+    "genre": "romance",
+    "num_scenes": 7,
+    "line_count": 131,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.2,
+        0.6
+      ]
+    }
+  },
+  "medium_055_thriller.txt": {
+    "category": "medium",
+    "genre": "thriller",
+    "num_scenes": 4,
+    "line_count": 99,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.5
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.2,
+        0.6
+      ]
+    }
+  },
+  "medium_056_comedy.txt": {
+    "category": "medium",
+    "genre": "comedy",
+    "num_scenes": 8,
+    "line_count": 180,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.1,
+        0.5
+      ]
+    }
+  },
+  "medium_057_horror.txt": {
+    "category": "medium",
+    "genre": "horror",
+    "num_scenes": 7,
+    "line_count": 135,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.2,
+        0.6
+      ]
+    }
+  },
+  "medium_058_drama.txt": {
+    "category": "medium",
+    "genre": "drama",
+    "num_scenes": 8,
+    "line_count": 180,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.2,
+        0.6
+      ]
+    }
+  },
+  "medium_059_romance.txt": {
+    "category": "medium",
+    "genre": "romance",
+    "num_scenes": 9,
+    "line_count": 239,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.2,
+        0.6
+      ]
+    }
+  },
+  "medium_060_thriller.txt": {
+    "category": "medium",
+    "genre": "thriller",
+    "num_scenes": 5,
+    "line_count": 146,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.5
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.2,
+        0.6
+      ]
+    }
+  },
+  "medium_061_romance.txt": {
+    "category": "medium",
+    "genre": "romance",
+    "num_scenes": 7,
+    "line_count": 160,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.2,
+        0.6
+      ]
+    }
+  },
+  "medium_062_thriller.txt": {
+    "category": "medium",
+    "genre": "thriller",
+    "num_scenes": 8,
+    "line_count": 205,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.5
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.2,
+        0.6
+      ]
+    }
+  },
+  "medium_063_drama.txt": {
+    "category": "medium",
+    "genre": "drama",
+    "num_scenes": 5,
+    "line_count": 89,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.2,
+        0.6
+      ]
+    }
+  },
+  "medium_064_drama.txt": {
+    "category": "medium",
+    "genre": "drama",
+    "num_scenes": 10,
+    "line_count": 181,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.2,
+        0.6
+      ]
+    }
+  },
+  "medium_065_horror.txt": {
+    "category": "medium",
+    "genre": "horror",
+    "num_scenes": 4,
+    "line_count": 116,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.2,
+        0.6
+      ]
+    }
+  },
+  "medium_066_horror.txt": {
+    "category": "medium",
+    "genre": "horror",
+    "num_scenes": 5,
+    "line_count": 136,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.2,
+        0.6
+      ]
+    }
+  },
+  "medium_067_drama.txt": {
+    "category": "medium",
+    "genre": "drama",
+    "num_scenes": 10,
+    "line_count": 221,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.2,
+        0.6
+      ]
+    }
+  },
+  "medium_068_thriller.txt": {
+    "category": "medium",
+    "genre": "thriller",
+    "num_scenes": 6,
+    "line_count": 157,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.5
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.2,
+        0.6
+      ]
+    }
+  },
+  "medium_069_thriller.txt": {
+    "category": "medium",
+    "genre": "thriller",
+    "num_scenes": 10,
+    "line_count": 203,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.5
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.2,
+        0.6
+      ]
+    }
+  },
+  "medium_070_drama.txt": {
+    "category": "medium",
+    "genre": "drama",
+    "num_scenes": 7,
+    "line_count": 150,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.2,
+        0.6
+      ]
+    }
+  },
+  "medium_071_thriller.txt": {
+    "category": "medium",
+    "genre": "thriller",
+    "num_scenes": 5,
+    "line_count": 115,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.5
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.2,
+        0.6
+      ]
+    }
+  },
+  "medium_072_horror.txt": {
+    "category": "medium",
+    "genre": "horror",
+    "num_scenes": 8,
+    "line_count": 193,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.2,
+        0.6
+      ]
+    }
+  },
+  "medium_073_romance.txt": {
+    "category": "medium",
+    "genre": "romance",
+    "num_scenes": 9,
+    "line_count": 249,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.2,
+        0.6
+      ]
+    }
+  },
+  "medium_074_thriller.txt": {
+    "category": "medium",
+    "genre": "thriller",
+    "num_scenes": 4,
+    "line_count": 79,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.5
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.2,
+        0.6
+      ]
+    }
+  },
+  "medium_075_romance.txt": {
+    "category": "medium",
+    "genre": "romance",
+    "num_scenes": 9,
+    "line_count": 191,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.2,
+        0.6
+      ]
+    }
+  },
+  "medium_076_comedy.txt": {
+    "category": "medium",
+    "genre": "comedy",
+    "num_scenes": 8,
+    "line_count": 156,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.1,
+        0.5
+      ]
+    }
+  },
+  "medium_077_drama.txt": {
+    "category": "medium",
+    "genre": "drama",
+    "num_scenes": 8,
+    "line_count": 198,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.2,
+        0.6
+      ]
+    }
+  },
+  "medium_078_horror.txt": {
+    "category": "medium",
+    "genre": "horror",
+    "num_scenes": 6,
+    "line_count": 117,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.2,
+        0.6
+      ]
+    }
+  },
+  "medium_079_thriller.txt": {
+    "category": "medium",
+    "genre": "thriller",
+    "num_scenes": 9,
+    "line_count": 199,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.5
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.2,
+        0.6
+      ]
+    }
+  },
+  "medium_080_romance.txt": {
+    "category": "medium",
+    "genre": "romance",
+    "num_scenes": 6,
+    "line_count": 127,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.2,
+        0.6
+      ]
+    }
+  },
+  "medium_081_comedy.txt": {
+    "category": "medium",
+    "genre": "comedy",
+    "num_scenes": 8,
+    "line_count": 164,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.1,
+        0.5
+      ]
+    }
+  },
+  "medium_082_drama.txt": {
+    "category": "medium",
+    "genre": "drama",
+    "num_scenes": 5,
+    "line_count": 105,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.2,
+        0.6
+      ]
+    }
+  },
+  "medium_083_comedy.txt": {
+    "category": "medium",
+    "genre": "comedy",
+    "num_scenes": 7,
+    "line_count": 155,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.1,
+        0.5
+      ]
+    }
+  },
+  "medium_084_drama.txt": {
+    "category": "medium",
+    "genre": "drama",
+    "num_scenes": 7,
+    "line_count": 167,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.2,
+        0.6
+      ]
+    }
+  },
+  "medium_085_comedy.txt": {
+    "category": "medium",
+    "genre": "comedy",
+    "num_scenes": 4,
+    "line_count": 105,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.1,
+        0.5
+      ]
+    }
+  },
+  "medium_086_horror.txt": {
+    "category": "medium",
+    "genre": "horror",
+    "num_scenes": 10,
+    "line_count": 225,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.2,
+        0.6
+      ]
+    }
+  },
+  "medium_087_thriller.txt": {
+    "category": "medium",
+    "genre": "thriller",
+    "num_scenes": 6,
+    "line_count": 150,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.5
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.2,
+        0.6
+      ]
+    }
+  },
+  "medium_088_romance.txt": {
+    "category": "medium",
+    "genre": "romance",
+    "num_scenes": 9,
+    "line_count": 207,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.2,
+        0.6
+      ]
+    }
+  },
+  "medium_089_horror.txt": {
+    "category": "medium",
+    "genre": "horror",
+    "num_scenes": 9,
+    "line_count": 210,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.2,
+        0.6
+      ]
+    }
+  },
+  "medium_090_thriller.txt": {
+    "category": "medium",
+    "genre": "thriller",
+    "num_scenes": 10,
+    "line_count": 249,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.5
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.2,
+        0.6
+      ]
+    }
+  },
+  "medium_091_comedy.txt": {
+    "category": "medium",
+    "genre": "comedy",
+    "num_scenes": 4,
+    "line_count": 79,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.1,
+        0.5
+      ]
+    }
+  },
+  "medium_092_drama.txt": {
+    "category": "medium",
+    "genre": "drama",
+    "num_scenes": 4,
+    "line_count": 109,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.2,
+        0.6
+      ]
+    }
+  },
+  "medium_093_thriller.txt": {
+    "category": "medium",
+    "genre": "thriller",
+    "num_scenes": 8,
+    "line_count": 168,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.5
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.2,
+        0.6
+      ]
+    }
+  },
+  "medium_094_horror.txt": {
+    "category": "medium",
+    "genre": "horror",
+    "num_scenes": 7,
+    "line_count": 191,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.2,
+        0.6
+      ]
+    }
+  },
+  "medium_095_thriller.txt": {
+    "category": "medium",
+    "genre": "thriller",
+    "num_scenes": 7,
+    "line_count": 132,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.5
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.2,
+        0.6
+      ]
+    }
+  },
+  "medium_096_thriller.txt": {
+    "category": "medium",
+    "genre": "thriller",
+    "num_scenes": 7,
+    "line_count": 168,
+    "labels": {
+      "boredom_risk": [
+        0.1,
+        0.5
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.2,
+        0.6
+      ]
+    }
+  },
+  "medium_097_romance.txt": {
+    "category": "medium",
+    "genre": "romance",
+    "num_scenes": 7,
+    "line_count": 160,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.2,
+        0.6
+      ]
+    }
+  },
+  "medium_098_horror.txt": {
+    "category": "medium",
+    "genre": "horror",
+    "num_scenes": 8,
+    "line_count": 145,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.2,
+        0.6
+      ]
+    }
+  },
+  "medium_099_drama.txt": {
+    "category": "medium",
+    "genre": "drama",
+    "num_scenes": 4,
+    "line_count": 95,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.15,
+        0.5
+      ],
+      "fatigue_perception": [
+        0.2,
+        0.6
+      ]
+    }
+  },
+  "long_100_thriller.txt": {
+    "category": "long",
+    "genre": "thriller",
+    "num_scenes": 25,
+    "line_count": 553,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.2,
+        0.6
+      ],
+      "fatigue_perception": [
+        0.4,
+        0.8
+      ]
+    }
+  },
+  "long_101_thriller.txt": {
+    "category": "long",
+    "genre": "thriller",
+    "num_scenes": 29,
+    "line_count": 649,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.2,
+        0.6
+      ],
+      "fatigue_perception": [
+        0.4,
+        0.8
+      ]
+    }
+  },
+  "long_102_thriller.txt": {
+    "category": "long",
+    "genre": "thriller",
+    "num_scenes": 18,
+    "line_count": 427,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.2,
+        0.6
+      ],
+      "fatigue_perception": [
+        0.4,
+        0.8
+      ]
+    }
+  },
+  "long_103_thriller.txt": {
+    "category": "long",
+    "genre": "thriller",
+    "num_scenes": 26,
+    "line_count": 638,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.2,
+        0.6
+      ],
+      "fatigue_perception": [
+        0.4,
+        0.8
+      ]
+    }
+  },
+  "long_104_romance.txt": {
+    "category": "long",
+    "genre": "romance",
+    "num_scenes": 29,
+    "line_count": 662,
+    "labels": {
+      "boredom_risk": [
+        0.3,
+        0.7
+      ],
+      "confusion_risk": [
+        0.2,
+        0.6
+      ],
+      "fatigue_perception": [
+        0.4,
+        0.8
+      ]
+    }
+  },
+  "long_105_romance.txt": {
+    "category": "long",
+    "genre": "romance",
+    "num_scenes": 21,
+    "line_count": 489,
+    "labels": {
+      "boredom_risk": [
+        0.3,
+        0.7
+      ],
+      "confusion_risk": [
+        0.2,
+        0.6
+      ],
+      "fatigue_perception": [
+        0.4,
+        0.8
+      ]
+    }
+  },
+  "long_106_thriller.txt": {
+    "category": "long",
+    "genre": "thriller",
+    "num_scenes": 23,
+    "line_count": 591,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.2,
+        0.6
+      ],
+      "fatigue_perception": [
+        0.4,
+        0.8
+      ]
+    }
+  },
+  "long_107_romance.txt": {
+    "category": "long",
+    "genre": "romance",
+    "num_scenes": 20,
+    "line_count": 449,
+    "labels": {
+      "boredom_risk": [
+        0.3,
+        0.7
+      ],
+      "confusion_risk": [
+        0.2,
+        0.6
+      ],
+      "fatigue_perception": [
+        0.4,
+        0.8
+      ]
+    }
+  },
+  "long_108_horror.txt": {
+    "category": "long",
+    "genre": "horror",
+    "num_scenes": 28,
+    "line_count": 611,
+    "labels": {
+      "boredom_risk": [
+        0.3,
+        0.7
+      ],
+      "confusion_risk": [
+        0.2,
+        0.6
+      ],
+      "fatigue_perception": [
+        0.4,
+        0.8
+      ]
+    }
+  },
+  "long_109_comedy.txt": {
+    "category": "long",
+    "genre": "comedy",
+    "num_scenes": 20,
+    "line_count": 418,
+    "labels": {
+      "boredom_risk": [
+        0.3,
+        0.7
+      ],
+      "confusion_risk": [
+        0.2,
+        0.6
+      ],
+      "fatigue_perception": [
+        0.3,
+        0.7
+      ]
+    }
+  },
+  "long_110_romance.txt": {
+    "category": "long",
+    "genre": "romance",
+    "num_scenes": 28,
+    "line_count": 710,
+    "labels": {
+      "boredom_risk": [
+        0.3,
+        0.7
+      ],
+      "confusion_risk": [
+        0.2,
+        0.6
+      ],
+      "fatigue_perception": [
+        0.4,
+        0.8
+      ]
+    }
+  },
+  "long_111_drama.txt": {
+    "category": "long",
+    "genre": "drama",
+    "num_scenes": 26,
+    "line_count": 500,
+    "labels": {
+      "boredom_risk": [
+        0.3,
+        0.7
+      ],
+      "confusion_risk": [
+        0.2,
+        0.6
+      ],
+      "fatigue_perception": [
+        0.4,
+        0.8
+      ]
+    }
+  },
+  "long_112_thriller.txt": {
+    "category": "long",
+    "genre": "thriller",
+    "num_scenes": 30,
+    "line_count": 720,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.2,
+        0.6
+      ],
+      "fatigue_perception": [
+        0.4,
+        0.8
+      ]
+    }
+  },
+  "long_113_drama.txt": {
+    "category": "long",
+    "genre": "drama",
+    "num_scenes": 22,
+    "line_count": 494,
+    "labels": {
+      "boredom_risk": [
+        0.3,
+        0.7
+      ],
+      "confusion_risk": [
+        0.2,
+        0.6
+      ],
+      "fatigue_perception": [
+        0.4,
+        0.8
+      ]
+    }
+  },
+  "long_114_thriller.txt": {
+    "category": "long",
+    "genre": "thriller",
+    "num_scenes": 24,
+    "line_count": 587,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.2,
+        0.6
+      ],
+      "fatigue_perception": [
+        0.4,
+        0.8
+      ]
+    }
+  },
+  "long_115_thriller.txt": {
+    "category": "long",
+    "genre": "thriller",
+    "num_scenes": 16,
+    "line_count": 410,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.2,
+        0.6
+      ],
+      "fatigue_perception": [
+        0.4,
+        0.8
+      ]
+    }
+  },
+  "long_116_thriller.txt": {
+    "category": "long",
+    "genre": "thriller",
+    "num_scenes": 25,
+    "line_count": 559,
+    "labels": {
+      "boredom_risk": [
+        0.2,
+        0.6
+      ],
+      "confusion_risk": [
+        0.2,
+        0.6
+      ],
+      "fatigue_perception": [
+        0.4,
+        0.8
+      ]
+    }
+  },
+  "long_117_romance.txt": {
+    "category": "long",
+    "genre": "romance",
+    "num_scenes": 28,
+    "line_count": 636,
+    "labels": {
+      "boredom_risk": [
+        0.3,
+        0.7
+      ],
+      "confusion_risk": [
+        0.2,
+        0.6
+      ],
+      "fatigue_perception": [
+        0.4,
+        0.8
+      ]
+    }
+  },
+  "long_118_drama.txt": {
+    "category": "long",
+    "genre": "drama",
+    "num_scenes": 17,
+    "line_count": 381,
+    "labels": {
+      "boredom_risk": [
+        0.3,
+        0.7
+      ],
+      "confusion_risk": [
+        0.2,
+        0.6
+      ],
+      "fatigue_perception": [
+        0.4,
+        0.8
+      ]
+    }
+  },
+  "long_119_horror.txt": {
+    "category": "long",
+    "genre": "horror",
+    "num_scenes": 20,
+    "line_count": 456,
+    "labels": {
+      "boredom_risk": [
+        0.3,
+        0.7
+      ],
+      "confusion_risk": [
+        0.2,
+        0.6
+      ],
+      "fatigue_perception": [
+        0.4,
+        0.8
+      ]
+    }
+  }
+}

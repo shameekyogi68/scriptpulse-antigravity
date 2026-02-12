@@ -29,6 +29,9 @@ def run(input_data):
     # Step 3: Apply minimum scene length constraint
     scenes = enforce_minimum_length(scenes, input_data)
     
+    # Step 3.5: Merge headless orphan fragments (v13.1)
+    scenes = merge_headless_fragments(scenes, input_data)
+    
     # Step 4: Merge low-confidence adjacent scenes
     scenes = merge_low_confidence(scenes)
     
@@ -212,4 +215,37 @@ def reindex_scenes(scenes):
     for i, scene in enumerate(scenes):
         scene['scene_index'] = i
     return scenes
+
+
+def merge_headless_fragments(scenes, parsed_lines, max_orphan_lines=5):
+    """
+    v13.1: Merge headless short scenes into the previous scene.
+    
+    Rule: If a scene has no 'S' tag (scene heading), is short (≤ max_orphan_lines),
+    and the previous scene has a heading, merge it back into the previous scene.
+    
+    This prevents parser-produced fragments (e.g., trailing dialogue blocks)
+    from being counted as separate scenes.
+    """
+    if len(scenes) <= 1:
+        return scenes
+    
+    merged = [scenes[0]]
+    
+    for scene in scenes[1:]:
+        # Check if this scene has a heading
+        has_heading = any(
+            parsed_lines[i]['tag'] == 'S'
+            for i in range(scene['start_line'], min(scene['end_line'] + 1, len(parsed_lines)))
+        )
+        length = scene['end_line'] - scene['start_line'] + 1
+        
+        if not has_heading and length <= max_orphan_lines and merged:
+            # Merge into previous scene
+            merged[-1]['end_line'] = scene['end_line']
+        else:
+            merged.append(scene)
+    
+    return merged
+
 

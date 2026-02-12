@@ -1,0 +1,6 @@
+{
+    "max_total_s": 1500,
+    "max_per_scene_s": 3,
+    "warn_total_s": 900,
+    "notes": "Measured on CPU (Apple M-series). GPU runs expected 3-5x faster."
+}
