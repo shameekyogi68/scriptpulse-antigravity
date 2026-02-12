@@ -1,0 +1,303 @@
+{
+  "summary": {
+    "passed": 40,
+    "failed": 2,
+    "total_time_s": 820.0
+  },
+  "checks": [
+    {
+      "section": "S1",
+      "prompt": "P1",
+      "check": "Scene count == 1",
+      "status": "FAIL",
+      "detail": "Got 2"
+    },
+    {
+      "section": "S1",
+      "prompt": "P1",
+      "check": "Temporal trace exists",
+      "status": "PASS",
+      "detail": "2 points"
+    },
+    {
+      "section": "S1",
+      "prompt": "P1",
+      "check": "No heuristic fallback",
+      "status": "PASS",
+      "detail": "ML_Active"
+    },
+    {
+      "section": "S1",
+      "prompt": "P2",
+      "check": "Parser still runs (no crash)",
+      "status": "PASS",
+      "detail": "Time: 15.3s"
+    },
+    {
+      "section": "S1",
+      "prompt": "P2",
+      "check": "At least 1 scene produced",
+      "status": "PASS",
+      "detail": "Got 1"
+    },
+    {
+      "section": "S1",
+      "prompt": "P3",
+      "check": "Coherence penalty detected",
+      "status": "PASS",
+      "detail": "Topic shifts should trigger penalties"
+    },
+    {
+      "section": "S2",
+      "prompt": "P4",
+      "check": "Pulse identical across 3 runs",
+      "status": "PASS",
+      "detail": "R1=[0.535], R2=[0.535]"
+    },
+    {
+      "section": "S2",
+      "prompt": "P4",
+      "check": "Fingerprint identical",
+      "status": "PASS",
+      "detail": "8a695ce1ee753901b17d"
+    },
+    {
+      "section": "S2",
+      "prompt": "P5",
+      "check": "Content fingerprint changes on edit",
+      "status": "PASS",
+      "detail": "Old=bb3e22f4350aaedb, New=a3b4badd87b70f20"
+    },
+    {
+      "section": "S3",
+      "prompt": "P6",
+      "check": "Late scenes show fatigue (lower or equal attention)",
+      "status": "PASS",
+      "detail": "Early=0.756, Late=0.691"
+    },
+    {
+      "section": "S3",
+      "prompt": "P7",
+      "check": "Pulse oscillates (not monotonic)",
+      "status": "PASS",
+      "detail": "Signals: [0.52, 0.43, 0.93, 0.92, 1.01, 1.01]"
+    },
+    {
+      "section": "S4",
+      "prompt": "P8",
+      "check": "Low tension for neutral scene",
+      "status": "PASS",
+      "detail": "Avg=0.349"
+    },
+    {
+      "section": "S4",
+      "prompt": "P9",
+      "check": "High tension for suspense scene",
+      "status": "PASS",
+      "detail": "Avg=0.638"
+    },
+    {
+      "section": "S5",
+      "prompt": "P10",
+      "check": "Semantic flux spike at topic change",
+      "status": "PASS",
+      "detail": "Flux: [0.0, 0.399, 0.89]"
+    },
+    {
+      "section": "S5",
+      "prompt": "P11",
+      "check": "Similar pulse for paraphrased scenes",
+      "status": "PASS",
+      "detail": "A=0.429, B=0.335, Diff=0.094"
+    },
+    {
+      "section": "S6",
+      "prompt": "P12",
+      "check": "Dominant speaker detected",
+      "status": "PASS",
+      "detail": "Top speaker: 4 lines"
+    },
+    {
+      "section": "S6",
+      "prompt": "P12",
+      "check": "Agency analysis exists",
+      "status": "PASS",
+      "detail": "<class 'dict'>"
+    },
+    {
+      "section": "S6",
+      "prompt": "P13",
+      "check": "Voice fingerprints show distinct complexity",
+      "status": "PASS",
+      "detail": "Range: [0.71, 0.93]"
+    },
+    {
+      "section": "S8",
+      "prompt": "P16",
+      "check": "Batch inference completed",
+      "status": "PASS",
+      "detail": "Time=22.94s, Scenes=30"
+    },
+    {
+      "section": "S8",
+      "prompt": "P16",
+      "check": "No scene missing actor state",
+      "status": "PASS",
+      "detail": "Missing: 0"
+    },
+    {
+      "section": "S8",
+      "prompt": "P16",
+      "check": "All scenes have internal_state",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "section": "S9",
+      "prompt": "P17",
+      "check": "Fairness/Agency analysis runs (no crash)",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "section": "S9",
+      "prompt": "P17",
+      "check": "Scene feedback generated",
+      "status": "PASS",
+      "detail": "Keys: [0]"
+    },
+    {
+      "section": "S10",
+      "prompt": "P18",
+      "check": "Suggestion agent proposes repairs",
+      "status": "PASS",
+      "detail": "Got 3 suggestions"
+    },
+    {
+      "section": "S10",
+      "prompt": "P18",
+      "check": "Scene notes generated",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "section": "S11",
+      "prompt": "P19",
+      "check": "Different lenses produce different weights",
+      "status": "PASS",
+      "detail": "V=[0.424, 0.333], D=[0.584, 0.236]"
+    },
+    {
+      "section": "S11",
+      "prompt": "P19",
+      "check": "All outputs bounded",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "section": "S12",
+      "prompt": "P20",
+      "check": "Uncertainty data generated",
+      "status": "PASS",
+      "detail": "Type: <class 'list'>"
+    },
+    {
+      "section": "S12",
+      "prompt": "P20",
+      "check": "XAI attribution exists",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "section": "S13",
+      "prompt": "P21",
+      "check": "220pg script completes",
+      "status": "PASS",
+      "detail": "Time=388.36s"
+    },
+    {
+      "section": "S13",
+      "prompt": "P21",
+      "check": "Runtime under 5 minutes",
+      "status": "FAIL",
+      "detail": "388.36s"
+    },
+    {
+      "section": "S13",
+      "prompt": "P21",
+      "check": "Scene count > 100",
+      "status": "PASS",
+      "detail": "Scenes=655"
+    },
+    {
+      "section": "S14",
+      "prompt": "P22",
+      "check": "Oversized file blocked",
+      "status": "PASS",
+      "detail": "Input rejected: 6,291,456 bytes exceeds maximum of 5,000,000 bytes (5 MB). Please reduce script size"
+    },
+    {
+      "section": "S14",
+      "prompt": "P22",
+      "check": "4MB file passes governance",
+      "status": "PASS",
+      "detail": "Size=930,000 chars"
+    },
+    {
+      "section": "S14",
+      "prompt": "P22",
+      "check": "Binary input blocked",
+      "status": "PASS",
+      "detail": "Input rejected: Binary content detected (null bytes). Please upload a valid UTF-8 text file."
+    },
+    {
+      "section": "S14",
+      "prompt": "P23",
+      "check": "Injection treated as plain text (no crash)",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "section": "S14",
+      "prompt": "P23",
+      "check": "Analysis produces valid output",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "section": "S15",
+      "prompt": "ALL",
+      "check": "No NaN/None in temporal trace",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "section": "S15",
+      "prompt": "ALL",
+      "check": "All scores in defined bounds [0, 2.0]",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "section": "S15",
+      "prompt": "ALL",
+      "check": "Scene count matches trace length",
+      "status": "PASS",
+      "detail": "scenes=1, trace=1"
+    },
+    {
+      "section": "S15",
+      "prompt": "ALL",
+      "check": "XAI attribution per scene",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "section": "S15",
+      "prompt": "ALL",
+      "check": "All meta fields present",
+      "status": "PASS",
+      "detail": "Missing: []"
+    }
+  ]
+}

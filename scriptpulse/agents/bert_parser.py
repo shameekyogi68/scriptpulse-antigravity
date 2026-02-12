@@ -81,10 +81,13 @@ class BertParserAgent:
     def run(self, script_text):
         """
         Parses the entire script.
+        v13.1: Normalizes dash variants before processing.
         """
+        # v13.1: Dash Normalization (Priority 5)
+        script_text = script_text.replace('—', '-').replace('–', '-')
+        
         lines = script_text.split('\n')
         results = []
-        
         
         # Context Management
         context = []

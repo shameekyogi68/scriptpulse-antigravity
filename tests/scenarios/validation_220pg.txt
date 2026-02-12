@@ -1,0 +1,12117 @@
+THE LAST FRONTIER (VARIED)
+
+by
+
+ScriptPulse Generator
+
+
+EXT. ALIEN DESERT - DAY
+
+A bright shadow fills the room. 6c0087eb
+
+		ROOKIE
+	It's quiet. Too quiet. (23)
+
+		ALIEN EMPEROR
+	I don't like this integration. (72)
+
+		ROOKIE
+	Did you hear that? (17)
+
+		ROOKIE
+	Check the stabilizers. (38)
+
+		COMMANDER
+	It's quiet. Too quiet. (41)
+
+		REBEL LEADER
+	I don't like this integration. (68)
+
+
+EXT. JUNGLE - DAY
+
+A cold blood fills the room. d2a3b9be
+
+		AI SYSTEM
+	I don't like this integration. (17)
+
+		REBEL LEADER
+	System check complete. (13)
+
+		SCIENTIST
+	It's quiet. Too quiet. (47)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A sudden weapon fills the room. 31433aaa
+
+		SCIENTIST
+	Reading normal parameters. (24)
+
+		ROOKIE
+	Supplies are running low. (5)
+
+		ALIEN EMPEROR
+	I don't like this integration. (42)
+
+		ALIEN EMPEROR
+	The sensors are picking up something. (32)
+
+
+INT. LABORATORY - NIGHT
+
+A violent hope fills the room. 4bb7796a
+
+		AI SYSTEM
+	Supplies are running low. (98)
+
+		ROOKIE
+	It's quiet. Too quiet. (16)
+
+		ROOKIE
+	We need a plan. (94)
+
+		SCIENTIST
+	Did you hear that? (43)
+
+		ALIEN EMPEROR
+	Supplies are running low. (69)
+
+
+EXT. ALIEN DESERT - DAY
+
+A bright weapon fills the room. b3365924
+
+		ALIEN EMPEROR
+	Supplies are running low. (97)
+
+		ALIEN EMPEROR
+	We need a plan. (92)
+
+		ROOKIE
+	The sensors are picking up something. (77)
+
+
+INT. COMMAND CENTER - DAY
+
+A ominous light fills the room. 8440f060
+
+		ALIEN EMPEROR
+	We need a plan. (8)
+
+		SCIENTIST
+	Did you hear that? (86)
+
+		REBEL LEADER
+	Reading normal parameters. (31)
+
+
+EXT. JUNGLE - DAY
+
+A burning metal fills the room. f7826456
+
+		COMMANDER
+	Check the stabilizers. (53)
+
+		REBEL LEADER
+	System check complete. (38)
+
+		SCIENTIST
+	Check the stabilizers. (94)
+
+		COMMANDER
+	It's quiet. Too quiet. (16)
+
+		REBEL LEADER
+	The sensors are picking up something. (89)
+
+		COMMANDER
+	It's quiet. Too quiet. (97)
+
+
+INT. COMMAND CENTER - DAY
+
+A dark sky fills the room. 9b7378f0
+
+		AI SYSTEM
+	Supplies are running low. (86)
+
+		ALIEN EMPEROR
+	Check the stabilizers. (91)
+
+		REBEL LEADER
+	The sensors are picking up something. (85)
+
+		SCIENTIST
+	The sensors are picking up something. (43)
+
+
+EXT. JUNGLE - DAY
+
+A ominous weapon fills the room. ef10c5b4
+
+		REBEL LEADER
+	Supplies are running low. (99)
+
+		COMMANDER
+	Check the stabilizers. (52)
+
+		MEDIC
+	System check complete. (27)
+
+
+INT. COMMAND CENTER - DAY
+
+A bright engine fills the room. f5519599
+
+		COMMANDER
+	I don't like this integration. (55)
+
+		AI SYSTEM
+	The sensors are picking up something. (27)
+
+		SCIENTIST
+	Did you hear that? (73)
+
+		SCIENTIST
+	Did you hear that? (20)
+
+		ALIEN EMPEROR
+	Check the stabilizers. (48)
+
+		AI SYSTEM
+	Supplies are running low. (23)
+
+
+EXT. CITY RUINS - DAY
+
+A broken weapon fills the room. 5a694d33
+
+		AI SYSTEM
+	Did you hear that? (14)
+
+		MEDIC
+	Reading normal parameters. (68)
+
+		AI SYSTEM
+	Supplies are running low. (67)
+
+		ALIEN EMPEROR
+	Check the stabilizers. (52)
+
+		REBEL LEADER
+	Check the stabilizers. (98)
+
+		MEDIC
+	I don't like this integration. (10)
+
+
+EXT. JUNGLE - DAY
+
+A bright weapon fills the room. e0cc3669
+
+		AI SYSTEM
+	I don't like this integration. (47)
+
+		AI SYSTEM
+	The sensors are picking up something. (85)
+
+		SCIENTIST
+	We need a plan. (85)
+
+
+INT. COMMAND CENTER - DAY
+
+A violent blood fills the room. 881c6245
+
+		MEDIC
+	System check complete. (96)
+
+		MEDIC
+	It's quiet. Too quiet. (83)
+
+		ROOKIE
+	Reading normal parameters. (52)
+
+
+EXT. CITY RUINS - DAY
+
+A dark light fills the room. f5c0eaa7
+
+		COMMANDER
+	The sensors are picking up something. (8)
+
+		REBEL LEADER
+	It's quiet. Too quiet. (45)
+
+		REBEL LEADER
+	We need a plan. (63)
+
+
+INT. MESS HALL - NIGHT
+
+A cold weapon fills the room. 8dbaf63a
+
+		ROOKIE
+	We need a plan. (96)
+
+		ALIEN EMPEROR
+	Check the stabilizers. (91)
+
+		MEDIC
+	Check the stabilizers. (35)
+
+		COMMANDER
+	Supplies are running low. (1)
+
+		AI SYSTEM
+	The sensors are picking up something. (54)
+
+
+EXT. ALIEN DESERT - DAY
+
+A bright blood fills the room. 2eef98f8
+
+		AI SYSTEM
+	Supplies are running low. (44)
+
+		MEDIC
+	System check complete. (70)
+
+		REBEL LEADER
+	We need a plan. (42)
+
+
+EXT. JUNGLE - DAY
+
+A cold blood fills the room. 99517cc9
+
+		AI SYSTEM
+	It's quiet. Too quiet. (62)
+
+		AI SYSTEM
+	Did you hear that? (84)
+
+		AI SYSTEM
+	Supplies are running low. (8)
+
+
+INT. MESS HALL - NIGHT
+
+A dark light fills the room. d7a2e82a
+
+		ALIEN EMPEROR
+	Supplies are running low. (26)
+
+		COMMANDER
+	I don't like this integration. (38)
+
+		MEDIC
+	Check the stabilizers. (24)
+
+		COMMANDER
+	Reading normal parameters. (66)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A sudden weapon fills the room. d0100fbd
+
+		MEDIC
+	Supplies are running low. (76)
+
+		SCIENTIST
+	The sensors are picking up something. (93)
+
+		AI SYSTEM
+	I don't like this integration. (51)
+
+		AI SYSTEM
+	The sensors are picking up something. (41)
+
+		ALIEN EMPEROR
+	System check complete. (41)
+
+		COMMANDER
+	The sensors are picking up something. (93)
+
+
+EXT. ALIEN DESERT - DAY
+
+A violent hope fills the room. e58e3caf
+
+		MEDIC
+	We need a plan. (85)
+
+		REBEL LEADER
+	I don't like this integration. (76)
+
+		COMMANDER
+	System check complete. (1)
+
+
+EXT. JUNGLE - DAY
+
+A dark shadow fills the room. 914e7c3a
+
+		REBEL LEADER
+	Check the stabilizers. (65)
+
+		COMMANDER
+	I don't like this integration. (97)
+
+		COMMANDER
+	We need a plan. (77)
+
+		ALIEN EMPEROR
+	System check complete. (95)
+
+		SCIENTIST
+	Did you hear that? (96)
+
+		COMMANDER
+	The sensors are picking up something. (96)
+
+
+EXT. JUNGLE - DAY
+
+A sudden weapon fills the room. 44c479ef
+
+		MEDIC
+	Supplies are running low. (66)
+
+		REBEL LEADER
+	Supplies are running low. (20)
+
+		ROOKIE
+	Reading normal parameters. (17)
+
+		ROOKIE
+	System check complete. (85)
+
+		ALIEN EMPEROR
+	Did you hear that? (57)
+
+		COMMANDER
+	Supplies are running low. (58)
+
+
+INT. LABORATORY - NIGHT
+
+A broken blood fills the room. eeeb661e
+
+		REBEL LEADER
+	Reading normal parameters. (25)
+
+		COMMANDER
+	Check the stabilizers. (68)
+
+		ROOKIE
+	Supplies are running low. (88)
+
+		MEDIC
+	System check complete. (100)
+
+
+EXT. JUNGLE - DAY
+
+A cold blood fills the room. b44adf98
+
+		MEDIC
+	System check complete. (51)
+
+		REBEL LEADER
+	I don't like this integration. (28)
+
+		COMMANDER
+	The sensors are picking up something. (37)
+
+		SCIENTIST
+	Reading normal parameters. (20)
+
+		MEDIC
+	System check complete. (35)
+
+		AI SYSTEM
+	I don't like this integration. (44)
+
+
+EXT. JUNGLE - DAY
+
+A violent metal fills the room. 8d67fa2a
+
+		SCIENTIST
+	Did you hear that? (26)
+
+		ALIEN EMPEROR
+	Check the stabilizers. (3)
+
+		REBEL LEADER
+	The sensors are picking up something. (71)
+
+		COMMANDER
+	The sensors are picking up something. (21)
+
+		MEDIC
+	Did you hear that? (34)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A cold blood fills the room. 51ed35f6
+
+		AI SYSTEM
+	The sensors are picking up something. (25)
+
+		COMMANDER
+	Did you hear that? (99)
+
+		COMMANDER
+	System check complete. (13)
+
+		ALIEN EMPEROR
+	I don't like this integration. (71)
+
+
+INT. COMMAND CENTER - DAY
+
+A burning weapon fills the room. 6a66eeb9
+
+		AI SYSTEM
+	Did you hear that? (26)
+
+		ALIEN EMPEROR
+	The sensors are picking up something. (80)
+
+		AI SYSTEM
+	The sensors are picking up something. (6)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A cold fear fills the room. 17928368
+
+		MEDIC
+	The sensors are picking up something. (88)
+
+		MEDIC
+	The sensors are picking up something. (46)
+
+		COMMANDER
+	Did you hear that? (65)
+
+		MEDIC
+	Supplies are running low. (100)
+
+		ROOKIE
+	Check the stabilizers. (57)
+
+		COMMANDER
+	The sensors are picking up something. (15)
+
+
+INT. MESS HALL - NIGHT
+
+A burning sky fills the room. 30e610f0
+
+		ALIEN EMPEROR
+	I don't like this integration. (5)
+
+		COMMANDER
+	The sensors are picking up something. (53)
+
+		REBEL LEADER
+	Supplies are running low. (17)
+
+		ROOKIE
+	Supplies are running low. (30)
+
+		SCIENTIST
+	We need a plan. (82)
+
+
+INT. LABORATORY - NIGHT
+
+A cold fear fills the room. 18faa38f
+
+		ROOKIE
+	Check the stabilizers. (22)
+
+		REBEL LEADER
+	The sensors are picking up something. (81)
+
+		AI SYSTEM
+	Did you hear that? (75)
+
+		AI SYSTEM
+	Supplies are running low. (81)
+
+
+INT. LABORATORY - NIGHT
+
+A dark shadow fills the room. e7e359e7
+
+		MEDIC
+	Reading normal parameters. (25)
+
+		ROOKIE
+	Supplies are running low. (17)
+
+		MEDIC
+	Supplies are running low. (77)
+
+		COMMANDER
+	The sensors are picking up something. (66)
+
+		MEDIC
+	Supplies are running low. (91)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A broken blood fills the room. 283c7da4
+
+		AI SYSTEM
+	It's quiet. Too quiet. (71)
+
+		MEDIC
+	We need a plan. (48)
+
+		REBEL LEADER
+	System check complete. (36)
+
+		AI SYSTEM
+	Reading normal parameters. (17)
+
+		MEDIC
+	System check complete. (90)
+
+		SCIENTIST
+	System check complete. (16)
+
+
+INT. COMMAND CENTER - DAY
+
+A violent engine fills the room. 89ea5710
+
+		ALIEN EMPEROR
+	Supplies are running low. (32)
+
+		ROOKIE
+	Did you hear that? (11)
+
+		ROOKIE
+	I don't like this integration. (38)
+
+		MEDIC
+	It's quiet. Too quiet. (75)
+
+		MEDIC
+	We need a plan. (55)
+
+
+INT. COMMAND CENTER - DAY
+
+A broken fear fills the room. ad03f633
+
+		ROOKIE
+	Check the stabilizers. (82)
+
+		AI SYSTEM
+	Supplies are running low. (76)
+
+		AI SYSTEM
+	Reading normal parameters. (98)
+
+		REBEL LEADER
+	Did you hear that? (18)
+
+
+EXT. JUNGLE - DAY
+
+A broken sky fills the room. d3c534de
+
+		SCIENTIST
+	We need a plan. (87)
+
+		ROOKIE
+	Check the stabilizers. (20)
+
+		ROOKIE
+	Reading normal parameters. (12)
+
+
+EXT. ALIEN DESERT - DAY
+
+A ominous blood fills the room. e60065a3
+
+		ALIEN EMPEROR
+	Did you hear that? (40)
+
+		ALIEN EMPEROR
+	System check complete. (59)
+
+		ALIEN EMPEROR
+	I don't like this integration. (46)
+
+
+EXT. CITY RUINS - DAY
+
+A cold sky fills the room. c6e1acd6
+
+		REBEL LEADER
+	Check the stabilizers. (67)
+
+		ROOKIE
+	Reading normal parameters. (5)
+
+		MEDIC
+	Check the stabilizers. (22)
+
+		MEDIC
+	Check the stabilizers. (61)
+
+		MEDIC
+	It's quiet. Too quiet. (61)
+
+		ROOKIE
+	The sensors are picking up something. (48)
+
+
+INT. LABORATORY - NIGHT
+
+A ominous blood fills the room. 35e12da5
+
+		REBEL LEADER
+	We need a plan. (58)
+
+		ALIEN EMPEROR
+	We need a plan. (20)
+
+		REBEL LEADER
+	Did you hear that? (78)
+
+		COMMANDER
+	System check complete. (61)
+
+
+INT. MESS HALL - NIGHT
+
+A silent fear fills the room. 2ba68e39
+
+		ROOKIE
+	Reading normal parameters. (54)
+
+		ROOKIE
+	Check the stabilizers. (89)
+
+		AI SYSTEM
+	Supplies are running low. (87)
+
+		ROOKIE
+	Reading normal parameters. (64)
+
+		COMMANDER
+	Supplies are running low. (42)
+
+
+INT. LABORATORY - NIGHT
+
+A cold blood fills the room. 8cf16ff0
+
+		SCIENTIST
+	We need a plan. (40)
+
+		MEDIC
+	We need a plan. (39)
+
+		REBEL LEADER
+	Check the stabilizers. (35)
+
+		SCIENTIST
+	Supplies are running low. (40)
+
+		MEDIC
+	Check the stabilizers. (49)
+
+		SCIENTIST
+	We need a plan. (96)
+
+
+INT. MESS HALL - NIGHT
+
+A bright fear fills the room. d0bd1ea8
+
+		ALIEN EMPEROR
+	It's quiet. Too quiet. (95)
+
+		ALIEN EMPEROR
+	I don't like this integration. (20)
+
+		MEDIC
+	The sensors are picking up something. (44)
+
+		ALIEN EMPEROR
+	It's quiet. Too quiet. (41)
+
+		REBEL LEADER
+	I don't like this integration. (68)
+
+		SCIENTIST
+	It's quiet. Too quiet. (32)
+
+
+INT. LABORATORY - NIGHT
+
+A dark metal fills the room. bfc42565
+
+		COMMANDER
+	It's quiet. Too quiet. (93)
+
+		SCIENTIST
+	I don't like this integration. (18)
+
+		ROOKIE
+	We need a plan. (51)
+
+		AI SYSTEM
+	Did you hear that? (32)
+
+
+INT. MESS HALL - NIGHT
+
+A cold hope fills the room. 6af143ab
+
+		SCIENTIST
+	Reading normal parameters. (53)
+
+		REBEL LEADER
+	Check the stabilizers. (98)
+
+		COMMANDER
+	Did you hear that? (34)
+
+		ROOKIE
+	System check complete. (93)
+
+		MEDIC
+	Did you hear that? (2)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A cold light fills the room. d131e929
+
+		ALIEN EMPEROR
+	System check complete. (35)
+
+		MEDIC
+	The sensors are picking up something. (32)
+
+		ROOKIE
+	It's quiet. Too quiet. (79)
+
+		ALIEN EMPEROR
+	Did you hear that? (44)
+
+		COMMANDER
+	Supplies are running low. (25)
+
+
+INT. LABORATORY - NIGHT
+
+A ominous sky fills the room. 3563d4b9
+
+		ROOKIE
+	Supplies are running low. (67)
+
+		MEDIC
+	Supplies are running low. (83)
+
+		MEDIC
+	The sensors are picking up something. (63)
+
+		ROOKIE
+	Supplies are running low. (81)
+
+
+INT. MESS HALL - NIGHT
+
+A burning metal fills the room. f6d3f990
+
+		REBEL LEADER
+	It's quiet. Too quiet. (68)
+
+		ALIEN EMPEROR
+	Reading normal parameters. (9)
+
+		SCIENTIST
+	System check complete. (14)
+
+
+INT. MESS HALL - NIGHT
+
+A cold hope fills the room. a2caa347
+
+		COMMANDER
+	Reading normal parameters. (55)
+
+		ROOKIE
+	I don't like this integration. (10)
+
+		SCIENTIST
+	Did you hear that? (69)
+
+		COMMANDER
+	Did you hear that? (97)
+
+
+EXT. JUNGLE - DAY
+
+A cold hope fills the room. e9af5d77
+
+		ROOKIE
+	We need a plan. (27)
+
+		COMMANDER
+	I don't like this integration. (1)
+
+		AI SYSTEM
+	We need a plan. (70)
+
+		ROOKIE
+	It's quiet. Too quiet. (44)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A broken hope fills the room. 21ab3e45
+
+		AI SYSTEM
+	Supplies are running low. (27)
+
+		ALIEN EMPEROR
+	We need a plan. (65)
+
+		REBEL LEADER
+	Did you hear that? (76)
+
+
+EXT. CITY RUINS - DAY
+
+A violent engine fills the room. 2d1b990d
+
+		AI SYSTEM
+	Check the stabilizers. (55)
+
+		AI SYSTEM
+	It's quiet. Too quiet. (89)
+
+		ALIEN EMPEROR
+	Supplies are running low. (14)
+
+
+INT. MESS HALL - NIGHT
+
+A broken blood fills the room. de9fa6e8
+
+		ALIEN EMPEROR
+	Check the stabilizers. (39)
+
+		REBEL LEADER
+	Reading normal parameters. (91)
+
+		ALIEN EMPEROR
+	The sensors are picking up something. (46)
+
+		COMMANDER
+	We need a plan. (50)
+
+
+EXT. ALIEN DESERT - DAY
+
+A broken hope fills the room. 53e2be18
+
+		SCIENTIST
+	Supplies are running low. (42)
+
+		SCIENTIST
+	System check complete. (36)
+
+		SCIENTIST
+	It's quiet. Too quiet. (55)
+
+
+EXT. CITY RUINS - DAY
+
+A sudden metal fills the room. dbb1bf8f
+
+		REBEL LEADER
+	Did you hear that? (16)
+
+		MEDIC
+	Did you hear that? (53)
+
+		ROOKIE
+	Supplies are running low. (68)
+
+		ROOKIE
+	Reading normal parameters. (5)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A ominous weapon fills the room. e019c20b
+
+		AI SYSTEM
+	Supplies are running low. (20)
+
+		MEDIC
+	Supplies are running low. (64)
+
+		COMMANDER
+	I don't like this integration. (3)
+
+		SCIENTIST
+	Reading normal parameters. (54)
+
+
+INT. MESS HALL - NIGHT
+
+A violent weapon fills the room. 5afbc5c7
+
+		COMMANDER
+	Did you hear that? (76)
+
+		MEDIC
+	Did you hear that? (20)
+
+		COMMANDER
+	The sensors are picking up something. (99)
+
+		REBEL LEADER
+	Check the stabilizers. (34)
+
+		MEDIC
+	I don't like this integration. (18)
+
+
+EXT. JUNGLE - DAY
+
+A burning engine fills the room. 619f13e7
+
+		ROOKIE
+	We need a plan. (33)
+
+		REBEL LEADER
+	Reading normal parameters. (66)
+
+		COMMANDER
+	Did you hear that? (61)
+
+
+EXT. CITY RUINS - DAY
+
+A sudden metal fills the room. f1a0a72c
+
+		ALIEN EMPEROR
+	The sensors are picking up something. (49)
+
+		MEDIC
+	Did you hear that? (58)
+
+		ROOKIE
+	Check the stabilizers. (54)
+
+		AI SYSTEM
+	The sensors are picking up something. (72)
+
+		SCIENTIST
+	I don't like this integration. (29)
+
+
+EXT. JUNGLE - DAY
+
+A bright light fills the room. 9b620191
+
+		SCIENTIST
+	I don't like this integration. (26)
+
+		COMMANDER
+	System check complete. (80)
+
+		COMMANDER
+	It's quiet. Too quiet. (99)
+
+		ROOKIE
+	Check the stabilizers. (63)
+
+		MEDIC
+	I don't like this integration. (87)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A cold blood fills the room. 1aece11d
+
+		ROOKIE
+	Reading normal parameters. (98)
+
+		AI SYSTEM
+	It's quiet. Too quiet. (30)
+
+		REBEL LEADER
+	I don't like this integration. (84)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A silent metal fills the room. 260b8ee3
+
+		ALIEN EMPEROR
+	Reading normal parameters. (40)
+
+		MEDIC
+	It's quiet. Too quiet. (40)
+
+		AI SYSTEM
+	We need a plan. (33)
+
+		COMMANDER
+	It's quiet. Too quiet. (38)
+
+		ALIEN EMPEROR
+	I don't like this integration. (55)
+
+
+EXT. ALIEN DESERT - DAY
+
+A burning fear fills the room. bc1f6f6e
+
+		ROOKIE
+	Check the stabilizers. (94)
+
+		AI SYSTEM
+	We need a plan. (65)
+
+		ALIEN EMPEROR
+	I don't like this integration. (8)
+
+		COMMANDER
+	I don't like this integration. (45)
+
+		AI SYSTEM
+	Reading normal parameters. (42)
+
+
+EXT. JUNGLE - DAY
+
+A cold shadow fills the room. 8ddf77a5
+
+		MEDIC
+	Did you hear that? (100)
+
+		ALIEN EMPEROR
+	Reading normal parameters. (27)
+
+		MEDIC
+	It's quiet. Too quiet. (28)
+
+		ALIEN EMPEROR
+	Supplies are running low. (86)
+
+		AI SYSTEM
+	Reading normal parameters. (70)
+
+
+INT. COMMAND CENTER - DAY
+
+A bright weapon fills the room. cbc8db17
+
+		REBEL LEADER
+	Reading normal parameters. (43)
+
+		MEDIC
+	The sensors are picking up something. (66)
+
+		MEDIC
+	The sensors are picking up something. (21)
+
+		ALIEN EMPEROR
+	Supplies are running low. (22)
+
+		ROOKIE
+	Check the stabilizers. (6)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A dark blood fills the room. 6a15c5ad
+
+		SCIENTIST
+	System check complete. (74)
+
+		ROOKIE
+	Reading normal parameters. (2)
+
+		SCIENTIST
+	System check complete. (64)
+
+
+EXT. ALIEN DESERT - DAY
+
+A silent metal fills the room. 1177a624
+
+		COMMANDER
+	Supplies are running low. (12)
+
+		AI SYSTEM
+	We need a plan. (51)
+
+		AI SYSTEM
+	System check complete. (54)
+
+		SCIENTIST
+	Check the stabilizers. (57)
+
+		SCIENTIST
+	We need a plan. (20)
+
+		SCIENTIST
+	Reading normal parameters. (2)
+
+
+EXT. JUNGLE - DAY
+
+A bright fear fills the room. 243359e7
+
+		MEDIC
+	System check complete. (100)
+
+		ALIEN EMPEROR
+	Reading normal parameters. (68)
+
+		AI SYSTEM
+	Supplies are running low. (49)
+
+
+INT. MESS HALL - NIGHT
+
+A burning metal fills the room. c313ff3d
+
+		ALIEN EMPEROR
+	Did you hear that? (54)
+
+		ALIEN EMPEROR
+	It's quiet. Too quiet. (78)
+
+		ALIEN EMPEROR
+	The sensors are picking up something. (80)
+
+
+INT. LABORATORY - NIGHT
+
+A cold engine fills the room. 26113ab1
+
+		COMMANDER
+	It's quiet. Too quiet. (25)
+
+		MEDIC
+	System check complete. (50)
+
+		REBEL LEADER
+	Supplies are running low. (7)
+
+
+EXT. JUNGLE - DAY
+
+A dark light fills the room. c0bc919e
+
+		ALIEN EMPEROR
+	It's quiet. Too quiet. (100)
+
+		SCIENTIST
+	Did you hear that? (25)
+
+		REBEL LEADER
+	The sensors are picking up something. (65)
+
+		SCIENTIST
+	Check the stabilizers. (55)
+
+		ROOKIE
+	Did you hear that? (2)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A violent blood fills the room. 27e8f910
+
+		COMMANDER
+	Supplies are running low. (45)
+
+		AI SYSTEM
+	We need a plan. (94)
+
+		AI SYSTEM
+	Did you hear that? (50)
+
+		ALIEN EMPEROR
+	Check the stabilizers. (47)
+
+
+EXT. ALIEN DESERT - DAY
+
+A sudden shadow fills the room. b79e9b0d
+
+		COMMANDER
+	Did you hear that? (71)
+
+		COMMANDER
+	I don't like this integration. (9)
+
+		MEDIC
+	Check the stabilizers. (83)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A burning weapon fills the room. 295e5f44
+
+		MEDIC
+	The sensors are picking up something. (60)
+
+		ALIEN EMPEROR
+	Did you hear that? (81)
+
+		ALIEN EMPEROR
+	System check complete. (59)
+
+		REBEL LEADER
+	Did you hear that? (67)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A sudden fear fills the room. 9be9abfa
+
+		ROOKIE
+	Reading normal parameters. (67)
+
+		REBEL LEADER
+	System check complete. (58)
+
+		COMMANDER
+	Supplies are running low. (67)
+
+		ROOKIE
+	System check complete. (20)
+
+		ALIEN EMPEROR
+	I don't like this integration. (63)
+
+
+INT. MESS HALL - NIGHT
+
+A silent shadow fills the room. acc4ea1a
+
+		SCIENTIST
+	Check the stabilizers. (31)
+
+		ROOKIE
+	We need a plan. (67)
+
+		MEDIC
+	System check complete. (19)
+
+		ALIEN EMPEROR
+	We need a plan. (5)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A broken shadow fills the room. d8f7b587
+
+		MEDIC
+	I don't like this integration. (99)
+
+		MEDIC
+	System check complete. (66)
+
+		AI SYSTEM
+	Check the stabilizers. (43)
+
+		REBEL LEADER
+	We need a plan. (80)
+
+		MEDIC
+	Supplies are running low. (66)
+
+
+INT. COMMAND CENTER - DAY
+
+A dark metal fills the room. 10f92280
+
+		ALIEN EMPEROR
+	System check complete. (15)
+
+		REBEL LEADER
+	I don't like this integration. (48)
+
+		REBEL LEADER
+	Reading normal parameters. (76)
+
+
+INT. LABORATORY - NIGHT
+
+A silent sky fills the room. 8047672d
+
+		ROOKIE
+	Supplies are running low. (4)
+
+		MEDIC
+	The sensors are picking up something. (76)
+
+		AI SYSTEM
+	I don't like this integration. (66)
+
+		COMMANDER
+	We need a plan. (96)
+
+		SCIENTIST
+	We need a plan. (30)
+
+
+EXT. JUNGLE - DAY
+
+A bright weapon fills the room. a8e28476
+
+		SCIENTIST
+	It's quiet. Too quiet. (31)
+
+		SCIENTIST
+	We need a plan. (25)
+
+		MEDIC
+	Supplies are running low. (16)
+
+		REBEL LEADER
+	Reading normal parameters. (26)
+
+		AI SYSTEM
+	Reading normal parameters. (23)
+
+
+EXT. ALIEN DESERT - DAY
+
+A broken weapon fills the room. 30b464c3
+
+		AI SYSTEM
+	Did you hear that? (75)
+
+		REBEL LEADER
+	Check the stabilizers. (84)
+
+		SCIENTIST
+	I don't like this integration. (21)
+
+		ROOKIE
+	Reading normal parameters. (96)
+
+		REBEL LEADER
+	Supplies are running low. (11)
+
+
+EXT. JUNGLE - DAY
+
+A sudden weapon fills the room. e76ff903
+
+		COMMANDER
+	We need a plan. (86)
+
+		SCIENTIST
+	System check complete. (30)
+
+		COMMANDER
+	Supplies are running low. (46)
+
+		REBEL LEADER
+	System check complete. (85)
+
+		ALIEN EMPEROR
+	System check complete. (62)
+
+		REBEL LEADER
+	The sensors are picking up something. (16)
+
+
+EXT. ALIEN DESERT - DAY
+
+A cold metal fills the room. df669bab
+
+		SCIENTIST
+	Check the stabilizers. (50)
+
+		SCIENTIST
+	The sensors are picking up something. (100)
+
+		AI SYSTEM
+	Did you hear that? (32)
+
+		AI SYSTEM
+	The sensors are picking up something. (49)
+
+		AI SYSTEM
+	We need a plan. (97)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A violent sky fills the room. 244b7c90
+
+		ROOKIE
+	Did you hear that? (78)
+
+		SCIENTIST
+	Supplies are running low. (35)
+
+		MEDIC
+	Check the stabilizers. (53)
+
+		ROOKIE
+	Supplies are running low. (4)
+
+		AI SYSTEM
+	System check complete. (8)
+
+
+EXT. ALIEN DESERT - DAY
+
+A dark engine fills the room. 91876e5b
+
+		ALIEN EMPEROR
+	I don't like this integration. (25)
+
+		SCIENTIST
+	Did you hear that? (25)
+
+		AI SYSTEM
+	I don't like this integration. (77)
+
+		MEDIC
+	Reading normal parameters. (77)
+
+		ROOKIE
+	We need a plan. (77)
+
+		MEDIC
+	It's quiet. Too quiet. (41)
+
+
+EXT. JUNGLE - DAY
+
+A sudden weapon fills the room. d0ff63d7
+
+		AI SYSTEM
+	It's quiet. Too quiet. (21)
+
+		MEDIC
+	Check the stabilizers. (70)
+
+		REBEL LEADER
+	Check the stabilizers. (57)
+
+		REBEL LEADER
+	Check the stabilizers. (61)
+
+		REBEL LEADER
+	Reading normal parameters. (70)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A bright weapon fills the room. c9ed8846
+
+		COMMANDER
+	Reading normal parameters. (29)
+
+		SCIENTIST
+	We need a plan. (53)
+
+		ALIEN EMPEROR
+	Did you hear that? (66)
+
+		SCIENTIST
+	System check complete. (62)
+
+
+INT. LABORATORY - NIGHT
+
+A sudden weapon fills the room. 8052e800
+
+		SCIENTIST
+	Check the stabilizers. (11)
+
+		SCIENTIST
+	It's quiet. Too quiet. (29)
+
+		ALIEN EMPEROR
+	We need a plan. (1)
+
+		SCIENTIST
+	Did you hear that? (64)
+
+		AI SYSTEM
+	The sensors are picking up something. (39)
+
+		MEDIC
+	I don't like this integration. (32)
+
+
+EXT. CITY RUINS - DAY
+
+A sudden sky fills the room. 681c4f88
+
+		MEDIC
+	It's quiet. Too quiet. (9)
+
+		SCIENTIST
+	System check complete. (59)
+
+		REBEL LEADER
+	I don't like this integration. (21)
+
+		AI SYSTEM
+	Did you hear that? (56)
+
+		COMMANDER
+	Reading normal parameters. (92)
+
+		ALIEN EMPEROR
+	We need a plan. (72)
+
+
+EXT. ALIEN DESERT - DAY
+
+A ominous shadow fills the room. 4775da51
+
+		ALIEN EMPEROR
+	Did you hear that? (36)
+
+		SCIENTIST
+	It's quiet. Too quiet. (13)
+
+		ROOKIE
+	We need a plan. (36)
+
+		SCIENTIST
+	Check the stabilizers. (22)
+
+
+INT. COMMAND CENTER - DAY
+
+A bright shadow fills the room. b57d73f4
+
+		ROOKIE
+	Check the stabilizers. (81)
+
+		AI SYSTEM
+	It's quiet. Too quiet. (33)
+
+		SCIENTIST
+	Did you hear that? (70)
+
+		SCIENTIST
+	Check the stabilizers. (82)
+
+
+EXT. JUNGLE - DAY
+
+A sudden shadow fills the room. 30ca5ac4
+
+		COMMANDER
+	Reading normal parameters. (57)
+
+		COMMANDER
+	I don't like this integration. (54)
+
+		REBEL LEADER
+	It's quiet. Too quiet. (88)
+
+		COMMANDER
+	The sensors are picking up something. (40)
+
+		REBEL LEADER
+	The sensors are picking up something. (6)
+
+		COMMANDER
+	Did you hear that? (77)
+
+
+INT. COMMAND CENTER - DAY
+
+A burning metal fills the room. abf5d0da
+
+		SCIENTIST
+	It's quiet. Too quiet. (41)
+
+		ALIEN EMPEROR
+	We need a plan. (97)
+
+		AI SYSTEM
+	The sensors are picking up something. (29)
+
+
+INT. MESS HALL - NIGHT
+
+A cold metal fills the room. 6e10208e
+
+		ALIEN EMPEROR
+	Reading normal parameters. (17)
+
+		COMMANDER
+	Did you hear that? (21)
+
+		REBEL LEADER
+	Reading normal parameters. (26)
+
+		AI SYSTEM
+	We need a plan. (10)
+
+		REBEL LEADER
+	We need a plan. (13)
+
+		SCIENTIST
+	We need a plan. (5)
+
+
+INT. LABORATORY - NIGHT
+
+A violent shadow fills the room. e75616fa
+
+		SCIENTIST
+	Supplies are running low. (81)
+
+		AI SYSTEM
+	Reading normal parameters. (87)
+
+		ROOKIE
+	Did you hear that? (9)
+
+		MEDIC
+	Reading normal parameters. (80)
+
+		ROOKIE
+	Did you hear that? (87)
+
+		ROOKIE
+	System check complete. (71)
+
+
+INT. COMMAND CENTER - DAY
+
+A dark sky fills the room. 08698733
+
+		COMMANDER
+	I don't like this integration. (42)
+
+		REBEL LEADER
+	Did you hear that? (31)
+
+		REBEL LEADER
+	It's quiet. Too quiet. (83)
+
+		AI SYSTEM
+	The sensors are picking up something. (48)
+
+		MEDIC
+	Check the stabilizers. (97)
+
+		REBEL LEADER
+	System check complete. (94)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A sudden engine fills the room. 7bf03f06
+
+		COMMANDER
+	Reading normal parameters. (27)
+
+		SCIENTIST
+	I don't like this integration. (8)
+
+		COMMANDER
+	We need a plan. (26)
+
+		SCIENTIST
+	We need a plan. (16)
+
+		MEDIC
+	Check the stabilizers. (99)
+
+
+INT. LABORATORY - NIGHT
+
+A sudden blood fills the room. 5928e027
+
+		MEDIC
+	System check complete. (79)
+
+		COMMANDER
+	Reading normal parameters. (25)
+
+		COMMANDER
+	Reading normal parameters. (67)
+
+
+INT. COMMAND CENTER - DAY
+
+A bright light fills the room. 78912c27
+
+		SCIENTIST
+	Supplies are running low. (22)
+
+		COMMANDER
+	We need a plan. (94)
+
+		ALIEN EMPEROR
+	Did you hear that? (71)
+
+		MEDIC
+	Supplies are running low. (11)
+
+		SCIENTIST
+	Check the stabilizers. (13)
+
+		REBEL LEADER
+	We need a plan. (89)
+
+
+INT. MESS HALL - NIGHT
+
+A burning engine fills the room. ec336d9b
+
+		MEDIC
+	The sensors are picking up something. (79)
+
+		ROOKIE
+	I don't like this integration. (100)
+
+		ROOKIE
+	We need a plan. (87)
+
+
+INT. MESS HALL - NIGHT
+
+A cold hope fills the room. fcccee86
+
+		SCIENTIST
+	We need a plan. (64)
+
+		COMMANDER
+	System check complete. (77)
+
+		ROOKIE
+	It's quiet. Too quiet. (20)
+
+		REBEL LEADER
+	Reading normal parameters. (43)
+
+		REBEL LEADER
+	Check the stabilizers. (44)
+
+
+INT. LABORATORY - NIGHT
+
+A cold engine fills the room. ac33f00e
+
+		MEDIC
+	The sensors are picking up something. (8)
+
+		COMMANDER
+	I don't like this integration. (95)
+
+		AI SYSTEM
+	I don't like this integration. (18)
+
+		REBEL LEADER
+	System check complete. (19)
+
+		ROOKIE
+	We need a plan. (18)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A silent hope fills the room. d48e18f5
+
+		ROOKIE
+	I don't like this integration. (22)
+
+		COMMANDER
+	We need a plan. (69)
+
+		COMMANDER
+	Did you hear that? (21)
+
+		SCIENTIST
+	Check the stabilizers. (93)
+
+		REBEL LEADER
+	Supplies are running low. (90)
+
+
+EXT. JUNGLE - DAY
+
+A violent fear fills the room. b520e718
+
+		AI SYSTEM
+	The sensors are picking up something. (40)
+
+		ALIEN EMPEROR
+	We need a plan. (29)
+
+		SCIENTIST
+	Supplies are running low. (46)
+
+		SCIENTIST
+	The sensors are picking up something. (47)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A violent metal fills the room. 624edc97
+
+		MEDIC
+	Supplies are running low. (50)
+
+		REBEL LEADER
+	It's quiet. Too quiet. (36)
+
+		MEDIC
+	Reading normal parameters. (11)
+
+		ROOKIE
+	The sensors are picking up something. (100)
+
+		ROOKIE
+	Reading normal parameters. (93)
+
+		SCIENTIST
+	Check the stabilizers. (64)
+
+
+EXT. CITY RUINS - DAY
+
+A sudden weapon fills the room. 67741cb2
+
+		ROOKIE
+	We need a plan. (21)
+
+		COMMANDER
+	System check complete. (5)
+
+		ROOKIE
+	The sensors are picking up something. (34)
+
+		ALIEN EMPEROR
+	We need a plan. (87)
+
+		MEDIC
+	Check the stabilizers. (47)
+
+		AI SYSTEM
+	Check the stabilizers. (24)
+
+
+INT. COMMAND CENTER - DAY
+
+A violent engine fills the room. f6f3716a
+
+		ROOKIE
+	Did you hear that? (10)
+
+		ROOKIE
+	Reading normal parameters. (65)
+
+		SCIENTIST
+	Did you hear that? (8)
+
+		ROOKIE
+	I don't like this integration. (78)
+
+
+EXT. JUNGLE - DAY
+
+A ominous shadow fills the room. b0c21c52
+
+		SCIENTIST
+	The sensors are picking up something. (71)
+
+		SCIENTIST
+	I don't like this integration. (80)
+
+		REBEL LEADER
+	It's quiet. Too quiet. (62)
+
+		ROOKIE
+	We need a plan. (52)
+
+
+INT. MESS HALL - NIGHT
+
+A dark light fills the room. 8631df8a
+
+		REBEL LEADER
+	Check the stabilizers. (53)
+
+		COMMANDER
+	The sensors are picking up something. (22)
+
+		COMMANDER
+	Supplies are running low. (53)
+
+		ALIEN EMPEROR
+	Reading normal parameters. (5)
+
+		MEDIC
+	The sensors are picking up something. (100)
+
+
+EXT. JUNGLE - DAY
+
+A violent engine fills the room. 1ce9aae3
+
+		REBEL LEADER
+	The sensors are picking up something. (42)
+
+		ROOKIE
+	Did you hear that? (57)
+
+		REBEL LEADER
+	Reading normal parameters. (24)
+
+
+INT. MESS HALL - NIGHT
+
+A cold blood fills the room. 7ebc483f
+
+		ALIEN EMPEROR
+	Did you hear that? (56)
+
+		REBEL LEADER
+	Supplies are running low. (11)
+
+		ROOKIE
+	The sensors are picking up something. (72)
+
+		SCIENTIST
+	Reading normal parameters. (26)
+
+		SCIENTIST
+	Did you hear that? (86)
+
+		ALIEN EMPEROR
+	I don't like this integration. (41)
+
+
+INT. COMMAND CENTER - DAY
+
+A bright hope fills the room. 76ae4105
+
+		ROOKIE
+	We need a plan. (44)
+
+		COMMANDER
+	We need a plan. (93)
+
+		MEDIC
+	Supplies are running low. (74)
+
+		MEDIC
+	We need a plan. (89)
+
+
+EXT. JUNGLE - DAY
+
+A sudden hope fills the room. 4bc63b34
+
+		COMMANDER
+	The sensors are picking up something. (82)
+
+		ROOKIE
+	Check the stabilizers. (9)
+
+		COMMANDER
+	I don't like this integration. (97)
+
+		MEDIC
+	Check the stabilizers. (48)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A dark engine fills the room. 3df5fa36
+
+		AI SYSTEM
+	It's quiet. Too quiet. (21)
+
+		AI SYSTEM
+	It's quiet. Too quiet. (38)
+
+		COMMANDER
+	The sensors are picking up something. (78)
+
+		ALIEN EMPEROR
+	We need a plan. (84)
+
+
+EXT. JUNGLE - DAY
+
+A bright fear fills the room. 5f08a2e2
+
+		AI SYSTEM
+	System check complete. (35)
+
+		SCIENTIST
+	Did you hear that? (22)
+
+		SCIENTIST
+	Check the stabilizers. (23)
+
+		AI SYSTEM
+	Check the stabilizers. (72)
+
+		COMMANDER
+	I don't like this integration. (47)
+
+		ALIEN EMPEROR
+	Did you hear that? (50)
+
+
+INT. LABORATORY - NIGHT
+
+A silent sky fills the room. 37fc6b85
+
+		SCIENTIST
+	Check the stabilizers. (61)
+
+		COMMANDER
+	Supplies are running low. (63)
+
+		ROOKIE
+	System check complete. (27)
+
+		MEDIC
+	Did you hear that? (93)
+
+		COMMANDER
+	The sensors are picking up something. (79)
+
+		ROOKIE
+	Did you hear that? (84)
+
+
+EXT. ALIEN DESERT - DAY
+
+A cold fear fills the room. fb077c33
+
+		ALIEN EMPEROR
+	Check the stabilizers. (98)
+
+		REBEL LEADER
+	Supplies are running low. (29)
+
+		ROOKIE
+	Supplies are running low. (13)
+
+		COMMANDER
+	I don't like this integration. (89)
+
+
+INT. COMMAND CENTER - DAY
+
+A dark blood fills the room. 50ff91b8
+
+		SCIENTIST
+	Reading normal parameters. (59)
+
+		REBEL LEADER
+	Reading normal parameters. (61)
+
+		ALIEN EMPEROR
+	Reading normal parameters. (52)
+
+		ROOKIE
+	Reading normal parameters. (23)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A sudden blood fills the room. 033de5a9
+
+		AI SYSTEM
+	It's quiet. Too quiet. (17)
+
+		COMMANDER
+	Did you hear that? (67)
+
+		ALIEN EMPEROR
+	It's quiet. Too quiet. (85)
+
+
+INT. LABORATORY - NIGHT
+
+A sudden fear fills the room. 19598731
+
+		AI SYSTEM
+	I don't like this integration. (23)
+
+		AI SYSTEM
+	Reading normal parameters. (14)
+
+		MEDIC
+	It's quiet. Too quiet. (55)
+
+		ALIEN EMPEROR
+	The sensors are picking up something. (33)
+
+		MEDIC
+	The sensors are picking up something. (100)
+
+		SCIENTIST
+	It's quiet. Too quiet. (73)
+
+
+EXT. ALIEN DESERT - DAY
+
+A violent engine fills the room. 0138a726
+
+		COMMANDER
+	We need a plan. (11)
+
+		ALIEN EMPEROR
+	Did you hear that? (37)
+
+		MEDIC
+	Reading normal parameters. (52)
+
+		SCIENTIST
+	I don't like this integration. (10)
+
+
+INT. LABORATORY - NIGHT
+
+A bright engine fills the room. 85b7dfda
+
+		ALIEN EMPEROR
+	We need a plan. (27)
+
+		MEDIC
+	The sensors are picking up something. (8)
+
+		AI SYSTEM
+	I don't like this integration. (84)
+
+		COMMANDER
+	It's quiet. Too quiet. (80)
+
+		COMMANDER
+	It's quiet. Too quiet. (43)
+
+		COMMANDER
+	It's quiet. Too quiet. (26)
+
+
+EXT. ALIEN DESERT - DAY
+
+A broken weapon fills the room. 43811f5e
+
+		SCIENTIST
+	Did you hear that? (93)
+
+		MEDIC
+	Supplies are running low. (19)
+
+		ALIEN EMPEROR
+	System check complete. (92)
+
+		AI SYSTEM
+	Reading normal parameters. (67)
+
+
+EXT. JUNGLE - DAY
+
+A bright shadow fills the room. d2819f12
+
+		SCIENTIST
+	Supplies are running low. (82)
+
+		ROOKIE
+	Supplies are running low. (36)
+
+		MEDIC
+	Did you hear that? (21)
+
+		SCIENTIST
+	System check complete. (9)
+
+
+EXT. ALIEN DESERT - DAY
+
+A burning engine fills the room. 6a8b0926
+
+		SCIENTIST
+	Reading normal parameters. (23)
+
+		ALIEN EMPEROR
+	Did you hear that? (94)
+
+		COMMANDER
+	System check complete. (35)
+
+		REBEL LEADER
+	Reading normal parameters. (28)
+
+		REBEL LEADER
+	The sensors are picking up something. (24)
+
+		REBEL LEADER
+	We need a plan. (23)
+
+
+EXT. ALIEN DESERT - DAY
+
+A dark fear fills the room. dacdc22c
+
+		REBEL LEADER
+	The sensors are picking up something. (7)
+
+		REBEL LEADER
+	Reading normal parameters. (63)
+
+		ALIEN EMPEROR
+	Reading normal parameters. (42)
+
+		ROOKIE
+	I don't like this integration. (80)
+
+		COMMANDER
+	Check the stabilizers. (30)
+
+
+EXT. ALIEN DESERT - DAY
+
+A ominous hope fills the room. 89f65aff
+
+		ALIEN EMPEROR
+	The sensors are picking up something. (85)
+
+		MEDIC
+	We need a plan. (20)
+
+		MEDIC
+	Did you hear that? (16)
+
+
+EXT. ALIEN DESERT - DAY
+
+A bright engine fills the room. 8841d661
+
+		MEDIC
+	Reading normal parameters. (85)
+
+		MEDIC
+	Reading normal parameters. (60)
+
+		AI SYSTEM
+	Supplies are running low. (26)
+
+		SCIENTIST
+	We need a plan. (19)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A sudden weapon fills the room. 0a85101c
+
+		COMMANDER
+	The sensors are picking up something. (19)
+
+		ALIEN EMPEROR
+	Check the stabilizers. (79)
+
+		AI SYSTEM
+	System check complete. (93)
+
+
+INT. LABORATORY - NIGHT
+
+A ominous metal fills the room. 37beed41
+
+		AI SYSTEM
+	System check complete. (19)
+
+		AI SYSTEM
+	Reading normal parameters. (37)
+
+		ROOKIE
+	Reading normal parameters. (79)
+
+
+INT. MESS HALL - NIGHT
+
+A ominous fear fills the room. 83ba6286
+
+		COMMANDER
+	The sensors are picking up something. (3)
+
+		ALIEN EMPEROR
+	Check the stabilizers. (70)
+
+		AI SYSTEM
+	The sensors are picking up something. (10)
+
+		AI SYSTEM
+	Did you hear that? (8)
+
+		AI SYSTEM
+	Check the stabilizers. (31)
+
+		ROOKIE
+	The sensors are picking up something. (86)
+
+
+EXT. JUNGLE - DAY
+
+A burning weapon fills the room. 20ed4e45
+
+		AI SYSTEM
+	Did you hear that? (4)
+
+		COMMANDER
+	We need a plan. (20)
+
+		REBEL LEADER
+	The sensors are picking up something. (83)
+
+		REBEL LEADER
+	The sensors are picking up something. (26)
+
+		ALIEN EMPEROR
+	Reading normal parameters. (84)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A violent fear fills the room. 274c5bbe
+
+		SCIENTIST
+	I don't like this integration. (66)
+
+		COMMANDER
+	Supplies are running low. (60)
+
+		COMMANDER
+	Did you hear that? (26)
+
+		COMMANDER
+	Did you hear that? (42)
+
+
+EXT. JUNGLE - DAY
+
+A ominous fear fills the room. 0584715a
+
+		ALIEN EMPEROR
+	It's quiet. Too quiet. (63)
+
+		SCIENTIST
+	The sensors are picking up something. (35)
+
+		COMMANDER
+	It's quiet. Too quiet. (35)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A cold fear fills the room. dbf2bd6d
+
+		MEDIC
+	Reading normal parameters. (16)
+
+		COMMANDER
+	System check complete. (39)
+
+		REBEL LEADER
+	We need a plan. (73)
+
+		AI SYSTEM
+	Did you hear that? (63)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A dark sky fills the room. 3706c38e
+
+		REBEL LEADER
+	Did you hear that? (22)
+
+		ROOKIE
+	Supplies are running low. (60)
+
+		AI SYSTEM
+	We need a plan. (63)
+
+		ROOKIE
+	The sensors are picking up something. (48)
+
+		AI SYSTEM
+	The sensors are picking up something. (10)
+
+		MEDIC
+	Supplies are running low. (57)
+
+
+EXT. ALIEN DESERT - DAY
+
+A broken weapon fills the room. 918e3213
+
+		COMMANDER
+	Reading normal parameters. (6)
+
+		ROOKIE
+	The sensors are picking up something. (14)
+
+		COMMANDER
+	The sensors are picking up something. (67)
+
+		MEDIC
+	I don't like this integration. (45)
+
+		SCIENTIST
+	Check the stabilizers. (13)
+
+
+INT. LABORATORY - NIGHT
+
+A burning fear fills the room. a9248a9b
+
+		ROOKIE
+	The sensors are picking up something. (61)
+
+		MEDIC
+	We need a plan. (2)
+
+		SCIENTIST
+	Reading normal parameters. (84)
+
+		ROOKIE
+	We need a plan. (8)
+
+		MEDIC
+	The sensors are picking up something. (77)
+
+
+EXT. CITY RUINS - DAY
+
+A silent light fills the room. 25fcfded
+
+		SCIENTIST
+	It's quiet. Too quiet. (20)
+
+		ROOKIE
+	We need a plan. (69)
+
+		ALIEN EMPEROR
+	Did you hear that? (8)
+
+
+INT. LABORATORY - NIGHT
+
+A silent light fills the room. dd2609cf
+
+		ALIEN EMPEROR
+	Reading normal parameters. (29)
+
+		MEDIC
+	Did you hear that? (6)
+
+		AI SYSTEM
+	Check the stabilizers. (32)
+
+		COMMANDER
+	System check complete. (47)
+
+		SCIENTIST
+	We need a plan. (50)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A cold weapon fills the room. 371aea88
+
+		COMMANDER
+	I don't like this integration. (57)
+
+		SCIENTIST
+	Supplies are running low. (71)
+
+		MEDIC
+	It's quiet. Too quiet. (11)
+
+		AI SYSTEM
+	I don't like this integration. (54)
+
+		COMMANDER
+	Reading normal parameters. (10)
+
+
+EXT. ALIEN DESERT - DAY
+
+A violent light fills the room. b4f0e6b0
+
+		ALIEN EMPEROR
+	Check the stabilizers. (86)
+
+		ROOKIE
+	System check complete. (9)
+
+		ROOKIE
+	It's quiet. Too quiet. (27)
+
+		REBEL LEADER
+	Supplies are running low. (17)
+
+		ALIEN EMPEROR
+	Reading normal parameters. (98)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A dark sky fills the room. c53d5a09
+
+		MEDIC
+	The sensors are picking up something. (2)
+
+		ALIEN EMPEROR
+	It's quiet. Too quiet. (35)
+
+		COMMANDER
+	We need a plan. (27)
+
+		ALIEN EMPEROR
+	It's quiet. Too quiet. (27)
+
+		MEDIC
+	Check the stabilizers. (26)
+
+		COMMANDER
+	Supplies are running low. (76)
+
+
+INT. MESS HALL - NIGHT
+
+A silent metal fills the room. 95d4ff7c
+
+		ALIEN EMPEROR
+	Check the stabilizers. (37)
+
+		ALIEN EMPEROR
+	We need a plan. (91)
+
+		SCIENTIST
+	The sensors are picking up something. (78)
+
+		REBEL LEADER
+	I don't like this integration. (42)
+
+
+EXT. JUNGLE - DAY
+
+A bright fear fills the room. 3010a15b
+
+		AI SYSTEM
+	We need a plan. (94)
+
+		ROOKIE
+	Did you hear that? (32)
+
+		ALIEN EMPEROR
+	I don't like this integration. (45)
+
+		SCIENTIST
+	System check complete. (43)
+
+		COMMANDER
+	I don't like this integration. (75)
+
+
+INT. LABORATORY - NIGHT
+
+A broken sky fills the room. 5b6983aa
+
+		MEDIC
+	System check complete. (11)
+
+		ROOKIE
+	Did you hear that? (12)
+
+		ALIEN EMPEROR
+	System check complete. (42)
+
+		ROOKIE
+	It's quiet. Too quiet. (47)
+
+
+EXT. CITY RUINS - DAY
+
+A violent shadow fills the room. ba26b03f
+
+		ALIEN EMPEROR
+	Check the stabilizers. (35)
+
+		COMMANDER
+	We need a plan. (33)
+
+		MEDIC
+	The sensors are picking up something. (58)
+
+		ALIEN EMPEROR
+	The sensors are picking up something. (92)
+
+		REBEL LEADER
+	I don't like this integration. (20)
+
+		AI SYSTEM
+	We need a plan. (59)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A broken light fills the room. cf734cc2
+
+		SCIENTIST
+	Reading normal parameters. (81)
+
+		ALIEN EMPEROR
+	It's quiet. Too quiet. (24)
+
+		AI SYSTEM
+	I don't like this integration. (63)
+
+		AI SYSTEM
+	Supplies are running low. (49)
+
+		AI SYSTEM
+	It's quiet. Too quiet. (15)
+
+		REBEL LEADER
+	System check complete. (97)
+
+
+EXT. JUNGLE - DAY
+
+A burning engine fills the room. 42f528e9
+
+		SCIENTIST
+	Supplies are running low. (33)
+
+		MEDIC
+	Check the stabilizers. (25)
+
+		ALIEN EMPEROR
+	It's quiet. Too quiet. (42)
+
+
+INT. MESS HALL - NIGHT
+
+A violent shadow fills the room. f47fbea3
+
+		REBEL LEADER
+	Supplies are running low. (51)
+
+		ROOKIE
+	System check complete. (52)
+
+		ALIEN EMPEROR
+	We need a plan. (1)
+
+		AI SYSTEM
+	Reading normal parameters. (69)
+
+		SCIENTIST
+	System check complete. (98)
+
+
+EXT. CITY RUINS - DAY
+
+A ominous engine fills the room. b7c44aef
+
+		MEDIC
+	Did you hear that? (23)
+
+		REBEL LEADER
+	System check complete. (97)
+
+		COMMANDER
+	Did you hear that? (81)
+
+		REBEL LEADER
+	Did you hear that? (28)
+
+
+EXT. JUNGLE - DAY
+
+A ominous sky fills the room. f3f311bb
+
+		AI SYSTEM
+	It's quiet. Too quiet. (59)
+
+		ALIEN EMPEROR
+	Reading normal parameters. (96)
+
+		AI SYSTEM
+	It's quiet. Too quiet. (92)
+
+		AI SYSTEM
+	The sensors are picking up something. (43)
+
+		COMMANDER
+	System check complete. (2)
+
+
+EXT. CITY RUINS - DAY
+
+A bright engine fills the room. 54b443a2
+
+		MEDIC
+	The sensors are picking up something. (62)
+
+		ROOKIE
+	I don't like this integration. (94)
+
+		MEDIC
+	Check the stabilizers. (37)
+
+		COMMANDER
+	Did you hear that? (89)
+
+		MEDIC
+	Supplies are running low. (66)
+
+
+INT. COMMAND CENTER - DAY
+
+A burning sky fills the room. 474ce8f3
+
+		MEDIC
+	Supplies are running low. (28)
+
+		COMMANDER
+	The sensors are picking up something. (29)
+
+		ROOKIE
+	Reading normal parameters. (21)
+
+		AI SYSTEM
+	We need a plan. (75)
+
+		COMMANDER
+	We need a plan. (53)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A sudden metal fills the room. 61864ac5
+
+		MEDIC
+	Reading normal parameters. (17)
+
+		AI SYSTEM
+	Reading normal parameters. (1)
+
+		REBEL LEADER
+	Check the stabilizers. (65)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A bright sky fills the room. 8367d0b8
+
+		COMMANDER
+	We need a plan. (35)
+
+		SCIENTIST
+	Supplies are running low. (32)
+
+		REBEL LEADER
+	Supplies are running low. (21)
+
+		MEDIC
+	Reading normal parameters. (58)
+
+
+INT. COMMAND CENTER - DAY
+
+A broken weapon fills the room. 9f4fd463
+
+		ALIEN EMPEROR
+	System check complete. (4)
+
+		ALIEN EMPEROR
+	Check the stabilizers. (82)
+
+		AI SYSTEM
+	I don't like this integration. (16)
+
+		MEDIC
+	System check complete. (35)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A broken light fills the room. 197cf74a
+
+		REBEL LEADER
+	We need a plan. (26)
+
+		REBEL LEADER
+	I don't like this integration. (57)
+
+		COMMANDER
+	Supplies are running low. (7)
+
+
+EXT. ALIEN DESERT - DAY
+
+A burning hope fills the room. 2c3933c0
+
+		COMMANDER
+	I don't like this integration. (56)
+
+		AI SYSTEM
+	It's quiet. Too quiet. (40)
+
+		AI SYSTEM
+	System check complete. (47)
+
+		SCIENTIST
+	Supplies are running low. (35)
+
+
+INT. MESS HALL - NIGHT
+
+A silent sky fills the room. eb77f1b2
+
+		COMMANDER
+	I don't like this integration. (12)
+
+		AI SYSTEM
+	Check the stabilizers. (15)
+
+		REBEL LEADER
+	Did you hear that? (48)
+
+		MEDIC
+	I don't like this integration. (45)
+
+		AI SYSTEM
+	It's quiet. Too quiet. (41)
+
+
+INT. LABORATORY - NIGHT
+
+A violent light fills the room. 35a5ab41
+
+		ALIEN EMPEROR
+	Reading normal parameters. (49)
+
+		SCIENTIST
+	I don't like this integration. (59)
+
+		COMMANDER
+	Did you hear that? (23)
+
+		REBEL LEADER
+	Supplies are running low. (7)
+
+		REBEL LEADER
+	Supplies are running low. (6)
+
+
+EXT. JUNGLE - DAY
+
+A cold hope fills the room. 7be1f6cf
+
+		MEDIC
+	It's quiet. Too quiet. (3)
+
+		COMMANDER
+	Reading normal parameters. (62)
+
+		AI SYSTEM
+	I don't like this integration. (49)
+
+
+INT. MESS HALL - NIGHT
+
+A violent fear fills the room. 1687635e
+
+		AI SYSTEM
+	I don't like this integration. (36)
+
+		REBEL LEADER
+	Reading normal parameters. (90)
+
+		REBEL LEADER
+	Reading normal parameters. (56)
+
+
+INT. LABORATORY - NIGHT
+
+A dark metal fills the room. 8e50d5f9
+
+		AI SYSTEM
+	Check the stabilizers. (78)
+
+		ROOKIE
+	Supplies are running low. (52)
+
+		SCIENTIST
+	I don't like this integration. (71)
+
+		ROOKIE
+	Did you hear that? (51)
+
+		REBEL LEADER
+	I don't like this integration. (90)
+
+		ROOKIE
+	We need a plan. (26)
+
+
+EXT. JUNGLE - DAY
+
+A ominous metal fills the room. 4dc8efa7
+
+		COMMANDER
+	System check complete. (80)
+
+		AI SYSTEM
+	The sensors are picking up something. (27)
+
+		SCIENTIST
+	It's quiet. Too quiet. (45)
+
+		MEDIC
+	We need a plan. (95)
+
+
+EXT. JUNGLE - DAY
+
+A broken sky fills the room. 01725026
+
+		MEDIC
+	I don't like this integration. (87)
+
+		REBEL LEADER
+	Reading normal parameters. (8)
+
+		COMMANDER
+	System check complete. (54)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A dark blood fills the room. 16686c3a
+
+		REBEL LEADER
+	It's quiet. Too quiet. (22)
+
+		ALIEN EMPEROR
+	The sensors are picking up something. (22)
+
+		ROOKIE
+	I don't like this integration. (1)
+
+		ALIEN EMPEROR
+	It's quiet. Too quiet. (55)
+
+		REBEL LEADER
+	Reading normal parameters. (19)
+
+		AI SYSTEM
+	Check the stabilizers. (40)
+
+
+EXT. CITY RUINS - DAY
+
+A bright fear fills the room. 106b78db
+
+		ALIEN EMPEROR
+	Fire everything you have! (53)
+
+		ROOKIE
+	They've boarded the main deck! (94)
+
+		REBEL LEADER
+	Fire everything you have! (80)
+
+		COMMANDER
+	It's a trap! (34)
+
+		ALIEN EMPEROR
+	They've boarded the main deck! (21)
+
+		SCIENTIST
+	It's a trap! (95)
+
+
+INT. COMMAND CENTER - DAY
+
+A burning sky fills the room. 1f36141b
+
+		MEDIC
+	Fire everything you have! (74)
+
+		ALIEN EMPEROR
+	Fire everything you have! (43)
+
+		MEDIC
+	It's a trap! (73)
+
+		MEDIC
+	Hull breach in sector 4! (32)
+
+		REBEL LEADER
+	They've boarded the main deck! (34)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A broken blood fills the room. 5618e1de
+
+		SCIENTIST
+	They are attacking! (33)
+
+		SCIENTIST
+	It's a trap! (61)
+
+		AI SYSTEM
+	They've boarded the main deck! (60)
+
+		COMMANDER
+	We're losing power! (27)
+
+		ALIEN EMPEROR
+	Hull breach in sector 4! (27)
+
+
+EXT. CITY RUINS - DAY
+
+A sudden metal fills the room. 12c135c2
+
+		ALIEN EMPEROR
+	Get to the escape pods! (43)
+
+		AI SYSTEM
+	We can't hold them back! (73)
+
+		COMMANDER
+	We're losing power! (12)
+
+		ROOKIE
+	They are attacking! (43)
+
+		SCIENTIST
+	They are attacking! (72)
+
+
+INT. COMMAND CENTER - DAY
+
+A silent hope fills the room. defd4a88
+
+		ALIEN EMPEROR
+	We can't hold them back! (33)
+
+		COMMANDER
+	Get to the escape pods! (97)
+
+		AI SYSTEM
+	They've boarded the main deck! (27)
+
+
+EXT. CITY RUINS - DAY
+
+A silent shadow fills the room. c676e90c
+
+		MEDIC
+	It's a trap! (29)
+
+		COMMANDER
+	We're losing power! (72)
+
+		REBEL LEADER
+	We can't hold them back! (1)
+
+		AI SYSTEM
+	Shields are down! (56)
+
+
+EXT. JUNGLE - DAY
+
+A silent metal fills the room. a30d27df
+
+		ROOKIE
+	Fire everything you have! (63)
+
+		SCIENTIST
+	Shields are down! (100)
+
+		MEDIC
+	It's a trap! (86)
+
+		ALIEN EMPEROR
+	They are attacking! (47)
+
+		ROOKIE
+	We can't hold them back! (85)
+
+
+INT. LABORATORY - NIGHT
+
+A bright shadow fills the room. a559511b
+
+		COMMANDER
+	They've boarded the main deck! (49)
+
+		REBEL LEADER
+	It's a trap! (59)
+
+		MEDIC
+	We can't hold them back! (72)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A cold engine fills the room. 029a6620
+
+		AI SYSTEM
+	Get to the escape pods! (47)
+
+		MEDIC
+	Shields are down! (66)
+
+		AI SYSTEM
+	They are attacking! (24)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A bright hope fills the room. f2dc4e5b
+
+		MEDIC
+	Hull breach in sector 4! (80)
+
+		ALIEN EMPEROR
+	It's a trap! (37)
+
+		ALIEN EMPEROR
+	Fire everything you have! (57)
+
+		AI SYSTEM
+	Shields are down! (36)
+
+		ALIEN EMPEROR
+	Hull breach in sector 4! (83)
+
+		ROOKIE
+	We can't hold them back! (73)
+
+
+INT. LABORATORY - NIGHT
+
+A bright engine fills the room. 0fea7af9
+
+		COMMANDER
+	They've boarded the main deck! (94)
+
+		REBEL LEADER
+	Get to the escape pods! (56)
+
+		MEDIC
+	It's a trap! (2)
+
+		AI SYSTEM
+	It's a trap! (1)
+
+		SCIENTIST
+	Fire everything you have! (96)
+
+
+INT. COMMAND CENTER - DAY
+
+A violent shadow fills the room. b3627198
+
+		ALIEN EMPEROR
+	Hull breach in sector 4! (2)
+
+		SCIENTIST
+	We're losing power! (13)
+
+		AI SYSTEM
+	They've boarded the main deck! (56)
+
+		SCIENTIST
+	We're losing power! (80)
+
+		COMMANDER
+	Shields are down! (78)
+
+		MEDIC
+	We can't hold them back! (63)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A dark weapon fills the room. cd4d3f0b
+
+		SCIENTIST
+	They've boarded the main deck! (34)
+
+		MEDIC
+	Get to the escape pods! (3)
+
+		REBEL LEADER
+	We're losing power! (45)
+
+		REBEL LEADER
+	They are attacking! (96)
+
+		SCIENTIST
+	It's a trap! (87)
+
+		SCIENTIST
+	They've boarded the main deck! (92)
+
+
+INT. MESS HALL - NIGHT
+
+A broken sky fills the room. a0abbd69
+
+		REBEL LEADER
+	We can't hold them back! (19)
+
+		MEDIC
+	Hull breach in sector 4! (46)
+
+		REBEL LEADER
+	We're losing power! (63)
+
+		AI SYSTEM
+	They are attacking! (92)
+
+
+INT. MESS HALL - NIGHT
+
+A cold weapon fills the room. 5ef7d873
+
+		ROOKIE
+	Hull breach in sector 4! (46)
+
+		MEDIC
+	They've boarded the main deck! (1)
+
+		AI SYSTEM
+	We can't hold them back! (56)
+
+		SCIENTIST
+	They've boarded the main deck! (90)
+
+
+EXT. JUNGLE - DAY
+
+A burning shadow fills the room. 2c451e2e
+
+		ALIEN EMPEROR
+	We can't hold them back! (61)
+
+		COMMANDER
+	We're losing power! (87)
+
+		AI SYSTEM
+	We can't hold them back! (16)
+
+		COMMANDER
+	We can't hold them back! (55)
+
+		ROOKIE
+	We're losing power! (90)
+
+
+EXT. CITY RUINS - DAY
+
+A sudden light fills the room. d6961c65
+
+		ALIEN EMPEROR
+	Hull breach in sector 4! (13)
+
+		REBEL LEADER
+	Get to the escape pods! (48)
+
+		ROOKIE
+	It's a trap! (10)
+
+		AI SYSTEM
+	We can't hold them back! (98)
+
+		MEDIC
+	Fire everything you have! (36)
+
+
+EXT. JUNGLE - DAY
+
+A cold engine fills the room. d6690f74
+
+		SCIENTIST
+	It's a trap! (24)
+
+		AI SYSTEM
+	Fire everything you have! (43)
+
+		MEDIC
+	Get to the escape pods! (62)
+
+		MEDIC
+	They are attacking! (59)
+
+		REBEL LEADER
+	They've boarded the main deck! (15)
+
+
+EXT. JUNGLE - DAY
+
+A ominous fear fills the room. b87bffc6
+
+		ALIEN EMPEROR
+	It's a trap! (23)
+
+		REBEL LEADER
+	They've boarded the main deck! (69)
+
+		ROOKIE
+	We're losing power! (73)
+
+		COMMANDER
+	They've boarded the main deck! (38)
+
+		ALIEN EMPEROR
+	It's a trap! (89)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A violent light fills the room. a4f548ef
+
+		SCIENTIST
+	Fire everything you have! (62)
+
+		ROOKIE
+	Hull breach in sector 4! (77)
+
+		REBEL LEADER
+	Get to the escape pods! (94)
+
+		ROOKIE
+	Fire everything you have! (33)
+
+		SCIENTIST
+	Hull breach in sector 4! (12)
+
+		COMMANDER
+	We can't hold them back! (12)
+
+
+EXT. JUNGLE - DAY
+
+A ominous metal fills the room. 030f5a36
+
+		SCIENTIST
+	They are attacking! (47)
+
+		ROOKIE
+	Get to the escape pods! (1)
+
+		ALIEN EMPEROR
+	Get to the escape pods! (62)
+
+		ROOKIE
+	Shields are down! (2)
+
+
+EXT. ALIEN DESERT - DAY
+
+A burning weapon fills the room. c1489f3c
+
+		MEDIC
+	They've boarded the main deck! (17)
+
+		MEDIC
+	Hull breach in sector 4! (36)
+
+		AI SYSTEM
+	Get to the escape pods! (35)
+
+		ROOKIE
+	Fire everything you have! (17)
+
+		SCIENTIST
+	Shields are down! (12)
+
+		ALIEN EMPEROR
+	They are attacking! (42)
+
+
+EXT. JUNGLE - DAY
+
+A sudden fear fills the room. 83fce630
+
+		MEDIC
+	It's a trap! (91)
+
+		REBEL LEADER
+	Get to the escape pods! (35)
+
+		COMMANDER
+	We're losing power! (43)
+
+		SCIENTIST
+	We can't hold them back! (83)
+
+		MEDIC
+	Get to the escape pods! (6)
+
+		COMMANDER
+	Fire everything you have! (60)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A violent sky fills the room. 7321b3c2
+
+		SCIENTIST
+	We're losing power! (72)
+
+		SCIENTIST
+	Hull breach in sector 4! (78)
+
+		ROOKIE
+	Fire everything you have! (35)
+
+		AI SYSTEM
+	They are attacking! (36)
+
+		MEDIC
+	They are attacking! (15)
+
+		REBEL LEADER
+	Hull breach in sector 4! (7)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A cold weapon fills the room. 8798b29d
+
+		ALIEN EMPEROR
+	They've boarded the main deck! (13)
+
+		ALIEN EMPEROR
+	We can't hold them back! (69)
+
+		ROOKIE
+	They are attacking! (58)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A cold sky fills the room. 131bb177
+
+		REBEL LEADER
+	We can't hold them back! (68)
+
+		REBEL LEADER
+	We can't hold them back! (73)
+
+		COMMANDER
+	Get to the escape pods! (1)
+
+		AI SYSTEM
+	They've boarded the main deck! (31)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A dark fear fills the room. 10521ebb
+
+		ALIEN EMPEROR
+	It's a trap! (83)
+
+		MEDIC
+	Hull breach in sector 4! (12)
+
+		REBEL LEADER
+	They've boarded the main deck! (49)
+
+		AI SYSTEM
+	It's a trap! (12)
+
+		ALIEN EMPEROR
+	They are attacking! (76)
+
+		MEDIC
+	Hull breach in sector 4! (89)
+
+
+EXT. CITY RUINS - DAY
+
+A bright blood fills the room. 618687e7
+
+		MEDIC
+	Hull breach in sector 4! (42)
+
+		SCIENTIST
+	Shields are down! (56)
+
+		AI SYSTEM
+	Hull breach in sector 4! (92)
+
+		COMMANDER
+	It's a trap! (90)
+
+
+INT. LABORATORY - NIGHT
+
+A broken hope fills the room. 79426b5f
+
+		AI SYSTEM
+	They've boarded the main deck! (95)
+
+		REBEL LEADER
+	They are attacking! (66)
+
+		MEDIC
+	Shields are down! (64)
+
+
+EXT. CITY RUINS - DAY
+
+A cold shadow fills the room. 3125e011
+
+		REBEL LEADER
+	Hull breach in sector 4! (83)
+
+		SCIENTIST
+	Get to the escape pods! (100)
+
+		MEDIC
+	Fire everything you have! (87)
+
+		SCIENTIST
+	They've boarded the main deck! (16)
+
+		SCIENTIST
+	They are attacking! (85)
+
+		ROOKIE
+	Fire everything you have! (51)
+
+
+EXT. CITY RUINS - DAY
+
+A broken shadow fills the room. 0a075a0b
+
+		MEDIC
+	Shields are down! (48)
+
+		SCIENTIST
+	Hull breach in sector 4! (68)
+
+		SCIENTIST
+	We can't hold them back! (86)
+
+		ALIEN EMPEROR
+	Get to the escape pods! (92)
+
+		COMMANDER
+	Shields are down! (78)
+
+
+EXT. ALIEN DESERT - DAY
+
+A dark engine fills the room. 705c5d33
+
+		AI SYSTEM
+	It's a trap! (56)
+
+		SCIENTIST
+	We're losing power! (60)
+
+		ALIEN EMPEROR
+	Shields are down! (46)
+
+
+INT. MESS HALL - NIGHT
+
+A sudden hope fills the room. 27f9a2eb
+
+		AI SYSTEM
+	Get to the escape pods! (20)
+
+		ALIEN EMPEROR
+	They've boarded the main deck! (82)
+
+		COMMANDER
+	We're losing power! (76)
+
+
+INT. MESS HALL - NIGHT
+
+A burning hope fills the room. 6dfc5a3b
+
+		ROOKIE
+	Fire everything you have! (59)
+
+		MEDIC
+	We can't hold them back! (62)
+
+		MEDIC
+	Shields are down! (16)
+
+		SCIENTIST
+	Shields are down! (10)
+
+		AI SYSTEM
+	Shields are down! (66)
+
+		AI SYSTEM
+	Get to the escape pods! (91)
+
+
+EXT. CITY RUINS - DAY
+
+A broken fear fills the room. ea3af2cb
+
+		REBEL LEADER
+	Fire everything you have! (7)
+
+		ALIEN EMPEROR
+	It's a trap! (29)
+
+		AI SYSTEM
+	Get to the escape pods! (85)
+
+		COMMANDER
+	Fire everything you have! (14)
+
+
+EXT. CITY RUINS - DAY
+
+A dark fear fills the room. feea7d26
+
+		AI SYSTEM
+	They've boarded the main deck! (56)
+
+		ROOKIE
+	It's a trap! (33)
+
+		MEDIC
+	Get to the escape pods! (82)
+
+		COMMANDER
+	We can't hold them back! (22)
+
+		MEDIC
+	Hull breach in sector 4! (11)
+
+		REBEL LEADER
+	Fire everything you have! (14)
+
+
+INT. MESS HALL - NIGHT
+
+A ominous fear fills the room. e724c7b7
+
+		REBEL LEADER
+	Get to the escape pods! (14)
+
+		ROOKIE
+	Get to the escape pods! (32)
+
+		ROOKIE
+	It's a trap! (13)
+
+		SCIENTIST
+	We're losing power! (37)
+
+		ALIEN EMPEROR
+	Get to the escape pods! (67)
+
+		COMMANDER
+	It's a trap! (87)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A violent engine fills the room. 4a508f94
+
+		COMMANDER
+	Fire everything you have! (75)
+
+		AI SYSTEM
+	It's a trap! (33)
+
+		AI SYSTEM
+	Get to the escape pods! (56)
+
+
+EXT. JUNGLE - DAY
+
+A ominous blood fills the room. 291e52af
+
+		COMMANDER
+	It's a trap! (14)
+
+		COMMANDER
+	It's a trap! (61)
+
+		SCIENTIST
+	We're losing power! (17)
+
+		MEDIC
+	We can't hold them back! (66)
+
+
+INT. LABORATORY - NIGHT
+
+A dark metal fills the room. 7687206c
+
+		SCIENTIST
+	They are attacking! (75)
+
+		ROOKIE
+	Fire everything you have! (2)
+
+		ALIEN EMPEROR
+	They've boarded the main deck! (41)
+
+		SCIENTIST
+	Fire everything you have! (6)
+
+		REBEL LEADER
+	Hull breach in sector 4! (44)
+
+		ROOKIE
+	Fire everything you have! (50)
+
+
+INT. MESS HALL - NIGHT
+
+A broken hope fills the room. 98db7fcd
+
+		MEDIC
+	We're losing power! (90)
+
+		REBEL LEADER
+	Get to the escape pods! (89)
+
+		SCIENTIST
+	We're losing power! (59)
+
+
+INT. COMMAND CENTER - DAY
+
+A cold weapon fills the room. db517a94
+
+		MEDIC
+	We can't hold them back! (21)
+
+		ROOKIE
+	Shields are down! (69)
+
+		AI SYSTEM
+	Hull breach in sector 4! (83)
+
+
+INT. LABORATORY - NIGHT
+
+A cold hope fills the room. 17be7ba9
+
+		SCIENTIST
+	It's a trap! (88)
+
+		AI SYSTEM
+	It's a trap! (38)
+
+		REBEL LEADER
+	Get to the escape pods! (42)
+
+		AI SYSTEM
+	They've boarded the main deck! (75)
+
+		COMMANDER
+	They've boarded the main deck! (2)
+
+
+EXT. CITY RUINS - DAY
+
+A ominous hope fills the room. 165ddf7d
+
+		COMMANDER
+	Get to the escape pods! (27)
+
+		SCIENTIST
+	We can't hold them back! (81)
+
+		REBEL LEADER
+	We're losing power! (32)
+
+		MEDIC
+	Hull breach in sector 4! (32)
+
+		ROOKIE
+	They are attacking! (39)
+
+		SCIENTIST
+	They've boarded the main deck! (63)
+
+
+EXT. ALIEN DESERT - DAY
+
+A silent light fills the room. 6602b3f2
+
+		COMMANDER
+	We can't hold them back! (8)
+
+		MEDIC
+	They've boarded the main deck! (80)
+
+		AI SYSTEM
+	They've boarded the main deck! (31)
+
+		MEDIC
+	We can't hold them back! (53)
+
+		MEDIC
+	They are attacking! (35)
+
+
+INT. MESS HALL - NIGHT
+
+A sudden light fills the room. 0bf89bed
+
+		REBEL LEADER
+	Get to the escape pods! (96)
+
+		AI SYSTEM
+	They've boarded the main deck! (5)
+
+		ROOKIE
+	Shields are down! (45)
+
+		MEDIC
+	We're losing power! (61)
+
+		COMMANDER
+	Fire everything you have! (95)
+
+
+INT. COMMAND CENTER - DAY
+
+A sudden metal fills the room. 9f70650a
+
+		COMMANDER
+	They've boarded the main deck! (39)
+
+		REBEL LEADER
+	Shields are down! (18)
+
+		SCIENTIST
+	We can't hold them back! (37)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A sudden shadow fills the room. 32760ac2
+
+		ALIEN EMPEROR
+	They've boarded the main deck! (99)
+
+		AI SYSTEM
+	They are attacking! (59)
+
+		MEDIC
+	Shields are down! (1)
+
+		REBEL LEADER
+	We can't hold them back! (60)
+
+		COMMANDER
+	Fire everything you have! (9)
+
+
+EXT. CITY RUINS - DAY
+
+A dark engine fills the room. 878cc9c0
+
+		REBEL LEADER
+	Hull breach in sector 4! (32)
+
+		AI SYSTEM
+	It's a trap! (99)
+
+		ROOKIE
+	We're losing power! (58)
+
+		SCIENTIST
+	Get to the escape pods! (93)
+
+		AI SYSTEM
+	We're losing power! (89)
+
+
+EXT. ALIEN DESERT - DAY
+
+A cold blood fills the room. 6f240865
+
+		ALIEN EMPEROR
+	We're losing power! (53)
+
+		REBEL LEADER
+	Fire everything you have! (86)
+
+		MEDIC
+	They are attacking! (30)
+
+		ROOKIE
+	We're losing power! (7)
+
+		AI SYSTEM
+	They are attacking! (98)
+
+		AI SYSTEM
+	It's a trap! (98)
+
+
+EXT. JUNGLE - DAY
+
+A dark fear fills the room. 2b444299
+
+		REBEL LEADER
+	They've boarded the main deck! (95)
+
+		ROOKIE
+	Get to the escape pods! (44)
+
+		ROOKIE
+	Shields are down! (61)
+
+		AI SYSTEM
+	They are attacking! (83)
+
+
+INT. MESS HALL - NIGHT
+
+A burning light fills the room. 33b5694e
+
+		COMMANDER
+	Hull breach in sector 4! (12)
+
+		REBEL LEADER
+	Fire everything you have! (42)
+
+		MEDIC
+	It's a trap! (20)
+
+		AI SYSTEM
+	They've boarded the main deck! (65)
+
+
+INT. MESS HALL - NIGHT
+
+A bright sky fills the room. cd5866aa
+
+		ALIEN EMPEROR
+	We can't hold them back! (99)
+
+		COMMANDER
+	They are attacking! (54)
+
+		AI SYSTEM
+	They are attacking! (6)
+
+		SCIENTIST
+	Get to the escape pods! (15)
+
+		REBEL LEADER
+	Get to the escape pods! (98)
+
+
+INT. MESS HALL - NIGHT
+
+A ominous fear fills the room. 220d9073
+
+		REBEL LEADER
+	Shields are down! (60)
+
+		ROOKIE
+	Fire everything you have! (9)
+
+		COMMANDER
+	They are attacking! (98)
+
+		COMMANDER
+	Fire everything you have! (96)
+
+		AI SYSTEM
+	Hull breach in sector 4! (59)
+
+		MEDIC
+	They've boarded the main deck! (52)
+
+
+EXT. ALIEN DESERT - DAY
+
+A dark hope fills the room. 4bb24891
+
+		ROOKIE
+	We can't hold them back! (71)
+
+		ALIEN EMPEROR
+	We can't hold them back! (89)
+
+		COMMANDER
+	We can't hold them back! (51)
+
+		ALIEN EMPEROR
+	We can't hold them back! (17)
+
+		ALIEN EMPEROR
+	Hull breach in sector 4! (100)
+
+
+EXT. ALIEN DESERT - DAY
+
+A cold light fills the room. 18141164
+
+		AI SYSTEM
+	It's a trap! (29)
+
+		MEDIC
+	They are attacking! (31)
+
+		AI SYSTEM
+	Get to the escape pods! (3)
+
+		SCIENTIST
+	Shields are down! (25)
+
+		AI SYSTEM
+	We can't hold them back! (23)
+
+
+EXT. JUNGLE - DAY
+
+A cold fear fills the room. 0db43011
+
+		ALIEN EMPEROR
+	Shields are down! (14)
+
+		ROOKIE
+	They are attacking! (20)
+
+		SCIENTIST
+	Hull breach in sector 4! (29)
+
+		ROOKIE
+	We're losing power! (47)
+
+
+EXT. JUNGLE - DAY
+
+A cold weapon fills the room. 7a3f26c6
+
+		SCIENTIST
+	They are attacking! (55)
+
+		AI SYSTEM
+	Get to the escape pods! (28)
+
+		SCIENTIST
+	It's a trap! (82)
+
+		ROOKIE
+	Fire everything you have! (90)
+
+		ROOKIE
+	Fire everything you have! (59)
+
+		AI SYSTEM
+	It's a trap! (30)
+
+
+INT. MESS HALL - NIGHT
+
+A violent shadow fills the room. a96ea039
+
+		SCIENTIST
+	We can't hold them back! (12)
+
+		REBEL LEADER
+	They are attacking! (44)
+
+		AI SYSTEM
+	They are attacking! (4)
+
+		SCIENTIST
+	Shields are down! (69)
+
+		AI SYSTEM
+	Get to the escape pods! (74)
+
+
+EXT. ALIEN DESERT - DAY
+
+A bright metal fills the room. 670a72e1
+
+		MEDIC
+	Shields are down! (40)
+
+		COMMANDER
+	Hull breach in sector 4! (44)
+
+		SCIENTIST
+	Get to the escape pods! (16)
+
+
+EXT. JUNGLE - DAY
+
+A sudden fear fills the room. 32601375
+
+		MEDIC
+	We're losing power! (44)
+
+		ROOKIE
+	Get to the escape pods! (65)
+
+		ROOKIE
+	Hull breach in sector 4! (23)
+
+		MEDIC
+	We're losing power! (45)
+
+		SCIENTIST
+	We can't hold them back! (17)
+
+		AI SYSTEM
+	They are attacking! (82)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A violent hope fills the room. cdb1d3f1
+
+		REBEL LEADER
+	Shields are down! (1)
+
+		REBEL LEADER
+	We're losing power! (59)
+
+		SCIENTIST
+	It's a trap! (29)
+
+		MEDIC
+	Hull breach in sector 4! (76)
+
+
+INT. MESS HALL - NIGHT
+
+A bright shadow fills the room. 56212056
+
+		MEDIC
+	They've boarded the main deck! (51)
+
+		SCIENTIST
+	Fire everything you have! (63)
+
+		COMMANDER
+	They are attacking! (12)
+
+
+EXT. CITY RUINS - DAY
+
+A bright blood fills the room. 0408f17d
+
+		AI SYSTEM
+	Fire everything you have! (95)
+
+		ROOKIE
+	It's a trap! (96)
+
+		AI SYSTEM
+	Shields are down! (27)
+
+
+INT. LABORATORY - NIGHT
+
+A bright blood fills the room. 1d9ba9d9
+
+		ROOKIE
+	Fire everything you have! (32)
+
+		SCIENTIST
+	It's a trap! (43)
+
+		REBEL LEADER
+	Fire everything you have! (87)
+
+
+EXT. ALIEN DESERT - DAY
+
+A dark blood fills the room. 71ce0bd4
+
+		ROOKIE
+	Hull breach in sector 4! (37)
+
+		COMMANDER
+	They are attacking! (89)
+
+		AI SYSTEM
+	It's a trap! (21)
+
+		ALIEN EMPEROR
+	It's a trap! (7)
+
+
+INT. LABORATORY - NIGHT
+
+A bright sky fills the room. 42aa7d35
+
+		AI SYSTEM
+	Fire everything you have! (38)
+
+		REBEL LEADER
+	They've boarded the main deck! (60)
+
+		REBEL LEADER
+	Fire everything you have! (4)
+
+		ALIEN EMPEROR
+	We can't hold them back! (48)
+
+		AI SYSTEM
+	Hull breach in sector 4! (75)
+
+		SCIENTIST
+	We're losing power! (53)
+
+
+EXT. JUNGLE - DAY
+
+A broken engine fills the room. 0680d56a
+
+		COMMANDER
+	Shields are down! (19)
+
+		SCIENTIST
+	Shields are down! (50)
+
+		REBEL LEADER
+	They've boarded the main deck! (3)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A dark shadow fills the room. b0c2fc81
+
+		AI SYSTEM
+	We're losing power! (73)
+
+		MEDIC
+	Hull breach in sector 4! (14)
+
+		ROOKIE
+	They've boarded the main deck! (63)
+
+		ROOKIE
+	Fire everything you have! (26)
+
+		REBEL LEADER
+	We can't hold them back! (69)
+
+		COMMANDER
+	Fire everything you have! (50)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A broken blood fills the room. 48e7204b
+
+		COMMANDER
+	We can't hold them back! (50)
+
+		SCIENTIST
+	We're losing power! (42)
+
+		MEDIC
+	They are attacking! (49)
+
+		AI SYSTEM
+	We can't hold them back! (46)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A ominous shadow fills the room. 3d0b37bd
+
+		ROOKIE
+	We can't hold them back! (21)
+
+		SCIENTIST
+	Shields are down! (44)
+
+		COMMANDER
+	We're losing power! (8)
+
+		ROOKIE
+	We're losing power! (72)
+
+		AI SYSTEM
+	They've boarded the main deck! (44)
+
+		REBEL LEADER
+	Hull breach in sector 4! (68)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A burning hope fills the room. f8469958
+
+		ALIEN EMPEROR
+	They are attacking! (8)
+
+		REBEL LEADER
+	Hull breach in sector 4! (75)
+
+		ROOKIE
+	Shields are down! (62)
+
+		COMMANDER
+	Fire everything you have! (58)
+
+
+INT. LABORATORY - NIGHT
+
+A violent blood fills the room. c7f1f3a0
+
+		REBEL LEADER
+	We're losing power! (43)
+
+		SCIENTIST
+	They are attacking! (100)
+
+		COMMANDER
+	Get to the escape pods! (12)
+
+		REBEL LEADER
+	Fire everything you have! (46)
+
+		ROOKIE
+	Shields are down! (10)
+
+
+EXT. CITY RUINS - DAY
+
+A broken shadow fills the room. 4221c233
+
+		MEDIC
+	They are attacking! (84)
+
+		ALIEN EMPEROR
+	It's a trap! (20)
+
+		REBEL LEADER
+	They are attacking! (59)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A burning hope fills the room. 13dec882
+
+		REBEL LEADER
+	Get to the escape pods! (15)
+
+		COMMANDER
+	Shields are down! (66)
+
+		SCIENTIST
+	We're losing power! (5)
+
+		ALIEN EMPEROR
+	We can't hold them back! (67)
+
+		ALIEN EMPEROR
+	Shields are down! (73)
+
+		REBEL LEADER
+	Fire everything you have! (54)
+
+
+INT. MESS HALL - NIGHT
+
+A silent shadow fills the room. 0f007db1
+
+		ALIEN EMPEROR
+	We can't hold them back! (81)
+
+		REBEL LEADER
+	Shields are down! (21)
+
+		SCIENTIST
+	Shields are down! (11)
+
+		ROOKIE
+	We can't hold them back! (47)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A violent hope fills the room. 3fa8b64a
+
+		REBEL LEADER
+	Fire everything you have! (11)
+
+		MEDIC
+	We can't hold them back! (50)
+
+		REBEL LEADER
+	We can't hold them back! (8)
+
+		REBEL LEADER
+	Get to the escape pods! (26)
+
+		ROOKIE
+	Fire everything you have! (9)
+
+		AI SYSTEM
+	We can't hold them back! (77)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A burning fear fills the room. f34b36a0
+
+		SCIENTIST
+	Hull breach in sector 4! (94)
+
+		ALIEN EMPEROR
+	They are attacking! (55)
+
+		AI SYSTEM
+	Shields are down! (47)
+
+
+INT. LABORATORY - NIGHT
+
+A burning engine fills the room. dda1ba09
+
+		COMMANDER
+	They are attacking! (92)
+
+		COMMANDER
+	Shields are down! (83)
+
+		AI SYSTEM
+	Fire everything you have! (87)
+
+		REBEL LEADER
+	Fire everything you have! (66)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A cold light fills the room. e8e13d1a
+
+		ALIEN EMPEROR
+	Fire everything you have! (67)
+
+		ALIEN EMPEROR
+	Shields are down! (93)
+
+		COMMANDER
+	We're losing power! (5)
+
+		COMMANDER
+	Hull breach in sector 4! (46)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A silent metal fills the room. 4aa5087b
+
+		ALIEN EMPEROR
+	Fire everything you have! (1)
+
+		AI SYSTEM
+	They are attacking! (12)
+
+		MEDIC
+	Hull breach in sector 4! (65)
+
+
+INT. COMMAND CENTER - DAY
+
+A burning blood fills the room. efd49a4d
+
+		ROOKIE
+	We can't hold them back! (60)
+
+		COMMANDER
+	Shields are down! (15)
+
+		REBEL LEADER
+	We can't hold them back! (85)
+
+
+EXT. ALIEN DESERT - DAY
+
+A silent engine fills the room. ecb221f8
+
+		COMMANDER
+	Hull breach in sector 4! (46)
+
+		ALIEN EMPEROR
+	Get to the escape pods! (76)
+
+		ALIEN EMPEROR
+	Fire everything you have! (41)
+
+		COMMANDER
+	It's a trap! (79)
+
+		ALIEN EMPEROR
+	We can't hold them back! (49)
+
+
+INT. COMMAND CENTER - DAY
+
+A broken sky fills the room. 46b063f0
+
+		MEDIC
+	It's a trap! (59)
+
+		AI SYSTEM
+	Get to the escape pods! (19)
+
+		SCIENTIST
+	They've boarded the main deck! (48)
+
+		SCIENTIST
+	We can't hold them back! (4)
+
+		MEDIC
+	They've boarded the main deck! (31)
+
+
+EXT. CITY RUINS - DAY
+
+A dark blood fills the room. a4e6a9b4
+
+		MEDIC
+	Fire everything you have! (99)
+
+		REBEL LEADER
+	They are attacking! (97)
+
+		ALIEN EMPEROR
+	We're losing power! (64)
+
+		AI SYSTEM
+	Fire everything you have! (40)
+
+
+INT. MESS HALL - NIGHT
+
+A bright blood fills the room. 9a209ff5
+
+		COMMANDER
+	They've boarded the main deck! (53)
+
+		REBEL LEADER
+	We're losing power! (54)
+
+		ROOKIE
+	It's a trap! (13)
+
+		COMMANDER
+	It's a trap! (25)
+
+		COMMANDER
+	We're losing power! (85)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A dark shadow fills the room. 8111864f
+
+		ALIEN EMPEROR
+	It's a trap! (71)
+
+		COMMANDER
+	We're losing power! (92)
+
+		AI SYSTEM
+	Hull breach in sector 4! (18)
+
+
+INT. MESS HALL - NIGHT
+
+A sudden sky fills the room. bde9341a
+
+		MEDIC
+	They've boarded the main deck! (34)
+
+		COMMANDER
+	We're losing power! (9)
+
+		ALIEN EMPEROR
+	Shields are down! (51)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A violent fear fills the room. 2f4a8816
+
+		SCIENTIST
+	Hull breach in sector 4! (13)
+
+		SCIENTIST
+	They've boarded the main deck! (56)
+
+		COMMANDER
+	They are attacking! (49)
+
+		MEDIC
+	They are attacking! (92)
+
+		ROOKIE
+	Fire everything you have! (19)
+
+
+EXT. ALIEN DESERT - DAY
+
+A burning hope fills the room. 23c0a5b8
+
+		ROOKIE
+	They are attacking! (7)
+
+		AI SYSTEM
+	Shields are down! (30)
+
+		REBEL LEADER
+	They are attacking! (26)
+
+
+EXT. JUNGLE - DAY
+
+A burning shadow fills the room. a6d8ae20
+
+		MEDIC
+	Hull breach in sector 4! (73)
+
+		REBEL LEADER
+	We can't hold them back! (92)
+
+		ALIEN EMPEROR
+	We can't hold them back! (45)
+
+		ROOKIE
+	They've boarded the main deck! (33)
+
+
+EXT. JUNGLE - DAY
+
+A dark sky fills the room. 6043ac05
+
+		MEDIC
+	We're losing power! (5)
+
+		REBEL LEADER
+	Shields are down! (57)
+
+		AI SYSTEM
+	We can't hold them back! (38)
+
+		MEDIC
+	Get to the escape pods! (82)
+
+		AI SYSTEM
+	Hull breach in sector 4! (49)
+
+		MEDIC
+	Hull breach in sector 4! (2)
+
+
+EXT. ALIEN DESERT - DAY
+
+A silent shadow fills the room. fc73845e
+
+		MEDIC
+	They are attacking! (15)
+
+		COMMANDER
+	Fire everything you have! (33)
+
+		REBEL LEADER
+	They are attacking! (58)
+
+		COMMANDER
+	It's a trap! (66)
+
+
+EXT. JUNGLE - DAY
+
+A broken fear fills the room. c7a359a4
+
+		ROOKIE
+	Fire everything you have! (82)
+
+		ROOKIE
+	Get to the escape pods! (68)
+
+		ALIEN EMPEROR
+	They've boarded the main deck! (79)
+
+		AI SYSTEM
+	Hull breach in sector 4! (16)
+
+
+EXT. CITY RUINS - DAY
+
+A bright sky fills the room. 7f6a3c0f
+
+		AI SYSTEM
+	They've boarded the main deck! (56)
+
+		MEDIC
+	It's a trap! (47)
+
+		COMMANDER
+	We're losing power! (20)
+
+		AI SYSTEM
+	We're losing power! (2)
+
+		ROOKIE
+	Shields are down! (33)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A dark engine fills the room. 575a470c
+
+		REBEL LEADER
+	They've boarded the main deck! (32)
+
+		COMMANDER
+	It's a trap! (16)
+
+		COMMANDER
+	Shields are down! (12)
+
+		COMMANDER
+	We're losing power! (33)
+
+		AI SYSTEM
+	They are attacking! (22)
+
+		COMMANDER
+	Hull breach in sector 4! (77)
+
+
+INT. MESS HALL - NIGHT
+
+A sudden weapon fills the room. 21bae7a6
+
+		ROOKIE
+	Get to the escape pods! (33)
+
+		ROOKIE
+	Hull breach in sector 4! (57)
+
+		AI SYSTEM
+	Shields are down! (45)
+
+		ROOKIE
+	Hull breach in sector 4! (3)
+
+		ALIEN EMPEROR
+	Get to the escape pods! (62)
+
+		ALIEN EMPEROR
+	They are attacking! (65)
+
+
+INT. COMMAND CENTER - DAY
+
+A sudden weapon fills the room. 876c92fe
+
+		AI SYSTEM
+	They are attacking! (7)
+
+		ROOKIE
+	It's a trap! (72)
+
+		COMMANDER
+	Hull breach in sector 4! (25)
+
+		ROOKIE
+	We're losing power! (54)
+
+
+INT. LABORATORY - NIGHT
+
+A broken blood fills the room. efbcb7a0
+
+		ALIEN EMPEROR
+	It's a trap! (91)
+
+		MEDIC
+	We can't hold them back! (21)
+
+		SCIENTIST
+	They've boarded the main deck! (44)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A silent blood fills the room. 61a5d213
+
+		REBEL LEADER
+	Shields are down! (40)
+
+		REBEL LEADER
+	We're losing power! (88)
+
+		ROOKIE
+	It's a trap! (84)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A burning engine fills the room. a328a9bd
+
+		SCIENTIST
+	Get to the escape pods! (38)
+
+		AI SYSTEM
+	Fire everything you have! (63)
+
+		AI SYSTEM
+	Get to the escape pods! (39)
+
+		MEDIC
+	They are attacking! (27)
+
+		REBEL LEADER
+	Shields are down! (88)
+
+		ALIEN EMPEROR
+	Get to the escape pods! (72)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A broken sky fills the room. be2961ac
+
+		COMMANDER
+	We can't hold them back! (34)
+
+		COMMANDER
+	We can't hold them back! (13)
+
+		MEDIC
+	Hull breach in sector 4! (97)
+
+
+INT. MESS HALL - NIGHT
+
+A sudden engine fills the room. a4090963
+
+		COMMANDER
+	Fire everything you have! (34)
+
+		COMMANDER
+	Hull breach in sector 4! (54)
+
+		ALIEN EMPEROR
+	Shields are down! (100)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A sudden shadow fills the room. 94761f0e
+
+		REBEL LEADER
+	They are attacking! (72)
+
+		MEDIC
+	We're losing power! (89)
+
+		COMMANDER
+	We can't hold them back! (87)
+
+		COMMANDER
+	Get to the escape pods! (72)
+
+		ALIEN EMPEROR
+	Get to the escape pods! (18)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A silent metal fills the room. 08179ca3
+
+		AI SYSTEM
+	It's a trap! (37)
+
+		SCIENTIST
+	Hull breach in sector 4! (80)
+
+		REBEL LEADER
+	We're losing power! (17)
+
+		ALIEN EMPEROR
+	Shields are down! (90)
+
+		AI SYSTEM
+	Fire everything you have! (73)
+
+
+EXT. CITY RUINS - DAY
+
+A violent fear fills the room. 1dec21d3
+
+		ALIEN EMPEROR
+	Hull breach in sector 4! (12)
+
+		AI SYSTEM
+	We're losing power! (69)
+
+		ROOKIE
+	We can't hold them back! (68)
+
+		ROOKIE
+	It's a trap! (60)
+
+
+EXT. CITY RUINS - DAY
+
+A dark hope fills the room. df709954
+
+		SCIENTIST
+	They are attacking! (38)
+
+		SCIENTIST
+	It's a trap! (23)
+
+		REBEL LEADER
+	Hull breach in sector 4! (22)
+
+		ROOKIE
+	Fire everything you have! (9)
+
+		COMMANDER
+	They are attacking! (37)
+
+
+EXT. ALIEN DESERT - DAY
+
+A silent weapon fills the room. f5abc7c8
+
+		ALIEN EMPEROR
+	Shields are down! (55)
+
+		COMMANDER
+	Hull breach in sector 4! (90)
+
+		MEDIC
+	They've boarded the main deck! (28)
+
+
+INT. COMMAND CENTER - DAY
+
+A dark engine fills the room. 18ef226b
+
+		REBEL LEADER
+	Shields are down! (93)
+
+		COMMANDER
+	We're losing power! (44)
+
+		ROOKIE
+	Hull breach in sector 4! (50)
+
+		COMMANDER
+	We're losing power! (98)
+
+
+EXT. CITY RUINS - DAY
+
+A ominous blood fills the room. b7dcfc4f
+
+		SCIENTIST
+	Shields are down! (100)
+
+		AI SYSTEM
+	They are attacking! (9)
+
+		ROOKIE
+	We can't hold them back! (57)
+
+		ROOKIE
+	We're losing power! (77)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A ominous engine fills the room. 2c5b40d0
+
+		REBEL LEADER
+	They are attacking! (21)
+
+		SCIENTIST
+	Get to the escape pods! (15)
+
+		ALIEN EMPEROR
+	They are attacking! (74)
+
+		COMMANDER
+	They are attacking! (1)
+
+
+INT. COMMAND CENTER - DAY
+
+A silent blood fills the room. c27aa6c2
+
+		ALIEN EMPEROR
+	We're losing power! (93)
+
+		SCIENTIST
+	Shields are down! (15)
+
+		REBEL LEADER
+	We can't hold them back! (73)
+
+		COMMANDER
+	Shields are down! (8)
+
+		ROOKIE
+	Fire everything you have! (23)
+
+		REBEL LEADER
+	Fire everything you have! (19)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A burning weapon fills the room. c486852a
+
+		REBEL LEADER
+	We can't hold them back! (83)
+
+		SCIENTIST
+	We can't hold them back! (8)
+
+		ROOKIE
+	We're losing power! (3)
+
+		SCIENTIST
+	We're losing power! (66)
+
+		MEDIC
+	It's a trap! (8)
+
+
+INT. MESS HALL - NIGHT
+
+A violent engine fills the room. 56b42c30
+
+		REBEL LEADER
+	They are attacking! (38)
+
+		ALIEN EMPEROR
+	They've boarded the main deck! (29)
+
+		ROOKIE
+	We can't hold them back! (69)
+
+
+EXT. ALIEN DESERT - DAY
+
+A ominous sky fills the room. 1a3881b5
+
+		REBEL LEADER
+	Get to the escape pods! (18)
+
+		REBEL LEADER
+	It's a trap! (43)
+
+		ROOKIE
+	Fire everything you have! (73)
+
+		ALIEN EMPEROR
+	Fire everything you have! (80)
+
+
+INT. COMMAND CENTER - DAY
+
+A bright metal fills the room. cacbb4f7
+
+		SCIENTIST
+	It's a trap! (78)
+
+		AI SYSTEM
+	We can't hold them back! (67)
+
+		MEDIC
+	They are attacking! (76)
+
+		MEDIC
+	Hull breach in sector 4! (14)
+
+		ALIEN EMPEROR
+	It's a trap! (17)
+
+		ALIEN EMPEROR
+	Hull breach in sector 4! (87)
+
+
+INT. MESS HALL - NIGHT
+
+A broken hope fills the room. 5d1eefb5
+
+		MEDIC
+	It's a trap! (74)
+
+		ALIEN EMPEROR
+	They are attacking! (92)
+
+		MEDIC
+	They've boarded the main deck! (78)
+
+		ALIEN EMPEROR
+	Fire everything you have! (52)
+
+		COMMANDER
+	Get to the escape pods! (13)
+
+		ROOKIE
+	Hull breach in sector 4! (2)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A ominous fear fills the room. 5fdc509b
+
+		AI SYSTEM
+	Get to the escape pods! (53)
+
+		ROOKIE
+	We can't hold them back! (58)
+
+		COMMANDER
+	Shields are down! (10)
+
+		COMMANDER
+	They've boarded the main deck! (80)
+
+
+EXT. ALIEN DESERT - DAY
+
+A dark sky fills the room. 348f8e4a
+
+		MEDIC
+	We can't hold them back! (21)
+
+		REBEL LEADER
+	Get to the escape pods! (94)
+
+		ROOKIE
+	We can't hold them back! (92)
+
+		AI SYSTEM
+	Get to the escape pods! (20)
+
+		AI SYSTEM
+	We can't hold them back! (9)
+
+		MEDIC
+	Get to the escape pods! (62)
+
+
+EXT. JUNGLE - DAY
+
+A cold engine fills the room. 41610fed
+
+		ROOKIE
+	We're losing power! (21)
+
+		REBEL LEADER
+	We're losing power! (73)
+
+		REBEL LEADER
+	We can't hold them back! (84)
+
+		SCIENTIST
+	Shields are down! (66)
+
+		ALIEN EMPEROR
+	They are attacking! (20)
+
+		COMMANDER
+	It's a trap! (21)
+
+
+INT. LABORATORY - NIGHT
+
+A sudden fear fills the room. 54dde7f6
+
+		REBEL LEADER
+	Get to the escape pods! (28)
+
+		COMMANDER
+	Get to the escape pods! (62)
+
+		ROOKIE
+	Fire everything you have! (37)
+
+		COMMANDER
+	We're losing power! (8)
+
+
+INT. MESS HALL - NIGHT
+
+A burning hope fills the room. 25a7c389
+
+		REBEL LEADER
+	Shields are down! (33)
+
+		AI SYSTEM
+	We can't hold them back! (72)
+
+		ALIEN EMPEROR
+	Shields are down! (12)
+
+		COMMANDER
+	They are attacking! (25)
+
+		ALIEN EMPEROR
+	Hull breach in sector 4! (20)
+
+		REBEL LEADER
+	Fire everything you have! (32)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A broken engine fills the room. 16bf6787
+
+		REBEL LEADER
+	Fire everything you have! (96)
+
+		REBEL LEADER
+	Get to the escape pods! (18)
+
+		REBEL LEADER
+	Fire everything you have! (79)
+
+		REBEL LEADER
+	Fire everything you have! (37)
+
+		ALIEN EMPEROR
+	Hull breach in sector 4! (41)
+
+
+EXT. CITY RUINS - DAY
+
+A ominous blood fills the room. 125b7731
+
+		ROOKIE
+	They are attacking! (62)
+
+		ROOKIE
+	They've boarded the main deck! (62)
+
+		ROOKIE
+	They are attacking! (46)
+
+		AI SYSTEM
+	Hull breach in sector 4! (57)
+
+		ALIEN EMPEROR
+	They've boarded the main deck! (87)
+
+		AI SYSTEM
+	Shields are down! (89)
+
+
+INT. LABORATORY - NIGHT
+
+A burning blood fills the room. f7515975
+
+		AI SYSTEM
+	Shields are down! (13)
+
+		AI SYSTEM
+	We're losing power! (55)
+
+		SCIENTIST
+	Shields are down! (90)
+
+
+EXT. ALIEN DESERT - DAY
+
+A dark blood fills the room. b1a68998
+
+		ROOKIE
+	Get to the escape pods! (76)
+
+		AI SYSTEM
+	They are attacking! (5)
+
+		SCIENTIST
+	Get to the escape pods! (22)
+
+
+EXT. CITY RUINS - DAY
+
+A dark blood fills the room. 2369275e
+
+		SCIENTIST
+	Shields are down! (21)
+
+		ROOKIE
+	Get to the escape pods! (30)
+
+		REBEL LEADER
+	They've boarded the main deck! (77)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A silent light fills the room. 9c7fada2
+
+		ALIEN EMPEROR
+	We can't hold them back! (13)
+
+		COMMANDER
+	We're losing power! (34)
+
+		REBEL LEADER
+	Hull breach in sector 4! (47)
+
+		ALIEN EMPEROR
+	They are attacking! (47)
+
+		MEDIC
+	We're losing power! (33)
+
+
+EXT. CITY RUINS - DAY
+
+A silent light fills the room. a142ea04
+
+		COMMANDER
+	It's a trap! (19)
+
+		ALIEN EMPEROR
+	Get to the escape pods! (65)
+
+		REBEL LEADER
+	Shields are down! (33)
+
+		REBEL LEADER
+	We can't hold them back! (2)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A ominous light fills the room. 27702ba9
+
+		AI SYSTEM
+	It's a trap! (25)
+
+		MEDIC
+	They are attacking! (23)
+
+		SCIENTIST
+	They are attacking! (100)
+
+		COMMANDER
+	They've boarded the main deck! (47)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A dark blood fills the room. 4824f6f3
+
+		ROOKIE
+	They've boarded the main deck! (57)
+
+		SCIENTIST
+	Hull breach in sector 4! (40)
+
+		REBEL LEADER
+	Hull breach in sector 4! (32)
+
+
+INT. COMMAND CENTER - DAY
+
+A cold shadow fills the room. bad976ad
+
+		SCIENTIST
+	We can't hold them back! (48)
+
+		ALIEN EMPEROR
+	We can't hold them back! (83)
+
+		AI SYSTEM
+	They've boarded the main deck! (49)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A violent weapon fills the room. 786fa24e
+
+		SCIENTIST
+	It's a trap! (16)
+
+		SCIENTIST
+	Hull breach in sector 4! (42)
+
+		AI SYSTEM
+	It's a trap! (41)
+
+
+INT. MESS HALL - NIGHT
+
+A dark shadow fills the room. ea3d20d9
+
+		AI SYSTEM
+	Fire everything you have! (4)
+
+		REBEL LEADER
+	Hull breach in sector 4! (3)
+
+		REBEL LEADER
+	Shields are down! (25)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A bright fear fills the room. 7fd26847
+
+		AI SYSTEM
+	Hull breach in sector 4! (69)
+
+		REBEL LEADER
+	They are attacking! (91)
+
+		SCIENTIST
+	Shields are down! (39)
+
+
+INT. MESS HALL - NIGHT
+
+A bright shadow fills the room. 379f3df9
+
+		ALIEN EMPEROR
+	It's a trap! (25)
+
+		SCIENTIST
+	Fire everything you have! (73)
+
+		SCIENTIST
+	They've boarded the main deck! (27)
+
+		ALIEN EMPEROR
+	Hull breach in sector 4! (8)
+
+		AI SYSTEM
+	Hull breach in sector 4! (90)
+
+
+INT. COMMAND CENTER - DAY
+
+A ominous hope fills the room. 597f1dfc
+
+		REBEL LEADER
+	Hull breach in sector 4! (39)
+
+		COMMANDER
+	Get to the escape pods! (73)
+
+		ROOKIE
+	Get to the escape pods! (79)
+
+		SCIENTIST
+	They've boarded the main deck! (57)
+
+		ALIEN EMPEROR
+	It's a trap! (4)
+
+		ALIEN EMPEROR
+	Get to the escape pods! (46)
+
+
+INT. LABORATORY - NIGHT
+
+A broken fear fills the room. f72bcdc4
+
+		SCIENTIST
+	They've boarded the main deck! (86)
+
+		SCIENTIST
+	We can't hold them back! (25)
+
+		ROOKIE
+	We can't hold them back! (9)
+
+		MEDIC
+	We're losing power! (53)
+
+		AI SYSTEM
+	Shields are down! (5)
+
+		REBEL LEADER
+	Shields are down! (50)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A silent weapon fills the room. aafffe60
+
+		AI SYSTEM
+	They've boarded the main deck! (96)
+
+		COMMANDER
+	Get to the escape pods! (79)
+
+		MEDIC
+	We're losing power! (28)
+
+
+INT. LABORATORY - NIGHT
+
+A dark weapon fills the room. 114bf137
+
+		AI SYSTEM
+	They are attacking! (96)
+
+		MEDIC
+	It's a trap! (34)
+
+		AI SYSTEM
+	Fire everything you have! (7)
+
+		ROOKIE
+	Get to the escape pods! (81)
+
+		SCIENTIST
+	Get to the escape pods! (97)
+
+		AI SYSTEM
+	We're losing power! (34)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A sudden sky fills the room. 29d991e1
+
+		REBEL LEADER
+	Fire everything you have! (76)
+
+		COMMANDER
+	It's a trap! (71)
+
+		REBEL LEADER
+	Shields are down! (72)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A silent metal fills the room. 1220744d
+
+		COMMANDER
+	We can't hold them back! (44)
+
+		REBEL LEADER
+	We're losing power! (91)
+
+		SCIENTIST
+	Shields are down! (10)
+
+
+INT. COMMAND CENTER - DAY
+
+A violent engine fills the room. 6beb0c6a
+
+		AI SYSTEM
+	Get to the escape pods! (93)
+
+		REBEL LEADER
+	They've boarded the main deck! (43)
+
+		MEDIC
+	Hull breach in sector 4! (11)
+
+
+EXT. ALIEN DESERT - DAY
+
+A dark light fills the room. 26d6e656
+
+		AI SYSTEM
+	Hull breach in sector 4! (68)
+
+		REBEL LEADER
+	They've boarded the main deck! (60)
+
+		SCIENTIST
+	We're losing power! (12)
+
+
+INT. MESS HALL - NIGHT
+
+A broken metal fills the room. be9d81bf
+
+		ALIEN EMPEROR
+	Hull breach in sector 4! (62)
+
+		REBEL LEADER
+	They've boarded the main deck! (29)
+
+		MEDIC
+	They are attacking! (65)
+
+		COMMANDER
+	They've boarded the main deck! (12)
+
+
+EXT. CITY RUINS - DAY
+
+A dark engine fills the room. 0812d556
+
+		ROOKIE
+	They are attacking! (32)
+
+		AI SYSTEM
+	We can't hold them back! (9)
+
+		ALIEN EMPEROR
+	Get to the escape pods! (2)
+
+		ALIEN EMPEROR
+	Shields are down! (50)
+
+		SCIENTIST
+	Get to the escape pods! (61)
+
+		ROOKIE
+	Fire everything you have! (83)
+
+
+INT. COMMAND CENTER - DAY
+
+A violent shadow fills the room. 16943bd9
+
+		SCIENTIST
+	Hull breach in sector 4! (92)
+
+		COMMANDER
+	They've boarded the main deck! (70)
+
+		SCIENTIST
+	It's a trap! (17)
+
+		AI SYSTEM
+	Get to the escape pods! (98)
+
+
+EXT. ALIEN DESERT - DAY
+
+A bright sky fills the room. 421972b1
+
+		SCIENTIST
+	Get to the escape pods! (5)
+
+		COMMANDER
+	Fire everything you have! (5)
+
+		ALIEN EMPEROR
+	Hull breach in sector 4! (88)
+
+		MEDIC
+	It's a trap! (70)
+
+		COMMANDER
+	Shields are down! (63)
+
+
+EXT. ALIEN DESERT - DAY
+
+A broken weapon fills the room. 66e5bf61
+
+		COMMANDER
+	Fire everything you have! (63)
+
+		MEDIC
+	They are attacking! (30)
+
+		ROOKIE
+	Get to the escape pods! (2)
+
+		ROOKIE
+	Get to the escape pods! (95)
+
+		COMMANDER
+	Hull breach in sector 4! (38)
+
+		ROOKIE
+	We're losing power! (7)
+
+
+EXT. ALIEN DESERT - DAY
+
+A sudden engine fills the room. 5886c4fd
+
+		AI SYSTEM
+	It's a trap! (21)
+
+		SCIENTIST
+	They've boarded the main deck! (79)
+
+		AI SYSTEM
+	Shields are down! (80)
+
+		AI SYSTEM
+	We're losing power! (93)
+
+		SCIENTIST
+	We can't hold them back! (61)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A sudden engine fills the room. 54d0564a
+
+		COMMANDER
+	We're losing power! (15)
+
+		ROOKIE
+	Hull breach in sector 4! (8)
+
+		SCIENTIST
+	Fire everything you have! (50)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A sudden shadow fills the room. ec51b404
+
+		REBEL LEADER
+	We can't hold them back! (22)
+
+		MEDIC
+	They are attacking! (51)
+
+		MEDIC
+	Get to the escape pods! (77)
+
+		REBEL LEADER
+	Fire everything you have! (35)
+
+
+INT. LABORATORY - NIGHT
+
+A ominous light fills the room. 40eba1dd
+
+		MEDIC
+	It's a trap! (51)
+
+		SCIENTIST
+	It's a trap! (23)
+
+		REBEL LEADER
+	Shields are down! (81)
+
+		COMMANDER
+	Hull breach in sector 4! (36)
+
+
+EXT. ALIEN DESERT - DAY
+
+A dark engine fills the room. 794cbcce
+
+		SCIENTIST
+	We can't hold them back! (21)
+
+		REBEL LEADER
+	We're losing power! (59)
+
+		MEDIC
+	They've boarded the main deck! (65)
+
+		SCIENTIST
+	It's a trap! (61)
+
+
+INT. LABORATORY - NIGHT
+
+A broken weapon fills the room. ce4aea31
+
+		MEDIC
+	We're losing power! (55)
+
+		COMMANDER
+	Fire everything you have! (28)
+
+		ALIEN EMPEROR
+	They are attacking! (79)
+
+		REBEL LEADER
+	Fire everything you have! (88)
+
+
+INT. LABORATORY - NIGHT
+
+A ominous sky fills the room. 8a101939
+
+		SCIENTIST
+	It's a trap! (31)
+
+		MEDIC
+	Get to the escape pods! (92)
+
+		REBEL LEADER
+	It's a trap! (74)
+
+		AI SYSTEM
+	We're losing power! (12)
+
+
+INT. MESS HALL - NIGHT
+
+A bright metal fills the room. 5e81eb85
+
+		ALIEN EMPEROR
+	Hull breach in sector 4! (41)
+
+		ROOKIE
+	Get to the escape pods! (42)
+
+		ROOKIE
+	Get to the escape pods! (80)
+
+		REBEL LEADER
+	It's a trap! (25)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A dark shadow fills the room. 455f8569
+
+		SCIENTIST
+	We can't hold them back! (43)
+
+		ROOKIE
+	Shields are down! (85)
+
+		MEDIC
+	Hull breach in sector 4! (31)
+
+		AI SYSTEM
+	Shields are down! (84)
+
+		MEDIC
+	They've boarded the main deck! (45)
+
+
+INT. LABORATORY - NIGHT
+
+A cold weapon fills the room. a7b34f19
+
+		COMMANDER
+	They are attacking! (25)
+
+		COMMANDER
+	It's a trap! (74)
+
+		SCIENTIST
+	It's a trap! (55)
+
+		MEDIC
+	Fire everything you have! (9)
+
+		COMMANDER
+	They've boarded the main deck! (7)
+
+		ALIEN EMPEROR
+	Get to the escape pods! (30)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A violent shadow fills the room. 509e657d
+
+		REBEL LEADER
+	They've boarded the main deck! (7)
+
+		MEDIC
+	Get to the escape pods! (2)
+
+		SCIENTIST
+	They've boarded the main deck! (64)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A dark engine fills the room. b3239c06
+
+		MEDIC
+	Get to the escape pods! (48)
+
+		MEDIC
+	Shields are down! (37)
+
+		ROOKIE
+	Fire everything you have! (49)
+
+
+EXT. ALIEN DESERT - DAY
+
+A broken light fills the room. cb56edf8
+
+		REBEL LEADER
+	We're losing power! (53)
+
+		SCIENTIST
+	It's a trap! (65)
+
+		SCIENTIST
+	Hull breach in sector 4! (79)
+
+		ROOKIE
+	They are attacking! (51)
+
+
+EXT. JUNGLE - DAY
+
+A bright hope fills the room. fbc5e3f5
+
+		MEDIC
+	We're losing power! (92)
+
+		REBEL LEADER
+	Shields are down! (33)
+
+		REBEL LEADER
+	It's a trap! (79)
+
+		ALIEN EMPEROR
+	We're losing power! (31)
+
+		COMMANDER
+	Fire everything you have! (78)
+
+		MEDIC
+	We can't hold them back! (14)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A violent blood fills the room. 7f3fabe1
+
+		SCIENTIST
+	They are attacking! (95)
+
+		SCIENTIST
+	They've boarded the main deck! (23)
+
+		ALIEN EMPEROR
+	Fire everything you have! (93)
+
+		MEDIC
+	It's a trap! (97)
+
+		SCIENTIST
+	We're losing power! (82)
+
+		AI SYSTEM
+	They are attacking! (53)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A ominous fear fills the room. be908b2d
+
+		REBEL LEADER
+	They've boarded the main deck! (54)
+
+		SCIENTIST
+	Hull breach in sector 4! (30)
+
+		SCIENTIST
+	We can't hold them back! (37)
+
+
+INT. COMMAND CENTER - DAY
+
+A ominous sky fills the room. 1ec72d9e
+
+		REBEL LEADER
+	We're losing power! (76)
+
+		MEDIC
+	Shields are down! (2)
+
+		MEDIC
+	Shields are down! (95)
+
+		ROOKIE
+	Shields are down! (70)
+
+		ALIEN EMPEROR
+	We're losing power! (53)
+
+
+INT. COMMAND CENTER - DAY
+
+A bright fear fills the room. aaca530c
+
+		ALIEN EMPEROR
+	They are attacking! (13)
+
+		ALIEN EMPEROR
+	Hull breach in sector 4! (83)
+
+		SCIENTIST
+	Get to the escape pods! (8)
+
+
+EXT. JUNGLE - DAY
+
+A burning blood fills the room. 27d91cc4
+
+		ALIEN EMPEROR
+	Hull breach in sector 4! (96)
+
+		REBEL LEADER
+	Hull breach in sector 4! (76)
+
+		MEDIC
+	It's a trap! (23)
+
+		AI SYSTEM
+	It's a trap! (5)
+
+		MEDIC
+	Hull breach in sector 4! (69)
+
+
+EXT. ALIEN DESERT - DAY
+
+A dark sky fills the room. 1bc9470c
+
+		COMMANDER
+	It's a trap! (40)
+
+		SCIENTIST
+	Shields are down! (17)
+
+		ALIEN EMPEROR
+	They are attacking! (25)
+
+		SCIENTIST
+	We're losing power! (7)
+
+
+EXT. CITY RUINS - DAY
+
+A silent engine fills the room. 8eb4e4ac
+
+		SCIENTIST
+	Shields are down! (24)
+
+		ROOKIE
+	We're losing power! (88)
+
+		ALIEN EMPEROR
+	We're losing power! (49)
+
+		SCIENTIST
+	Get to the escape pods! (86)
+
+
+INT. COMMAND CENTER - DAY
+
+A bright shadow fills the room. fb76f8ea
+
+		SCIENTIST
+	We can't hold them back! (80)
+
+		REBEL LEADER
+	Fire everything you have! (16)
+
+		MEDIC
+	Shields are down! (44)
+
+		AI SYSTEM
+	It's a trap! (27)
+
+		ALIEN EMPEROR
+	Shields are down! (25)
+
+		REBEL LEADER
+	Get to the escape pods! (32)
+
+
+INT. MESS HALL - NIGHT
+
+A cold fear fills the room. 156668e4
+
+		REBEL LEADER
+	Fire everything you have! (18)
+
+		ALIEN EMPEROR
+	They've boarded the main deck! (89)
+
+		SCIENTIST
+	It's a trap! (57)
+
+		MEDIC
+	We're losing power! (19)
+
+
+EXT. ALIEN DESERT - DAY
+
+A broken sky fills the room. 3cefc8e7
+
+		ALIEN EMPEROR
+	They've boarded the main deck! (95)
+
+		ROOKIE
+	Get to the escape pods! (65)
+
+		ALIEN EMPEROR
+	It's a trap! (11)
+
+		MEDIC
+	Shields are down! (31)
+
+		ALIEN EMPEROR
+	Get to the escape pods! (57)
+
+		ALIEN EMPEROR
+	Hull breach in sector 4! (56)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A cold metal fills the room. 53645d2c
+
+		SCIENTIST
+	Hull breach in sector 4! (63)
+
+		AI SYSTEM
+	They've boarded the main deck! (64)
+
+		COMMANDER
+	Get to the escape pods! (17)
+
+		ROOKIE
+	It's a trap! (86)
+
+		ROOKIE
+	They've boarded the main deck! (66)
+
+
+INT. LABORATORY - NIGHT
+
+A cold shadow fills the room. 588091e6
+
+		ROOKIE
+	Fire everything you have! (92)
+
+		COMMANDER
+	We're losing power! (34)
+
+		COMMANDER
+	Hull breach in sector 4! (85)
+
+		SCIENTIST
+	They are attacking! (77)
+
+		REBEL LEADER
+	They are attacking! (6)
+
+
+EXT. CITY RUINS - DAY
+
+A violent hope fills the room. b7377cf5
+
+		ALIEN EMPEROR
+	They've boarded the main deck! (97)
+
+		REBEL LEADER
+	They are attacking! (73)
+
+		REBEL LEADER
+	It's a trap! (9)
+
+
+INT. LABORATORY - NIGHT
+
+A broken sky fills the room. bfa55ab9
+
+		MEDIC
+	We can't hold them back! (27)
+
+		ALIEN EMPEROR
+	They are attacking! (33)
+
+		ALIEN EMPEROR
+	It's a trap! (12)
+
+		COMMANDER
+	We're losing power! (11)
+
+		REBEL LEADER
+	Hull breach in sector 4! (60)
+
+		MEDIC
+	We're losing power! (32)
+
+
+EXT. CITY RUINS - DAY
+
+A cold weapon fills the room. f52fc94c
+
+		AI SYSTEM
+	It's a trap! (82)
+
+		ALIEN EMPEROR
+	Fire everything you have! (96)
+
+		COMMANDER
+	They've boarded the main deck! (46)
+
+		REBEL LEADER
+	We can't hold them back! (58)
+
+
+EXT. ALIEN DESERT - DAY
+
+A broken light fills the room. d8c77ec1
+
+		ROOKIE
+	It's a trap! (73)
+
+		SCIENTIST
+	We're losing power! (57)
+
+		ROOKIE
+	Shields are down! (80)
+
+		COMMANDER
+	Shields are down! (97)
+
+		ALIEN EMPEROR
+	Shields are down! (90)
+
+		AI SYSTEM
+	It's a trap! (67)
+
+
+EXT. ALIEN DESERT - DAY
+
+A dark fear fills the room. b14c1c0f
+
+		AI SYSTEM
+	We can't hold them back! (57)
+
+		SCIENTIST
+	Shields are down! (97)
+
+		MEDIC
+	They've boarded the main deck! (65)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A silent weapon fills the room. 7856900f
+
+		REBEL LEADER
+	They've boarded the main deck! (5)
+
+		ROOKIE
+	They are attacking! (83)
+
+		MEDIC
+	We're losing power! (12)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A ominous metal fills the room. 34e254bc
+
+		ALIEN EMPEROR
+	Shields are down! (83)
+
+		COMMANDER
+	It's a trap! (37)
+
+		MEDIC
+	We're losing power! (63)
+
+		COMMANDER
+	Get to the escape pods! (83)
+
+		REBEL LEADER
+	Get to the escape pods! (92)
+
+
+EXT. JUNGLE - DAY
+
+A broken hope fills the room. 9bb7a514
+
+		AI SYSTEM
+	Get to the escape pods! (17)
+
+		ALIEN EMPEROR
+	Get to the escape pods! (16)
+
+		SCIENTIST
+	Fire everything you have! (90)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A broken blood fills the room. c07be662
+
+		MEDIC
+	It's a trap! (15)
+
+		COMMANDER
+	They are attacking! (19)
+
+		REBEL LEADER
+	We're losing power! (41)
+
+
+EXT. CITY RUINS - DAY
+
+A cold metal fills the room. 8dccd1c5
+
+		SCIENTIST
+	We're losing power! (53)
+
+		AI SYSTEM
+	Shields are down! (56)
+
+		COMMANDER
+	Hull breach in sector 4! (74)
+
+		SCIENTIST
+	We're losing power! (50)
+
+		AI SYSTEM
+	Fire everything you have! (79)
+
+		AI SYSTEM
+	They are attacking! (78)
+
+
+EXT. ALIEN DESERT - DAY
+
+A cold weapon fills the room. d8cd5deb
+
+		MEDIC
+	Get to the escape pods! (15)
+
+		COMMANDER
+	Shields are down! (50)
+
+		REBEL LEADER
+	They are attacking! (92)
+
+		ALIEN EMPEROR
+	Shields are down! (96)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A burning sky fills the room. 39ad1bf2
+
+		REBEL LEADER
+	We're losing power! (84)
+
+		ALIEN EMPEROR
+	Fire everything you have! (57)
+
+		MEDIC
+	We're losing power! (87)
+
+		AI SYSTEM
+	Hull breach in sector 4! (37)
+
+		MEDIC
+	Shields are down! (40)
+
+
+EXT. ALIEN DESERT - DAY
+
+A cold shadow fills the room. de3c6649
+
+		MEDIC
+	Get to the escape pods! (81)
+
+		SCIENTIST
+	They are attacking! (59)
+
+		REBEL LEADER
+	Get to the escape pods! (48)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A burning light fills the room. 38859731
+
+		ALIEN EMPEROR
+	It's a trap! (16)
+
+		MEDIC
+	Hull breach in sector 4! (66)
+
+		SCIENTIST
+	Get to the escape pods! (70)
+
+		AI SYSTEM
+	Get to the escape pods! (57)
+
+		REBEL LEADER
+	It's a trap! (53)
+
+		SCIENTIST
+	Shields are down! (83)
+
+
+INT. LABORATORY - NIGHT
+
+A silent blood fills the room. c307e874
+
+		MEDIC
+	Get to the escape pods! (96)
+
+		AI SYSTEM
+	They are attacking! (42)
+
+		ALIEN EMPEROR
+	We can't hold them back! (21)
+
+		ALIEN EMPEROR
+	They've boarded the main deck! (69)
+
+		ROOKIE
+	Shields are down! (57)
+
+		SCIENTIST
+	We can't hold them back! (13)
+
+
+EXT. ALIEN DESERT - DAY
+
+A broken weapon fills the room. fcda17d4
+
+		SCIENTIST
+	Get to the escape pods! (44)
+
+		AI SYSTEM
+	Shields are down! (15)
+
+		SCIENTIST
+	Hull breach in sector 4! (10)
+
+		REBEL LEADER
+	We're losing power! (93)
+
+
+INT. LABORATORY - NIGHT
+
+A ominous shadow fills the room. e7572678
+
+		COMMANDER
+	Get to the escape pods! (58)
+
+		AI SYSTEM
+	Shields are down! (46)
+
+		SCIENTIST
+	We can't hold them back! (82)
+
+		MEDIC
+	We can't hold them back! (56)
+
+
+EXT. ALIEN DESERT - DAY
+
+A silent light fills the room. 4ac7aec4
+
+		REBEL LEADER
+	Get to the escape pods! (66)
+
+		ALIEN EMPEROR
+	We can't hold them back! (56)
+
+		SCIENTIST
+	We can't hold them back! (2)
+
+
+EXT. CITY RUINS - DAY
+
+A bright hope fills the room. 39516470
+
+		ROOKIE
+	Shields are down! (43)
+
+		COMMANDER
+	They've boarded the main deck! (37)
+
+		ALIEN EMPEROR
+	Hull breach in sector 4! (13)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A cold engine fills the room. 7069768b
+
+		SCIENTIST
+	We're losing power! (17)
+
+		AI SYSTEM
+	We're losing power! (53)
+
+		COMMANDER
+	It's a trap! (92)
+
+		AI SYSTEM
+	Get to the escape pods! (60)
+
+		ROOKIE
+	We're losing power! (4)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A bright shadow fills the room. 58b6367c
+
+		SCIENTIST
+	Shields are down! (21)
+
+		ALIEN EMPEROR
+	Shields are down! (72)
+
+		REBEL LEADER
+	We can't hold them back! (1)
+
+		COMMANDER
+	Hull breach in sector 4! (7)
+
+		REBEL LEADER
+	Hull breach in sector 4! (62)
+
+
+INT. LABORATORY - NIGHT
+
+A cold hope fills the room. 6eaad896
+
+		REBEL LEADER
+	Fire everything you have! (46)
+
+		ROOKIE
+	We're losing power! (32)
+
+		COMMANDER
+	Shields are down! (21)
+
+		AI SYSTEM
+	They are attacking! (25)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A silent hope fills the room. efbdca7c
+
+		MEDIC
+	Shields are down! (9)
+
+		SCIENTIST
+	It's a trap! (13)
+
+		MEDIC
+	They are attacking! (83)
+
+
+INT. LABORATORY - NIGHT
+
+A ominous engine fills the room. 47d1a77b
+
+		ROOKIE
+	They are attacking! (30)
+
+		ALIEN EMPEROR
+	Fire everything you have! (54)
+
+		ROOKIE
+	They are attacking! (83)
+
+		COMMANDER
+	They are attacking! (70)
+
+
+INT. LABORATORY - NIGHT
+
+A violent blood fills the room. 1ab8eb33
+
+		SCIENTIST
+	It's a trap! (73)
+
+		AI SYSTEM
+	Shields are down! (88)
+
+		SCIENTIST
+	It's a trap! (10)
+
+		ALIEN EMPEROR
+	It's a trap! (39)
+
+		SCIENTIST
+	We're losing power! (94)
+
+		MEDIC
+	We can't hold them back! (73)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A dark light fills the room. 3a7944c5
+
+		COMMANDER
+	Shields are down! (34)
+
+		AI SYSTEM
+	Shields are down! (87)
+
+		ROOKIE
+	We can't hold them back! (89)
+
+		SCIENTIST
+	They are attacking! (48)
+
+		ALIEN EMPEROR
+	They've boarded the main deck! (79)
+
+		ALIEN EMPEROR
+	We're losing power! (99)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A ominous shadow fills the room. c1746466
+
+		SCIENTIST
+	They've boarded the main deck! (85)
+
+		COMMANDER
+	We're losing power! (76)
+
+		COMMANDER
+	We're losing power! (27)
+
+		ROOKIE
+	It's a trap! (93)
+
+
+INT. LABORATORY - NIGHT
+
+A burning sky fills the room. a935f12b
+
+		ROOKIE
+	They've boarded the main deck! (72)
+
+		ROOKIE
+	They are attacking! (35)
+
+		SCIENTIST
+	We can't hold them back! (41)
+
+		MEDIC
+	It's a trap! (51)
+
+		SCIENTIST
+	They are attacking! (97)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A burning metal fills the room. cbc429e1
+
+		SCIENTIST
+	It's a trap! (42)
+
+		SCIENTIST
+	We're losing power! (80)
+
+		AI SYSTEM
+	Get to the escape pods! (77)
+
+		COMMANDER
+	Shields are down! (57)
+
+
+INT. LABORATORY - NIGHT
+
+A silent shadow fills the room. 7546a903
+
+		ALIEN EMPEROR
+	Get to the escape pods! (8)
+
+		COMMANDER
+	We can't hold them back! (70)
+
+		AI SYSTEM
+	They are attacking! (53)
+
+
+EXT. JUNGLE - DAY
+
+A silent light fills the room. 19e42eb7
+
+		ALIEN EMPEROR
+	We can't hold them back! (38)
+
+		ALIEN EMPEROR
+	They are attacking! (68)
+
+		ALIEN EMPEROR
+	Fire everything you have! (77)
+
+
+EXT. JUNGLE - DAY
+
+A violent blood fills the room. caad48a3
+
+		ALIEN EMPEROR
+	Hull breach in sector 4! (22)
+
+		MEDIC
+	They are attacking! (51)
+
+		REBEL LEADER
+	We're losing power! (2)
+
+
+EXT. ALIEN DESERT - DAY
+
+A bright fear fills the room. 3bf4d6ac
+
+		ROOKIE
+	We're losing power! (11)
+
+		COMMANDER
+	We can't hold them back! (17)
+
+		REBEL LEADER
+	Hull breach in sector 4! (49)
+
+		AI SYSTEM
+	It's a trap! (41)
+
+		ALIEN EMPEROR
+	Hull breach in sector 4! (2)
+
+		REBEL LEADER
+	They are attacking! (43)
+
+
+EXT. JUNGLE - DAY
+
+A burning engine fills the room. 32b5ecf6
+
+		COMMANDER
+	Get to the escape pods! (33)
+
+		AI SYSTEM
+	Shields are down! (61)
+
+		REBEL LEADER
+	Get to the escape pods! (82)
+
+		REBEL LEADER
+	We're losing power! (74)
+
+
+INT. COMMAND CENTER - DAY
+
+A sudden sky fills the room. f444e20b
+
+		SCIENTIST
+	Hull breach in sector 4! (100)
+
+		REBEL LEADER
+	Shields are down! (98)
+
+		COMMANDER
+	It's a trap! (32)
+
+		ALIEN EMPEROR
+	They've boarded the main deck! (48)
+
+		ROOKIE
+	It's a trap! (67)
+
+		MEDIC
+	Fire everything you have! (40)
+
+
+INT. LABORATORY - NIGHT
+
+A bright engine fills the room. 6cb27504
+
+		ALIEN EMPEROR
+	Fire everything you have! (62)
+
+		MEDIC
+	Hull breach in sector 4! (35)
+
+		AI SYSTEM
+	Shields are down! (14)
+
+
+EXT. JUNGLE - DAY
+
+A dark fear fills the room. 84e2d696
+
+		ROOKIE
+	They've boarded the main deck! (27)
+
+		ROOKIE
+	Get to the escape pods! (29)
+
+		ROOKIE
+	They are attacking! (83)
+
+		AI SYSTEM
+	They are attacking! (96)
+
+
+EXT. ALIEN DESERT - DAY
+
+A ominous sky fills the room. d9056b24
+
+		MEDIC
+	We can't hold them back! (46)
+
+		MEDIC
+	Shields are down! (96)
+
+		ALIEN EMPEROR
+	They are attacking! (10)
+
+		AI SYSTEM
+	We can't hold them back! (14)
+
+
+INT. LABORATORY - NIGHT
+
+A burning blood fills the room. 16ebea7a
+
+		ROOKIE
+	Shields are down! (89)
+
+		ALIEN EMPEROR
+	Fire everything you have! (44)
+
+		REBEL LEADER
+	They've boarded the main deck! (1)
+
+		ALIEN EMPEROR
+	They are attacking! (65)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A ominous blood fills the room. d8d144b0
+
+		COMMANDER
+	Shields are down! (30)
+
+		REBEL LEADER
+	It's a trap! (21)
+
+		ROOKIE
+	It's a trap! (36)
+
+		REBEL LEADER
+	Get to the escape pods! (22)
+
+		REBEL LEADER
+	It's a trap! (90)
+
+		MEDIC
+	It's a trap! (53)
+
+
+INT. COMMAND CENTER - DAY
+
+A dark sky fills the room. 9a1f326b
+
+		SCIENTIST
+	Hull breach in sector 4! (51)
+
+		ALIEN EMPEROR
+	Get to the escape pods! (97)
+
+		COMMANDER
+	Fire everything you have! (49)
+
+		AI SYSTEM
+	Shields are down! (80)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A silent metal fills the room. 9a420442
+
+		ROOKIE
+	Shields are down! (51)
+
+		MEDIC
+	They are attacking! (19)
+
+		ROOKIE
+	Shields are down! (73)
+
+		AI SYSTEM
+	It's a trap! (24)
+
+		AI SYSTEM
+	They've boarded the main deck! (35)
+
+
+INT. COMMAND CENTER - DAY
+
+A dark blood fills the room. c521c3fc
+
+		SCIENTIST
+	We're losing power! (11)
+
+		COMMANDER
+	It's a trap! (47)
+
+		SCIENTIST
+	Hull breach in sector 4! (18)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A burning fear fills the room. 69a041f4
+
+		COMMANDER
+	It's a trap! (54)
+
+		REBEL LEADER
+	We can't hold them back! (85)
+
+		COMMANDER
+	Shields are down! (85)
+
+		REBEL LEADER
+	They've boarded the main deck! (11)
+
+		ALIEN EMPEROR
+	We can't hold them back! (38)
+
+		ROOKIE
+	Get to the escape pods! (36)
+
+
+EXT. JUNGLE - DAY
+
+A violent metal fills the room. b0f01c97
+
+		SCIENTIST
+	Shields are down! (76)
+
+		COMMANDER
+	We can't hold them back! (20)
+
+		AI SYSTEM
+	Get to the escape pods! (42)
+
+
+EXT. CITY RUINS - DAY
+
+A bright sky fills the room. a54b1310
+
+		ROOKIE
+	Shields are down! (78)
+
+		REBEL LEADER
+	They've boarded the main deck! (67)
+
+		COMMANDER
+	Get to the escape pods! (23)
+
+		SCIENTIST
+	Get to the escape pods! (94)
+
+
+EXT. ALIEN DESERT - DAY
+
+A sudden engine fills the room. 2339be28
+
+		ROOKIE
+	We can't hold them back! (28)
+
+		SCIENTIST
+	It's a trap! (39)
+
+		ROOKIE
+	Fire everything you have! (81)
+
+		REBEL LEADER
+	Shields are down! (39)
+
+		ALIEN EMPEROR
+	Fire everything you have! (24)
+
+		COMMANDER
+	Fire everything you have! (33)
+
+
+INT. COMMAND CENTER - DAY
+
+A bright hope fills the room. 543b17d1
+
+		AI SYSTEM
+	We can't hold them back! (38)
+
+		ROOKIE
+	We're losing power! (54)
+
+		COMMANDER
+	It's a trap! (24)
+
+		ROOKIE
+	It's a trap! (34)
+
+
+EXT. JUNGLE - DAY
+
+A sudden engine fills the room. 0c624618
+
+		AI SYSTEM
+	Shields are down! (13)
+
+		ALIEN EMPEROR
+	Shields are down! (2)
+
+		COMMANDER
+	We can't hold them back! (60)
+
+
+EXT. ALIEN DESERT - DAY
+
+A burning light fills the room. d12f9544
+
+		MEDIC
+	We're losing power! (26)
+
+		MEDIC
+	Shields are down! (18)
+
+		AI SYSTEM
+	We're losing power! (92)
+
+
+INT. MESS HALL - NIGHT
+
+A broken sky fills the room. 4ec8762f
+
+		SCIENTIST
+	Get to the escape pods! (88)
+
+		ROOKIE
+	It's a trap! (82)
+
+		REBEL LEADER
+	They've boarded the main deck! (81)
+
+		SCIENTIST
+	Fire everything you have! (37)
+
+		ROOKIE
+	Fire everything you have! (91)
+
+		REBEL LEADER
+	Hull breach in sector 4! (45)
+
+
+INT. LABORATORY - NIGHT
+
+A bright metal fills the room. 17c60c4b
+
+		ROOKIE
+	We can't hold them back! (49)
+
+		REBEL LEADER
+	They've boarded the main deck! (56)
+
+		MEDIC
+	They've boarded the main deck! (42)
+
+		COMMANDER
+	Shields are down! (47)
+
+		REBEL LEADER
+	We can't hold them back! (33)
+
+
+INT. LABORATORY - NIGHT
+
+A sudden shadow fills the room. 093e46df
+
+		ROOKIE
+	Fire everything you have! (73)
+
+		ROOKIE
+	Hull breach in sector 4! (28)
+
+		ALIEN EMPEROR
+	It's a trap! (83)
+
+		MEDIC
+	Shields are down! (77)
+
+
+EXT. JUNGLE - DAY
+
+A sudden metal fills the room. 38f87cae
+
+		ROOKIE
+	They've boarded the main deck! (78)
+
+		ALIEN EMPEROR
+	Fire everything you have! (77)
+
+		ROOKIE
+	We're losing power! (96)
+
+		ROOKIE
+	They've boarded the main deck! (32)
+
+		REBEL LEADER
+	They are attacking! (94)
+
+
+INT. LABORATORY - NIGHT
+
+A cold sky fills the room. ad4a25ba
+
+		COMMANDER
+	Fire everything you have! (35)
+
+		MEDIC
+	They've boarded the main deck! (59)
+
+		REBEL LEADER
+	We can't hold them back! (88)
+
+		AI SYSTEM
+	Fire everything you have! (69)
+
+
+INT. MESS HALL - NIGHT
+
+A bright weapon fills the room. d7be4169
+
+		COMMANDER
+	Get to the escape pods! (41)
+
+		MEDIC
+	We're losing power! (42)
+
+		ALIEN EMPEROR
+	They've boarded the main deck! (39)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A ominous light fills the room. af361edd
+
+		AI SYSTEM
+	We can't hold them back! (75)
+
+		MEDIC
+	We can't hold them back! (58)
+
+		COMMANDER
+	Hull breach in sector 4! (10)
+
+		ALIEN EMPEROR
+	It's a trap! (2)
+
+		AI SYSTEM
+	It's a trap! (76)
+
+		ALIEN EMPEROR
+	Shields are down! (78)
+
+
+EXT. JUNGLE - DAY
+
+A sudden light fills the room. 3455b447
+
+		MEDIC
+	Hull breach in sector 4! (24)
+
+		COMMANDER
+	Fire everything you have! (53)
+
+		ROOKIE
+	Get to the escape pods! (51)
+
+		AI SYSTEM
+	We're losing power! (48)
+
+
+INT. COMMAND CENTER - DAY
+
+A cold weapon fills the room. 77d4d421
+
+		AI SYSTEM
+	Hull breach in sector 4! (18)
+
+		COMMANDER
+	Get to the escape pods! (58)
+
+		MEDIC
+	We can't hold them back! (6)
+
+		COMMANDER
+	It's a trap! (28)
+
+		ROOKIE
+	It's a trap! (26)
+
+		COMMANDER
+	We can't hold them back! (26)
+
+
+EXT. CITY RUINS - DAY
+
+A broken engine fills the room. 89e7e814
+
+		ALIEN EMPEROR
+	Hull breach in sector 4! (13)
+
+		AI SYSTEM
+	We're losing power! (97)
+
+		COMMANDER
+	They've boarded the main deck! (62)
+
+
+INT. LABORATORY - NIGHT
+
+A violent shadow fills the room. 70d1723b
+
+		AI SYSTEM
+	We can't hold them back! (39)
+
+		AI SYSTEM
+	They are attacking! (14)
+
+		AI SYSTEM
+	Shields are down! (70)
+
+		AI SYSTEM
+	They are attacking! (30)
+
+		ALIEN EMPEROR
+	Fire everything you have! (71)
+
+
+INT. COMMAND CENTER - DAY
+
+A sudden blood fills the room. 796875e3
+
+		MEDIC
+	Hull breach in sector 4! (26)
+
+		ROOKIE
+	It's a trap! (100)
+
+		SCIENTIST
+	They are attacking! (67)
+
+
+EXT. CITY RUINS - DAY
+
+A dark blood fills the room. 5e06213d
+
+		SCIENTIST
+	Fire everything you have! (16)
+
+		AI SYSTEM
+	We're losing power! (97)
+
+		SCIENTIST
+	Get to the escape pods! (3)
+
+		ALIEN EMPEROR
+	Fire everything you have! (95)
+
+		REBEL LEADER
+	Hull breach in sector 4! (96)
+
+		MEDIC
+	We can't hold them back! (41)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A sudden metal fills the room. 186b2814
+
+		REBEL LEADER
+	Shields are down! (32)
+
+		REBEL LEADER
+	Fire everything you have! (84)
+
+		AI SYSTEM
+	We can't hold them back! (6)
+
+		MEDIC
+	We're losing power! (92)
+
+		REBEL LEADER
+	We can't hold them back! (97)
+
+		SCIENTIST
+	They are attacking! (77)
+
+
+EXT. CITY RUINS - DAY
+
+A sudden fear fills the room. 3a7e3e23
+
+		REBEL LEADER
+	We're losing power! (65)
+
+		ROOKIE
+	We're losing power! (86)
+
+		SCIENTIST
+	Get to the escape pods! (49)
+
+		ALIEN EMPEROR
+	They've boarded the main deck! (17)
+
+		AI SYSTEM
+	It's a trap! (2)
+
+
+INT. LABORATORY - NIGHT
+
+A silent light fills the room. b12dbb81
+
+		ROOKIE
+	We're losing power! (15)
+
+		COMMANDER
+	Get to the escape pods! (51)
+
+		REBEL LEADER
+	They are attacking! (55)
+
+		ROOKIE
+	They are attacking! (4)
+
+		ROOKIE
+	Get to the escape pods! (19)
+
+		COMMANDER
+	They've boarded the main deck! (70)
+
+
+INT. MESS HALL - NIGHT
+
+A silent fear fills the room. dcfd4f80
+
+		MEDIC
+	They've boarded the main deck! (29)
+
+		MEDIC
+	Shields are down! (95)
+
+		ALIEN EMPEROR
+	They've boarded the main deck! (16)
+
+		ALIEN EMPEROR
+	It's a trap! (15)
+
+		SCIENTIST
+	We can't hold them back! (83)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A silent engine fills the room. 2bde652d
+
+		AI SYSTEM
+	Get to the escape pods! (92)
+
+		AI SYSTEM
+	Get to the escape pods! (34)
+
+		ALIEN EMPEROR
+	Shields are down! (67)
+
+		REBEL LEADER
+	We can't hold them back! (26)
+
+
+EXT. CITY RUINS - DAY
+
+A dark blood fills the room. bca0bab7
+
+		ROOKIE
+	It's a trap! (83)
+
+		REBEL LEADER
+	Hull breach in sector 4! (27)
+
+		SCIENTIST
+	Get to the escape pods! (80)
+
+		REBEL LEADER
+	It's a trap! (77)
+
+
+INT. MESS HALL - NIGHT
+
+A silent sky fills the room. ec8e0e87
+
+		SCIENTIST
+	We're losing power! (83)
+
+		ROOKIE
+	We're losing power! (79)
+
+		COMMANDER
+	They've boarded the main deck! (22)
+
+		SCIENTIST
+	They are attacking! (45)
+
+
+EXT. JUNGLE - DAY
+
+A sudden fear fills the room. 279a9d5e
+
+		REBEL LEADER
+	Hull breach in sector 4! (60)
+
+		AI SYSTEM
+	They've boarded the main deck! (76)
+
+		REBEL LEADER
+	It's a trap! (58)
+
+		REBEL LEADER
+	Hull breach in sector 4! (27)
+
+		COMMANDER
+	We can't hold them back! (84)
+
+		MEDIC
+	They've boarded the main deck! (83)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A silent weapon fills the room. 0b6aa584
+
+		COMMANDER
+	It's a trap! (38)
+
+		ROOKIE
+	They've boarded the main deck! (19)
+
+		ALIEN EMPEROR
+	Get to the escape pods! (1)
+
+		SCIENTIST
+	They've boarded the main deck! (8)
+
+		ALIEN EMPEROR
+	Hull breach in sector 4! (52)
+
+
+INT. LABORATORY - NIGHT
+
+A burning blood fills the room. 172646cb
+
+		REBEL LEADER
+	They've boarded the main deck! (49)
+
+		ROOKIE
+	We can't hold them back! (53)
+
+		ALIEN EMPEROR
+	They've boarded the main deck! (62)
+
+		COMMANDER
+	They've boarded the main deck! (82)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A broken light fills the room. d7ff1c7f
+
+		SCIENTIST
+	Shields are down! (70)
+
+		MEDIC
+	They are attacking! (3)
+
+		AI SYSTEM
+	They've boarded the main deck! (77)
+
+		COMMANDER
+	Fire everything you have! (45)
+
+		SCIENTIST
+	They are attacking! (20)
+
+
+INT. LABORATORY - NIGHT
+
+A broken hope fills the room. f2f1c5d5
+
+		ROOKIE
+	It's a trap! (3)
+
+		ALIEN EMPEROR
+	Shields are down! (67)
+
+		COMMANDER
+	It's a trap! (62)
+
+
+EXT. CITY RUINS - DAY
+
+A dark sky fills the room. e2efb560
+
+		ROOKIE
+	It's a trap! (36)
+
+		ROOKIE
+	We can't hold them back! (49)
+
+		ALIEN EMPEROR
+	It's a trap! (93)
+
+		COMMANDER
+	Get to the escape pods! (85)
+
+		ALIEN EMPEROR
+	We can't hold them back! (80)
+
+
+EXT. CITY RUINS - DAY
+
+A violent hope fills the room. b19d818c
+
+		REBEL LEADER
+	They are attacking! (33)
+
+		REBEL LEADER
+	Hull breach in sector 4! (38)
+
+		COMMANDER
+	Shields are down! (41)
+
+		AI SYSTEM
+	They've boarded the main deck! (15)
+
+		AI SYSTEM
+	Fire everything you have! (26)
+
+
+EXT. JUNGLE - DAY
+
+A bright shadow fills the room. 67b6b3dd
+
+		AI SYSTEM
+	We can't hold them back! (73)
+
+		COMMANDER
+	Fire everything you have! (10)
+
+		ROOKIE
+	It's a trap! (82)
+
+		COMMANDER
+	Get to the escape pods! (87)
+
+
+EXT. JUNGLE - DAY
+
+A cold blood fills the room. 9fbec320
+
+		ALIEN EMPEROR
+	Fire everything you have! (4)
+
+		ALIEN EMPEROR
+	Get to the escape pods! (25)
+
+		MEDIC
+	We're losing power! (72)
+
+		MEDIC
+	Hull breach in sector 4! (33)
+
+		COMMANDER
+	It's a trap! (67)
+
+		REBEL LEADER
+	Fire everything you have! (72)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A bright fear fills the room. 850a3e45
+
+		REBEL LEADER
+	Fire everything you have! (23)
+
+		SCIENTIST
+	We're losing power! (63)
+
+		SCIENTIST
+	They've boarded the main deck! (25)
+
+		ALIEN EMPEROR
+	We're losing power! (37)
+
+		ROOKIE
+	It's a trap! (81)
+
+		MEDIC
+	They've boarded the main deck! (8)
+
+
+EXT. JUNGLE - DAY
+
+A dark shadow fills the room. 69bf28aa
+
+		ALIEN EMPEROR
+	We're losing power! (53)
+
+		AI SYSTEM
+	Hull breach in sector 4! (21)
+
+		REBEL LEADER
+	We can't hold them back! (94)
+
+		AI SYSTEM
+	It's a trap! (85)
+
+		ROOKIE
+	Hull breach in sector 4! (68)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A ominous shadow fills the room. 23fd3911
+
+		AI SYSTEM
+	We can't hold them back! (43)
+
+		ALIEN EMPEROR
+	Hull breach in sector 4! (30)
+
+		COMMANDER
+	We can't hold them back! (24)
+
+		ROOKIE
+	We can't hold them back! (94)
+
+		MEDIC
+	Fire everything you have! (54)
+
+		MEDIC
+	We can't hold them back! (34)
+
+
+EXT. JUNGLE - DAY
+
+A silent sky fills the room. 51630ee6
+
+		REBEL LEADER
+	We can't hold them back! (54)
+
+		ALIEN EMPEROR
+	We can't hold them back! (41)
+
+		COMMANDER
+	Hull breach in sector 4! (72)
+
+
+EXT. CITY RUINS - DAY
+
+A broken sky fills the room. e626c25b
+
+		ALIEN EMPEROR
+	Fire everything you have! (81)
+
+		REBEL LEADER
+	Get to the escape pods! (53)
+
+		ROOKIE
+	Fire everything you have! (74)
+
+		ROOKIE
+	Fire everything you have! (45)
+
+		COMMANDER
+	We can't hold them back! (35)
+
+		SCIENTIST
+	We're losing power! (2)
+
+
+INT. MESS HALL - NIGHT
+
+A broken blood fills the room. 6089b727
+
+		AI SYSTEM
+	It's a trap! (67)
+
+		REBEL LEADER
+	Get to the escape pods! (100)
+
+		MEDIC
+	They've boarded the main deck! (94)
+
+		REBEL LEADER
+	We're losing power! (65)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A ominous hope fills the room. ef59c820
+
+		ROOKIE
+	Hull breach in sector 4! (96)
+
+		SCIENTIST
+	Shields are down! (91)
+
+		AI SYSTEM
+	It's a trap! (63)
+
+		COMMANDER
+	They are attacking! (73)
+
+		MEDIC
+	Get to the escape pods! (20)
+
+		MEDIC
+	They are attacking! (98)
+
+
+EXT. ALIEN DESERT - DAY
+
+A bright metal fills the room. 8a25fc9c
+
+		MEDIC
+	Shields are down! (88)
+
+		ALIEN EMPEROR
+	They've boarded the main deck! (29)
+
+		REBEL LEADER
+	Shields are down! (41)
+
+		REBEL LEADER
+	Fire everything you have! (81)
+
+		AI SYSTEM
+	Shields are down! (99)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A silent blood fills the room. 2bdca545
+
+		ROOKIE
+	Hull breach in sector 4! (98)
+
+		REBEL LEADER
+	Get to the escape pods! (46)
+
+		SCIENTIST
+	They've boarded the main deck! (18)
+
+		ROOKIE
+	They've boarded the main deck! (93)
+
+
+EXT. JUNGLE - DAY
+
+A cold blood fills the room. 97ba6441
+
+		ALIEN EMPEROR
+	Shields are down! (19)
+
+		SCIENTIST
+	We're losing power! (2)
+
+		AI SYSTEM
+	They are attacking! (24)
+
+		AI SYSTEM
+	It's a trap! (64)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A dark fear fills the room. d3927a9f
+
+		COMMANDER
+	We're losing power! (86)
+
+		ALIEN EMPEROR
+	They are attacking! (88)
+
+		AI SYSTEM
+	Hull breach in sector 4! (1)
+
+		REBEL LEADER
+	Shields are down! (76)
+
+
+EXT. JUNGLE - DAY
+
+A broken weapon fills the room. 62ad1556
+
+		AI SYSTEM
+	We're losing power! (41)
+
+		ROOKIE
+	Hull breach in sector 4! (91)
+
+		ALIEN EMPEROR
+	It's a trap! (41)
+
+
+INT. COMMAND CENTER - DAY
+
+A violent shadow fills the room. 9714162d
+
+		ALIEN EMPEROR
+	Get to the escape pods! (20)
+
+		ALIEN EMPEROR
+	We're losing power! (48)
+
+		COMMANDER
+	Fire everything you have! (33)
+
+		SCIENTIST
+	Get to the escape pods! (62)
+
+
+INT. LABORATORY - NIGHT
+
+A violent sky fills the room. b2c967f1
+
+		MEDIC
+	They are attacking! (56)
+
+		ALIEN EMPEROR
+	It's a trap! (44)
+
+		ROOKIE
+	We're losing power! (45)
+
+		MEDIC
+	We're losing power! (35)
+
+		ROOKIE
+	We're losing power! (64)
+
+
+EXT. ALIEN DESERT - DAY
+
+A violent weapon fills the room. b533158e
+
+		AI SYSTEM
+	Shields are down! (62)
+
+		COMMANDER
+	We're losing power! (88)
+
+		ROOKIE
+	Hull breach in sector 4! (10)
+
+
+INT. LABORATORY - NIGHT
+
+A cold metal fills the room. 9d39cb00
+
+		SCIENTIST
+	It's a trap! (70)
+
+		ROOKIE
+	We can't hold them back! (2)
+
+		ROOKIE
+	Shields are down! (28)
+
+		AI SYSTEM
+	We're losing power! (1)
+
+
+INT. MESS HALL - NIGHT
+
+A dark light fills the room. 4c52988f
+
+		AI SYSTEM
+	Get to the escape pods! (91)
+
+		ROOKIE
+	It's a trap! (62)
+
+		ROOKIE
+	Fire everything you have! (6)
+
+		AI SYSTEM
+	They've boarded the main deck! (52)
+
+
+EXT. ALIEN DESERT - DAY
+
+A cold fear fills the room. 173b075c
+
+		COMMANDER
+	It's a trap! (58)
+
+		REBEL LEADER
+	They've boarded the main deck! (36)
+
+		ALIEN EMPEROR
+	They've boarded the main deck! (13)
+
+		REBEL LEADER
+	Get to the escape pods! (48)
+
+		MEDIC
+	It's a trap! (77)
+
+		AI SYSTEM
+	Fire everything you have! (77)
+
+
+INT. COMMAND CENTER - DAY
+
+A broken blood fills the room. e5349ae9
+
+		AI SYSTEM
+	Shields are down! (14)
+
+		MEDIC
+	It's a trap! (20)
+
+		AI SYSTEM
+	We're losing power! (97)
+
+
+EXT. JUNGLE - DAY
+
+A burning weapon fills the room. 82625dea
+
+		MEDIC
+	We're losing power! (71)
+
+		MEDIC
+	Fire everything you have! (3)
+
+		ROOKIE
+	Get to the escape pods! (11)
+
+		SCIENTIST
+	We're losing power! (99)
+
+		AI SYSTEM
+	They've boarded the main deck! (54)
+
+
+INT. COMMAND CENTER - DAY
+
+A violent blood fills the room. b1e8db04
+
+		MEDIC
+	We're losing power! (100)
+
+		ALIEN EMPEROR
+	We're losing power! (46)
+
+		MEDIC
+	Get to the escape pods! (36)
+
+
+INT. COMMAND CENTER - DAY
+
+A broken blood fills the room. 4f5f558e
+
+		SCIENTIST
+	Fire everything you have! (12)
+
+		ROOKIE
+	We can't hold them back! (3)
+
+		AI SYSTEM
+	They've boarded the main deck! (29)
+
+		ALIEN EMPEROR
+	Get to the escape pods! (68)
+
+		COMMANDER
+	Shields are down! (11)
+
+
+INT. LABORATORY - NIGHT
+
+A burning hope fills the room. e3e6644a
+
+		ROOKIE
+	They've boarded the main deck! (75)
+
+		ROOKIE
+	Fire everything you have! (94)
+
+		MEDIC
+	They've boarded the main deck! (47)
+
+		ALIEN EMPEROR
+	We can't hold them back! (82)
+
+		COMMANDER
+	We're losing power! (37)
+
+
+EXT. ALIEN DESERT - DAY
+
+A burning sky fills the room. 7e5a1564
+
+		REBEL LEADER
+	We can't hold them back! (89)
+
+		SCIENTIST
+	Shields are down! (53)
+
+		COMMANDER
+	Shields are down! (35)
+
+		COMMANDER
+	Hull breach in sector 4! (58)
+
+		AI SYSTEM
+	Hull breach in sector 4! (37)
+
+		REBEL LEADER
+	Hull breach in sector 4! (90)
+
+
+EXT. ALIEN DESERT - DAY
+
+A dark shadow fills the room. bdf65853
+
+		ALIEN EMPEROR
+	Shields are down! (23)
+
+		ALIEN EMPEROR
+	Fire everything you have! (33)
+
+		ALIEN EMPEROR
+	Get to the escape pods! (7)
+
+		COMMANDER
+	Fire everything you have! (33)
+
+
+EXT. CITY RUINS - DAY
+
+A bright metal fills the room. 92fa59c6
+
+		SCIENTIST
+	It's a trap! (26)
+
+		MEDIC
+	They are attacking! (91)
+
+		COMMANDER
+	They are attacking! (36)
+
+		ROOKIE
+	We can't hold them back! (51)
+
+		AI SYSTEM
+	They are attacking! (36)
+
+
+EXT. ALIEN DESERT - DAY
+
+A sudden fear fills the room. 18e864a2
+
+		MEDIC
+	They've boarded the main deck! (11)
+
+		COMMANDER
+	We can't hold them back! (16)
+
+		AI SYSTEM
+	We're losing power! (73)
+
+
+INT. COMMAND CENTER - DAY
+
+A broken shadow fills the room. 9b50176e
+
+		COMMANDER
+	We can't hold them back! (32)
+
+		MEDIC
+	They are attacking! (40)
+
+		REBEL LEADER
+	Hull breach in sector 4! (2)
+
+		COMMANDER
+	We can't hold them back! (86)
+
+		COMMANDER
+	Shields are down! (98)
+
+
+EXT. CITY RUINS - DAY
+
+A sudden weapon fills the room. 09743db3
+
+		MEDIC
+	We can't hold them back! (98)
+
+		REBEL LEADER
+	It's a trap! (24)
+
+		ROOKIE
+	We're losing power! (51)
+
+		MEDIC
+	We can't hold them back! (30)
+
+		COMMANDER
+	Fire everything you have! (5)
+
+		ROOKIE
+	Get to the escape pods! (31)
+
+
+EXT. ALIEN DESERT - DAY
+
+A broken metal fills the room. 2082c6e6
+
+		ALIEN EMPEROR
+	Hull breach in sector 4! (48)
+
+		ROOKIE
+	Fire everything you have! (67)
+
+		SCIENTIST
+	Get to the escape pods! (54)
+
+		MEDIC
+	They are attacking! (22)
+
+		REBEL LEADER
+	It's a trap! (68)
+
+		COMMANDER
+	It's a trap! (52)
+
+
+EXT. CITY RUINS - DAY
+
+A sudden hope fills the room. d6296674
+
+		SCIENTIST
+	It's a trap! (85)
+
+		MEDIC
+	Fire everything you have! (50)
+
+		ALIEN EMPEROR
+	Shields are down! (7)
+
+		ROOKIE
+	Hull breach in sector 4! (11)
+
+		AI SYSTEM
+	It's a trap! (37)
+
+		ROOKIE
+	We can't hold them back! (43)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A sudden sky fills the room. e9871f53
+
+		AI SYSTEM
+	They've boarded the main deck! (16)
+
+		REBEL LEADER
+	They've boarded the main deck! (50)
+
+		ALIEN EMPEROR
+	Get to the escape pods! (85)
+
+		MEDIC
+	Get to the escape pods! (63)
+
+		AI SYSTEM
+	Shields are down! (38)
+
+
+INT. MESS HALL - NIGHT
+
+A burning blood fills the room. 30e10eeb
+
+		ALIEN EMPEROR
+	Hull breach in sector 4! (53)
+
+		ALIEN EMPEROR
+	We can't hold them back! (15)
+
+		MEDIC
+	Shields are down! (81)
+
+		ALIEN EMPEROR
+	They've boarded the main deck! (2)
+
+
+EXT. JUNGLE - DAY
+
+A sudden shadow fills the room. a33a6257
+
+		MEDIC
+	We can't hold them back! (37)
+
+		AI SYSTEM
+	Fire everything you have! (80)
+
+		REBEL LEADER
+	Get to the escape pods! (10)
+
+
+INT. COMMAND CENTER - DAY
+
+A dark weapon fills the room. 3b88442a
+
+		COMMANDER
+	Get to the escape pods! (84)
+
+		AI SYSTEM
+	They've boarded the main deck! (64)
+
+		REBEL LEADER
+	They are attacking! (91)
+
+		REBEL LEADER
+	Get to the escape pods! (30)
+
+		SCIENTIST
+	It's a trap! (1)
+
+
+INT. COMMAND CENTER - DAY
+
+A sudden engine fills the room. c2c71731
+
+		MEDIC
+	It's a trap! (66)
+
+		SCIENTIST
+	Hull breach in sector 4! (9)
+
+		COMMANDER
+	We're losing power! (97)
+
+		SCIENTIST
+	Shields are down! (38)
+
+		ALIEN EMPEROR
+	We're losing power! (13)
+
+		MEDIC
+	They are attacking! (62)
+
+
+INT. COMMAND CENTER - DAY
+
+A sudden engine fills the room. 4721acb8
+
+		REBEL LEADER
+	Shields are down! (9)
+
+		ALIEN EMPEROR
+	We can't hold them back! (3)
+
+		ROOKIE
+	They've boarded the main deck! (78)
+
+		COMMANDER
+	Fire everything you have! (26)
+
+
+EXT. ALIEN DESERT - DAY
+
+A ominous weapon fills the room. e3b5a175
+
+		MEDIC
+	It's a trap! (29)
+
+		ALIEN EMPEROR
+	It's a trap! (86)
+
+		ALIEN EMPEROR
+	They are attacking! (7)
+
+		REBEL LEADER
+	We're losing power! (1)
+
+		SCIENTIST
+	We can't hold them back! (79)
+
+		REBEL LEADER
+	We can't hold them back! (9)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A violent blood fills the room. 573136e8
+
+		AI SYSTEM
+	They are attacking! (32)
+
+		COMMANDER
+	They are attacking! (46)
+
+		MEDIC
+	Hull breach in sector 4! (90)
+
+		AI SYSTEM
+	Get to the escape pods! (56)
+
+		SCIENTIST
+	We're losing power! (44)
+
+		SCIENTIST
+	Get to the escape pods! (37)
+
+
+EXT. CITY RUINS - DAY
+
+A broken fear fills the room. 06fa2c17
+
+		AI SYSTEM
+	Get to the escape pods! (6)
+
+		COMMANDER
+	We're losing power! (8)
+
+		AI SYSTEM
+	We can't hold them back! (94)
+
+
+INT. COMMAND CENTER - DAY
+
+A broken sky fills the room. b4482093
+
+		COMMANDER
+	Hull breach in sector 4! (56)
+
+		MEDIC
+	They've boarded the main deck! (38)
+
+		ROOKIE
+	Get to the escape pods! (77)
+
+		REBEL LEADER
+	We can't hold them back! (10)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A ominous shadow fills the room. 08d46906
+
+		ROOKIE
+	We can't hold them back! (67)
+
+		ALIEN EMPEROR
+	Hull breach in sector 4! (1)
+
+		SCIENTIST
+	We can't hold them back! (99)
+
+		COMMANDER
+	Get to the escape pods! (26)
+
+		AI SYSTEM
+	We're losing power! (50)
+
+		SCIENTIST
+	We're losing power! (66)
+
+
+INT. MESS HALL - NIGHT
+
+A broken light fills the room. 166fe540
+
+		ROOKIE
+	They've boarded the main deck! (84)
+
+		SCIENTIST
+	It's a trap! (62)
+
+		ROOKIE
+	Fire everything you have! (88)
+
+		ROOKIE
+	We're losing power! (43)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A dark fear fills the room. 1ec444c5
+
+		MEDIC
+	We can't hold them back! (71)
+
+		COMMANDER
+	Fire everything you have! (6)
+
+		AI SYSTEM
+	Fire everything you have! (4)
+
+		MEDIC
+	We're losing power! (62)
+
+		SCIENTIST
+	We can't hold them back! (61)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A dark engine fills the room. 02e27b60
+
+		MEDIC
+	Shields are down! (83)
+
+		ALIEN EMPEROR
+	Fire everything you have! (43)
+
+		MEDIC
+	They've boarded the main deck! (48)
+
+		MEDIC
+	Fire everything you have! (56)
+
+		MEDIC
+	Fire everything you have! (44)
+
+
+INT. LABORATORY - NIGHT
+
+A bright blood fills the room. 01769100
+
+		REBEL LEADER
+	We can't hold them back! (5)
+
+		REBEL LEADER
+	They are attacking! (43)
+
+		SCIENTIST
+	They've boarded the main deck! (81)
+
+		ALIEN EMPEROR
+	They've boarded the main deck! (14)
+
+
+INT. COMMAND CENTER - DAY
+
+A burning light fills the room. 5696190f
+
+		MEDIC
+	Hull breach in sector 4! (64)
+
+		SCIENTIST
+	Shields are down! (50)
+
+		COMMANDER
+	They've boarded the main deck! (93)
+
+
+INT. LABORATORY - NIGHT
+
+A dark metal fills the room. d711dda9
+
+		ROOKIE
+	We can't hold them back! (60)
+
+		ROOKIE
+	Get to the escape pods! (74)
+
+		AI SYSTEM
+	We can't hold them back! (51)
+
+		AI SYSTEM
+	It's a trap! (96)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A bright shadow fills the room. 4b2625b7
+
+		ROOKIE
+	It's a trap! (41)
+
+		ALIEN EMPEROR
+	It's a trap! (49)
+
+		AI SYSTEM
+	We can't hold them back! (1)
+
+		SCIENTIST
+	They are attacking! (72)
+
+
+INT. MESS HALL - NIGHT
+
+A bright sky fills the room. fe9f9866
+
+		REBEL LEADER
+	Hull breach in sector 4! (39)
+
+		COMMANDER
+	Fire everything you have! (42)
+
+		COMMANDER
+	They are attacking! (79)
+
+		ALIEN EMPEROR
+	They've boarded the main deck! (68)
+
+		REBEL LEADER
+	It's a trap! (24)
+
+		ALIEN EMPEROR
+	They are attacking! (67)
+
+
+EXT. ALIEN DESERT - DAY
+
+A cold engine fills the room. c29cbf17
+
+		ALIEN EMPEROR
+	Get to the escape pods! (18)
+
+		ALIEN EMPEROR
+	They are attacking! (42)
+
+		AI SYSTEM
+	It's a trap! (75)
+
+		SCIENTIST
+	We can't hold them back! (60)
+
+		SCIENTIST
+	They've boarded the main deck! (56)
+
+
+EXT. JUNGLE - DAY
+
+A bright metal fills the room. 606fb7e5
+
+		AI SYSTEM
+	Shields are down! (70)
+
+		AI SYSTEM
+	Shields are down! (37)
+
+		AI SYSTEM
+	Fire everything you have! (11)
+
+		MEDIC
+	They've boarded the main deck! (8)
+
+		ROOKIE
+	We can't hold them back! (93)
+
+
+INT. MESS HALL - NIGHT
+
+A violent engine fills the room. 305a00e6
+
+		MEDIC
+	It's a trap! (50)
+
+		ALIEN EMPEROR
+	Fire everything you have! (70)
+
+		AI SYSTEM
+	We can't hold them back! (7)
+
+		ROOKIE
+	We're losing power! (67)
+
+		MEDIC
+	Fire everything you have! (92)
+
+		SCIENTIST
+	Shields are down! (35)
+
+
+INT. COMMAND CENTER - DAY
+
+A bright sky fills the room. 48c55b91
+
+		AI SYSTEM
+	Shields are down! (24)
+
+		COMMANDER
+	Shields are down! (71)
+
+		COMMANDER
+	They are attacking! (78)
+
+		COMMANDER
+	Shields are down! (7)
+
+		ALIEN EMPEROR
+	They've boarded the main deck! (59)
+
+		ROOKIE
+	Shields are down! (39)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A burning shadow fills the room. c194c8f5
+
+		SCIENTIST
+	We can't hold them back! (30)
+
+		MEDIC
+	Hull breach in sector 4! (67)
+
+		ROOKIE
+	We can't hold them back! (35)
+
+
+INT. COMMAND CENTER - DAY
+
+A dark shadow fills the room. e995b316
+
+		REBEL LEADER
+	We can't hold them back! (65)
+
+		AI SYSTEM
+	They've boarded the main deck! (27)
+
+		MEDIC
+	We can't hold them back! (30)
+
+		ROOKIE
+	We're losing power! (8)
+
+		ALIEN EMPEROR
+	Get to the escape pods! (97)
+
+		AI SYSTEM
+	It's a trap! (23)
+
+
+EXT. JUNGLE - DAY
+
+A burning sky fills the room. 3918f3b0
+
+		COMMANDER
+	They've boarded the main deck! (89)
+
+		MEDIC
+	Fire everything you have! (36)
+
+		MEDIC
+	Get to the escape pods! (48)
+
+		COMMANDER
+	They've boarded the main deck! (59)
+
+
+EXT. ALIEN DESERT - DAY
+
+A bright metal fills the room. e97599e5
+
+		COMMANDER
+	Fire everything you have! (27)
+
+		COMMANDER
+	We're losing power! (55)
+
+		MEDIC
+	They are attacking! (24)
+
+
+EXT. ALIEN DESERT - DAY
+
+A dark hope fills the room. b2a36669
+
+		MEDIC
+	Shields are down! (33)
+
+		AI SYSTEM
+	Hull breach in sector 4! (3)
+
+		COMMANDER
+	They've boarded the main deck! (95)
+
+
+EXT. ALIEN DESERT - DAY
+
+A dark shadow fills the room. 3dac5eae
+
+		ALIEN EMPEROR
+	They've boarded the main deck! (55)
+
+		MEDIC
+	It's a trap! (11)
+
+		MEDIC
+	It's a trap! (88)
+
+		COMMANDER
+	Fire everything you have! (33)
+
+
+EXT. JUNGLE - DAY
+
+A silent fear fills the room. 83b9a17b
+
+		COMMANDER
+	We're losing power! (80)
+
+		ROOKIE
+	We can't hold them back! (18)
+
+		ROOKIE
+	We can't hold them back! (76)
+
+		ALIEN EMPEROR
+	They are attacking! (25)
+
+
+EXT. CITY RUINS - DAY
+
+A burning sky fills the room. 6be998b9
+
+		REBEL LEADER
+	Fire everything you have! (78)
+
+		ALIEN EMPEROR
+	It's a trap! (28)
+
+		AI SYSTEM
+	We can't hold them back! (91)
+
+		MEDIC
+	Shields are down! (2)
+
+
+INT. LABORATORY - NIGHT
+
+A burning fear fills the room. fead7339
+
+		ALIEN EMPEROR
+	It's a trap! (75)
+
+		REBEL LEADER
+	Shields are down! (71)
+
+		ALIEN EMPEROR
+	We can't hold them back! (50)
+
+		REBEL LEADER
+	Fire everything you have! (17)
+
+		SCIENTIST
+	Hull breach in sector 4! (55)
+
+
+INT. COMMAND CENTER - DAY
+
+A burning engine fills the room. ce7a84e4
+
+		SCIENTIST
+	We're losing power! (29)
+
+		ALIEN EMPEROR
+	We can't hold them back! (63)
+
+		AI SYSTEM
+	They've boarded the main deck! (39)
+
+		AI SYSTEM
+	Get to the escape pods! (68)
+
+		AI SYSTEM
+	Fire everything you have! (89)
+
+		ALIEN EMPEROR
+	Shields are down! (67)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A silent shadow fills the room. 8ce75550
+
+		REBEL LEADER
+	Shields are down! (67)
+
+		COMMANDER
+	It's a trap! (25)
+
+		REBEL LEADER
+	We're losing power! (12)
+
+		SCIENTIST
+	They've boarded the main deck! (58)
+
+		SCIENTIST
+	We're losing power! (33)
+
+		MEDIC
+	They've boarded the main deck! (96)
+
+
+INT. MESS HALL - NIGHT
+
+A bright weapon fills the room. 2bbee6ac
+
+		AI SYSTEM
+	They've boarded the main deck! (48)
+
+		ROOKIE
+	Get to the escape pods! (88)
+
+		MEDIC
+	Get to the escape pods! (97)
+
+		SCIENTIST
+	They are attacking! (24)
+
+		REBEL LEADER
+	They've boarded the main deck! (17)
+
+		COMMANDER
+	Hull breach in sector 4! (59)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A silent fear fills the room. 656c759a
+
+		ROOKIE
+	Fire everything you have! (62)
+
+		ROOKIE
+	We can't hold them back! (43)
+
+		ROOKIE
+	It's a trap! (50)
+
+		MEDIC
+	It's a trap! (43)
+
+		ALIEN EMPEROR
+	We can't hold them back! (26)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A silent light fills the room. 58c3b67b
+
+		SCIENTIST
+	We can't hold them back! (96)
+
+		AI SYSTEM
+	We can't hold them back! (13)
+
+		ROOKIE
+	They've boarded the main deck! (14)
+
+		REBEL LEADER
+	Hull breach in sector 4! (13)
+
+		MEDIC
+	Shields are down! (65)
+
+		ALIEN EMPEROR
+	Shields are down! (35)
+
+
+EXT. JUNGLE - DAY
+
+A burning metal fills the room. ad52229e
+
+		COMMANDER
+	Fire everything you have! (12)
+
+		ALIEN EMPEROR
+	It's a trap! (68)
+
+		AI SYSTEM
+	They are attacking! (40)
+
+		ROOKIE
+	It's a trap! (43)
+
+
+EXT. JUNGLE - DAY
+
+A sudden blood fills the room. 633b2e88
+
+		ALIEN EMPEROR
+	They've boarded the main deck! (71)
+
+		ALIEN EMPEROR
+	It's a trap! (65)
+
+		AI SYSTEM
+	It's a trap! (76)
+
+		ROOKIE
+	Fire everything you have! (30)
+
+		AI SYSTEM
+	We're losing power! (99)
+
+
+INT. LABORATORY - NIGHT
+
+A ominous hope fills the room. 0e48cd6e
+
+		COMMANDER
+	Hull breach in sector 4! (86)
+
+		ROOKIE
+	Fire everything you have! (59)
+
+		ALIEN EMPEROR
+	They are attacking! (85)
+
+		MEDIC
+	They are attacking! (61)
+
+		MEDIC
+	Fire everything you have! (8)
+
+
+INT. MESS HALL - NIGHT
+
+A silent hope fills the room. 4da8583e
+
+		SCIENTIST
+	Fire everything you have! (53)
+
+		ROOKIE
+	Get to the escape pods! (20)
+
+		COMMANDER
+	We can't hold them back! (51)
+
+		COMMANDER
+	They've boarded the main deck! (46)
+
+
+INT. COMMAND CENTER - DAY
+
+A bright sky fills the room. 566ca903
+
+		MEDIC
+	Die, you monster! (6)
+
+		ROOKIE
+	Tell them we died fighting. (45)
+
+		ROOKIE
+	Tell them we died fighting. (31)
+
+		MEDIC
+	I will never surrender. (20)
+
+
+EXT. CITY RUINS - DAY
+
+A bright metal fills the room. fac6003d
+
+		COMMANDER
+	Tell them we died fighting. (94)
+
+		REBEL LEADER
+	Tell them we died fighting. (50)
+
+		MEDIC
+	Die, you monster! (79)
+
+		COMMANDER
+	Launch the final weapon! (3)
+
+
+INT. MESS HALL - NIGHT
+
+A sudden blood fills the room. c8b1afee
+
+		SCIENTIST
+	I will never surrender. (95)
+
+		MEDIC
+	Launch the final weapon! (87)
+
+		ALIEN EMPEROR
+	For the alliance! (41)
+
+		ALIEN EMPEROR
+	Overload the core! (98)
+
+		REBEL LEADER
+	Overload the core! (81)
+
+
+EXT. JUNGLE - DAY
+
+A cold fear fills the room. e6164c65
+
+		REBEL LEADER
+	For the alliance! (59)
+
+		ALIEN EMPEROR
+	Overload the core! (15)
+
+		SCIENTIST
+	Tell them we died fighting. (61)
+
+
+EXT. CITY RUINS - DAY
+
+A bright metal fills the room. 405966ca
+
+		ROOKIE
+	Overload the core! (72)
+
+		MEDIC
+	I will never surrender. (24)
+
+		ALIEN EMPEROR
+	Overload the core! (4)
+
+		REBEL LEADER
+	Launch the final weapon! (48)
+
+		REBEL LEADER
+	Launch the final weapon! (98)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A broken sky fills the room. 1922936e
+
+		COMMANDER
+	Overload the core! (76)
+
+		COMMANDER
+	Die, you monster! (75)
+
+		MEDIC
+	I will never surrender. (28)
+
+		SCIENTIST
+	This is the end. (64)
+
+
+INT. LABORATORY - NIGHT
+
+A broken light fills the room. f726b730
+
+		MEDIC
+	Launch the final weapon! (9)
+
+		REBEL LEADER
+	Die, you monster! (35)
+
+		COMMANDER
+	Launch the final weapon! (59)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A violent blood fills the room. 89d1ffad
+
+		ALIEN EMPEROR
+	It's now or never! (83)
+
+		COMMANDER
+	This is the end. (83)
+
+		COMMANDER
+	Die, you monster! (10)
+
+		MEDIC
+	Launch the final weapon! (90)
+
+		COMMANDER
+	Overload the core! (50)
+
+		COMMANDER
+	Overload the core! (21)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A violent hope fills the room. 923f3528
+
+		SCIENTIST
+	It's now or never! (60)
+
+		SCIENTIST
+	I will never surrender. (37)
+
+		SCIENTIST
+	This is the end. (79)
+
+		COMMANDER
+	Tell them we died fighting. (23)
+
+		SCIENTIST
+	For the alliance! (91)
+
+
+EXT. ALIEN DESERT - DAY
+
+A silent fear fills the room. 2831b2d0
+
+		ROOKIE
+	Launch the final weapon! (89)
+
+		SCIENTIST
+	Tell them we died fighting. (97)
+
+		ALIEN EMPEROR
+	Overload the core! (81)
+
+		AI SYSTEM
+	It's now or never! (20)
+
+		COMMANDER
+	Launch the final weapon! (66)
+
+
+EXT. ALIEN DESERT - DAY
+
+A broken light fills the room. bf2de53d
+
+		AI SYSTEM
+	Tell them we died fighting. (92)
+
+		ROOKIE
+	For the alliance! (33)
+
+		SCIENTIST
+	Die, you monster! (46)
+
+		MEDIC
+	For the alliance! (16)
+
+		COMMANDER
+	Launch the final weapon! (17)
+
+
+INT. MESS HALL - NIGHT
+
+A sudden blood fills the room. 0a8ebe85
+
+		REBEL LEADER
+	Overload the core! (9)
+
+		ALIEN EMPEROR
+	Tell them we died fighting. (84)
+
+		MEDIC
+	For the alliance! (62)
+
+		REBEL LEADER
+	It's now or never! (36)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A dark engine fills the room. dd364198
+
+		REBEL LEADER
+	It's now or never! (61)
+
+		REBEL LEADER
+	Die, you monster! (82)
+
+		ALIEN EMPEROR
+	I will never surrender. (40)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A bright engine fills the room. 1e357f0b
+
+		COMMANDER
+	Launch the final weapon! (86)
+
+		ROOKIE
+	Tell them we died fighting. (9)
+
+		COMMANDER
+	Die, you monster! (92)
+
+
+EXT. JUNGLE - DAY
+
+A cold blood fills the room. 9f8cc3bb
+
+		REBEL LEADER
+	Die, you monster! (91)
+
+		COMMANDER
+	It's now or never! (36)
+
+		AI SYSTEM
+	It's now or never! (83)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A ominous sky fills the room. 030f473b
+
+		SCIENTIST
+	Tell them we died fighting. (47)
+
+		ALIEN EMPEROR
+	Launch the final weapon! (47)
+
+		MEDIC
+	It's now or never! (11)
+
+
+INT. MESS HALL - NIGHT
+
+A silent light fills the room. 6e267091
+
+		ROOKIE
+	Die, you monster! (44)
+
+		ROOKIE
+	Overload the core! (84)
+
+		COMMANDER
+	This is the end. (3)
+
+		AI SYSTEM
+	Overload the core! (95)
+
+		MEDIC
+	For the alliance! (77)
+
+		AI SYSTEM
+	Launch the final weapon! (96)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A broken fear fills the room. 14c85428
+
+		ALIEN EMPEROR
+	Launch the final weapon! (36)
+
+		MEDIC
+	This is the end. (29)
+
+		SCIENTIST
+	For the alliance! (1)
+
+		REBEL LEADER
+	Launch the final weapon! (52)
+
+
+EXT. ALIEN DESERT - DAY
+
+A sudden shadow fills the room. 7d907a85
+
+		ALIEN EMPEROR
+	For the alliance! (45)
+
+		COMMANDER
+	Tell them we died fighting. (3)
+
+		SCIENTIST
+	Die, you monster! (62)
+
+
+EXT. JUNGLE - DAY
+
+A sudden sky fills the room. 3afe40b7
+
+		COMMANDER
+	Launch the final weapon! (22)
+
+		SCIENTIST
+	Tell them we died fighting. (34)
+
+		COMMANDER
+	Overload the core! (93)
+
+		SCIENTIST
+	Overload the core! (64)
+
+
+EXT. CITY RUINS - DAY
+
+A sudden engine fills the room. c8c85aee
+
+		ALIEN EMPEROR
+	Die, you monster! (14)
+
+		MEDIC
+	Die, you monster! (67)
+
+		ROOKIE
+	For the alliance! (15)
+
+
+EXT. ALIEN DESERT - DAY
+
+A bright metal fills the room. 553db79b
+
+		REBEL LEADER
+	Die, you monster! (1)
+
+		ALIEN EMPEROR
+	Launch the final weapon! (52)
+
+		MEDIC
+	Launch the final weapon! (41)
+
+		COMMANDER
+	Die, you monster! (81)
+
+
+INT. MESS HALL - NIGHT
+
+A bright fear fills the room. 68afd478
+
+		ALIEN EMPEROR
+	I will never surrender. (6)
+
+		ALIEN EMPEROR
+	This is the end. (93)
+
+		MEDIC
+	Tell them we died fighting. (81)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A violent sky fills the room. ef45a4cc
+
+		SCIENTIST
+	For the alliance! (87)
+
+		AI SYSTEM
+	Tell them we died fighting. (96)
+
+		MEDIC
+	Tell them we died fighting. (66)
+
+		COMMANDER
+	Overload the core! (98)
+
+		REBEL LEADER
+	This is the end. (46)
+
+
+EXT. CITY RUINS - DAY
+
+A sudden hope fills the room. e941a7a3
+
+		ALIEN EMPEROR
+	Tell them we died fighting. (100)
+
+		REBEL LEADER
+	For the alliance! (30)
+
+		REBEL LEADER
+	Launch the final weapon! (8)
+
+
+INT. MESS HALL - NIGHT
+
+A violent weapon fills the room. db63c87b
+
+		REBEL LEADER
+	Overload the core! (47)
+
+		COMMANDER
+	For the alliance! (29)
+
+		AI SYSTEM
+	This is the end. (45)
+
+		AI SYSTEM
+	It's now or never! (19)
+
+
+EXT. ALIEN DESERT - DAY
+
+A cold hope fills the room. b4953771
+
+		SCIENTIST
+	Die, you monster! (7)
+
+		AI SYSTEM
+	I will never surrender. (65)
+
+		ALIEN EMPEROR
+	Launch the final weapon! (63)
+
+		SCIENTIST
+	Overload the core! (79)
+
+		MEDIC
+	Launch the final weapon! (45)
+
+		COMMANDER
+	For the alliance! (67)
+
+
+INT. MESS HALL - NIGHT
+
+A dark blood fills the room. fd142575
+
+		ROOKIE
+	This is the end. (38)
+
+		COMMANDER
+	Overload the core! (99)
+
+		AI SYSTEM
+	This is the end. (70)
+
+		COMMANDER
+	Launch the final weapon! (75)
+
+		MEDIC
+	I will never surrender. (52)
+
+		REBEL LEADER
+	This is the end. (70)
+
+
+INT. MESS HALL - NIGHT
+
+A dark fear fills the room. 04d4f595
+
+		AI SYSTEM
+	I will never surrender. (56)
+
+		MEDIC
+	Die, you monster! (60)
+
+		ROOKIE
+	Tell them we died fighting. (38)
+
+		MEDIC
+	It's now or never! (80)
+
+		MEDIC
+	It's now or never! (19)
+
+		ALIEN EMPEROR
+	Launch the final weapon! (84)
+
+
+INT. LABORATORY - NIGHT
+
+A silent light fills the room. 85748731
+
+		MEDIC
+	Launch the final weapon! (83)
+
+		REBEL LEADER
+	It's now or never! (19)
+
+		COMMANDER
+	I will never surrender. (24)
+
+		REBEL LEADER
+	Tell them we died fighting. (43)
+
+		MEDIC
+	I will never surrender. (44)
+
+		AI SYSTEM
+	Die, you monster! (82)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A silent fear fills the room. 7c3ff5bc
+
+		MEDIC
+	Overload the core! (75)
+
+		MEDIC
+	It's now or never! (46)
+
+		MEDIC
+	Tell them we died fighting. (86)
+
+		MEDIC
+	This is the end. (49)
+
+		AI SYSTEM
+	Tell them we died fighting. (67)
+
+
+INT. MESS HALL - NIGHT
+
+A bright engine fills the room. 2cc33515
+
+		MEDIC
+	It's now or never! (70)
+
+		SCIENTIST
+	I will never surrender. (61)
+
+		REBEL LEADER
+	Tell them we died fighting. (78)
+
+		AI SYSTEM
+	I will never surrender. (55)
+
+		REBEL LEADER
+	Launch the final weapon! (70)
+
+
+EXT. JUNGLE - DAY
+
+A cold hope fills the room. 5f490644
+
+		ROOKIE
+	Die, you monster! (100)
+
+		AI SYSTEM
+	For the alliance! (57)
+
+		MEDIC
+	I will never surrender. (70)
+
+		ROOKIE
+	For the alliance! (94)
+
+		ROOKIE
+	Tell them we died fighting. (30)
+
+
+EXT. CITY RUINS - DAY
+
+A broken shadow fills the room. e5e6b557
+
+		AI SYSTEM
+	For the alliance! (36)
+
+		MEDIC
+	This is the end. (17)
+
+		REBEL LEADER
+	I will never surrender. (1)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A silent weapon fills the room. 6a5bdbb0
+
+		ALIEN EMPEROR
+	Die, you monster! (70)
+
+		AI SYSTEM
+	Overload the core! (85)
+
+		ALIEN EMPEROR
+	Tell them we died fighting. (69)
+
+		COMMANDER
+	Die, you monster! (79)
+
+		REBEL LEADER
+	For the alliance! (38)
+
+
+EXT. CITY RUINS - DAY
+
+A violent weapon fills the room. 554254b9
+
+		COMMANDER
+	Die, you monster! (53)
+
+		AI SYSTEM
+	Overload the core! (95)
+
+		AI SYSTEM
+	Tell them we died fighting. (83)
+
+		AI SYSTEM
+	Die, you monster! (11)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A silent sky fills the room. 88c1c9ed
+
+		SCIENTIST
+	For the alliance! (85)
+
+		COMMANDER
+	Launch the final weapon! (22)
+
+		REBEL LEADER
+	Tell them we died fighting. (77)
+
+		ROOKIE
+	Launch the final weapon! (50)
+
+		REBEL LEADER
+	Launch the final weapon! (70)
+
+		ROOKIE
+	This is the end. (29)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A ominous engine fills the room. 27256d92
+
+		SCIENTIST
+	For the alliance! (75)
+
+		COMMANDER
+	Overload the core! (93)
+
+		SCIENTIST
+	For the alliance! (76)
+
+
+INT. COMMAND CENTER - DAY
+
+A sudden metal fills the room. 9c10dcf0
+
+		REBEL LEADER
+	I will never surrender. (18)
+
+		AI SYSTEM
+	I will never surrender. (8)
+
+		REBEL LEADER
+	Tell them we died fighting. (54)
+
+		REBEL LEADER
+	Tell them we died fighting. (84)
+
+		ALIEN EMPEROR
+	This is the end. (81)
+
+		REBEL LEADER
+	Launch the final weapon! (58)
+
+
+INT. MESS HALL - NIGHT
+
+A bright weapon fills the room. 5ba981de
+
+		REBEL LEADER
+	It's now or never! (93)
+
+		SCIENTIST
+	This is the end. (93)
+
+		AI SYSTEM
+	Overload the core! (37)
+
+		REBEL LEADER
+	Launch the final weapon! (61)
+
+		AI SYSTEM
+	This is the end. (63)
+
+		ALIEN EMPEROR
+	Overload the core! (88)
+
+
+EXT. CITY RUINS - DAY
+
+A violent sky fills the room. 8eb27208
+
+		SCIENTIST
+	For the alliance! (20)
+
+		ROOKIE
+	This is the end. (81)
+
+		AI SYSTEM
+	Overload the core! (25)
+
+		AI SYSTEM
+	Die, you monster! (99)
+
+
+EXT. ALIEN DESERT - DAY
+
+A silent fear fills the room. 283eccd0
+
+		MEDIC
+	It's now or never! (35)
+
+		COMMANDER
+	This is the end. (71)
+
+		SCIENTIST
+	Die, you monster! (94)
+
+		SCIENTIST
+	This is the end. (76)
+
+		ALIEN EMPEROR
+	Die, you monster! (12)
+
+		MEDIC
+	For the alliance! (53)
+
+
+EXT. CITY RUINS - DAY
+
+A ominous weapon fills the room. c08b8e6b
+
+		AI SYSTEM
+	Overload the core! (100)
+
+		MEDIC
+	It's now or never! (20)
+
+		SCIENTIST
+	Die, you monster! (66)
+
+		AI SYSTEM
+	I will never surrender. (13)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A dark light fills the room. c23c598d
+
+		COMMANDER
+	It's now or never! (95)
+
+		MEDIC
+	It's now or never! (57)
+
+		ALIEN EMPEROR
+	I will never surrender. (41)
+
+		MEDIC
+	For the alliance! (6)
+
+		COMMANDER
+	Overload the core! (16)
+
+		SCIENTIST
+	It's now or never! (83)
+
+
+EXT. ALIEN DESERT - DAY
+
+A burning fear fills the room. 5179fb47
+
+		ALIEN EMPEROR
+	This is the end. (37)
+
+		REBEL LEADER
+	Overload the core! (42)
+
+		REBEL LEADER
+	For the alliance! (19)
+
+		COMMANDER
+	Die, you monster! (37)
+
+		ROOKIE
+	Overload the core! (56)
+
+		MEDIC
+	It's now or never! (95)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A dark weapon fills the room. 57af1a59
+
+		REBEL LEADER
+	Overload the core! (33)
+
+		COMMANDER
+	I will never surrender. (60)
+
+		REBEL LEADER
+	Tell them we died fighting. (75)
+
+		ROOKIE
+	I will never surrender. (42)
+
+		COMMANDER
+	Overload the core! (98)
+
+		REBEL LEADER
+	Overload the core! (84)
+
+
+EXT. JUNGLE - DAY
+
+A silent sky fills the room. f18534f8
+
+		ALIEN EMPEROR
+	It's now or never! (43)
+
+		COMMANDER
+	It's now or never! (78)
+
+		REBEL LEADER
+	Launch the final weapon! (41)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A burning weapon fills the room. 903b6e53
+
+		COMMANDER
+	For the alliance! (13)
+
+		COMMANDER
+	Overload the core! (17)
+
+		SCIENTIST
+	Overload the core! (17)
+
+		COMMANDER
+	Launch the final weapon! (96)
+
+
+INT. LABORATORY - NIGHT
+
+A bright engine fills the room. b418d0f3
+
+		AI SYSTEM
+	I will never surrender. (7)
+
+		ALIEN EMPEROR
+	Launch the final weapon! (75)
+
+		REBEL LEADER
+	Overload the core! (3)
+
+		SCIENTIST
+	It's now or never! (27)
+
+		SCIENTIST
+	It's now or never! (62)
+
+
+INT. MESS HALL - NIGHT
+
+A violent metal fills the room. f357e5d1
+
+		SCIENTIST
+	This is the end. (98)
+
+		ALIEN EMPEROR
+	Die, you monster! (62)
+
+		SCIENTIST
+	It's now or never! (47)
+
+		AI SYSTEM
+	It's now or never! (28)
+
+		ALIEN EMPEROR
+	Tell them we died fighting. (98)
+
+		ROOKIE
+	I will never surrender. (39)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A bright hope fills the room. 3a0af79d
+
+		COMMANDER
+	Tell them we died fighting. (66)
+
+		SCIENTIST
+	Overload the core! (16)
+
+		ALIEN EMPEROR
+	Launch the final weapon! (74)
+
+		SCIENTIST
+	It's now or never! (88)
+
+		SCIENTIST
+	It's now or never! (96)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A silent hope fills the room. 6767755e
+
+		ROOKIE
+	Launch the final weapon! (43)
+
+		MEDIC
+	For the alliance! (21)
+
+		ROOKIE
+	Overload the core! (46)
+
+
+EXT. ALIEN DESERT - DAY
+
+A sudden engine fills the room. 63ea318b
+
+		REBEL LEADER
+	Overload the core! (5)
+
+		COMMANDER
+	It's now or never! (76)
+
+		SCIENTIST
+	For the alliance! (87)
+
+
+INT. COMMAND CENTER - DAY
+
+A violent light fills the room. 94daf4f7
+
+		REBEL LEADER
+	Launch the final weapon! (63)
+
+		ALIEN EMPEROR
+	Tell them we died fighting. (88)
+
+		SCIENTIST
+	Launch the final weapon! (28)
+
+		ROOKIE
+	Overload the core! (8)
+
+
+EXT. CITY RUINS - DAY
+
+A silent weapon fills the room. 8498091b
+
+		SCIENTIST
+	I will never surrender. (47)
+
+		ALIEN EMPEROR
+	Die, you monster! (58)
+
+		MEDIC
+	For the alliance! (84)
+
+		COMMANDER
+	Die, you monster! (74)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A cold metal fills the room. 36bf923a
+
+		ROOKIE
+	Overload the core! (3)
+
+		REBEL LEADER
+	It's now or never! (27)
+
+		MEDIC
+	Die, you monster! (40)
+
+		ROOKIE
+	This is the end. (30)
+
+		AI SYSTEM
+	For the alliance! (55)
+
+		REBEL LEADER
+	Overload the core! (88)
+
+
+INT. COMMAND CENTER - DAY
+
+A burning metal fills the room. 747380b3
+
+		COMMANDER
+	Tell them we died fighting. (86)
+
+		COMMANDER
+	I will never surrender. (63)
+
+		ROOKIE
+	For the alliance! (75)
+
+		MEDIC
+	For the alliance! (46)
+
+		ALIEN EMPEROR
+	Die, you monster! (24)
+
+		REBEL LEADER
+	Tell them we died fighting. (80)
+
+
+INT. MESS HALL - NIGHT
+
+A bright hope fills the room. fb9ac719
+
+		MEDIC
+	Overload the core! (60)
+
+		COMMANDER
+	Tell them we died fighting. (45)
+
+		REBEL LEADER
+	Tell them we died fighting. (59)
+
+
+EXT. JUNGLE - DAY
+
+A sudden blood fills the room. a5a9c3f5
+
+		ROOKIE
+	Tell them we died fighting. (24)
+
+		MEDIC
+	For the alliance! (25)
+
+		COMMANDER
+	It's now or never! (50)
+
+		MEDIC
+	Die, you monster! (87)
+
+		COMMANDER
+	Tell them we died fighting. (16)
+
+
+INT. LABORATORY - NIGHT
+
+A sudden light fills the room. a622c3ed
+
+		AI SYSTEM
+	Tell them we died fighting. (76)
+
+		MEDIC
+	I will never surrender. (69)
+
+		COMMANDER
+	Tell them we died fighting. (27)
+
+
+EXT. JUNGLE - DAY
+
+A cold fear fills the room. 32a2b43f
+
+		SCIENTIST
+	I will never surrender. (94)
+
+		ROOKIE
+	This is the end. (71)
+
+		ROOKIE
+	This is the end. (37)
+
+
+INT. COMMAND CENTER - DAY
+
+A ominous weapon fills the room. 255924b2
+
+		ROOKIE
+	For the alliance! (81)
+
+		ALIEN EMPEROR
+	I will never surrender. (99)
+
+		AI SYSTEM
+	Tell them we died fighting. (98)
+
+		MEDIC
+	Die, you monster! (55)
+
+		AI SYSTEM
+	For the alliance! (89)
+
+
+INT. MESS HALL - NIGHT
+
+A bright blood fills the room. b3ad2767
+
+		ALIEN EMPEROR
+	For the alliance! (39)
+
+		ALIEN EMPEROR
+	Launch the final weapon! (37)
+
+		ROOKIE
+	It's now or never! (48)
+
+		ROOKIE
+	For the alliance! (74)
+
+
+INT. MESS HALL - NIGHT
+
+A broken hope fills the room. 56692276
+
+		REBEL LEADER
+	Launch the final weapon! (46)
+
+		COMMANDER
+	Launch the final weapon! (44)
+
+		REBEL LEADER
+	Tell them we died fighting. (79)
+
+
+INT. MESS HALL - NIGHT
+
+A burning sky fills the room. bfd0f925
+
+		ALIEN EMPEROR
+	Overload the core! (64)
+
+		SCIENTIST
+	Tell them we died fighting. (23)
+
+		ALIEN EMPEROR
+	Die, you monster! (53)
+
+		SCIENTIST
+	For the alliance! (6)
+
+		ROOKIE
+	Launch the final weapon! (7)
+
+		AI SYSTEM
+	Overload the core! (74)
+
+
+INT. LABORATORY - NIGHT
+
+A burning blood fills the room. 7772dd9e
+
+		SCIENTIST
+	Tell them we died fighting. (73)
+
+		SCIENTIST
+	I will never surrender. (77)
+
+		AI SYSTEM
+	It's now or never! (50)
+
+		ALIEN EMPEROR
+	Launch the final weapon! (74)
+
+
+INT. COMMAND CENTER - DAY
+
+A sudden shadow fills the room. dce53eab
+
+		ROOKIE
+	It's now or never! (99)
+
+		ALIEN EMPEROR
+	It's now or never! (8)
+
+		AI SYSTEM
+	Launch the final weapon! (59)
+
+		ALIEN EMPEROR
+	It's now or never! (47)
+
+		AI SYSTEM
+	It's now or never! (67)
+
+		MEDIC
+	This is the end. (2)
+
+
+EXT. ALIEN DESERT - DAY
+
+A cold sky fills the room. 3cd69d78
+
+		SCIENTIST
+	Tell them we died fighting. (21)
+
+		COMMANDER
+	I will never surrender. (9)
+
+		ROOKIE
+	This is the end. (5)
+
+		ROOKIE
+	Overload the core! (95)
+
+		SCIENTIST
+	Overload the core! (81)
+
+
+EXT. JUNGLE - DAY
+
+A bright metal fills the room. f8bb6450
+
+		SCIENTIST
+	I will never surrender. (86)
+
+		ROOKIE
+	Tell them we died fighting. (56)
+
+		AI SYSTEM
+	For the alliance! (47)
+
+
+EXT. JUNGLE - DAY
+
+A violent hope fills the room. 3520873e
+
+		MEDIC
+	Die, you monster! (20)
+
+		SCIENTIST
+	Die, you monster! (78)
+
+		ALIEN EMPEROR
+	This is the end. (54)
+
+		AI SYSTEM
+	Overload the core! (99)
+
+		SCIENTIST
+	Launch the final weapon! (30)
+
+
+INT. MESS HALL - NIGHT
+
+A dark hope fills the room. 0dd72f38
+
+		AI SYSTEM
+	Tell them we died fighting. (49)
+
+		ROOKIE
+	Tell them we died fighting. (1)
+
+		MEDIC
+	I will never surrender. (11)
+
+
+EXT. JUNGLE - DAY
+
+A cold sky fills the room. 7a6ae26c
+
+		REBEL LEADER
+	It's now or never! (91)
+
+		ALIEN EMPEROR
+	Launch the final weapon! (55)
+
+		REBEL LEADER
+	Tell them we died fighting. (49)
+
+		ALIEN EMPEROR
+	Launch the final weapon! (62)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A silent sky fills the room. 64ad18d1
+
+		MEDIC
+	Launch the final weapon! (99)
+
+		MEDIC
+	Overload the core! (91)
+
+		MEDIC
+	For the alliance! (73)
+
+		REBEL LEADER
+	Launch the final weapon! (97)
+
+
+INT. COMMAND CENTER - DAY
+
+A burning light fills the room. e66d8680
+
+		MEDIC
+	I will never surrender. (18)
+
+		REBEL LEADER
+	Tell them we died fighting. (100)
+
+		SCIENTIST
+	Tell them we died fighting. (86)
+
+		REBEL LEADER
+	Launch the final weapon! (95)
+
+		ALIEN EMPEROR
+	Overload the core! (71)
+
+		COMMANDER
+	Overload the core! (66)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A broken weapon fills the room. 76276866
+
+		MEDIC
+	Overload the core! (55)
+
+		MEDIC
+	For the alliance! (2)
+
+		ROOKIE
+	Launch the final weapon! (23)
+
+		SCIENTIST
+	I will never surrender. (72)
+
+		AI SYSTEM
+	I will never surrender. (65)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A cold light fills the room. 8dd480e7
+
+		ALIEN EMPEROR
+	This is the end. (82)
+
+		SCIENTIST
+	Overload the core! (60)
+
+		AI SYSTEM
+	Tell them we died fighting. (93)
+
+		SCIENTIST
+	Overload the core! (80)
+
+		ROOKIE
+	It's now or never! (34)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A broken metal fills the room. e8d52849
+
+		ROOKIE
+	Die, you monster! (80)
+
+		COMMANDER
+	It's now or never! (92)
+
+		COMMANDER
+	For the alliance! (59)
+
+		SCIENTIST
+	I will never surrender. (55)
+
+		AI SYSTEM
+	Launch the final weapon! (23)
+
+		SCIENTIST
+	Overload the core! (39)
+
+
+INT. MESS HALL - NIGHT
+
+A broken hope fills the room. 8285cacb
+
+		ALIEN EMPEROR
+	It's now or never! (68)
+
+		COMMANDER
+	It's now or never! (75)
+
+		AI SYSTEM
+	For the alliance! (60)
+
+		COMMANDER
+	Overload the core! (71)
+
+		SCIENTIST
+	For the alliance! (8)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A violent weapon fills the room. 12ae2114
+
+		SCIENTIST
+	Launch the final weapon! (22)
+
+		COMMANDER
+	I will never surrender. (41)
+
+		SCIENTIST
+	For the alliance! (32)
+
+		REBEL LEADER
+	It's now or never! (89)
+
+		ALIEN EMPEROR
+	Launch the final weapon! (65)
+
+
+EXT. CITY RUINS - DAY
+
+A cold hope fills the room. 3d405f55
+
+		AI SYSTEM
+	It's now or never! (10)
+
+		COMMANDER
+	For the alliance! (23)
+
+		REBEL LEADER
+	For the alliance! (25)
+
+		ROOKIE
+	I will never surrender. (27)
+
+		AI SYSTEM
+	I will never surrender. (97)
+
+
+EXT. JUNGLE - DAY
+
+A ominous fear fills the room. 6eb1c61f
+
+		ROOKIE
+	Overload the core! (92)
+
+		ROOKIE
+	For the alliance! (34)
+
+		ALIEN EMPEROR
+	Launch the final weapon! (32)
+
+
+INT. LABORATORY - NIGHT
+
+A dark metal fills the room. 499d61bc
+
+		ROOKIE
+	Tell them we died fighting. (30)
+
+		COMMANDER
+	It's now or never! (46)
+
+		AI SYSTEM
+	For the alliance! (24)
+
+		REBEL LEADER
+	Launch the final weapon! (99)
+
+		ROOKIE
+	It's now or never! (32)
+
+		ROOKIE
+	I will never surrender. (93)
+
+
+INT. MESS HALL - NIGHT
+
+A ominous fear fills the room. c7ddcc05
+
+		AI SYSTEM
+	Launch the final weapon! (38)
+
+		COMMANDER
+	Overload the core! (53)
+
+		ROOKIE
+	For the alliance! (18)
+
+
+INT. MESS HALL - NIGHT
+
+A bright blood fills the room. 82626a09
+
+		SCIENTIST
+	Overload the core! (16)
+
+		AI SYSTEM
+	I will never surrender. (29)
+
+		ROOKIE
+	Launch the final weapon! (44)
+
+		SCIENTIST
+	Overload the core! (49)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A sudden metal fills the room. 7794ab69
+
+		REBEL LEADER
+	For the alliance! (47)
+
+		ALIEN EMPEROR
+	Tell them we died fighting. (30)
+
+		COMMANDER
+	Launch the final weapon! (97)
+
+		REBEL LEADER
+	Launch the final weapon! (98)
+
+		ALIEN EMPEROR
+	Die, you monster! (52)
+
+		ALIEN EMPEROR
+	Overload the core! (47)
+
+
+EXT. CITY RUINS - DAY
+
+A violent weapon fills the room. e5b82efe
+
+		SCIENTIST
+	I will never surrender. (12)
+
+		AI SYSTEM
+	Die, you monster! (1)
+
+		MEDIC
+	I will never surrender. (29)
+
+		MEDIC
+	It's now or never! (29)
+
+
+INT. MESS HALL - NIGHT
+
+A violent shadow fills the room. 6de25708
+
+		AI SYSTEM
+	Die, you monster! (87)
+
+		SCIENTIST
+	For the alliance! (43)
+
+		SCIENTIST
+	This is the end. (83)
+
+
+EXT. ALIEN DESERT - DAY
+
+A dark blood fills the room. 17ecd642
+
+		COMMANDER
+	It's now or never! (8)
+
+		AI SYSTEM
+	Tell them we died fighting. (88)
+
+		REBEL LEADER
+	For the alliance! (6)
+
+		COMMANDER
+	I will never surrender. (58)
+
+
+EXT. JUNGLE - DAY
+
+A silent light fills the room. aeedede4
+
+		MEDIC
+	For the alliance! (65)
+
+		MEDIC
+	Launch the final weapon! (76)
+
+		SCIENTIST
+	For the alliance! (30)
+
+		COMMANDER
+	It's now or never! (76)
+
+		COMMANDER
+	I will never surrender. (4)
+
+
+EXT. CITY RUINS - DAY
+
+A sudden hope fills the room. c5ee2fc0
+
+		ALIEN EMPEROR
+	This is the end. (54)
+
+		SCIENTIST
+	Launch the final weapon! (52)
+
+		COMMANDER
+	Die, you monster! (1)
+
+		MEDIC
+	I will never surrender. (36)
+
+		MEDIC
+	Overload the core! (60)
+
+
+INT. MESS HALL - NIGHT
+
+A silent weapon fills the room. 0b222953
+
+		REBEL LEADER
+	It's now or never! (77)
+
+		ROOKIE
+	It's now or never! (42)
+
+		COMMANDER
+	This is the end. (57)
+
+		COMMANDER
+	Overload the core! (73)
+
+		REBEL LEADER
+	It's now or never! (42)
+
+		MEDIC
+	I will never surrender. (42)
+
+
+EXT. JUNGLE - DAY
+
+A dark engine fills the room. 16c7c240
+
+		MEDIC
+	For the alliance! (41)
+
+		ALIEN EMPEROR
+	It's now or never! (76)
+
+		COMMANDER
+	For the alliance! (80)
+
+
+INT. LABORATORY - NIGHT
+
+A sudden metal fills the room. fbf81019
+
+		MEDIC
+	Tell them we died fighting. (23)
+
+		REBEL LEADER
+	Die, you monster! (81)
+
+		AI SYSTEM
+	Overload the core! (87)
+
+		ROOKIE
+	Tell them we died fighting. (42)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A sudden shadow fills the room. 12b604c6
+
+		AI SYSTEM
+	It's now or never! (4)
+
+		COMMANDER
+	Overload the core! (48)
+
+		SCIENTIST
+	Overload the core! (59)
+
+		SCIENTIST
+	Overload the core! (98)
+
+		REBEL LEADER
+	I will never surrender. (78)
+
+
+INT. MESS HALL - NIGHT
+
+A sudden weapon fills the room. 34435947
+
+		COMMANDER
+	This is the end. (22)
+
+		MEDIC
+	For the alliance! (97)
+
+		AI SYSTEM
+	Tell them we died fighting. (78)
+
+
+EXT. ALIEN DESERT - DAY
+
+A burning fear fills the room. 6a8f9df4
+
+		ROOKIE
+	I will never surrender. (14)
+
+		ROOKIE
+	It's now or never! (2)
+
+		ROOKIE
+	Launch the final weapon! (82)
+
+		SCIENTIST
+	Tell them we died fighting. (40)
+
+		ALIEN EMPEROR
+	It's now or never! (35)
+
+
+EXT. CITY RUINS - DAY
+
+A ominous metal fills the room. 821508eb
+
+		AI SYSTEM
+	Overload the core! (24)
+
+		SCIENTIST
+	This is the end. (100)
+
+		REBEL LEADER
+	It's now or never! (13)
+
+		MEDIC
+	Launch the final weapon! (27)
+
+		ROOKIE
+	Die, you monster! (5)
+
+		ROOKIE
+	Overload the core! (8)
+
+
+EXT. ALIEN DESERT - DAY
+
+A burning metal fills the room. 7a4469f8
+
+		AI SYSTEM
+	Die, you monster! (40)
+
+		REBEL LEADER
+	Overload the core! (25)
+
+		ALIEN EMPEROR
+	Launch the final weapon! (76)
+
+		ALIEN EMPEROR
+	I will never surrender. (75)
+
+		ALIEN EMPEROR
+	Die, you monster! (81)
+
+
+INT. LABORATORY - NIGHT
+
+A dark metal fills the room. 9e1c1d3f
+
+		ROOKIE
+	I will never surrender. (69)
+
+		MEDIC
+	It's now or never! (25)
+
+		REBEL LEADER
+	For the alliance! (100)
+
+		REBEL LEADER
+	Tell them we died fighting. (45)
+
+		AI SYSTEM
+	Overload the core! (85)
+
+		COMMANDER
+	For the alliance! (17)
+
+
+EXT. JUNGLE - DAY
+
+A dark shadow fills the room. 4eb0674f
+
+		SCIENTIST
+	We lost good people today. (97)
+
+		REBEL LEADER
+	The war is over. (59)
+
+		ALIEN EMPEROR
+	We did it. (48)
+
+		SCIENTIST
+	Let's go home. (36)
+
+		COMMANDER
+	We lost good people today. (84)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A burning hope fills the room. f023543d
+
+		ALIEN EMPEROR
+	The war is over. (38)
+
+		REBEL LEADER
+	We did it. (14)
+
+		MEDIC
+	Peace at last. (34)
+
+		SCIENTIST
+	Look at the sunrise. (51)
+
+
+INT. LABORATORY - NIGHT
+
+A silent engine fills the room. 48dccce3
+
+		ROOKIE
+	We did it. (77)
+
+		COMMANDER
+	I need a drink. (44)
+
+		REBEL LEADER
+	We lost good people today. (67)
+
+
+INT. COMMAND CENTER - DAY
+
+A violent light fills the room. 27ed7282
+
+		COMMANDER
+	Let's go home. (94)
+
+		MEDIC
+	The war is over. (81)
+
+		COMMANDER
+	The war is over. (43)
+
+		SCIENTIST
+	The war is over. (26)
+
+		ROOKIE
+	We did it. (82)
+
+		ROOKIE
+	I need a drink. (32)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A burning blood fills the room. d42abb0e
+
+		ALIEN EMPEROR
+	The war is over. (86)
+
+		COMMANDER
+	Peace at last. (69)
+
+		MEDIC
+	I need a drink. (57)
+
+		SCIENTIST
+	Look at the sunrise. (87)
+
+
+EXT. JUNGLE - DAY
+
+A cold fear fills the room. 24cf4267
+
+		ROOKIE
+	Let's go home. (17)
+
+		ROOKIE
+	I need a drink. (54)
+
+		SCIENTIST
+	The war is over. (70)
+
+		ROOKIE
+	I need a drink. (62)
+
+		ROOKIE
+	I need a drink. (54)
+
+		MEDIC
+	Let's go home. (49)
+
+
+INT. LABORATORY - NIGHT
+
+A silent blood fills the room. 63b4edda
+
+		MEDIC
+	The war is over. (82)
+
+		ROOKIE
+	The war is over. (28)
+
+		SCIENTIST
+	We lost good people today. (97)
+
+		REBEL LEADER
+	I need a drink. (52)
+
+
+INT. LABORATORY - NIGHT
+
+A violent blood fills the room. 971c9915
+
+		COMMANDER
+	Look at the sunrise. (84)
+
+		ROOKIE
+	We did it. (35)
+
+		COMMANDER
+	The war is over. (70)
+
+		ALIEN EMPEROR
+	We did it. (68)
+
+		SCIENTIST
+	The war is over. (37)
+
+		SCIENTIST
+	We did it. (29)
+
+
+EXT. ALIEN DESERT - DAY
+
+A sudden engine fills the room. 45f94032
+
+		MEDIC
+	Look at the sunrise. (64)
+
+		COMMANDER
+	Peace at last. (88)
+
+		AI SYSTEM
+	Look at the sunrise. (11)
+
+		COMMANDER
+	The war is over. (89)
+
+		ROOKIE
+	Look at the sunrise. (10)
+
+
+INT. LABORATORY - NIGHT
+
+A cold blood fills the room. 8456595f
+
+		REBEL LEADER
+	I need a drink. (72)
+
+		REBEL LEADER
+	I need a drink. (8)
+
+		AI SYSTEM
+	Peace at last. (47)
+
+		SCIENTIST
+	We did it. (1)
+
+
+INT. MESS HALL - NIGHT
+
+A sudden weapon fills the room. 0a2bfe04
+
+		AI SYSTEM
+	Peace at last. (82)
+
+		ROOKIE
+	I need a drink. (40)
+
+		REBEL LEADER
+	Look at the sunrise. (81)
+
+		COMMANDER
+	Look at the sunrise. (9)
+
+		AI SYSTEM
+	Let's go home. (7)
+
+		ROOKIE
+	Look at the sunrise. (90)
+
+
+EXT. ALIEN DESERT - DAY
+
+A silent weapon fills the room. 40005677
+
+		ALIEN EMPEROR
+	We lost good people today. (71)
+
+		MEDIC
+	We did it. (96)
+
+		ALIEN EMPEROR
+	Look at the sunrise. (8)
+
+		ROOKIE
+	The war is over. (81)
+
+		REBEL LEADER
+	We did it. (86)
+
+		REBEL LEADER
+	Look at the sunrise. (14)
+
+
+EXT. JUNGLE - DAY
+
+A ominous sky fills the room. 2f5795d1
+
+		AI SYSTEM
+	We did it. (62)
+
+		REBEL LEADER
+	Let's go home. (65)
+
+		REBEL LEADER
+	We did it. (28)
+
+		ROOKIE
+	We lost good people today. (13)
+
+
+INT. COMMAND CENTER - DAY
+
+A dark shadow fills the room. f6ae1b06
+
+		AI SYSTEM
+	Let's go home. (16)
+
+		COMMANDER
+	Look at the sunrise. (21)
+
+		ALIEN EMPEROR
+	Look at the sunrise. (78)
+
+		SCIENTIST
+	Look at the sunrise. (78)
+
+		REBEL LEADER
+	We did it. (76)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A dark shadow fills the room. 4f640165
+
+		AI SYSTEM
+	I need a drink. (85)
+
+		COMMANDER
+	The war is over. (73)
+
+		SCIENTIST
+	Let's go home. (58)
+
+		REBEL LEADER
+	We did it. (39)
+
+		COMMANDER
+	We lost good people today. (60)
+
+		AI SYSTEM
+	Peace at last. (35)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A bright fear fills the room. 20875ef8
+
+		ALIEN EMPEROR
+	We lost good people today. (75)
+
+		COMMANDER
+	The war is over. (35)
+
+		REBEL LEADER
+	Let's go home. (63)
+
+
+INT. MESS HALL - NIGHT
+
+A broken light fills the room. e28e8502
+
+		SCIENTIST
+	The war is over. (10)
+
+		AI SYSTEM
+	Peace at last. (71)
+
+		COMMANDER
+	Peace at last. (91)
+
+		AI SYSTEM
+	We lost good people today. (51)
+
+		SCIENTIST
+	Look at the sunrise. (21)
+
+		COMMANDER
+	We lost good people today. (62)
+
+
+INT. COMMAND CENTER - DAY
+
+A dark sky fills the room. baf5becd
+
+		AI SYSTEM
+	Let's go home. (88)
+
+		AI SYSTEM
+	Peace at last. (93)
+
+		ROOKIE
+	Peace at last. (17)
+
+		ALIEN EMPEROR
+	I need a drink. (20)
+
+
+INT. COMMAND CENTER - DAY
+
+A dark blood fills the room. c0f0de49
+
+		COMMANDER
+	Let's go home. (51)
+
+		COMMANDER
+	We did it. (5)
+
+		REBEL LEADER
+	Look at the sunrise. (36)
+
+		REBEL LEADER
+	Peace at last. (82)
+
+		SCIENTIST
+	The war is over. (43)
+
+		AI SYSTEM
+	I need a drink. (61)
+
+
+EXT. CITY RUINS - DAY
+
+A cold sky fills the room. b48c6b8b
+
+		AI SYSTEM
+	We lost good people today. (57)
+
+		COMMANDER
+	Look at the sunrise. (60)
+
+		ALIEN EMPEROR
+	Look at the sunrise. (44)
+
+		ALIEN EMPEROR
+	Peace at last. (87)
+
+		MEDIC
+	Peace at last. (91)
+
+		ROOKIE
+	I need a drink. (79)
+
+
+INT. LABORATORY - NIGHT
+
+A burning hope fills the room. 2c4df9b5
+
+		MEDIC
+	We lost good people today. (50)
+
+		SCIENTIST
+	Peace at last. (92)
+
+		AI SYSTEM
+	The war is over. (64)
+
+		ROOKIE
+	Look at the sunrise. (15)
+
+
+INT. LABORATORY - NIGHT
+
+A burning light fills the room. 319d3903
+
+		ROOKIE
+	I need a drink. (14)
+
+		ALIEN EMPEROR
+	I need a drink. (97)
+
+		AI SYSTEM
+	Let's go home. (51)
+
+
+EXT. ALIEN DESERT - DAY
+
+A cold fear fills the room. 76d82d7a
+
+		MEDIC
+	The war is over. (5)
+
+		ALIEN EMPEROR
+	I need a drink. (4)
+
+		ALIEN EMPEROR
+	We lost good people today. (49)
+
+		REBEL LEADER
+	Peace at last. (36)
+
+		COMMANDER
+	Peace at last. (40)
+
+
+INT. COMMAND CENTER - DAY
+
+A dark hope fills the room. 191853c6
+
+		ALIEN EMPEROR
+	We did it. (23)
+
+		COMMANDER
+	Let's go home. (88)
+
+		ROOKIE
+	Look at the sunrise. (64)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A cold metal fills the room. 21bf44d0
+
+		MEDIC
+	Look at the sunrise. (86)
+
+		ALIEN EMPEROR
+	We did it. (76)
+
+		MEDIC
+	Peace at last. (5)
+
+		ALIEN EMPEROR
+	We did it. (58)
+
+		AI SYSTEM
+	We did it. (35)
+
+
+INT. COMMAND CENTER - DAY
+
+A burning metal fills the room. 7d8e3913
+
+		MEDIC
+	Let's go home. (77)
+
+		COMMANDER
+	The war is over. (29)
+
+		ROOKIE
+	Peace at last. (77)
+
+		MEDIC
+	The war is over. (32)
+
+
+INT. COMMAND CENTER - DAY
+
+A violent fear fills the room. 35c72160
+
+		ALIEN EMPEROR
+	I need a drink. (14)
+
+		MEDIC
+	Let's go home. (48)
+
+		ALIEN EMPEROR
+	Let's go home. (32)
+
+		AI SYSTEM
+	I need a drink. (76)
+
+		AI SYSTEM
+	We lost good people today. (76)
+
+
+INT. COMMAND CENTER - DAY
+
+A burning light fills the room. 52f1c38b
+
+		SCIENTIST
+	We lost good people today. (40)
+
+		MEDIC
+	Let's go home. (57)
+
+		ROOKIE
+	Let's go home. (23)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A ominous shadow fills the room. 736d85e8
+
+		AI SYSTEM
+	Let's go home. (20)
+
+		COMMANDER
+	I need a drink. (56)
+
+		SCIENTIST
+	Peace at last. (68)
+
+		SCIENTIST
+	We lost good people today. (82)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A dark weapon fills the room. 03f48995
+
+		MEDIC
+	Look at the sunrise. (42)
+
+		COMMANDER
+	We lost good people today. (6)
+
+		AI SYSTEM
+	The war is over. (78)
+
+		MEDIC
+	I need a drink. (49)
+
+		SCIENTIST
+	I need a drink. (58)
+
+
+EXT. JUNGLE - DAY
+
+A cold hope fills the room. 43a74465
+
+		MEDIC
+	Let's go home. (20)
+
+		SCIENTIST
+	Look at the sunrise. (56)
+
+		MEDIC
+	I need a drink. (74)
+
+		SCIENTIST
+	We lost good people today. (14)
+
+		COMMANDER
+	The war is over. (95)
+
+
+INT. MESS HALL - NIGHT
+
+A cold hope fills the room. 6b61cb95
+
+		ROOKIE
+	We did it. (98)
+
+		ALIEN EMPEROR
+	Let's go home. (72)
+
+		SCIENTIST
+	Peace at last. (14)
+
+
+INT. LABORATORY - NIGHT
+
+A violent engine fills the room. 8e97b363
+
+		MEDIC
+	We lost good people today. (78)
+
+		ALIEN EMPEROR
+	Let's go home. (87)
+
+		REBEL LEADER
+	The war is over. (1)
+
+
+INT. MESS HALL - NIGHT
+
+A broken sky fills the room. 9371542b
+
+		MEDIC
+	Peace at last. (24)
+
+		ROOKIE
+	Peace at last. (62)
+
+		AI SYSTEM
+	We lost good people today. (13)
+
+		ROOKIE
+	Look at the sunrise. (20)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A cold blood fills the room. 59d9b56e
+
+		SCIENTIST
+	Look at the sunrise. (42)
+
+		MEDIC
+	I need a drink. (38)
+
+		ROOKIE
+	The war is over. (76)
+
+		ROOKIE
+	Let's go home. (14)
+
+		REBEL LEADER
+	I need a drink. (39)
+
+		COMMANDER
+	I need a drink. (16)
+
+
+EXT. JUNGLE - DAY
+
+A cold light fills the room. 0d63abf8
+
+		MEDIC
+	The war is over. (57)
+
+		SCIENTIST
+	We did it. (38)
+
+		ALIEN EMPEROR
+	Let's go home. (83)
+
+		MEDIC
+	I need a drink. (21)
+
+		REBEL LEADER
+	I need a drink. (57)
+
+		ALIEN EMPEROR
+	The war is over. (10)
+
+
+INT. MESS HALL - NIGHT
+
+A dark engine fills the room. 64a0be73
+
+		MEDIC
+	Peace at last. (72)
+
+		MEDIC
+	The war is over. (8)
+
+		ALIEN EMPEROR
+	I need a drink. (37)
+
+		AI SYSTEM
+	Let's go home. (70)
+
+		COMMANDER
+	We did it. (32)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A silent fear fills the room. 45f77dd9
+
+		COMMANDER
+	Peace at last. (30)
+
+		SCIENTIST
+	Let's go home. (57)
+
+		MEDIC
+	Let's go home. (36)
+
+		ALIEN EMPEROR
+	We lost good people today. (23)
+
+		ROOKIE
+	We did it. (63)
+
+		COMMANDER
+	We lost good people today. (27)
+
+
+EXT. ALIEN DESERT - DAY
+
+A broken weapon fills the room. 2af6662c
+
+		SCIENTIST
+	I need a drink. (89)
+
+		MEDIC
+	The war is over. (66)
+
+		ALIEN EMPEROR
+	Peace at last. (66)
+
+		AI SYSTEM
+	We did it. (1)
+
+
+INT. COMMAND CENTER - DAY
+
+A violent metal fills the room. 0297cc90
+
+		REBEL LEADER
+	Look at the sunrise. (62)
+
+		COMMANDER
+	I need a drink. (38)
+
+		SCIENTIST
+	We lost good people today. (35)
+
+		SCIENTIST
+	The war is over. (30)
+
+		REBEL LEADER
+	Let's go home. (60)
+
+		ALIEN EMPEROR
+	Look at the sunrise. (43)
+
+
+INT. SPACESHIP COCKPIT - NIGHT
+
+A bright blood fills the room. 16776886
+
+		ROOKIE
+	We lost good people today. (41)
+
+		AI SYSTEM
+	The war is over. (14)
+
+		MEDIC
+	We did it. (39)
+
+		ALIEN EMPEROR
+	The war is over. (68)
+
+		ROOKIE
+	Look at the sunrise. (28)
+
+		SCIENTIST
+	Look at the sunrise. (21)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A bright weapon fills the room. b9194e35
+
+		COMMANDER
+	Peace at last. (49)
+
+		REBEL LEADER
+	The war is over. (51)
+
+		ROOKIE
+	Let's go home. (3)
+
+
+INT. MESS HALL - NIGHT
+
+A sudden weapon fills the room. 759a031c
+
+		ROOKIE
+	Peace at last. (21)
+
+		MEDIC
+	The war is over. (76)
+
+		SCIENTIST
+	We did it. (40)
+
+		SCIENTIST
+	We did it. (1)
+
+		ALIEN EMPEROR
+	I need a drink. (92)
+
+
+EXT. CITY RUINS - DAY
+
+A burning engine fills the room. 116888ad
+
+		COMMANDER
+	We did it. (3)
+
+		ROOKIE
+	The war is over. (7)
+
+		MEDIC
+	We did it. (76)
+
+		ROOKIE
+	I need a drink. (61)
+
+		REBEL LEADER
+	Peace at last. (19)
+
+
+EXT. CITY RUINS - DAY
+
+A dark fear fills the room. e08d37a7
+
+		REBEL LEADER
+	We did it. (69)
+
+		AI SYSTEM
+	Let's go home. (98)
+
+		MEDIC
+	We lost good people today. (73)
+
+		MEDIC
+	Look at the sunrise. (60)
+
+
+INT. COMMAND CENTER - DAY
+
+A silent hope fills the room. cdbfa3da
+
+		ROOKIE
+	We did it. (58)
+
+		MEDIC
+	Let's go home. (41)
+
+		MEDIC
+	The war is over. (76)
+
+		SCIENTIST
+	I need a drink. (32)
+
+		ALIEN EMPEROR
+	Let's go home. (18)
+
+
+INT. MESS HALL - NIGHT
+
+A dark engine fills the room. 44e4be91
+
+		COMMANDER
+	We lost good people today. (53)
+
+		REBEL LEADER
+	We lost good people today. (76)
+
+		MEDIC
+	We did it. (81)
+
+		SCIENTIST
+	Let's go home. (2)
+
+		MEDIC
+	I need a drink. (44)
+
+		REBEL LEADER
+	The war is over. (61)
+
+
+EXT. JUNGLE - DAY
+
+A silent light fills the room. a69a5430
+
+		ROOKIE
+	Let's go home. (99)
+
+		ALIEN EMPEROR
+	The war is over. (47)
+
+		MEDIC
+	Peace at last. (53)
+
+
+EXT. ALIEN DESERT - DAY
+
+A broken hope fills the room. 3cd15697
+
+		MEDIC
+	The war is over. (30)
+
+		AI SYSTEM
+	Peace at last. (13)
+
+		AI SYSTEM
+	Look at the sunrise. (74)
+
+		AI SYSTEM
+	Let's go home. (8)
+
+
+EXT. JUNGLE - DAY
+
+A burning shadow fills the room. 81324062
+
+		ROOKIE
+	I need a drink. (38)
+
+		ROOKIE
+	Look at the sunrise. (38)
+
+		AI SYSTEM
+	Let's go home. (74)
+
+		MEDIC
+	Look at the sunrise. (82)
+
+		AI SYSTEM
+	We lost good people today. (21)
+
+		SCIENTIST
+	We lost good people today. (48)
+
+
+EXT. JUNGLE - DAY
+
+A burning hope fills the room. 9f55fa66
+
+		MEDIC
+	We did it. (66)
+
+		ROOKIE
+	Peace at last. (43)
+
+		ROOKIE
+	I need a drink. (74)
+
+		COMMANDER
+	The war is over. (90)
+
+		ALIEN EMPEROR
+	We did it. (69)
+
+
+INT. MESS HALL - NIGHT
+
+A dark sky fills the room. 4f2cc3fd
+
+		MEDIC
+	The war is over. (25)
+
+		COMMANDER
+	We did it. (18)
+
+		ALIEN EMPEROR
+	Let's go home. (8)
+
+
+EXT. ALIEN DESERT - DAY
+
+A burning hope fills the room. d618fb2a
+
+		SCIENTIST
+	We did it. (87)
+
+		MEDIC
+	We did it. (69)
+
+		AI SYSTEM
+	We did it. (7)
+
+		SCIENTIST
+	Let's go home. (54)
+
+
+INT. MESS HALL - NIGHT
+
+A silent light fills the room. 67aa6681
+
+		SCIENTIST
+	We lost good people today. (26)
+
+		ROOKIE
+	Let's go home. (89)
+
+		ALIEN EMPEROR
+	We lost good people today. (97)
+
+		ALIEN EMPEROR
+	We did it. (40)
+
+
+EXT. JUNGLE - DAY
+
+A dark metal fills the room. c5abad96
+
+		ROOKIE
+	Look at the sunrise. (84)
+
+		MEDIC
+	Look at the sunrise. (38)
+
+		SCIENTIST
+	Look at the sunrise. (33)
+
+
+EXT. JUNGLE - DAY
+
+A burning weapon fills the room. b615e084
+
+		ALIEN EMPEROR
+	The war is over. (73)
+
+		MEDIC
+	We did it. (17)
+
+		MEDIC
+	I need a drink. (23)
+
+		COMMANDER
+	Look at the sunrise. (31)
+
+		ROOKIE
+	Let's go home. (11)
+
+		REBEL LEADER
+	We did it. (94)
+
+
+EXT. CITY RUINS - DAY
+
+A bright shadow fills the room. 65fe3420
+
+		SCIENTIST
+	We lost good people today. (3)
+
+		SCIENTIST
+	I need a drink. (9)
+
+		AI SYSTEM
+	Let's go home. (70)
+
+		ALIEN EMPEROR
+	We did it. (53)
+
+		AI SYSTEM
+	We lost good people today. (95)
+
+
+EXT. JUNGLE - DAY
+
+A bright metal fills the room. e3ab9188
+
+		SCIENTIST
+	We did it. (14)
+
+		MEDIC
+	The war is over. (47)
+
+		ALIEN EMPEROR
+	The war is over. (39)
+
+		COMMANDER
+	I need a drink. (21)
+
+
+EXT. ALIEN DESERT - DAY
+
+A sudden light fills the room. da3e3ec3
+
+		AI SYSTEM
+	Look at the sunrise. (22)
+
+		AI SYSTEM
+	Look at the sunrise. (86)
+
+		AI SYSTEM
+	Let's go home. (28)
+
+		SCIENTIST
+	Look at the sunrise. (36)
+
+
+INT. LABORATORY - NIGHT
+
+A ominous hope fills the room. 3e392f6d
+
+		COMMANDER
+	Peace at last. (55)
+
+		REBEL LEADER
+	Let's go home. (85)
+
+		REBEL LEADER
+	We lost good people today. (100)
+
+		AI SYSTEM
+	Peace at last. (65)
+
+		REBEL LEADER
+	I need a drink. (92)
+
+
+EXT. ALIEN DESERT - DAY
+
+A violent blood fills the room. 744a6f11
+
+		MEDIC
+	I need a drink. (20)
+
+		MEDIC
+	We did it. (58)
+
+		REBEL LEADER
+	We did it. (8)
+
+
+EXT. SPACE BATTLE - SPACE
+
+A silent fear fills the room. 499ea373
+
+		ROOKIE
+	We lost good people today. (90)
+
+		ALIEN EMPEROR
+	We did it. (42)
+
+		REBEL LEADER
+	We did it. (12)
+
+		MEDIC
+	Peace at last. (36)
+
+		ROOKIE
+	Let's go home. (33)
+
+
+INT. LABORATORY - NIGHT
+
+A broken shadow fills the room. 34ca0916
+
+		SCIENTIST
+	Peace at last. (55)
+
+		SCIENTIST
+	We lost good people today. (57)
+
+		REBEL LEADER
+	We lost good people today. (21)
+
+
+EXT. ALIEN DESERT - DAY
+
+A broken fear fills the room. 0ab1a51d
+
+		ALIEN EMPEROR
+	Look at the sunrise. (75)
+
+		ROOKIE
+	The war is over. (80)
+
+		COMMANDER
+	Look at the sunrise. (53)
+
+		AI SYSTEM
+	The war is over. (52)
+
+		REBEL LEADER
+	I need a drink. (15)
+

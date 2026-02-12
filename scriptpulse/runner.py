@@ -13,7 +13,7 @@ from .utils import runtime  # v13.0
 # vNext.11 Experimental
 from .agents import resonance, insight, silicon_stanislavski
 
-def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama', audience_profile='general', high_res_mode=False, pre_parsed_lines=None, character_context=None, experimental_mode=False, moonshot_mode=False):
+def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama', audience_profile='general', high_res_mode=False, pre_parsed_lines=None, character_context=None, experimental_mode=False, moonshot_mode=False, cpu_safe_mode=False):
     """
     Orchestrate the ScriptPulse Analysis Pipeline.
     
@@ -64,9 +64,12 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
     # === SFE: Structural Fingerprint ===
     struct_fingerprint = fingerprint.generate_structural_fingerprint(parsed, segmented)
     
+    # === v13.1: Content Fingerprint ===
+    content_fp = fingerprint.generate_content_fingerprint(parsed)
+    
     # === DRL: Deterministic Run ID ===
     lens_id = lens if lens else 'viewer'
-    run_id, version = fingerprint.generate_run_id(struct_fingerprint, lens_id, writer_intent)
+    run_id, version = fingerprint.generate_run_id(struct_fingerprint, lens_id, writer_intent, content_fingerprint=content_fp)
     
     # === REPRODUCIBILITY LOCK ===
     random.seed(int(run_id[:16], 16))
@@ -105,7 +108,17 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
     voice_map = voice.run({'scenes': segmented})
     
     # === NEW: Agent 3.7: Affective Valence (v6.5) ===
-    valence_scores = valence.run({'scenes': segmented})
+    if cpu_safe_mode:
+        # v13.1: In CPU safe mode, run valence every 3rd scene
+        valence_scores = []
+        for vi, sc in enumerate(segmented):
+            if vi % 3 == 0:
+                vs = valence.run({'scenes': [sc]})
+                valence_scores.append(vs[0] if vs else 0.0)
+            else:
+                valence_scores.append(valence_scores[-1] if valence_scores else 0.0)
+    else:
+        valence_scores = valence.run({'scenes': segmented})
     
     # === NEW: Agent 3.8: Cognitive Profiling & Coherence (v6.6) ===
     # Get Profile Params (lambda, beta, threshold)
@@ -133,8 +146,14 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
     
     if stanislavski:
         if experimental_mode or moonshot_mode: # Only run if enabled
-            print(f"[Performance] Running Batch Inference on {len(all_scene_texts)} scenes...")
-            stan_batch_results = stanislavski.analyze_script(all_scene_texts)
+            # v13.1: CPU safe mode — skip Stanislavski for very short scenes
+            if cpu_safe_mode:
+                filtered_texts = [t if len(t.split()) >= 10 else '' for t in all_scene_texts]
+                print(f"[Performance/CPU-Safe] Running Batch Inference on {sum(1 for t in filtered_texts if t)} of {len(all_scene_texts)} scenes...")
+                stan_batch_results = stanislavski.analyze_script([t for t in filtered_texts if t])
+            else:
+                print(f"[Performance] Running Batch Inference on {len(all_scene_texts)} scenes...")
+                stan_batch_results = stanislavski.analyze_script(all_scene_texts)
             
             # Extract Tension Scores for Temporal Agent
             for res in stan_batch_results:
@@ -317,6 +336,7 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
         'run_id': run_id,
         'execution_mode': ml_status,
         'fingerprint': struct_fingerprint,
+        'content_fingerprint': content_fp,
         'version': version,
         'lens': lens_id
     }

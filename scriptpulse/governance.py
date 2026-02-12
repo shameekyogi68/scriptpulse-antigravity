@@ -32,13 +32,50 @@ def validate_context(context_type: UseContext):
         raise PolicyViolationError("Invalid or missing Use Context declaration.")
     return True
 
+class InputSizeError(PolicyViolationError):
+    """Raised when input exceeds size limits."""
+    pass
+
+class BinaryInputError(PolicyViolationError):
+    """Raised when input contains non-text binary content."""
+    pass
+
+# Hard Limits
+MAX_BYTES = 5_000_000   # 5 MB
+MAX_CHARS = 1_000_000   # 1M characters
+
 def validate_request(input_text, context=None):
     """
-    Validate that the request complies with ethical boundaries.
+    Validate that the request complies with ethical and safety boundaries.
     Raises PolicyViolationError if misuse is detected.
+    Raises InputSizeError if input exceeds size limits.
+    Raises BinaryInputError if input contains non-text content.
     """
     if not input_text:
         return # Empty is handled elsewhere
+    
+    # === SIZE GUARD (Priority 1 — Must run BEFORE any parsing) ===
+    byte_size = len(input_text.encode('utf-8'))
+    char_size = len(input_text)
+    
+    if byte_size > MAX_BYTES:
+        raise InputSizeError(
+            f"Input rejected: {byte_size:,} bytes exceeds maximum of {MAX_BYTES:,} bytes (5 MB). "
+            "Please reduce script size."
+        )
+    
+    if char_size > MAX_CHARS:
+        raise InputSizeError(
+            f"Input rejected: {char_size:,} characters exceeds maximum of {MAX_CHARS:,}. "
+            "Please reduce script size."
+        )
+    
+    # === BINARY GUARD ===
+    if '\x00' in input_text:
+        raise BinaryInputError(
+            "Input rejected: Binary content detected (null bytes). "
+            "Please upload a valid UTF-8 text file."
+        )
         
     text_lower = input_text.lower()
     

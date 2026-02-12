@@ -75,4 +75,10 @@ def generate_epic_screenplay(filename="tests/scenarios/epic_200pg.txt", target_p
     print(f"Done. Generated {filename} (~{lines_written} lines).")
 
 if __name__ == "__main__":
-    generate_epic_screenplay()
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--pages", type=int, default=200, help="Number of pages to generate")
+    parser.add_argument("--output", type=str, default="tests/scenarios/epic_200pg.txt", help="Output filename")
+    args = parser.parse_args()
+    
+    generate_epic_screenplay(filename=args.output, target_pages=args.pages)

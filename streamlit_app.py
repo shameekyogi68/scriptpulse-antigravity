@@ -20,6 +20,30 @@ from scriptpulse import runner
 # PAGE CONFIGURATION
 # =============================================================================
 
+@st.cache_resource(show_spinner="Warming up the Application Layer...")
+def preload_models():
+    """Pre-load critical ML models into memory to speed up first analysis."""
+    from scriptpulse.utils.model_manager import manager
+    # Initialize Manager
+    # Pre-fetch key pipelines
+    try:
+        if manager.device >= 0:
+            print(f"Preloading on GPU: {manager.device}")
+        
+        # Load heavy hitters
+        # 1. DistilBART (Stanislavski)
+        manager.get_pipeline("zero-shot-classification", "valhalla/distilbart-mnli-12-3")
+        # 2. SBERT (Embeddings) - Implicitly loaded by semantic_flux usually
+        manager.get_sentence_transformer("all-MiniLM-L6-v2")
+        
+        return True
+    except Exception as e:
+        print(f"Preload Warning: {e}")
+        return False
+
+# Trigger Preload
+preload_models()
+
 # v13.0: Simple, friendly UI for non-technical writers
 st.set_page_config(
     page_title="ScriptPulse - Easy Script Analyzer",
@@ -34,61 +58,44 @@ st.set_page_config(
 st.markdown("""
 <style>
     /* Clean, distraction-free typography */
-    body { font-family: 'Inter', sans-serif; }
+    body { 
+        font-family: 'Inter', sans-serif; 
+        background-color: #ffffff;
+    }
+    
+    /* Force main container to be white */
+    .stApp {
+        background-color: #ffffff;
+    }
     
     /* Hide Streamlit Chrome */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
+    header {visibility: hidden;}
+    
+    /* Elegant Spacing */
+    .block-container {
+        padding-top: 2rem;
+        padding-bottom: 5rem;
+        max_width: 900px;
+    }
     
     /* Signal Boxes - Writer Native Colors */
     .signal-box {
-        padding: 15px;
-        border-left: 4px solid;
-        background-color: #f8f9fa; /* Light grey base */
-        border-radius: 4px;
-        margin-bottom: 15px;
-        color: #1a1a1a;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
-    
-    /* Tension / Demand (Red/Orange) */
-    .signal-tension { border-color: #FF4B4B; }
-    
-    /* Drift / Loss of Grip (Yellow/Amber) */
-    .signal-drift { border-color: #FFA500; }
-    
-    /* Stability / Flow (Green/Teal) */
-    .signal-flow { border-color: #00CC66; background-color: #e8f5e9; }
-
-    /* AFFECTIVE STATES (v6.5) */
-    /* Excitement (High Arousal + Pos Valence) -> Purple/Blue */
-    .signal-excitement { border-color: #8A2BE2; background-color: #f3e5f5; }
-    
-    /* Anxiety (High Arousal + Neg Valence) -> Red (Standard) */
-    .signal-anxiety { border-color: #FF4B4B; background-color: #ffebee; }
-    
-    /* Melancholy (Low Arousal + Neg Valence) -> Grey/Blue */
-    .signal-melancholy { border-color: #607D8B; background-color: #eceff1; }
-    
-    /* Script Editor View (Monospace) */
-    .script-view {
-        font-family: 'Courier Prime', 'Courier New', monospace;
-        background-color: #ffffff;
         padding: 20px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        color: #333;
-        white-space: pre-wrap;
-        height: 600px;
-        overflow-y: auto;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        background-color: #fafafa;
+        border: 1px solid #eee;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
     }
     
-    /* Footer Disclaimer */
-    .disclaimer {
-        font-size: 0.8em;
-        color: #888;
-        margin-top: 50px;
-        text-align: center;
+    /* Metric Cards */
+    div[data-testid="stMetric"] {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px solid #eee;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -98,27 +105,27 @@ st.markdown("""
 # =============================================================================
 
 with st.sidebar:
-    # v13.0: Friendly, simple title
-    st.title("ScriptPulse: Story Analysis Tool")
-    st.caption("Upload your script and get instant feedback - no technical knowledge needed!")
+    st.title("ScriptPulse")
+    st.caption("Writer-Native Analytics")
     
-    # Mode Selection (v10.0: Market Readiness)
-    mode = st.sidebar.radio("Analysis Mode", ["Full Script Analysis", "Scene Comparison (A/B)"])
+    st.markdown("---")
     
-    # --- MODE 1: SCENE COMPARISON (A/B) ---
-    if mode == "Scene Comparison (A/B)":
-        st.header("⚖️ Scene A/B Testing")
-        st.caption("Compare two versions of a scene side-by-side to see which hits harder.")
+    # Simplified Mode Selection
+    mode = st.radio("Mode", ["Script Analysis", "Scene Compare"], label_visibility="collapsed")
+    
+    if mode == "Scene Compare":
+        st.header("⚖️ Scene A/B")
+        st.caption("Compare two versions.")
         
         col1, col2 = st.columns(2)
         with col1:
-            file_a = st.file_uploader("Upload Version A", key="file_a")
+            file_a = st.file_uploader("Version A", key="file_a")
         with col2:
-            file_b = st.file_uploader("Upload Version B", key="file_b")
+            file_b = st.file_uploader("Version B", key="file_b")
             
         if file_a and file_b:
-            if st.button("Compare Versions"):
-                # Run lightweight analysis
+            if st.button("Compare"):
+                # ... (Logic remains same, just cleaner UI) ...
                 import scriptpulse.agents.parsing as p
                 import scriptpulse.agents.temporal as t
                 import scriptpulse.agents.valence as v
@@ -126,56 +133,34 @@ with st.sidebar:
                 def analyze_snippet(f):
                     txt = f.getvalue().decode('utf-8')
                     parsed = p.run(txt)
-                    # Hack: Treat snippets as single scenes
                     scene = {'lines': parsed, 'scene_index': 0}
-                    
-                    # Manual extraction
                     temp_score = t.calculate_attentional_pulse({'scenes': [scene]})[0]
                     val_score = v.run({'scenes': [scene]})[0]
-                    return temp_score, val_score, len(parsed)
+                    return temp_score, val_score
                     
-                t_a, v_a, len_a = analyze_snippet(file_a)
-                t_b, v_b, len_b = analyze_snippet(file_b)
+                t_a, v_a = analyze_snippet(file_a)
+                t_b, v_b = analyze_snippet(file_b)
                 
-                # Display Results
                 c1, c2 = st.columns(2)
                 with c1:
-                    st.metric("Cognitive Load (Effort)", f"{t_a['attentional_signal']:.2f}", 
-                             delta=f"{t_a['attentional_signal'] - t_b['attentional_signal']:.2f} vs B")
-                    st.metric("Emotional Impact (Valence)", f"{v_a:.2f}")
-                    st.subheader("Version A")
-                
+                    st.metric("Tension (A)", f"{t_a['attentional_signal']:.2f}")
                 with c2:
-                    st.metric("Cognitive Load (Effort)", f"{t_b['attentional_signal']:.2f}",
-                             delta=f"{t_b['attentional_signal'] - t_a['attentional_signal']:.2f} vs A")
-                    st.metric("Emotional Impact (Valence)", f"{v_b:.2f}")
-                    st.subheader("Version B")
+                    st.metric("Tension (B)", f"{t_b['attentional_signal']:.2f}")
                     
-        st.stop() # Stop here so we don't render the main app
+        st.stop()
         
-    # --- MODE 2: FULL ANALYSIS (The Original App) ---
-    
+    # --- INFO ---
     st.info(
-        "**The Pulse Line**\n"
-        "Visualize the rhythmic heartbeat of your story. "
-        "See where attention tightens, and where it releases."
+        "**Reading the Pulse**\n\n"
+        "🔴 **High Tension**: Demanding, intense.\n"
+        "🟢 **Flow**: Balanced, engaging.\n"
+        "🟠 **Risk**: Low energy, potential drift."
     )
     
     st.markdown("---")
-    st.markdown("**How to Read Signals**")
-    
-    st.markdown("🔴 **Tension / Demand**")
-    st.caption("High effort. The audience is working hard.")
-    
-    st.markdown("🟠 **Drift / Risk**")
-    st.caption("Pacing softens. Grip may loosen.")
-    
-    st.markdown("🟢 **Flow / Stability**")
-    st.caption("Effort and recovery are balanced.")
-    
-    st.markdown("---")
-    st.markdown("**Research Controls**")
-    ref_file = st.file_uploader("Upload Target (Reference)", type=['txt', 'pdf'], help="Compare against a gold standard (e.g. Pulp Fiction).")
+    # Hide complex settings by default
+    with st.expander("⚙️ Advanced Settings"):
+         ref_file = st.file_uploader("Reference Script", type=['txt', 'pdf'])
 
 # =============================================================================
 # MAIN INTERFACE
@@ -350,64 +335,40 @@ if script_input and st.button("Analyze Rhythm", type="primary"):
     bar.progress(30)
     
     start_time = time.time()
-    report = runner.run_pipeline(
+    # Caching Wrapper
+    @st.cache_data(show_spinner="Analyzing script structure and semantics...")
+    def cached_analysis(text, intent, lens, genre, profile, high_res):
+        return runner.run_pipeline(
+            text, 
+            writer_intent=intent,
+            lens=lens,
+            genre=genre,
+            audience_profile=profile,
+            high_res_mode=high_res,
+            experimental_mode=True, # Enable Research-Grade ML
+            moonshot_mode=True      # Enable Stanislavski & Resonance
+        )
+        
+    start_time = time.time()
+    report = cached_analysis(
         script_input, 
-        writer_intent=writer_intent,
-        lens=selected_lens,
-        genre=selected_genre,
-        audience_profile=selected_profile,
-        high_res_mode=use_high_res # NEW v7.0
+        writer_intent,
+        selected_lens,
+        selected_genre,
+        selected_profile,
+        use_high_res
     )
     bar.progress(100)
     bar.progress(100)
-    # === BIOMETRIC VALIDATION LAB (v7.0) ===
-    # Only show if not high res? Or both?
-    try:
-        from research import biometrics
-        import pandas as pd # Added import for pandas
-        with st.expander("🧪 Biometric Validation Lab (Empirical)", expanded=False):
-            bio_file = st.file_uploader("Import Physiological Data (CSV)", type=['csv'], help="Columns: Time, HeartRate/GSR")
-            if bio_file:
-                # Mock parsing of CSV for Demo
-                # Ideally: pd.read_csv -> clean -> list of floats
-                try:
-                    df_bio = pd.read_csv(bio_file)
-                    # Assume first numeric col is data
-                    numeric_cols = df_bio.select_dtypes(include=['float', 'int']).columns
-                    if len(numeric_cols) > 0:
-                        real_data = df_bio[numeric_cols[0]].tolist()
-                        sim_trace = report.get('temporal_trace', [])
-                        
-                        r_score = biometrics.correlate_biometrics(sim_trace, real_data)
-                        
-                        b_col1, b_col2 = st.columns(2)
-                        with b_col1:
-                            st.metric("Pearson Correlation", f"{r_score:.3f}")
-                        with b_col2:
-                            if r_score > 0.7:
-                                st.success("Strong Validation (Scientific Proof)")
-                            elif r_score > 0.4:
-                                st.info("Moderate Validation")
-                            else:
-                                st.warning("Weak Correlation (Model Mismatch)")
-                                
-                        # Plot Overlay? (Future)
-                    else:
-                        st.error("CSV has no numeric data.")
-                except Exception as e:
-                    st.error(f"Bio Data Error: {e}")
-            else:
-                 st.info("Upload real human heart-rate data to validate this trace.")
-                 
-    except ImportError:
-        pass
+    # === BIOMETRICS REMOVED (Simplification) ===
+    # Code removed to keep UI clean for writers.
+    pass
     
     status.empty()
     bar.empty()
     
-    # === TOP STATS CARD (v21.0 - Clean UI) ===
+    # === THE PULSE DASHBOARD (Writer-First) ===
     st.markdown("---")
-    st.markdown("### 📊 Quick Summary")
     
     # Calculate key metrics
     trace = report.get('temporal_trace', [])
@@ -416,42 +377,51 @@ if script_input and st.button("Analyze Rhythm", type="primary"):
     
     valence_scores = report.get('valence_scores', [])
     avg_valence = sum(valence_scores) / len(valence_scores) if valence_scores else 0
+    
+    # Default (Lexicon)
     if avg_valence > 0.1:
-        tone_label = "Positive"
-        tone_emoji = "😊"
+        tone_label = "Bright" # Writer term
+        tone_emoji = "☀️"
     elif avg_valence < -0.1:
-        tone_label = "Serious"
-        tone_emoji = "😐"
+        tone_label = "Dark" # Writer term
+        tone_emoji = "🌑"
     else:
-        tone_label = "Balanced"
-        tone_emoji = "⚖️"
+        tone_label = "Neutral"
+        tone_emoji = "☁️"
+        
+    # v13.0: OVERRIDE with ML Emotion (Stanislavski)
+    ms_data = report.get('moonshot_resonance', [])
+    if ms_data:
+        emotions = [s.get('stanislavski_state', {}).get('felt_emotion', 'Neutral') for s in ms_data]
+        valid_emotions = [e for e in emotions if e and 'N/A' not in e]
+        
+        if valid_emotions:
+            from collections import Counter
+            dom_emo = Counter(valid_emotions).most_common(1)[0][0]
+            tone_label = dom_emo
+            
+            # Writer-Centric Emojis
+            if "Fear" in dom_emo: tone_emoji = "😨 Tension"
+            elif "Suspicion" in dom_emo: tone_emoji = "👀 Mystery"
+            elif "Empowered" in dom_emo: tone_emoji = "⚡ Drive"
+            elif "Helpless" in dom_emo: tone_emoji = "🏳️ Tragedy"
+            elif "Trust" in dom_emo: tone_emoji = "🤝 Warmth"
+            else: tone_emoji = "🎭 Drama"
     
     runtime = report.get('runtime_estimate', {})
     runtime_min = runtime.get('avg_minutes', 0)
     
-    # Display in 3 columns with colored boxes
-    col1, col2, col3 = st.columns(3)
+    # Display in 4 clean columns
+    c1, c2, c3, c4 = st.columns(4)
     
-    with col1:
-        st.metric(
-            label="🎯 Intensity Score",
-            value=f"{intensity_score}/10",
-            help="Overall cognitive demand (0=light, 10=intense)"
-        )
-    
-    with col2:
-        st.metric(
-            label=f"{tone_emoji} Emotional Tone",
-            value=tone_label,
-            help="Overall emotional quality of the script"
-        )
-    
-    with col3:
-        st.metric(
-            label="⏱️ Runtime",
-            value=f"~{runtime_min} min",
-            help="Estimated screen time"
-        )
+    with c1:
+        st.metric("Tension", f"{intensity_score}/10")
+    with c2:
+        st.metric("Mood", tone_label)
+    with c3:
+        st.metric("Pacing", "Fast" if intensity_score > 6 else "Slow")
+    with c4:
+        st.metric("Runtime", f"{runtime_min} mins")
     
     # === COLLAPSIBLE SECTIONS (v21.0) ===
     
@@ -538,380 +508,154 @@ if script_input and st.button("Analyze Rhythm", type="primary"):
                         st.markdown("")  # spacing
                     
                     
-    # === DEEP ANALYSIS & ETHICS (Tabs) ===
-    st.markdown("### 🔬 Deep Insights")
+    # === WRITER WORKSPACE ===
+    st.markdown("### 📖 Story Analysis")
     
-    # v13.0: Simplified tab names
-    tabs_list = [
-        "Quick Summary",
-        "Character Details",
-        "Bias Check",
-        "Compare to Classics",
-        "Writing Tips"
-    ]
+    tabs = st.tabs(["Themes & Drivers", "Characters", "Structure", "Subtext (AI)"])
     
-    # vNext.11: Conditional Moonshot Tab
-    moonshot_data = report.get('moonshot_resonance', [])
-    if moonshot_data:
-        tabs_list.append("🚀 Moonshot: Cognitive Resonance")
+    # Map tabs
+    tab_drivers = tabs[0]
+    tab_chars = tabs[1]
+    tab_struct = tabs[2]
+    tab_subtext = tabs[3]
+    
+    # 1. THEMES & DRIVERS (was Quick Summary / XAI)
+    with tab_drivers:
+        st.caption("What is driving your story?")
+        xai_attribution = report.get('xai_attribution', [])
         
-    tabs = st.tabs(tabs_list)
-    
-    # Map tabs to variables for convenience
-    tab1 = tabs[0]
-    tab2 = tabs[1]
-    tab3 = tabs[2]
-    tab4 = tabs[3]
-    tab5 = tabs[4]
-    
-    if moonshot_data:
-         with tabs[-1]:
-            st.info("🧠 **vNext.11 Experimental Layer Active**")
-            st.markdown("Visualizing the 'internal state' of the agent (Silicon Stanislavski).")
+        if xai_attribution:
+            first = xai_attribution[0] if isinstance(xai_attribution, list) and len(xai_attribution) > 0 else {}
+            driver = first.get('dominant_driver', 'Unknown').title()
+            st.markdown(f"**Primary Driver**: {driver}")
+            
+            drivers = first.get('drivers', {})
+            if drivers:
+                # Custom Clean Progress Bars
+                for d, pct in drivers.items():
+                    st.text(f"{d.title()}")
+                    st.progress(pct)
+
+    # 4. SUBTEXT (was Moonshot)
+    with tab_subtext:
+        if moonshot_data:
+            st.info("🧠 **AI Subtext Reader**")
+            st.caption("The AI 'reads' the subtext (Safety, Trust, Agency).")
             
             # Prepare Dataframes
             ms_records = []
             for scene in moonshot_data:
                 state = scene['stanislavski_state']['internal_state']
-                res = scene['resonance']
-                ins = scene['insight']
-                
-                rec = {
+                ms_records.append({
                     'Scene': scene['scene_index'],
                     'Safety': state.get('safety', 0),
                     'Trust': state.get('trust', 0),
-                    'Agency': state.get('agency', 0),
-                    'Resonance': res.get('resonance_score', 0),
-                    'Entropy Delta': ins.get('entropy_delta', 0)
-                }
-                ms_records.append(rec)
+                    'Agency': state.get('agency', 0)
+                })
             
             df_ms = pd.DataFrame(ms_records).set_index('Scene')
             
-            # 1. Emotional Seismograph
-            st.subheader("💓 Emotional Seismograph (Internal State)")
-            st.caption("Tracking the agent's simulated feelings of Safety, Trust, and Agency.")
-            st.line_chart(df_ms[['Safety', 'Trust', 'Agency']])
+            st.subheader("Emotional Arc")
+            st.line_chart(df_ms[['Safety', 'Trust', 'Agency']], color=["#00CC66", "#FFA500", "#FF4B4B"])
+        else:
+            st.caption("No subtext data available.")
             
-            # 2. Resonance Heatmap
-            st.subheader("🔥 Thematic Resonance")
-            st.caption("Scenes where Structural Effort *multiplied* by Thematic Depth.")
-            st.bar_chart(df_ms['Resonance'])
-            
-            # 3. Insight Markers
-            st.subheader("💡 Insight Cacades (Aha! Moments)")
-            st.caption("Sudden drops in entropy signaling resolution or realization.")
-            
-            # Highlight insights
-            insights = [r for r in ms_records if r['Entropy Delta'] > 0.1] # Threshold
-            if insights:
-                for ins in insights:
-                    st.success(f"**Scene {ins['Scene']}**: Entropy Drop of {ins['Entropy Delta']:.3f} (Insight Event)")
-            else:
-                st.caption("No massive insight cascades detected in this run.")
-
-    
-    with tab1:
-        # xai_attribution is a LIST of dicts (one per scene)
-        xai_attribution = report.get('xai_attribution', [])
+    # 2. CHARACTERS (was Voice Map / Chemistry)
+    with tab_chars:
+        st.caption("Do your characters sound distinct? Do they grow?")
         
-        if xai_attribution and len(xai_attribution) > 0:
-            # Show overall dominant driver (from first scene or aggregate)
-            first_scene_xai = xai_attribution[0] if isinstance(xai_attribution[0], dict) else {}
-            dominant_driver = first_scene_xai.get('dominant_driver', 'Unknown')
-            
-            st.markdown(f"**Primary Driver:** {dominant_driver.title() if isinstance(dominant_driver, str) else 'Unknown'}")
-            
-            # Show driver breakdown (from first scene)
-            drivers = first_scene_xai.get('drivers', {})
-            if drivers:
-                st.caption("Contribution breakdown:")
-                for driver, pct in drivers.items():
-                    st.progress(pct, text=f"{driver}: {int(pct*100)}%")
-            
-        # v10.1: Voice Distinctiveness Map
         voice_data = report.get('voice_fingerprints', {})
         if voice_data:
-            st.markdown("---")
-            st.subheader("🗣️ Character Voice Map")
-            st.caption("Are your characters distinct? Overlapping dots = 'Same Voice' problem.")
-            
-            # Prepare Data for Scatter Plot
-            # Streamlit scatter_chart is simple, lets use Vega-Lite via st.vega_lite_chart or just st.scatter_chart
-            # st.scatter_chart takes a DF with x, y, color, size
-            
+            # A. Voice Map
+            st.subheader("🗣️ Voice Distinctiveness")
             v_data = []
             for char, metrics in voice_data.items():
                 v_data.append({
                     'Character': char,
-                    'Complexity (Intellect)': metrics['complexity'],
-                    'Positivity (Tone)': metrics['positivity'],
-                    'Agency (Active Verbs)': metrics['agency'] * 100, # Scale for size
+                    'Complexity': metrics['complexity'],
+                    'Positivity': metrics['positivity'],
+                    'Agency': metrics['agency'] * 100, 
                     'Lines': metrics['line_count']
                 })
             
             if v_data:
-                df_voice = pd.DataFrame(v_data)
-                st.scatter_chart(
-                    df_voice,
-                    x='Complexity (Intellect)',
-                    y='Positivity (Tone)',
-                    size='Agency (Active Verbs)',
-                    color='Character',
-                )
-            else:
-                st.info("Not enough dialogue for Voice Analysis.")
+                st.scatter_chart(pd.DataFrame(v_data), x='Complexity', y='Positivity', size='Agency', color='Character')
             
-            # v13.0: Character Arc Tracking (Growth Over Time)
             st.markdown("---")
-            st.subheader("📈 Character Growth Tracker")
-            st.caption("Do your characters evolve? This shows if they become more confident/active over the story.")
             
-            voice_map = report.get('voice_fingerprints', {})
-            if voice_map and len(report['scenes']) > 6:  # Need enough scenes for acts
-                # Divide script into 3 acts
-                num_scenes = len(report['scenes'])
-                act1_end = num_scenes // 3
-                act2_end = 2 * num_scenes // 3
-                
-                # Calculate agency per act for each character
+            # B. Character Growth (Arc)
+            st.subheader("📈 Character Growth")
+            if len(report.get('scenes', [])) > 6:
+                # Simple logic: Act 1 vs Act 3 Agency
                 char_arcs = {}
-                for char, profile in voice_map.items():
-                    if profile['line_count'] < 5:  # Skip minor characters
-                        continue
+                scenes = report['scenes']
+                n_scenes = len(scenes)
+                for char, profile in voice_data.items():
+                    if profile['line_count'] < 5: continue
                     
-                    # Get agency scores per scene
-                    scenes = report['scenes']
-                    act1_agency = []
-                    act2_agency = []
-                    act3_agency = []
+                    # Trend Calculation (Simplified)
+                    active_scores = []
+                    for s in scenes:
+                         # Check if char in scene lines
+                         if any(char in l.get('text', '') for l in s['lines'] if l.get('tag')=='C'):
+                             active_scores.append(report['valence_scores'][s['scene_index']] if s['scene_index'] < len(report['valence_scores']) else 0)
                     
-                    for i, scene in enumerate(scenes):
-                        # Check if character speaks in this scene
-                        char_in_scene = any(
-                            line.get('tag') == 'C' and char in line.get('text', '')
-                            for line in scene['lines']
-                        )
-                        if not char_in_scene:
-                            continue
-                            
-                        # Use valence as proxy for "agency" (positive = active)
-                        val_scores = report.get('valence_scores', [])
-                        if i < len(val_scores):
-                            if i < act1_end:
-                                act1_agency.append(val_scores[i])
-                            elif i < act2_end:
-                                act2_agency.append(val_scores[i])
-                            else:
-                                act3_agency.append(val_scores[i])
-                    
-                    if act1_agency and act3_agency:
-                        char_arcs[char] = {
-                            'Act 1': sum(act1_agency) / len(act1_agency) if act1_agency else 0,
-                            'Act 2': sum(act2_agency) / len(act2_agency) if act2_agency else 0,
-                            'Act 3': sum(act3_agency) / len(act3_agency) if act3_agency else 0
-                        }
+                    if len(active_scores) > 2:
+                        start = sum(active_scores[:len(active_scores)//3]) / max(1, len(active_scores)//3)
+                        end = sum(active_scores[-len(active_scores)//3:]) / max(1, len(active_scores)//3)
+                        char_arcs[char] = {'Start': start, 'End': end, 'Growth': end - start}
                 
                 if char_arcs:
-                    # Show as simple line chart
-                    import pandas as pd
-                    arc_df = pd.DataFrame(char_arcs).T
-                    st.line_chart(arc_df)
-                    
-                    # Interpret
-                    for char, scores in char_arcs.items():
-                        trend = scores['Act 3'] - scores['Act 1']
-                        if trend > 0.1:
-                            st.success(f"✅ **{char}** grows more confident/positive (↗️ +{trend:.2f})")
-                        elif trend < -0.1:
-                            st.warning(f"⚠️ **{char}** becomes more negative/passive (↘️ {trend:.2f})")
-                        else:
-                            st.info(f"➡️ **{char}** stays consistent")
-                else:
-                    st.info("Not enough data to track character arcs.")
+                    for char, data in char_arcs.items():
+                        trend = data['Growth']
+                        icon = "↗️" if trend > 0.1 else "↘️" if trend < -0.1 else "➡️"
+                        st.metric(f"{char}", f"{icon} {trend:.2f} Growth")
             
-            # v11.0: Interaction Heatmap (Chemistry)
+            # C. Chemistry
             interaction_map = report.get('interaction_map', {})
-            # Need to compute Valence for pairs
-            # Map: "A|B" -> [idx, idx]
-            # Valence: report['valence_scores'][idx]
-            
             if interaction_map:
                 st.markdown("---")
-                st.subheader("💞 Interaction Chemistry (Heatmap)")
-                st.caption("How positive/negative are key relationships? (Red = Conflict, Blue = Bonding)")
-                
-                val_scores = report.get('valence_scores', [])
+                st.subheader("💞 Interaction Chemistry")
                 chem_data = []
+                val_scores = report.get('valence_scores', [])
                 
                 for pair, indices in interaction_map.items():
-                    if len(indices) < 2: continue # Ignore brief encounters
-                    
-                    # Calculate Avg Valence for this Pair
-                    pair_vals = [val_scores[i] for i in indices if i < len(val_scores)]
-                    if not pair_vals: continue
-                    
-                    avg_val = sum(pair_vals) / len(pair_vals)
+                    if len(indices) < 2: continue
+                    p_vals = [val_scores[i] for i in indices if i < len(val_scores)]
+                    avg = sum(p_vals)/len(p_vals)
                     c1, c2 = pair.split('|')
-                    chem_data.append({'Char A': c1, 'Char B': c2, 'Chemistry': avg_val})
-                    # Add symmetric for full matrix
-                    chem_data.append({'Char A': c2, 'Char B': c1, 'Chemistry': avg_val})
-                    
+                    chem_data.append({'Char A': c1, 'Char B': c2, 'Chemistry': avg})
+                
                 if chem_data:
-                    df_chem = pd.DataFrame(chem_data)
-                    # Pivot to matrix
-                    matrix = df_chem.pivot(index='Char A', columns='Char B', values='Chemistry').fillna(0)
-                    st.dataframe(matrix.style.background_gradient(cmap='coolwarm', vmin=-0.5, vmax=0.5))
-                else:
-                    st.info("No significant character interactions found.")
-            
-    with tab2: # ACT Structure
+                     st.dataframe(pd.DataFrame(chem_data).style.background_gradient(cmap='coolwarm', vmin=-0.5, vmax=0.5))
+
+    # 3. STRUCTURE (was Act Fidelity)
+    with tab_struct:
+        st.caption("Does the story hold together?")
+        
         macro = report.get('macro_structure_fidelity', {})
         if macro:
-            best_fit = macro.get('best_fit_template', 'Unknown')
-            score = macro.get('fidelity_score', 0.0)
-            st.metric("Structure Fidelity Score", f"{macro.get('fidelity_score', 0)}%")
-            st.caption("Adherence to standard 3-Act structure (Setup, Confrontation, Resolution).")
+            st.metric("Structure Fidelity", f"{macro.get('fidelity_score', 0)}%")
+            st.caption(f"Best fit: {macro.get('best_fit_template', 'Unknown')}")
             
-        # v10.1: Act Sequence Analysis
-        st.markdown("### 🎬 Act Sequence Analysis")
         trace = report.get('temporal_trace', [])
         if len(trace) > 10:
+            st.subheader("Act Pacing")
             n = len(trace)
-            act1_end = int(n * 0.25)
-            act2_end = int(n * 0.75)
-            
             acts = {
-                "Act 1 (Setup)": trace[:act1_end],
-                "Act 2 (Confrontation)": trace[act1_end:act2_end],
-                "Act 3 (Resolution)": trace[act2_end:]
+                "Act 1": trace[:int(n*0.25)],
+                "Act 2": trace[int(n*0.25):int(n*0.75)],
+                "Act 3": trace[int(n*0.75):]
             }
-            
-            act_data = []
+            act_rows = []
             for name, scenes in acts.items():
-                if not scenes: continue
-                avg_t = sum(s.get('attentional_signal', 0) for s in scenes) / len(scenes) if scenes else 0
-                valence_scores = report.get('valence_scores', [])
-                avg_v = sum(valence_scores[s['scene_index']] for s in scenes if s.get('scene_index', 0) < len(valence_scores)) / len(scenes) if scenes and valence_scores else 0
-                act_data.append({
-                    "Act": name,
-                    "Avg Tension": avg_t,
-                    "Avg Valence": avg_v,
-                    "Scenes": len(scenes)
-                })
-                
-            st.table(pd.DataFrame(act_data).set_index("Act").style.highlight_max(axis=0))
-        else:
-            st.info("Script too short for Act Analysis.")
-            st.metric("Narrative Arc Match", best_fit, delta=f"{score*100:.1f}% Fidelity")
-            
-    with tab3: # FAIRNESS AUDIT (v8.0)
-        fairness = report.get('fairness_audit', {})
-        risks = fairness.get('stereotyping_risks', [])
-        if risks:
-            st.error("⚠️ Algorithmic Fairness Warnings")
-            for r in risks:
-                st.write(f"- {r}")
-        else:
-            st.success("No Significant Stereotyping Risks Detected.")
-        stats = fairness.get('representation_stats', {})
-        if stats:
-            st.caption("Character Representation Stats")
-            st.dataframe(stats)
-            
-    with tab4: # COMPARATIVE BENCHMARK (v9.0)
-        # Main Pulse Chart
-        st.subheader("📈 Cognitive Intensity Over Time")
-        
-        # v12.0: Benchmark Overlay
-        benchmark_options = ["None", "Linear Rise", "Three-Act", "Hero's Journey"]
-        selected_benchmark = st.selectbox("Compare to Classic:", benchmark_options, help="Overlay your script against classic narrative structures")
-        
-        chart_data = pd.DataFrame({
-            'Your Script': [p.get('attentional_signal', 0) for p in report.get('temporal_trace', [])]
-        })
-        
-        if selected_benchmark != "None":
-            # Simple benchmark patterns
-            n = len(chart_data)
-            if selected_benchmark == "Linear Rise":
-                chart_data['Classic Pattern'] = [i/n for i in range(n)]
-            elif selected_benchmark == "Three-Act":
-                chart_data['Classic Pattern'] = [0.3 if i < n*0.25 else 0.7 if i < n*0.75 else 0.9 for i in range(n)]
-            elif selected_benchmark == "Hero's Journey":
-                # This pattern is a simplified example, ensure it matches the length of chart_data
-                hero_pattern = [0.2, 0.4, 0.5, 0.3, 0.6, 0.8, 0.9, 0.7, 0.5]
-                chart_data['Classic Pattern'] = (hero_pattern * (n // len(hero_pattern) + 1))[:n]
-            
-        st.line_chart(chart_data)
-        
-        # v12.0: Visual Beat Board (Index Card View)
-        st.markdown("---")
-        st.subheader("🗂️ Visual Beat Board")
-        st.caption("Your script as Index Cards. Color = Tension (Red=Intense, Gray=Calm)")
-        
-        # Create cards
-        trace = report.get('temporal_trace', [])
-        cols_per_row = 5
-        for row_start in range(0, len(trace), cols_per_row):
-            cols = st.columns(cols_per_row)
-            for i, col in enumerate(cols):
-                idx = row_start + i
-                if idx >= len(trace):
-                    break
-                    
-                point = trace[idx]
-                tension = point.get('attentional_signal', 0)
-                state = point.get('affective_state', 'Normal')
-                
-                # Color mapping
-                if tension > 0.8:
-                    color = "#ff4444"  # Red
-                elif tension > 0.6:
-                    color = "#ff9944"  # Orange
-                elif tension > 0.4:
-                    color = "#ffdd44"  # Yellow
-                else:
-                    color = "#dddddd"  # Gray
-                    
-                # Emoji for state
-                emoji = "🔥" if state == "Anxiety" else "😐" if state == "Normal" else "🔵"
-                
-                with col:
-                    st.markdown(
-                        f"""
-                        <div style="background: {color}; padding: 10px; border-radius: 5px; margin: 5px 0; min-height: 80px; border: 2px solid #333;">
-                            <div style="font-weight: bold; font-size: 11px;">Scene {idx+1} {emoji}</div>
-                            <div style="font-size: 10px; color: #333;">Tension: {tension:.2f}</div>
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
-        
-        st.markdown("---")
-        # New v9.1 Comparison: Hybrid NLP vs Heuristic
-        flux = report.get('semantic_flux', [])
-        if flux:
-            st.markdown("---")
-            st.markdown("**2. Focus & Coherence Check**")
-            st.caption("Comparision of 'Thematic Focus' (Blue) vs 'Structural Coherence' (Red).")
-            
-            # Get Coherence scores from trace
-            coherence_vals = [p.get('coherence_penalty', 0.0) for p in report.get('temporal_trace', [])]
-            
-            min_len_flux = min(len(flux), len(coherence_vals))
-            
-            flux_chart = pd.DataFrame({
-                'Thematic Shift (Topic Change)': flux[:min_len_flux],
-                'Disorientation Risk (Coherence)': coherence_vals[:min_len_flux]
-            })
-            st.area_chart(flux_chart)
+                if scenes:
+                    avg_t = sum(s.get('attentional_signal', 0) for s in scenes) / len(scenes)
+                    act_rows.append({'Act': name, 'Avg Tension': f"{avg_t:.2f}"})
+            st.table(pd.DataFrame(act_rows).set_index("Act"))
 
-    with tab5: # HCI / Comparator
-        import sys 
-        if 'comparator' in sys.modules:
-            pass 
-        st.info("Longitudinal tracking active in sidebar.")
+    # Cleanup Sidebar Message
+    # (Removed longitudinal info for simplicity)
     
     # Store current run for next time
     st.session_state['prev_run'] = report

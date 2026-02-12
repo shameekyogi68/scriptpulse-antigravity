@@ -22,20 +22,40 @@ def estimate_runtime(scenes):
     lines_per_page = 55
     
     for scene in scenes:
-        for line in scene['lines']:
-            tag = line.get('tag', 'A')
+        lines = scene.get('lines', [])
+        # Count all lines for page estimation
+        total_lines_in_scene = len(lines)
+        
+        # Heuristic: If lines are missing but text exists, estimate
+        if total_lines_in_scene == 0 and scene.get('text'):
+            total_lines_in_scene = len(scene['text'].split('\n'))
             
-            if tag == 'D':  # Dialogue
-                dialogue_lines += 1
-            elif tag == 'A':  # Action
-                action_lines += 1
+        dialogue_count = 0
+        action_count = 0
+        
+        for line in lines:
+            tag = line.get('tag', 'A')
+            # Support both legacy (D) and new (dialogue) tags
+            if tag in ['D', 'dialogue', 'parenthetical']:
+                dialogue_count += 1
+            elif tag in ['A', 'action', 'scene_heading', 'transition', 'shot']:
+                action_count += 1
                 
-    total_lines = dialogue_lines + action_lines
-    if total_lines == 0:
-        return {'min_minutes': 0, 'max_minutes': 0, 'avg_minutes': 0}
+        dialogue_lines += dialogue_count
+        action_lines += action_count
+        
+        # If parsing failed or empty, assume mix based on text length
+        if total_lines_in_scene > 0:
+             pass # we have data
+        else:
+             total_lines_in_scene = max(1, len(scene.get('text', '')) // 40) # 40 chars ~ 1 line?
+             
+        total_pages += (total_lines_in_scene / lines_per_page)
+
+    total_lines = dialogue_lines + action_lines # Used for ratio only
     
-    # Calculate pages
-    total_pages = total_lines / lines_per_page
+    if total_pages == 0:
+        return {'min_minutes': 0, 'max_minutes': 0, 'avg_minutes': 0}
     
     # Base estimate: 1 page = 1 minute (industry standard)
     base_minutes = total_pages

@@ -40,19 +40,34 @@ def generate_structural_fingerprint(parsed_lines, scenes):
     
     return fingerprint
 
-def generate_run_id(fingerprint, lens_config_id, intent_data=None):
+def generate_content_fingerprint(parsed_lines):
+    """
+    v13.1: Generate a content-aware hash that changes on ANY text edit.
+    Normalized: lowercase, whitespace collapsed, timestamps removed.
+    """
+    import re
+    combined = " ".join(l.get('text', '') for l in parsed_lines)
+    # Normalize
+    normalized = combined.lower()
+    normalized = re.sub(r'\s+', ' ', normalized).strip()
+    normalized = re.sub(r'\d{1,2}:\d{2}(:\d{2})?', '', normalized)  # Remove timestamps
+    
+    return hashlib.sha256(normalized.encode('utf-8')).hexdigest()
+
+def generate_run_id(fingerprint, lens_config_id, intent_data=None, content_fingerprint=None):
     """
     Generate a Deterministic Run ID (DRL).
     
-    RunID = hash(Structure + Calibration + Config + Intent)
+    v13.1: Now includes content_fingerprint so word-level edits change the run ID.
+    
+    RunID = hash(Structure + Content + Calibration + Config + Intent)
     
     Guarantees: Same input + Same settings = Same ID.
     """
-    # Intent hash
     intent_str = json.dumps(intent_data, sort_keys=True) if intent_data else "no_intent"
+    content_fp = content_fingerprint or "no_content"
     
-    # Payload to sign
-    payload = f"{fingerprint}|{CALIBRATION_VERSION}|{lens_config_id}|{intent_str}"
+    payload = f"{fingerprint}|{content_fp}|{CALIBRATION_VERSION}|{lens_config_id}|{intent_str}"
     
     run_id = hashlib.sha256(payload.encode('utf-8')).hexdigest()
     
