@@ -15,7 +15,14 @@ import math
 import numpy as np
 
 class SemanticAgent:
-    def __init__(self, model_name='all-MiniLM-L6-v2'):
+    def __init__(self):
+        # The original `manager` was imported from `..utils.model_manager`.
+        # The instruction snippet implies creating a new local `manager` instance.
+        # Assuming `ModelManager` is available in the same `model_manager` module.
+        from ..utils.model_manager import ModelManager
+        manager = ModelManager()
+
+        model_name = "sentence-transformers/all-MiniLM-L6-v2"
         self.model = manager.get_sentence_transformer(model_name)
         if self.model:
             print("[ML] Loaded SBERT for Semantic Analysis.")

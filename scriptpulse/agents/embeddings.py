@@ -20,16 +20,18 @@ def run(data):
     scenes = data.get('scenes', [])
     scores = []
     
-    # Try SBERT (Modern Standard)
+    # Try SBERT (Modern Standard via Manager)
     model = None
     try:
-        from sentence_transformers import SentenceTransformer, util
-        # Use a tiny model to avoid 500MB download lag in demo
-        # 'all-MiniLM-L6-v2' is standard but big.
-        # We will assume installed, or fail gracefully.
-        model = SentenceTransformer('all-MiniLM-L6-v2')
-    except ImportError:
+        from ..utils.model_manager import ModelManager
+        from sentence_transformers import util
+        manager = ModelManager()
+
+        model = manager.get_sentence_transformer("sentence-transformers/all-MiniLM-L6-v2")
+    except Exception:
+
         pass
+
         
     for i in range(len(scenes)):
         if i == 0:

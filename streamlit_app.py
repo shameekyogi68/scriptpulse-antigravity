@@ -10,36 +10,45 @@ import os
 import json
 import pandas as pd
 import time
+import traceback
 
 # Ensure we can import the locked pipeline
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from scriptpulse import runner
+import scriptpulse.streamlit_utils as stu
+
+# =============================================================================
+# v13.1 CONTROL 1: STARTUP INTEGRITY CHECK (Run Once)
+# =============================================================================
+passed, msg = stu.check_integrity()
+if not passed:
+    st.error(f"🛑 FATAL CONFIG ERROR: {msg}")
+    st.info("System halted for safety. Contact Ops.")
+    st.stop()
+
 
 # =============================================================================
 # PAGE CONFIGURATION
 # =============================================================================
 
-@st.cache_resource(show_spinner="Warming up the Application Layer...")
+@st.cache_resource(show_spinner="Initializing ScriptPulse Neural Engine...")
 def preload_models():
-    """Pre-load critical ML models into memory to speed up first analysis."""
-    from scriptpulse.utils.model_manager import manager
-    # Initialize Manager
-    # Pre-fetch key pipelines
     try:
-        if manager.device >= 0:
-            print(f"Preloading on GPU: {manager.device}")
+        # v13.1 CONTROL 2: RUNTIME SINGLETONS
+        from scriptpulse.utils.model_manager import ModelManager
+        loader = ModelManager()
+
         
-        # Load heavy hitters
-        # 1. DistilBART (Stanislavski)
-        manager.get_pipeline("zero-shot-classification", "valhalla/distilbart-mnli-12-3")
-        # 2. SBERT (Embeddings) - Implicitly loaded by semantic_flux usually
-        manager.get_sentence_transformer("all-MiniLM-L6-v2")
+        # Pre-fetch weights for fast first run
+        loader.get_pipeline('zero-shot-classification')
+        loader.get_sentence_transformer('sentence-transformers/all-MiniLM-L6-v2')
         
         return True
     except Exception as e:
         print(f"Preload Warning: {e}")
         return False
+
 
 # Trigger Preload
 preload_models()
@@ -50,6 +59,10 @@ st.set_page_config(
     page_icon="🎬",
     layout="wide"
 )
+
+# v13.1 CONTROL 3: SYNC SAFETY STATE
+stu.sync_safety_state()
+
 
 # =============================================================================
 # THEME & STYLING (The "Premium Instrument" Look)
@@ -162,6 +175,10 @@ with st.sidebar:
     with st.expander("⚙️ Advanced Settings"):
          ref_file = st.file_uploader("Reference Script", type=['txt', 'pdf'])
 
+    # v13.1 CONTROL 4 & 6: OPERATOR PANEL + SHADOW TOGGLE
+    shadow_mode, high_accuracy_mode = stu.render_operator_panel(st.session_state.get('prev_run'))
+
+
 # =============================================================================
 # MAIN INTERFACE
 # =============================================================================
@@ -213,6 +230,10 @@ if uploaded_file is not None:
             script_text = "\n".join(text_parts)
         else: # txt, fountain, md
             script_text = uploaded_file.read().decode('utf-8')
+            
+        # v13.1 CONTROL 5: SIZE GUARD
+        if not stu.check_upload_size(uploaded_file):
+            st.stop()
             
         # IMMEDIATE PARSE (For Scene Picker)
         with st.spinner("Parsing structure..."):
@@ -325,47 +346,78 @@ if script_input:
 
 # --- Step 3: The Pulse Analysis ---
 
-if script_input and st.button("Analyze Rhythm", type="primary"):
+# Caching Wrapper (Defined at top level within step context)
+@st.cache_data(show_spinner="Running Analysis...")
+def cached_analysis(text, intent, lens, genre, profile, high_res, shadow=False, high_acc=False):
+    # Override safe mode if session requests it
+    force_safe = st.session_state.get('safe_mode_active', False)
     
-    # Run Pipeline
-    status = st.empty()
-    bar = st.progress(0)
+    # v13.1 Optimization: Fast Mode Defaults
+    use_cpu_safe = True
+    use_stride = 3
+    use_min_words = 20
     
-    status.text("Modeling adaptive attention...")
-    bar.progress(30)
+    if high_acc:
+        use_cpu_safe = False
+        use_stride = 1
+        use_min_words = 10
     
-    start_time = time.time()
-    # Caching Wrapper
-    @st.cache_data(show_spinner="Analyzing script structure and semantics...")
-    def cached_analysis(text, intent, lens, genre, profile, high_res):
-        return runner.run_pipeline(
-            text, 
-            writer_intent=intent,
-            lens=lens,
-            genre=genre,
-            audience_profile=profile,
-            high_res_mode=high_res,
-            experimental_mode=True, # Enable Research-Grade ML
-            moonshot_mode=True      # Enable Stanislavski & Resonance
-        )
-        
-    start_time = time.time()
-    report = cached_analysis(
-        script_input, 
-        writer_intent,
-        selected_lens,
-        selected_genre,
-        selected_profile,
-        use_high_res
+    if force_safe:
+        use_cpu_safe = True
+
+    return runner.run_pipeline(
+        text, 
+        writer_intent=intent,
+        lens=lens,
+        genre=genre,
+        audience_profile=profile,
+        high_res_mode=high_res,
+        experimental_mode=True, 
+        moonshot_mode=True,      
+        cpu_safe_mode=use_cpu_safe, 
+        shadow_mode=shadow,
+        valence_stride=use_stride,
+        stanislavski_min_words=use_min_words
     )
-    bar.progress(100)
-    bar.progress(100)
-    # === BIOMETRICS REMOVED (Simplification) ===
-    # Code removed to keep UI clean for writers.
-    pass
+
+analyze_clicked = st.button("Analyze Rhythm", type="primary")
+
+if script_input and (analyze_clicked or 'last_report' in st.session_state):
     
-    status.empty()
-    bar.empty()
+    # v13.1 Optimization: Input Guard
+    if not stu.check_input_length(script_input):
+        st.stop()
+        
+    report = None
+    
+    if analyze_clicked:
+         try:
+            with st.spinner("Processing story architecture..."):
+                report = cached_analysis(
+                    script_input, 
+                    writer_intent,
+                    selected_lens,
+                    selected_genre,
+                    selected_profile,
+                    use_high_res,
+                    shadow_mode,
+                    high_accuracy_mode
+                )
+            st.session_state['last_report'] = report
+         except Exception as e:
+            st.error(f"Analysis Failed: {e}")
+            st.stop()
+            
+    elif 'last_report' in st.session_state:
+        report = st.session_state['last_report']
+
+    if report is None:
+        st.stop()
+
+    # v13.1 CONTROL 5: EXECUTION GUARD
+    render_start = time.time()
+    HARD_RENDER_LIMIT = 2.0 
+    truncated = False
     
     # === THE PULSE DASHBOARD (Writer-First) ===
     st.markdown("---")
@@ -535,8 +587,12 @@ if script_input and st.button("Analyze Rhythm", type="primary"):
                 for d, pct in drivers.items():
                     st.text(f"{d.title()}")
                     st.progress(pct)
+            
+    # Prepare Data
+    moonshot_data = report.get('moonshot_analysis', []) if report else []
 
     # 4. SUBTEXT (was Moonshot)
+
     with tab_subtext:
         if moonshot_data:
             st.info("🧠 **AI Subtext Reader**")
@@ -622,8 +678,10 @@ if script_input and st.button("Analyze Rhythm", type="primary"):
                 for pair, indices in interaction_map.items():
                     if len(indices) < 2: continue
                     p_vals = [val_scores[i] for i in indices if i < len(val_scores)]
+                    if not p_vals: continue
                     avg = sum(p_vals)/len(p_vals)
                     c1, c2 = pair.split('|')
+
                     chem_data.append({'Char A': c1, 'Char B': c2, 'Chemistry': avg})
                 
                 if chem_data:
@@ -761,6 +819,10 @@ if script_input and st.button("Analyze Rhythm", type="primary"):
                     help="Download raw analysis data for external processing"
                 )
                 
+                # Debug Details (Collapsed by default - v13.1 Optimization)
+                with st.expander("🛠️ Debug Output"):
+                    st.json(report.get('debug_export', {}))
+                
                 # Print Summary
                 from scriptpulse.reporters import print_summary
                 print_html = print_summary.generate_print_summary(report, script_title=script_title)
@@ -785,8 +847,12 @@ if script_input and st.button("Analyze Rhythm", type="primary"):
                             st.warning(f"**Scene {sc_idx+1}:** {notes[0]['suggestion']}")
                             count += 1
                 
+        if time.time() - render_start > HARD_RENDER_LIMIT:
+             st.warning("⚠️ Report Truncated: Render timeout exceeded.")
+             truncated = True
+             
         # 3. Reflections (Structure)
-        if reflections:
+        if reflections and not truncated:
              st.markdown("---")
              st.caption("Structural Notes")
              for ref in reflections:

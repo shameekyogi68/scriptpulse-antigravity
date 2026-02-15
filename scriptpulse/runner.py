@@ -7,9 +7,16 @@ import sys
 import time
 import random
 import tracemalloc
+
+import os
+import json
+import hashlib
+
 from .agents import parsing, segmentation, encoding, temporal, patterns, intent, mediation, acd, ssf, lrf, semantic, syntax, xai, imagery, social, valence, profiler, coherence, beat, fairness, suggestion, embeddings, voice, scene_notes, bert_parser, agency, ensemble_uncertainty, multimodal, polyglot_validator # vNext.10 Experimental
 from . import lenses, fingerprint, governance
 from .utils import runtime  # v13.0
+from .utils import normalizer # Universal Support
+
 
 
 # vNext.11 Experimental
@@ -22,6 +29,51 @@ _RESOURCE_LIMITS = {
     'max_runtime_per_scene_s': 3,  # Per-scene ceiling
 }
 _OVERSIZED_BUCKETS = set()  # Scene count buckets that exceeded limits
+_SAFETY_STATE_FILE = os.path.expanduser("~/.scriptpulse/.safety_state.json")
+
+def _load_safety_state():
+    try:
+        if os.path.exists(_SAFETY_STATE_FILE):
+            with open(_SAFETY_STATE_FILE, 'r') as f:
+                return json.load(f)
+    except:
+        pass
+    return {}
+
+def _update_safety_state(updates):
+    try:
+        state = _load_safety_state()
+        state.update(updates)
+        os.makedirs(os.path.dirname(_SAFETY_STATE_FILE), exist_ok=True)
+        with open(_SAFETY_STATE_FILE, 'w') as f:
+            json.dump(state, f)
+    except Exception as e:
+        print(f"[Safety State] Failed to update: {e}")
+
+def _classify_run(script_content, total_scenes, wall_time_s):
+    """Classify run into buckets for telemetry."""
+    # Input size
+    size_bytes = len(script_content.encode('utf-8'))
+    if size_bytes < 20 * 1024: input_bucket = 'small'
+    elif size_bytes > 100 * 1024: input_bucket = 'large'
+    else: input_bucket = 'medium'
+    
+    # Scene bucket
+    if total_scenes <= 10: scene_bucket = '1-10'
+    elif total_scenes <= 50: scene_bucket = '11-50'
+    elif total_scenes <= 200: scene_bucket = '51-200'
+    else: scene_bucket = '200+'
+    
+    # Runtime bucket
+    if wall_time_s < 5: runtime_bucket = 'fast'
+    elif wall_time_s > 30: runtime_bucket = 'slow'
+    else: runtime_bucket = 'normal'
+    
+    return {
+        'input_size_bucket': input_bucket,
+        'scene_bucket': scene_bucket,
+        'runtime_bucket': runtime_bucket
+    }
 
 def _scene_bucket(n):
     """Bucket scene counts: 1-5, 6-20, 21-50, 51-100, 100+"""
@@ -47,6 +99,25 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
     """
     # === GPBL: Governance Check ===
     governance.validate_request(script_content)
+    
+    # v13.2 Universal Format Support: Normalize Input
+    # This transforms messy styles into standard format for the parser
+    script_content = normalizer.normalize_script(script_content)
+    
+    # v13.1 Control 2: Auto Safe Fallback
+
+    safety_state = _load_safety_state()
+    auto_safe_triggered = False
+    
+    if safety_state.get('auto_safe_next_run'):
+        print("[Auto Safe Fallback] Previous run unstable. Forcing safety defaults.")
+        cpu_safe_mode = True
+        valence_stride = 3
+        stanislavski_min_words = 20
+        auto_safe_triggered = True
+        # Reset flag? No, keep it until a clean run clears it (or manual reset).
+        # Actually, standard practice is "try safe once". If safe run passes, we might clear it.
+        # But for now, we just enforce it.
     
     # v13.1 Block 4: Start resource measurement
     _run_start = time.time()
@@ -463,8 +534,9 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
                 'syntax': syntax_scores[i] if i < len(syntax_scores) else 0,
             },
             'temporal': temporal_output[i] if i < len(temporal_output) else {},
-            'lrf_value': lrf_trace[i].get('attentional_signal') if i < len(lrf_trace) else None,
+            'lrf_value': temporal_output[i].get('attentional_signal') if i < len(temporal_output) else None,
             'coherence_penalty': temporal_output[i].get('coherence_penalty', 0) if i < len(temporal_output) else 0,
+
         } for i in range(len(segmented))],
         'lens_weights': lens_config,
         'cpu_safe_mode': cpu_safe_mode,
@@ -496,7 +568,51 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
     final_output['meta']['resource_flag'] = resource_flag
     final_output['meta']['wall_time_s'] = _wall_time_s
     final_output['meta']['peak_memory_mb'] = _peak_mb
+    if auto_safe_triggered:
+        final_output['meta']['auto_safe_mode'] = True
+
+    # v13.1 Control 1: Run Classification
+    buckets = _classify_run(script_content, len(segmented), _wall_time_s)
+    final_output['meta'].update(buckets)
+
+    # v13.1 Control 3: Audit Hash Stamp
+    # Compute SHA256 over critical state
+    audit_payload = {
+        'version': final_output['meta'].get('version'),
+        'model_versions': final_output.get('model_versions', {}),
+        'lens': lens,
+        'flags': {
+            'cpu_safe_mode': cpu_safe_mode,
+            'experimental_mode': experimental_mode,
+            'shadow_mode': shadow_mode
+        }
+    }
+    # Hash config file if exists
+    config_path = os.path.join(os.path.dirname(__file__), '../../v13_1_frozen_config.json')
+    if os.path.exists(config_path):
+        with open(config_path, 'rb') as f:
+            audit_payload['config_hash'] = hashlib.sha256(f.read()).hexdigest()
     
+    audit_str = json.dumps(audit_payload, sort_keys=True)
+    final_output['meta']['audit_stamp'] = hashlib.sha256(audit_str.encode()).hexdigest()
+
+    # v13.1 Control 2: Update Safety State
+    # Check triggers: resource_flag, drift_flag=UNSTABLE, shadow_mismatch, validation_errors
+    next_safe = False
+    if resource_flag == 'exceeded': next_safe = True
+    if final_output.get('drift_flag') == 'UNSTABLE': next_safe = True
+    if final_output['meta'].get('shadow_mismatch'): next_safe = True
+    
+    if next_safe:
+        _update_safety_state({'auto_safe_next_run': True})
+        print("[Safety State] Flagged for safe mode next run.")
+    elif auto_safe_triggered and not next_safe:
+        # If we were in safe mode and it passed clean, maybe clear it?
+        # User didn't specify auto-clear, but "Auto switch next run defaults" implies transience.
+        # I'll enable clearing if clean run achieved.
+        _update_safety_state({'auto_safe_next_run': False})
+        print("[Safety State] Clean run. Clearing safe mode flag.")
+
     # v13.1 Block 7: Log telemetry (hash-only)
     telemetry.log_run(final_output)
     
