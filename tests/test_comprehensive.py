@@ -10,7 +10,8 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from scriptpulse import runner
-from scriptpulse.agents import parsing, segmentation
+from scriptpulse.agents import structure_agent as parsing
+# segmentation is now part of structure_agent too
 
 
 class TestEmptyScript(unittest.TestCase):

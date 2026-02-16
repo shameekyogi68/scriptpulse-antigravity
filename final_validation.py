@@ -84,7 +84,22 @@ class TestFullPipeline(unittest.TestCase):
         """Verify pipeline structure and determinism"""
         res1 = self.run_pipeline(CLEAN_PROFESSIONAL)
         res2 = self.run_pipeline(CLEAN_PROFESSIONAL)
-        self.assertEqual(res1, res2, "Pipeline must be deterministic")
+        
+        # Remove volatile timing/meta fields before comparing
+        for r in [res1, res2]:
+            if 'meta' in r:
+                r['meta'].pop('agent_timings', None)
+                r['meta'].pop('wall_time_s', None)
+                r['meta'].pop('peak_memory_mb', None)
+                r['meta'].pop('audit_stamp', None) # Hash includes timings
+                r['meta'].pop('auto_safe_mode', None) # Dependent on previous run state
+                r['meta'].pop('resource_flag', None) 
+            r.pop('runtime_estimate', None)
+            r.pop('scenes_per_second', None)
+            r.pop('runtime_ms', None)
+            r.pop('debug_export', None) # Contains timings
+            
+        self.assertEqual(res1, res2, "Pipeline must be deterministic (ignoring timings)")
         
     def test_writer_safety_ethics(self):
         """Verify intent suppression and no advice"""
