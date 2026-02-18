@@ -87,6 +87,50 @@ class EthicsAgent:
         return {'agency_metrics': report}
 
     # =========================================================================
+    # ROLE CLASSIFIER LOGIC (New)
+    # =========================================================================
+
+    def classify_roles(self, input_data):
+        """Heuristic Role Classification based on presence and agency."""
+        scenes = input_data.get('scenes', [])
+        if not scenes: return {}
+        
+        # 1. Count Lines and Scenes
+        char_lines = collections.defaultdict(int)
+        char_scenes = collections.defaultdict(int)
+        
+        for scene in scenes:
+            seen_in_scene = set()
+            for line in scene['lines']:
+                if line['tag'] == 'C':
+                    name = line['text'].split('(')[0].strip()
+                    if name:
+                        char_lines[name] += 1
+                        seen_in_scene.add(name)
+            for name in seen_in_scene:
+                char_scenes[name] += 1
+                
+        if not char_lines: return {}
+        
+        # 2. Determine Hierarchy
+        sorted_chars = sorted(char_lines.items(), key=lambda x: x[1], reverse=True)
+        top_char, max_lines = sorted_chars[0]
+        
+        roles = {}
+        roles[top_char] = 'Protagonist'
+        
+        for char, lines in sorted_chars[1:]:
+            ratio = lines / max_lines
+            if ratio > 0.6:
+                roles[char] = 'Major Support' # Potential Antagonist or Deuteragonist
+            elif ratio > 0.2:
+                roles[char] = 'Supporting'
+            else:
+                roles[char] = 'Minor'
+                
+        return roles
+
+    # =========================================================================
     # FAIRNESS LOGIC (formerly fairness.py)
     # =========================================================================
 
@@ -94,16 +138,23 @@ class EthicsAgent:
         """Audit character portrayals for potential bias."""
         scenes = input_data.get('scenes', [])
         valence_scores = input_data.get('valence_scores', [])
-        char_context = context or {}
+        
+        # Auto-detect roles if not provided
+        roles = context if context else self.classify_roles(input_data)
         
         # Genre Thresholds
         g_lower = genre.lower()
         neg_thresh = -0.3 if g_lower in ['horror', 'thriller'] else (-0.05 if g_lower == 'comedy' else -0.15)
-        pos_thresh = 0.2 if g_lower == 'comedy' else None
         
         if not scenes: return {}
         
         char_valence = collections.defaultdict(list)
+        char_agency = collections.defaultdict(list) # Placeholder for agency integration
+        
+        # Get Agency Data if available (self-call or passed)
+        agency_data = self.analyze_agency(input_data).get('agency_metrics', [])
+        agency_map = {item['character']: item['agency_score'] for item in agency_data}
+        
         for i, scene in enumerate(scenes):
             val = valence_scores[i] if i < len(valence_scores) else 0.0
             active = set()
@@ -120,20 +171,28 @@ class EthicsAgent:
         for char in major_chars:
             vals = char_valence[char]
             avg_val = statistics.mean(vals)
-            role = char_context.get(char, 'Unknown')
+            role = roles.get(char, 'Unknown')
+            agency = agency_map.get(char, 0.5)
             
-            if avg_val < neg_thresh:
-                if role not in ['Antagonist', 'Villain']:
-                    report['stereotyping_risks'].append(
-                        f"Character '{char}' ({role}) is associated with Negative Sentiment (Avg: {avg_val:.2f}). Check for 'Villain Coding'."
-                    )
+            # Risk 1: The "Inept" Minor Character (Low Agency + Negative Sentiment)
+            if role == 'Minor' and agency < 0.2 and avg_val < -0.1:
+                 report['stereotyping_risks'].append(
+                     f"Minor Character '{char}' is portrayed with Low Agency ({agency:.2f}) and Negative Tone. Check for punching down."
+                 )
             
-            if pos_thresh and avg_val < pos_thresh:
-                report['stereotyping_risks'].append(f"Character '{char}' seems too negative for a Comedy.")
-                
+            # Risk 2: Villain Coding (check if Major Support is excessively negative)
+            if role in ['Major Support', 'Protagonist'] and avg_val < neg_thresh:
+                if role == 'Protagonist':
+                     report['stereotyping_risks'].append(f"Protagonist '{char}' has consistently negative sentiment ({avg_val:.2f}). Is this an Anti-Hero?")
+                else:
+                     report['stereotyping_risks'].append(
+                         f"Major Character '{char}' has high negative sentiment ({avg_val:.2f}). Likely Antagonist, but ensure motivation is clear."
+                     )
+
             report['representation_stats'][char] = {
                 'scene_count': len(vals),
                 'avg_sentiment': round(avg_val, 3),
+                'agency': round(agency, 3),
                 'role': role
             }
             

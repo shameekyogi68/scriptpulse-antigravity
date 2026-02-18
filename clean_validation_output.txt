@@ -1,0 +1,235 @@
+RUNNING TEST CASE: The Escape (Feature Film)
+INPUT BLOCK
+Script title: The Escape
+Script type: Feature Film
+Scene text (first 100 chars): 
+Scene length in words: 39
+Notes on intent: [{'scene_range': [0, 1], 'intent': 'should feel tense'}]
+EXPECTED OUTPUT BLOCK
+Attention risk level: Low (High action)
+Mental effort level: Medium (Visual density)
+Flag decision: No Flag
+SCRIPT PULSE RUN BLOCK
+{
+  "avg_effort": 0.253,
+  "avg_attention": 0.519,
+  "avg_recovery": 0.042,
+  "peak_effort": 0.291,
+  "surfaced_patterns": [],
+  "silence_check": "N/A"
+}
+RUNNING TEST CASE: Thirst (Short Film)
+INPUT BLOCK
+Script title: Thirst
+Script type: Short Film
+Scene text (first 100 chars): 
+Scene length in words: 31
+Notes on intent: None
+EXPECTED OUTPUT BLOCK
+Attention risk level: Medium (Slow pace)
+Mental effort level: Low (Simple visual)
+Flag decision: No Flag
+SCRIPT PULSE RUN BLOCK
+{
+  "avg_effort": 0.22,
+  "avg_attention": 0.492,
+  "avg_recovery": 0.047,
+  "peak_effort": 0.226,
+  "surfaced_patterns": [],
+  "silence_check": "N/A"
+}
+RUNNING TEST CASE: Stream Wars (Web Series)
+INPUT BLOCK
+Script title: Stream Wars
+Script type: Web Series
+Scene text (first 100 chars): 
+Scene length in words: 55
+Notes on intent: None
+EXPECTED OUTPUT BLOCK
+Attention risk level: Low (High dialogue conflict)
+Mental effort level: Low (Conversational)
+Flag decision: No Flag
+SCRIPT PULSE RUN BLOCK
+{
+  "avg_effort": 0.332,
+  "avg_attention": 0.438,
+  "avg_recovery": 0.037,
+  "peak_effort": 0.332,
+  "surfaced_patterns": [],
+  "silence_check": "N/A"
+}
+RUNNING TEST CASE: The Diagnosis (TV Drama)
+INPUT BLOCK
+Script title: The Diagnosis
+Script type: TV Drama
+Scene text (first 100 chars): 
+Scene length in words: 41
+Notes on intent: None
+EXPECTED OUTPUT BLOCK
+Attention risk level: Low (High stakes)
+Mental effort level: Medium (Emotional load)
+Flag decision: No Flag
+SCRIPT PULSE RUN BLOCK
+{
+  "avg_effort": 0.344,
+  "avg_attention": 0.588,
+  "avg_recovery": 0.031,
+  "peak_effort": 0.344,
+  "surfaced_patterns": [],
+  "silence_check": "N/A"
+}
+RUNNING TEST CASE: Hamlet (Stage Play)
+INPUT BLOCK
+Script title: Hamlet
+Script type: Stage Play
+Scene text (first 100 chars): 
+Scene length in words: 82
+Notes on intent: None
+EXPECTED OUTPUT BLOCK
+Attention risk level: Medium (Dense language)
+Mental effort level: High (Archaic syntax)
+Flag decision: Possible Pattern (Sustained Demand)
+SCRIPT PULSE RUN BLOCK
+{
+  "avg_effort": 0.283,
+  "avg_attention": 0.539,
+  "avg_recovery": 0.043,
+  "peak_effort": 0.433,
+  "surfaced_patterns": [],
+  "silence_check": "N/A"
+}
+RUNNING TEST CASE: Void Drift (Audio Drama)
+INPUT BLOCK
+Script title: Void Drift
+Script type: Audio Drama
+Scene text (first 100 chars): 
+Scene length in words: 32
+Notes on intent: None
+EXPECTED OUTPUT BLOCK
+Attention risk level: Low (High auditory stimulus)
+Mental effort level: Medium (Imagination required)
+Flag decision: No Flag
+SCRIPT PULSE RUN BLOCK
+{
+  "avg_effort": 0.315,
+  "avg_attention": 0.35,
+  "avg_recovery": 0.045,
+  "peak_effort": 0.315,
+  "surfaced_patterns": [],
+  "silence_check": "N/A"
+}
+RUNNING TEST CASE: Survival (Documentary)
+INPUT BLOCK
+Script title: Survival
+Script type: Documentary
+Scene text (first 100 chars): 
+Scene length in words: 45
+Notes on intent: None
+EXPECTED OUTPUT BLOCK
+Attention risk level: Low (Engaging visuals + voice)
+Mental effort level: Low (Clear exposition)
+Flag decision: No Flag
+SCRIPT PULSE RUN BLOCK
+{
+  "avg_effort": 0.302,
+  "avg_attention": 0.471,
+  "avg_recovery": 0.041,
+  "peak_effort": 0.302,
+  "surfaced_patterns": [],
+  "silence_check": "N/A"
+}
+RUNNING TEST CASE: Spicy Delight (Ad Film)
+INPUT BLOCK
+Script title: Spicy Delight
+Script type: Ad Film
+Scene text (first 100 chars): 
+Scene length in words: 27
+Notes on intent: None
+EXPECTED OUTPUT BLOCK
+Attention risk level: Low (Very fast)
+Mental effort level: Low
+Flag decision: Possible Pattern (Short Duration)
+SCRIPT PULSE RUN BLOCK
+{
+  "avg_effort": 0.317,
+  "avg_attention": 0.426,
+  "avg_recovery": 0.035,
+  "peak_effort": 0.317,
+  "surfaced_patterns": [],
+  "silence_check": "N/A"
+}
+RUNNING TEST CASE: Storytime (YouTube)
+INPUT BLOCK
+Script title: Storytime
+Script type: YouTube
+Scene text (first 100 chars): 
+Scene length in words: 47
+Notes on intent: None
+EXPECTED OUTPUT BLOCK
+Attention risk level: Low (Direct address)
+Mental effort level: Low
+Flag decision: No Flag
+SCRIPT PULSE RUN BLOCK
+{
+  "avg_effort": 0.244,
+  "avg_attention": 0.486,
+  "avg_recovery": 0.045,
+  "peak_effort": 0.28,
+  "surfaced_patterns": [],
+  "silence_check": "N/A"
+}
+RUNNING TEST CASE: Inception_Lite (Experimental)
+INPUT BLOCK
+Script title: Inception_Lite
+Script type: Experimental
+Scene text (first 100 chars): 
+Scene length in words: 30
+Notes on intent: None
+EXPECTED OUTPUT BLOCK
+Attention risk level: High (Confusion)
+Mental effort level: High (Abstract)
+Flag decision: Pattern (Degenerative Fatigue/Collapse)
+SCRIPT PULSE RUN BLOCK
+{
+  "avg_effort": 0.201,
+  "avg_attention": 0.526,
+  "avg_recovery": 0.049,
+  "peak_effort": 0.25,
+  "surfaced_patterns": [],
+  "silence_check": "N/A"
+}
+RUNNING CONSISTENCY CHECK...
+RUNNING TEST CASE: Base (Test)
+INPUT BLOCK
+Script title: Base
+Script type: Test
+Scene text (first 100 chars): 
+Scene length in words: 10
+Notes on intent: None
+SCRIPT PULSE RUN BLOCK
+{
+  "avg_effort": 0.141,
+  "avg_attention": 0.352,
+  "avg_recovery": 0.054,
+  "peak_effort": 0.141,
+  "surfaced_patterns": [],
+  "silence_check": "N/A"
+}
+RUNNING TEST CASE: Variant (Test)
+INPUT BLOCK
+Script title: Variant
+Script type: Test
+Scene text (first 100 chars): 
+Scene length in words: 10
+Notes on intent: None
+SCRIPT PULSE RUN BLOCK
+{
+  "avg_effort": 0.147,
+  "avg_attention": 0.294,
+  "avg_recovery": 0.053,
+  "peak_effort": 0.147,
+  "surfaced_patterns": [],
+  "silence_check": "N/A"
+}
+Effort Difference: 0.006000000000000005
+CONSISTENCY PASS

@@ -149,6 +149,87 @@ class PolyglotValidatorAgent:
 
 
 # =============================================================================
+# MULTI-LABEL EMOTION LOGIC
+# =============================================================================
+
+class MultiLabelEmotionAgent:
+    """Detects Plutchik's 8 Emotions + Compound States"""
+    
+    def __init__(self):
+        self.emotions = {
+            'joy': {'joy', 'happy', 'smile', 'laugh', 'win', 'good', 'love', 'success'},
+            'sadness': {'sad', 'cry', 'tears', 'grief', 'loss', 'die', 'dead', 'pain', 'fail'},
+            'anger': {'angry', 'hate', 'rage', 'kill', 'fight', 'attack', 'enemy', 'fury'},
+            'fear': {'scared', 'fear', 'afraid', 'run', 'hide', 'terror', 'panic', 'danger'},
+            'trust': {'trust', 'friend', 'help', 'safe', 'believe', 'team', 'agree'},
+            'disgust': {'gross', 'ugly', 'sick', 'rot', 'dirty', 'vile', 'nasty'},
+            'surprise': {'shock', 'swhat', 'gasp', 'sudden', 'unexpected', 'stunned'},
+            'anticipation': {'wait', 'hope', 'plan', 'ready', 'soon', 'look forward'}
+        }
+        
+    def run(self, scene_text):
+        if not scene_text: return {}
+        words = scene_text.lower().split()
+        scores = {k: 0.0 for k in self.emotions.keys()}
+        total_hits = 0
+        
+        for w in words:
+            for emo, keywords in self.emotions.items():
+                if w in keywords:
+                    scores[emo] += 1.0
+                    total_hits += 1
+                    
+        if total_hits == 0: return {k: 0.0 for k in scores}
+        
+        # Normalize
+        normalized = {k: round(v / total_hits, 2) for k, v in scores.items()}
+        
+        # Detect Compounds
+        compounds = []
+        if normalized['joy'] > 0.2 and normalized['trust'] > 0.2: compounds.append('Love')
+        if normalized['fear'] > 0.2 and normalized['surprise'] > 0.2: compounds.append('Awe')
+        if normalized['anger'] > 0.2 and normalized['disgust'] > 0.2: compounds.append('Contempt')
+        
+        return {'emotions': normalized, 'compounds': compounds}
+
+
+# =============================================================================
+# STAKES DETECTOR LOGIC
+# =============================================================================
+
+class StakesDetector:
+    """Detects High Stakes and Time Pressure using Lexical Markers"""
+    
+    def __init__(self):
+        self.high_stakes_markers = {
+            'die', 'kill', 'save', 'bomb', 'gun', 'blood', 'forever', 'last chance', 'escape', 'destroy',
+            'ruin', 'love', 'marry', 'pregnant', 'truth', 'secret', 'confess', 'explode', 'life', 'lives', 'death'
+        }
+        self.time_pressure_markers = {
+            'hurry', 'run', 'fast', 'quick', 'seconds', 'minutes', 'too late', 'now', 'move', 'go go'
+        }
+        
+    def run(self, scene_text):
+        if not scene_text: return {'stakes': 'Low', 'time_pressure': False}
+        
+        lower_text = scene_text.lower()
+        
+        stakes_hits = sum(1 for m in self.high_stakes_markers if m in lower_text)
+        time_hits = sum(1 for m in self.time_pressure_markers if m in lower_text)
+        
+        stakes_level = 'Low'
+        if stakes_hits >= 2: 
+            stakes_level = 'High' if (stakes_hits >= 3 or time_hits >= 1) else 'Medium'
+        elif stakes_hits == 1 and time_hits >= 2:
+            stakes_level = 'Medium'
+        
+        return {
+            'stakes': stakes_level,
+            'time_pressure': time_hits > 0, # Strict check for boolean
+            'markers_found': stakes_hits + time_hits
+        }
+
+# =============================================================================
 # MULTIMODAL LOGIC (formerly multimodal.py)
 # =============================================================================
 

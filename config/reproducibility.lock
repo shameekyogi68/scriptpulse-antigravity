@@ -1,0 +1,26 @@
+{
+  "version": "1.2.0-research-grade",
+  "seed": 42,
+  "parameters": {
+    "dynamics": {
+      "lambda_base": 0.85,
+      "beta_recovery": 0.3,
+      "fatigue_threshold": 1.0,
+      "coherence_weight": 0.15,
+      "max_short_term_memory": 5
+    },
+    "perception": {
+      "readability_weight": 1.0,
+      "idea_density_weight": 1.0
+    },
+    "ethics": {
+      "bias_threshold_negative": -0.3,
+      "bias_threshold_positive": 0.2
+    }
+  },
+  "dependencies": {
+    "python": ">=3.9",
+    "numpy": ">=1.20",
+    "scikit-learn": ">=0.24"
+  }
+}

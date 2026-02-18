@@ -23,18 +23,34 @@ class EncodingAgent:
         if not scenes: return []
         
         feature_vectors = []
+        prev_characters = set() # Track for Entity Churn
+        
         for i, scene in enumerate(scenes):
             if 'lines' in scene:
                 scene_lines = scene['lines']
             else:
                 scene_lines = self.get_scene_lines(scene, lines)
             
+            # Extract Ref Load with Context
+            ref_load = self.extract_referential_load(scene_lines, prev_characters)
+            
+            # Update context for next iteration
+            # We assume active characters in this scene become the "prev" for the next
+            # But strictly speaking, churn is about who entered vs left comparing sets.
+            current_chars = ref_load.get('current_character_set', set())
+            prev_characters = current_chars
+            
+            # Remove the set from output to keep JSON clean if needed, 
+            # but usually it's fine. We'll strip it if strictly numbers required.
+            if 'current_character_set' in ref_load:
+                del ref_load['current_character_set']
+
             features = {
                 'scene_index': scene['scene_index'],
                 'linguistic_load': self.extract_linguistic_load(scene_lines),
                 'dialogue_dynamics': self.extract_dialogue_dynamics(scene_lines),
                 'visual_abstraction': self.extract_visual_abstraction(scene_lines),
-                'referential_load': self.extract_referential_load(scene_lines),
+                'referential_load': ref_load,
                 'structural_change': self.extract_structural_change(scene, scenes, i),
                 'ambient_signals': self.extract_ambient_signals(scene_lines),
                 'micro_structure': self.extract_micro_structure(scene_lines),
@@ -48,24 +64,63 @@ class EncodingAgent:
         end = scene['end_line']
         return [line for line in all_lines if start <= line['line_index'] <= end]
 
+    def _count_syllables(self, word):
+        word = word.lower()
+        if len(word) <= 3: return 1
+        count = 0
+        vowels = "aeiouy"
+        if word[0] in vowels: count += 1
+        for i in range(1, len(word)):
+            if word[i] in vowels and word[i-1] not in vowels:
+                count += 1
+        if word.endswith("e"): count -= 1
+        if count == 0: count += 1
+        return count
+
     def extract_linguistic_load(self, scene_lines):
         all_text = ' '.join([line['text'] for line in scene_lines if line['text'].strip()])
         sentences = re.split(r'[.!?]+', all_text)
         sentences = [s.strip() for s in sentences if s.strip()]
         
         if not sentences:
-            return {'sentence_count': 0, 'mean_sentence_length': 0.0, 'max_sentence_length': 0, 'sentence_length_variance': 0.0}
+            return {'sentence_count': 0, 'mean_sentence_length': 0.0, 'max_sentence_length': 0, 
+                    'sentence_length_variance': 0.0, 'readability_grade': 0.0, 'idea_density': 0.0}
         
+        word_list = all_text.split()
+        total_words = len(word_list)
+        total_sentences = len(sentences)
+        
+        # Word stats
         word_counts = [len(s.split()) for s in sentences]
         mean_length = sum(word_counts) / len(word_counts)
         max_length = max(word_counts)
         variance = sum((x - mean_length) ** 2 for x in word_counts) / len(word_counts)
         
+        # 1. READABILITY (Flesch-Kincaid Grade Level)
+        # Formula: 0.39 * (words/sentences) + 11.8 * (syllables/words) - 15.59
+        total_syllables = sum(self._count_syllables(w) for w in word_list)
+        avg_syllables_per_word = total_syllables / total_words if total_words > 0 else 0
+        avg_words_per_sentence = total_words / total_sentences if total_sentences > 0 else 0
+        
+        fk_grade = 0.39 * avg_words_per_sentence + 11.8 * avg_syllables_per_word - 15.59
+        fk_grade = max(0.0, round(fk_grade, 2))
+        
+        # 2. IDEA DENSITY (Propositional Density Approximation)
+        # Using Unique Words (Types) + Prepositions as proxy for propositions
+        prepositions = {'in', 'on', 'at', 'by', 'with', 'from', 'to', 'for', 'of', 'about', 'under', 'over'}
+        prep_count = sum(1 for w in word_list if w.lower() in prepositions)
+        unique_words = len(set(w.lower() for w in word_list))
+        
+        # Idea Density ~ (Unique Words + Prepositions) / Total Words
+        idea_density = (unique_words + prep_count) / total_words if total_words > 0 else 0.0
+        
         return {
             'sentence_count': len(sentences),
             'mean_sentence_length': round(mean_length, 2),
             'max_sentence_length': max_length,
-            'sentence_length_variance': round(variance, 2)
+            'sentence_length_variance': round(variance, 2),
+            'readability_grade': fk_grade,
+            'idea_density': round(idea_density, 3)
         }
 
     def extract_dialogue_dynamics(self, scene_lines):
@@ -97,10 +152,12 @@ class EncodingAgent:
             
         return {
             'dialogue_turns': dialogue_count,
+            'dialogue_line_count': dialogue_count, # Alias for consistency
             'speaker_switches': switches,
             'turn_velocity': round(velocity, 3),
             'monologue_runs': monologue_runs
         }
+
 
     def extract_visual_abstraction(self, scene_lines):
         action_lines = [line for line in scene_lines if line['tag'] == 'A']
@@ -123,7 +180,7 @@ class EncodingAgent:
             'vertical_writing_load': action_count
         }
 
-    def extract_referential_load(self, scene_lines):
+    def extract_referential_load(self, scene_lines, prev_characters=None):
         character_lines = [line for line in scene_lines if line['tag'] == 'C']
         unique_characters = set(line['text'].strip() for line in character_lines)
         character_count = len(unique_characters)
@@ -136,7 +193,44 @@ class EncodingAgent:
                 if char in seen: reintroductions += 1
                 seen.add(char)
         
-        return {'active_character_count': character_count, 'character_reintroductions': reintroductions}
+        # 1. ENTITY CHURN
+        # Churn = (Added + Removed) / Total Active (averaged or max)
+        churn = 0.0
+        if prev_characters is not None:
+             added = len(unique_characters - prev_characters)
+             removed = len(prev_characters - unique_characters)
+             total_pool = len(unique_characters.union(prev_characters))
+             if total_pool > 0:
+                 churn = (added + removed) / total_pool
+        
+        # 2. UNRESOLVED REFERENCES (Ghost Mentions)
+        # Names mentioned in dialogue/action but not present as Speakers (Tags)
+        # Heuristic: Check for capitalized words in Action that match known characters? 
+        # Or just look for any capitalized names not in unique_characters.
+        # Simplified: Count capitalized words that look like names.
+        text_blobs = [l['text'] for l in scene_lines if l['tag'] in ('A', 'D')]
+        full_text = ' '.join(text_blobs)
+        # Regex for Capitalized words not at start of sentence (rough proxy)
+        # This is noisy without NER, so we use a simpler proxy:
+        # Check against a known "All Characters" list if available, or just self-reference.
+        # We will count how many times CURRENT characters are mentioned in ACTION (tracking)
+        # vs how many "unknown" capitalized entities appear.
+        
+        # For now, let's track "Non-Speaking Presence"
+        # i.e. Characters mentioned in Action but didn't speak.
+        ghost_mentions = 0
+        potential_names = re.findall(r'\b[A-Z][A-Z]+\b', full_text) # Uppercase formatting common in scripts
+        for name in potential_names:
+            if name not in unique_characters and len(name) > 2:
+                ghost_mentions += 1
+        
+        return {
+            'active_character_count': character_count, 
+            'character_reintroductions': reintroductions,
+            'entity_churn': round(churn, 2),
+            'unresolved_references': ghost_mentions,
+            'current_character_set': unique_characters # Internal use
+        }
 
     def extract_structural_change(self, scene, all_scenes, current_index):
         if current_index == 0: return {'event_boundary_score': 0.0}

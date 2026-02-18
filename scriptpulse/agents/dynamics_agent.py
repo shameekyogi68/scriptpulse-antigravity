@@ -14,6 +14,42 @@ import copy
 # TEMPORAL LOGIC (formerly temporal.py)
 # =============================================================================
 
+class ReaderProfile:
+    """
+    User-configurable profile for the target audience.
+    Affects fatigue accumulation, recovery capability, and complexity tolerance.
+    """
+    def __init__(self, familiarity=0.5, speed=250, tolerance=0.5):
+        self.familiarity = max(0.0, min(1.0, familiarity)) # 0.0 (Novice) to 1.0 (Expert)
+        self.speed = max(100, min(1000, speed)) # Words Per Minute
+        self.tolerance = max(0.0, min(1.0, tolerance)) # Tolerance for high complexity
+        
+    def get_params(self):
+        """Map profile attributes to dynamics parameters."""
+        # 1. Lambda (Decay): Higher tolerance = slower decay (sustains interest longer)
+        # Base 0.85 -> Range [0.80, 0.95]
+        lambda_base = 0.80 + (self.tolerance * 0.15)
+        
+        # 2. Beta (Recovery): Higher familiarity = faster recovery (better processing)
+        # Base 0.3 -> Range [0.2, 0.5]
+        beta_recovery = 0.2 + (self.familiarity * 0.3)
+        
+        # 3. Fatigue Threshold: Higher tolerance = higher threshold
+        # Base 1.0 -> Range [0.8, 1.2]
+        fatigue_threshold = 0.8 + (self.tolerance * 0.4)
+        
+        # 4. Coherence Weight: Higher familiarity = less penalty for confusion
+        # Base 0.15 -> Range [0.2, 0.05]
+        coherence_weight = 0.2 - (self.familiarity * 0.15)
+        
+        return {
+            'lambda_base': lambda_base,
+            'beta_recovery': beta_recovery,
+            'fatigue_threshold': fatigue_threshold,
+            'coherence_weight': coherence_weight
+        }
+
+
 class DynamicsAgent:
     """
     Dynamics Agent - Temporal Simulation & Pattern Detection
@@ -64,6 +100,12 @@ class DynamicsAgent:
                 'fatigue_threshold': 1.0,
                 'coherence_weight': 0.15
             }
+            
+        # Ensure we have all keys if a partial dict was passed
+        defaults = ReaderProfile().get_params()
+        for k, v in defaults.items():
+            if k not in profile_params:
+                profile_params[k] = v
             
         accumulated_signals = None
         base_lens = copy.deepcopy(lens_config) if lens_config else {}
@@ -197,9 +239,74 @@ class DynamicsAgent:
             
             # Avoid div zero
             dial_eng = dial['turn_velocity']
+            
+            # -- 2a. Determine Scene Type & Adaptive Decay --
+            # "Use separate decay rates for exposition, action, and dialogue heavy scenes"
+            scene_type = 'balanced'
+            lambda_mod = 0.0
+            
+            # Simple heuristic based on feature dominance
+            if vis['action_lines'] > dial['dialogue_line_count'] * 1.5:
+                scene_type = 'action'
+                lambda_mod = -0.05 # Faster decay (Action needs constant stimulation)
+            elif dial['dialogue_line_count'] > vis['action_lines'] * 2.0:
+                scene_type = 'dialogue'
+                lambda_mod = 0.05 # Slower decay (Dialogue sustains attention longer via thread tracking)
+            elif scene_feat.get('is_exposition', False): # Future proofing
+                 scene_type = 'exposition'
+                 lambda_mod = 0.10 # Slowest decay (Reader invests effort expecting payoff)
+                 
+            # -- 2b. Instantaneous Effort Calculation E[i] --
+            
+            # "Normalize effort by information units, not scene length"
+            # Calculate Density Factor (Propensity of info per unit length)
+            # Default density is 1.0. High entropy/short length = High Density.
+            # Low entropy/long length = Low Density.
+            
+            density_factor = 1.0
+            if 'entropy_score' in scene_feat and ling['sentence_count'] > 0:
+                 entropy = scene_feat['entropy_score']
+                 # Normalize entropy (typically 0-6 bits) against volume
+                 # High volume with low entropy -> Lower the effective load
+                 normalized_entropy = entropy / 6.0 # Max entropy approx 6
+                 
+                 # Logic: If volume is high but entropy is low (verbose), reduce load.
+                 # If volume is low but entropy is high (dense), increase load.
+                 density_factor = 0.5 + normalized_entropy
+            
+            # A. Cognitive Load
+            struct_load = (scene_feat['referential_load']['active_character_count'] / 10.0 + 
+                          scene_feat['structural_change']['event_boundary_score'] / 100.0) / 2.0
+            sem_load = scene_feat.get('entropy_score', 0) / 8.0 # Approx normalization
+            syn_load = scene_feat['linguistic_load']['sentence_length_variance'] / 100.0
+            
+            cog_load = (struct_load * weights['cognitive_components']['structural'] +
+                       sem_load * weights['cognitive_components']['semantic'] +
+                       syn_load * weights['cognitive_components']['syntactic'])
+            
+            # B. Emotional Load (Normalized by Density)
+            dial = scene_feat['dialogue_dynamics']
+            vis = scene_feat['visual_abstraction']
+            ling = scene_feat['linguistic_load']
+            amb = scene_feat['ambient_signals']
+            
+            # Avoid div zero
+            dial_eng = dial['turn_velocity']
             vis_int = min(1.0, vis['action_lines'] / 20.0)
             ling_vol = min(1.0, ling['sentence_count'] / 50.0)
             still_pen = amb['component_scores']['stillness']
+            
+            # Apply Density Normalization to Volume Metrics
+            # "Long but simple scenes still trigger overload flags" -> Fix by scaling volume by density
+            ling_vol *= density_factor
+            vis_int *= density_factor
+            
+            # Confusion Markers (Entity Churn) - "Add confusion markers"
+            confusion_penalty = 0.0
+            if 'entity_churn' in scene_feat.get('referential_load', {}):
+                 confusion_penalty = scene_feat['referential_load']['entity_churn'] * 0.2
+            if 'unresolved_references' in scene_feat.get('referential_load', {}):
+                 confusion_penalty += scene_feat['referential_load']['unresolved_references'] * 0.1
             
             emo_load = (dial_eng * weights['emotional_components']['dialogue_engagement'] +
                        vis_int * weights['emotional_components']['visual_intensity'] +
@@ -215,8 +322,9 @@ class DynamicsAgent:
             coh_penalty = 0.0
             if coherence_scores and i < len(coherence_scores):
                 coh_penalty = coherence_scores[i] * coh_weight
-                
-            effort = base_effort + coh_penalty
+            
+            # Total Effort with Confusion
+            effort = base_effort + coh_penalty + confusion_penalty
             
             # -- 3. TAM Integration (Micro-Dynamics) --
             tam_modifiers = self._run_tam_integration(scene_feat, effort)
@@ -229,12 +337,13 @@ class DynamicsAgent:
             
             # -- 5. Signal State Update S[i] --
             # Autoregressive decay + Input
-            adaptive_lambda = min(0.90, lambda_base) # Clamp for stability
+            # Apply Scene Type Modifier to Lambda
+            current_lambda = max(0.1, min(0.99, lambda_base + lambda_mod))
             
             if i == 0:
                 signal = effort
             else:
-                signal = effort + adaptive_lambda * prev_signal - recovery
+                signal = effort + current_lambda * prev_signal - recovery
                 
             # Bounds checking
             signal = max(0.0, min(1.0, signal))

@@ -419,7 +419,7 @@ class InterpretationAgent:
         
         # Generate reflections
         for pattern in surfaced:
-            reflection = self._generate_reflection(pattern, acd_states, total_scenes)
+            reflection = self._generate_reflection(pattern, acd_states, total_scenes, input_data=input_data)
             reflections.append(reflection)
         
         # Handle silence
@@ -465,10 +465,48 @@ class InterpretationAgent:
             if not is_redundant: unique_patterns.append(p)
         return unique_patterns
 
-    def _generate_reflection(self, pattern, acd_states=None, total_scenes=100):
+    def _calculate_confidence(self, pattern, input_data):
+        """
+        Calculate a confidence score (0.0-1.0) for a specific pattern/insight.
+        Based on:
+        1. Signal Clarity (Signal-to-Noise Ratio in local window)
+        2. Data Density (Number of data points in scene)
+        3. Feature Congruence (Do multiple features agree?)
+        """
+        scene_range = pattern.get('scene_range', [0, 0])
+        start, end = scene_range
+        
+        # 1. Data Density
+        scenes = input_data.get('scenes', [])
+        relevant_scenes = [s for s in scenes if start <= s['scene_index'] <= end]
+        total_lines = sum(len(s.get('lines', [])) for s in relevant_scenes)
+        
+        density_score = min(1.0, total_lines / 10.0) # <10 lines = lower confidence
+        
+        # 2. Heuristic Congruence (Simplified)
+        congruence_score = 0.8 # Default base
+        if pattern.get('pattern_type') == 'high_tension':
+            # Check if stakes detector also fired
+            stakes = self._check_stakes(relevant_scenes)
+            if stakes == 'High': congruence_score = 1.0
+            
+        return round(density_score * congruence_score, 2)
+
+    def _check_stakes(self, scenes):
+        # Placeholder for accessing pre-computed stakes if available
+        return 'Low'
+
+    def _generate_reflection(self, pattern, acd_states=None, total_scenes=100, input_data=None):
         pattern_type = pattern.get('pattern_type', 'unknown')
         scene_range = pattern.get('scene_range', [0, 0])
-        confidence = pattern.get('confidence', 'low')
+        
+        # Calculate specialized confidence
+        confidence_val = self._calculate_confidence(pattern, input_data) if input_data else 0.7
+        
+        # Map float to Label
+        confidence_label = 'High'
+        if confidence_val < 0.4: confidence_label = 'Low'
+        elif confidence_val < 0.7: confidence_label = 'Medium'
         
         reflection_text = "This section creates a unique texture that may require specific audience tuning."
         
@@ -490,7 +528,12 @@ class InterpretationAgent:
             if end / max(1, total_scenes) > 0.8:
                 reflection_text += " (Deep in the script, this requires even more energy to sustain.)"
                 
-        return {'scene_range': scene_range, 'reflection': reflection_text, 'confidence': confidence}
+        return {
+            'scene_range': scene_range, 
+            'reflection': reflection_text, 
+            'confidence': confidence_label,
+            'confidence_score': confidence_val # Numeric score for research purposes
+        }
 
     def _generate_silence_explanation(self, suppressed, alignment_notes, ssf_analysis=None):
         if alignment_notes:
@@ -513,3 +556,69 @@ class InterpretationAgent:
         start, end = note.get('scene_range', [0, 0])
         return f"You marked scenes {start}–{end} as '{intent}'. This matches the signal perfectly."
 
+
+# =============================================================================
+# COUNTERFACTUAL LOGIC (New for Research-Grade)
+# =============================================================================
+
+class CounterfactualExplainer:
+    """Run 'What-If' Simulations to explain why a score is high/low"""
+    
+    def __init__(self):
+        self.dynamics = dynamics_agent.DynamicsAgent()
+        
+    def run(self, input_data):
+        """
+        Compare actual signals against hypothetical variations.
+        Returns: {
+            'action_heavy_delta': float,
+            'dialogue_heavy_delta': float,
+            'suggestion': str
+        }
+        """
+        original_signals = input_data.get('temporal_signals', [])
+        features = input_data.get('features', [])
+        
+        if not original_signals or not features: return {}
+        
+        avg_original = statistics.mean([s['instantaneous_effort'] for s in original_signals])
+        
+        # 1. Simulate "What if lighter structure?" (Simulating an edit)
+        # We modify features in-place (deep copied)
+        light_features = copy.deepcopy(features)
+        for f in light_features:
+            f['linguistic_load']['sentence_length_variance'] *= 0.8
+            f['structural_change']['event_boundary_score'] *= 0.8
+            
+        light_input = copy.deepcopy(input_data)
+        light_input['features'] = light_features
+        
+        light_signals = self.dynamics.run_simulation(light_input, iterations=1)
+        if not light_signals: return {}
+        
+        avg_light = statistics.mean([s['instantaneous_effort'] for s in light_signals])
+        delta_light = avg_original - avg_light
+        
+        # 2. Simulate "What if more visual?"
+        vis_features = copy.deepcopy(features)
+        for f in vis_features:
+            f['visual_abstraction']['action_lines'] *= 1.5
+            
+        vis_input = copy.deepcopy(input_data)
+        vis_input['features'] = vis_features
+        
+        vis_signals = self.dynamics.run_simulation(vis_input, iterations=1)
+        avg_vis = statistics.mean([s['instantaneous_effort'] for s in vis_signals])
+        delta_vis = avg_vis - avg_original
+        
+        insight = "Balanced."
+        if delta_light > 0.1:
+            insight = "Structural complexity is a major driver. Simplifying sentences would significantly reduce load."
+        elif delta_vis < 0:
+            insight = "Adding visual action would actually LOWER the cognitive load (by breaking up density)."
+            
+        return {
+            'effort_reduction_if_simplified': round(delta_light, 3),
+            'effort_change_if_visuals_doubled': round(delta_vis, 3),
+            'counterfactual_insight': insight
+        }

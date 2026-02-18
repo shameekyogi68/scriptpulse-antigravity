@@ -1,0 +1,9 @@
+script_id,scene_index,human_effort_mean,human_effort_std,human_tension_mean,human_tension_std,human_satisfaction_mean
+script_001,1,0.2,0.1,0.7,0.2,4.2
+script_001,2,0.3,0.15,0.4,0.1,3.8
+script_001,3,0.6,0.2,0.8,0.1,4.5
+script_001,4,0.8,0.1,0.9,0.05,4.8
+script_001,5,0.4,0.1,0.3,0.2,3.5
+script_001,6,0.5,0.2,0.6,0.3,3.9
+script_001,7,0.7,0.1,0.8,0.1,4.6
+script_001,8,0.2,0.05,0.2,0.1,3.2
