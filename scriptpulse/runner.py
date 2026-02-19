@@ -18,6 +18,8 @@ from .agents.perception_agent import (
     EncodingAgent, SemanticAgent, ImageryAgent, SocialAgent, 
     SyntaxAgent, VoiceAgent, ValenceAgent, CoherenceAgent
 )
+from .agents.experimental_agent import ExperimentalAgent
+from .validation.confidence import ConfidenceScorer # v1.3
 from .agents.dynamics_agent import DynamicsAgent
 from .agents.interpretation_agent import InterpretationAgent
 from .agents.experimental_agent import (
@@ -26,109 +28,39 @@ from .agents.experimental_agent import (
 )
 from .agents.ethics_agent import EthicsAgent
 
-from . import lenses, fingerprint, governance
-from .utils import runtime  # v13.0
-from .utils import normalizer # Universal Support
+# Pure Research Runner
+from .utils import normalizer
 
-# v13.1 Block 4: Resource guardrails
+# Research-Grade Resource Limits
 _RESOURCE_LIMITS = {
-    'max_wall_time_s': 300,        # Per-run wall time limit
-    'max_memory_mb': 2048,         # Per-run peak memory
-    'max_runtime_per_scene_s': 3,  # Per-scene ceiling
+    'max_wall_time_s': 300,        
+    'max_memory_mb': 2048,         
 }
-_OVERSIZED_BUCKETS = set()  # Scene count buckets that exceeded limits
-_SAFETY_STATE_FILE = os.path.expanduser("~/.scriptpulse/.safety_state.json")
 
-def _load_safety_state():
-    try:
-        if os.path.exists(_SAFETY_STATE_FILE):
-            with open(_SAFETY_STATE_FILE, 'r') as f:
-                return json.load(f)
-    except:
-        pass
-    return {}
 
-def _update_safety_state(updates):
-    try:
-        state = _load_safety_state()
-        state.update(updates)
-        os.makedirs(os.path.dirname(_SAFETY_STATE_FILE), exist_ok=True)
-        with open(_SAFETY_STATE_FILE, 'w') as f:
-            json.dump(state, f)
-    except Exception as e:
-        print(f"[Safety State] Failed to update: {e}")
 
-def _classify_run(script_content, total_scenes, wall_time_s):
-    """Classify run into buckets for telemetry."""
-    # Input size
-    size_bytes = len(script_content.encode('utf-8'))
-    if size_bytes < 20 * 1024: input_bucket = 'small'
-    elif size_bytes > 100 * 1024: input_bucket = 'large'
-    else: input_bucket = 'medium'
-    
-    # Scene bucket
-    if total_scenes <= 10: scene_bucket = '1-10'
-    elif total_scenes <= 50: scene_bucket = '11-50'
-    elif total_scenes <= 200: scene_bucket = '51-200'
-    else: scene_bucket = '200+'
-    
-    # Runtime bucket
-    if wall_time_s < 5: runtime_bucket = 'fast'
-    elif wall_time_s > 30: runtime_bucket = 'slow'
-    else: runtime_bucket = 'normal'
-    
-    return {
-        'input_size_bucket': input_bucket,
-        'scene_bucket': scene_bucket,
-        'runtime_bucket': runtime_bucket
-    }
 
-def _scene_bucket(n):
-    """Bucket scene counts: 1-5, 6-20, 21-50, 51-100, 100+"""
-    if n <= 5: return '1-5'
-    if n <= 20: return '6-20'
-    if n <= 50: return '21-50'
-    if n <= 100: return '51-100'
-    return '100+'
 
 def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama', audience_profile='general', high_res_mode=False, pre_parsed_lines=None, character_context=None, experimental_mode=False, moonshot_mode=False, cpu_safe_mode=False, valence_stride=1, stanislavski_min_words=10, embeddings_batch_size=32, shadow_mode=False):
     """
     Orchestrate the ScriptPulse Analysis Pipeline.
     """
-    # === GPBL: Governance Check ===
-    governance.validate_request(script_content)
+    # Research Pipeline Execution
     
-    # v13.2 Universal Format Support: Normalize Input
+    # Universal Format Support: Normalize Input
     script_content = normalizer.normalize_script(script_content)
     
-    # v13.1 Control 2: Auto Safe Fallback
-    safety_state = _load_safety_state()
-    auto_safe_triggered = False
-    
-    if safety_state.get('auto_safe_next_run'):
-        print("[Auto Safe Fallback] Previous run unstable. Forcing safety defaults.")
-        cpu_safe_mode = True
-        valence_stride = 3
-        stanislavski_min_words = 20
-        auto_safe_triggered = True
-    
-    # v13.1 Block 4: Start resource measurement
     _run_start = time.time()
     tracemalloc.start()
     
-    # v13.1 Block 4: Auto cpu_safe_mode for oversized buckets
-    estimated_scenes = script_content.count('INT.') + script_content.count('EXT.')
-    bucket = _scene_bucket(estimated_scenes)
-    if bucket in _OVERSIZED_BUCKETS and not cpu_safe_mode:
-        cpu_safe_mode = True
-        print(f"[Resource Guard] Auto-enabled cpu_safe_mode for bucket '{bucket}'")
+    # Research Lens Configuration (Simplified)
+    lens_config = {
+        'lens_id': lens,
+        'description': 'Research Default',
+        'effort_weights': {'cognitive_mix': 0.55, 'emotional_mix': 0.45}
+    }
     
-    # vNext.9 Safety: Drift Monitoring
-    from . import drift_monitor, telemetry 
-    drift_monitor.monitor.check_domain_adherence(script_content.splitlines())
-    
-    # Load lens config
-    lens_config = lenses.get_lens(lens)
+    timings = {}
     
     timings = {}
     
@@ -463,75 +395,31 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
     runtime_info = runtime.estimate_runtime(segmented)
     final_output['runtime_estimate'] = runtime_info
     
-    drift_monitor.monitor.log_run({'run_id': run_id, 'fingerprint': struct_fingerprint}, entropy_scores=semantic_scores)
-    
-    scene_feedback = interpretation_agent.generate_scene_notes({
-        'scenes': segmented,
-        'temporal_trace': temporal_output,
-        'valence_scores': valence_scores,
-        'syntax_scores': syntax_scores
-    })
-    final_output['scene_feedback'] = scene_feedback
-    
-    final_output['meta'].update({'lens': lens_config['lens_id'], 'lens_description': lens_config['description']})
-    
-    final_output['debug_export'] = {
-        'per_scene': [{'scene_index': i} for i in range(len(segmented))],
-        'lens_weights': lens_config,
-        'cpu_safe_mode': cpu_safe_mode,
-        'agent_timings': timings
-    }
-    
-    # Resource Cleanup & Validation
+    # Research Runtime Stats
     _wall_time_s = round(time.time() - _run_start, 2)
-    _current, _peak = tracemalloc.get_traced_memory()
     tracemalloc.stop()
-    _peak_mb = round(_peak / (1024*1024), 1)
     
-    resource_flag = None
-    if _wall_time_s > _RESOURCE_LIMITS['max_wall_time_s']: resource_flag = 'exceeded'
-    elif _peak_mb > _RESOURCE_LIMITS['max_memory_mb']: resource_flag = 'exceeded'
-    
-    final_output['meta']['resource_flag'] = resource_flag
-    final_output['meta']['wall_time_s'] = _wall_time_s
-    final_output['meta']['peak_memory_mb'] = _peak_mb
-    
-    buckets = _classify_run(script_content, len(segmented), _wall_time_s)
-    final_output['meta'].update(buckets)
-    
-    # Audit Stamp
-    audit_payload = {
-        'version': final_output['meta'].get('version'),
-        'lens': lens,
-        'flags': {'cpu_safe_mode': cpu_safe_mode, 'experimental_mode': experimental_mode}
-    }
-    audit_str = json.dumps(audit_payload, sort_keys=True)
-    final_output['meta']['audit_stamp'] = hashlib.sha256(audit_str.encode()).hexdigest()
-    
-    # Safety State Update
-    if resource_flag == 'exceeded':
-        _update_safety_state({'auto_safe_next_run': True})
-    elif auto_safe_triggered:
-        _update_safety_state({'auto_safe_next_run': False})
+    # Version Locking (v1.3 Safeguard)
+    import hashlib
+    def _get_file_hash(path):
+        try:
+            with open(path, 'rb') as f: return hashlib.md5(f.read()).hexdigest()[:8]
+        except: return "unknown"
         
-    telemetry.log_run(final_output)
+    genre_hash = _get_file_hash(os.path.join(os.path.dirname(__file__), 'schemas/genre_priors.json'))
     
-    if shadow_mode:
-        print("[Shadow Mode] Executing dual run...")
-        shadow_result = run_pipeline(
-            script_content, writer_intent, lens, genre, audience_profile, 
-            high_res_mode, pre_parsed_lines, character_context, 
-            experimental_mode, moonshot_mode, cpu_safe_mode, 
-            valence_stride, stanislavski_min_words, embeddings_batch_size, 
-            shadow_mode=False
-        )
-        if final_output['total_scenes'] != shadow_result['total_scenes']:
-             final_output['meta']['shadow_mismatch'] = True
-             
-    final_output['cpu_safe_mode'] = cpu_safe_mode
-    final_output['resource_flag'] = resource_flag
+    # v1.3 Confidence Scoring
+    confidence_data = ConfidenceScorer().calculate(temporal_output)
+    final_output['meta']['confidence_score'] = confidence_data
+    
+    final_output['meta']['wall_time_s'] = _wall_time_s
+    final_output['meta']['metric_version'] = "1.3"
+    final_output['meta']['genre_profile_version'] = "1.0"
+    final_output['meta']['constants_hash'] = genre_hash
+    final_output['meta']['wall_time_s'] = _wall_time_s
+    final_output['meta']['metric_version'] = "1.3"
     final_output['runtime_ms'] = sum(timings.values())
-    final_output['scenes_per_second'] = round(len(segmented) / max(_wall_time_s, 0.001), 2)
+    final_output['perceptual_features'] = encoded # Expose Novelty/Clarity
     
     return final_output
 

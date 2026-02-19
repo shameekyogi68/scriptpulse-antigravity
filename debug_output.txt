@@ -1,0 +1,67 @@
+[MLOps] Model Cache: /Users/shameekyogi/.scriptpulse/models
+[MLOps] Acceleration: CPU
+[MLOps] Version enforcement: 2 models registered
+Running Edge Case Verification...
+
+--- Test A: High Action in 'Drama' Mode ---
+[Dynamics] Active Genre: Drama | Lambda: 0.9 | Beta: 0.25 | Fatigue Limit: 0.9
+[DEBUG MERGE] k='fatigue_threshold' found in defaults. In params? True | Value in Params: 0.9 | Value in Defaults: 1.0
+[DEBUG TRACE] Profile Params Inside: 0.9
+[DEBUG TRACE] Thresh Init: 0.9 | Length Factor: 2.0
+[DEBUG Dyn] Scene 0: Sig=0.66 Thresh=0.90 Fatigue=0.00
+[DEBUG Dyn] Scene 1: Sig=1.00 Thresh=0.90 Fatigue=0.10
+[DEBUG Dyn] Scene 2: Sig=1.00 Thresh=0.90 Fatigue=0.10
+[DEBUG TRACE] Profile Params Inside: 0.9
+[DEBUG TRACE] Thresh Init: 0.9 | Length Factor: 2.0
+[DEBUG Dyn] Scene 0: Sig=0.66 Thresh=0.90 Fatigue=0.00
+[DEBUG Dyn] Scene 1: Sig=1.00 Thresh=0.90 Fatigue=0.10
+[DEBUG Dyn] Scene 2: Sig=1.00 Thresh=0.90 Fatigue=0.10
+[DEBUG TRACE] Profile Params Inside: 0.9
+[DEBUG TRACE] Thresh Init: 0.9 | Length Factor: 2.0
+[DEBUG Dyn] Scene 0: Sig=0.66 Thresh=0.90 Fatigue=0.00
+[DEBUG Dyn] Scene 1: Sig=1.00 Thresh=0.90 Fatigue=0.10
+[DEBUG Dyn] Scene 2: Sig=1.00 Thresh=0.90 Fatigue=0.10
+[DEBUG TRACE] Profile Params Inside: 0.9
+[DEBUG TRACE] Thresh Init: 0.9 | Length Factor: 2.0
+[DEBUG Dyn] Scene 0: Sig=0.66 Thresh=0.90 Fatigue=0.00
+[DEBUG Dyn] Scene 1: Sig=1.00 Thresh=0.90 Fatigue=0.10
+[DEBUG Dyn] Scene 2: Sig=1.00 Thresh=0.90 Fatigue=0.10
+[DEBUG TRACE] Profile Params Inside: 0.9
+[DEBUG TRACE] Thresh Init: 0.9 | Length Factor: 2.0
+[DEBUG Dyn] Scene 0: Sig=0.66 Thresh=0.90 Fatigue=0.00
+[DEBUG Dyn] Scene 1: Sig=1.00 Thresh=0.90 Fatigue=0.10
+[DEBUG Dyn] Scene 2: Sig=1.00 Thresh=0.90 Fatigue=0.10
+Signals A: [0.66, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+Avg Fatigue: 0.000
+
+--- Test B: Slow Art in 'Thriller' Mode ---
+[Dynamics] Active Genre: Thriller | Lambda: 0.75 | Beta: 0.4 | Fatigue Limit: 1.2
+[DEBUG MERGE] k='fatigue_threshold' found in defaults. In params? True | Value in Params: 1.2 | Value in Defaults: 1.0
+[DEBUG TRACE] Profile Params Inside: 1.2
+[DEBUG TRACE] Thresh Init: 1.2 | Length Factor: 2.0
+[DEBUG Dyn] Scene 0: Sig=0.15 Thresh=1.20 Fatigue=0.00
+[DEBUG Dyn] Scene 1: Sig=0.22 Thresh=1.20 Fatigue=0.00
+[DEBUG Dyn] Scene 2: Sig=0.28 Thresh=1.20 Fatigue=0.00
+[DEBUG TRACE] Profile Params Inside: 1.2
+[DEBUG TRACE] Thresh Init: 1.2 | Length Factor: 2.0
+[DEBUG Dyn] Scene 0: Sig=0.15 Thresh=1.20 Fatigue=0.00
+[DEBUG Dyn] Scene 1: Sig=0.22 Thresh=1.20 Fatigue=0.00
+[DEBUG Dyn] Scene 2: Sig=0.28 Thresh=1.20 Fatigue=0.00
+[DEBUG TRACE] Profile Params Inside: 1.2
+[DEBUG TRACE] Thresh Init: 1.2 | Length Factor: 2.0
+[DEBUG Dyn] Scene 0: Sig=0.15 Thresh=1.20 Fatigue=0.00
+[DEBUG Dyn] Scene 1: Sig=0.22 Thresh=1.20 Fatigue=0.00
+[DEBUG Dyn] Scene 2: Sig=0.28 Thresh=1.20 Fatigue=0.00
+[DEBUG TRACE] Profile Params Inside: 1.2
+[DEBUG TRACE] Thresh Init: 1.2 | Length Factor: 2.0
+[DEBUG Dyn] Scene 0: Sig=0.15 Thresh=1.20 Fatigue=0.00
+[DEBUG Dyn] Scene 1: Sig=0.22 Thresh=1.20 Fatigue=0.00
+[DEBUG Dyn] Scene 2: Sig=0.28 Thresh=1.20 Fatigue=0.00
+[DEBUG TRACE] Profile Params Inside: 1.2
+[DEBUG TRACE] Thresh Init: 1.2 | Length Factor: 2.0
+[DEBUG Dyn] Scene 0: Sig=0.15 Thresh=1.20 Fatigue=0.00
+[DEBUG Dyn] Scene 1: Sig=0.22 Thresh=1.20 Fatigue=0.00
+[DEBUG Dyn] Scene 2: Sig=0.28 Thresh=1.20 Fatigue=0.00
+Avg Attention: 0.346
+
+❌ FAILURE: Logic check failed.

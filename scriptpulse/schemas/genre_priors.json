@@ -1,0 +1,34 @@
+{
+    "genres": {
+        "Thriller": {
+            "lambda_decay": 0.75,
+            "beta_recovery": 0.4,
+            "fatigue_threshold": 1.2,
+            "description": "Fast decay, high recovery needs, higher tolerance for intensity."
+        },
+        "Drama": {
+            "lambda_decay": 0.90,
+            "beta_recovery": 0.25,
+            "fatigue_threshold": 0.9,
+            "description": "Slow decay, focuses on sustained emotional arcs."
+        },
+        "Comedy": {
+            "lambda_decay": 0.80,
+            "beta_recovery": 0.6,
+            "fatigue_threshold": 0.8,
+            "description": "Medium decay, very fast recovery (jokes reset tension)."
+        },
+        "Horror": {
+            "lambda_decay": 0.70,
+            "beta_recovery": 0.15,
+            "fatigue_threshold": 1.5,
+            "description": "Very fast decay (jump scares), very slow recovery (dread)."
+        },
+        "Action": {
+            "lambda_decay": 0.78,
+            "beta_recovery": 0.5,
+            "fatigue_threshold": 1.3,
+            "description": "High tolerance for sustained intensity."
+        }
+    }
+}

@@ -60,7 +60,8 @@ class AblationRunner:
             profile = ReaderProfile(familiarity=0.5, tolerance=0.5).get_params()
             
         # Run Dynamics
-        signals = dynamics.run_simulation({'features': features}, profile_params=profile)
+        input_data = {'features': features, 'profile_params': profile}
+        signals = dynamics.run_simulation(input_data, genre='drama')
         
         # Calculate Aggregate Metrics
         avg_effort = statistics.mean([s['instantaneous_effort'] for s in signals])

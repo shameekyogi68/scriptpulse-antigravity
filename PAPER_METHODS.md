@@ -18,7 +18,7 @@ The core contribution is the **Attentional State Model**, a linear dynamical sys
 ### 2.1 State Equations
 The instantaneous attentional state for scene $t$ is defined as:
 
-$$ A_t = A_{t-1} \cdot \lambda + E_t - R_t $$
+$$ A_t = \min(1.0, \max(0.0, A_{t-1} \cdot \lambda + E_t - R_t)) $$
 
 Where:
 *   $A_t$: Attentional Engagement (Scalar, 0-1).
@@ -49,8 +49,32 @@ The system adapts parameters ($\lambda, w_i$) based on a **Reader Profile** vect
 *   **Decay Rate ($\lambda$)**: $\lambda = 0.80 + (0.15 \cdot T)$
 *   **Recovery Base ($\beta$)**: $\beta = 0.20 + (0.30 \cdot F)$
 *   **Fatigue Threshold ($\theta$)**: $\theta = 0.80 + (0.40 \cdot T)$
+### 2.4 Genre Priors (v1.3)
+To account for genre norms, base parameters are adjusted per narrative mode.
 
+| Genre | $\lambda$ (Decay) | $\beta$ (Recovery) | $\theta$ (Fatigue) | Rationale |
+| :--- | :--- | :--- | :--- | :--- |
+| **Drama** | 0.90 | 0.25 | 0.90 | Slow decay, focuses on sustained emotional arcs. |
+| **Thriller** | 0.75 | 0.40 | 1.20 | Fast decay, high recovery needs, higher tolerance. |
+| **Action** | 0.78 | 0.50 | 1.30 | High tolerance for sustained intensity. |
+| **Comedy** | 0.80 | 0.60 | 0.80 | Jokes reset tension rapidly. |
+| **Horror** | 0.70 | 0.15 | 1.50 | Very fast decay (jump scares), very slow recovery. |
 ---
+
+## 2.5 Pre-Registered Validation Criteria (v2.0)
+To be considered scientifically valid, the external validation phase must meet:
+
+| Metric | Target Threshold | Statistical Significance | Definition |
+| :--- | :--- | :--- | :--- |
+| **Spearman $\rho$** | $> 0.5$ | $p < 0.05$ | Correlation between Mean Attention and Human Rank. |
+| **Inter-Rater $\alpha$** | $> 0.7$ | 95% CI > 0.6 | Agreement level of ground truth annotators. |
+| **Rank Error (MARE)** | $< 2.0$ | N/A | Mean Absolute Rank Error per script (N=10). |
+
+**Error Analysis Requirement**:
+All validation reports must include:
+1.  **Top 3 Disagreement Cases** (Outliers).
+2.  **95% Bootstrap Confidence Intervals** for $\rho$ and $\alpha$.
+3.  **Effect Size Interpretation** (Weak < 0.4, Moderate < 0.7, Strong > 0.7).
 
 ## 3. Evaluation Protocol
 
@@ -61,14 +85,23 @@ The system adapts parameters ($\lambda, w_i$) based on a **Reader Profile** vect
 *   **Holdout Set ($D_{Holdout}$)**: $N=10$ scripts, strictly unseen during development.
 *   **Real Reader Study ($D_{Real}$)**: *[PLACEHOLDER: N participants, Age Range, Demographics]*
 
-### 3.2 Metrics
-*   **Human Alignment**: Pearson correlation ($r$) between Model $A_t$ series and Human Interest $H_t$.
-*   **Inter-Rater Reliability**: Krippendorff's $\alpha$ for human raters.
-    *   *Reported $\alpha$*: *[PLACEHOLDER]*
-*   **Calibration Error (ECE)**: Expected Calibration Error for confidence scores.
-    *   $ECE = \sum_{m=1}^M \frac{|B_m|}{n} |acc(B_m) - conf(B_m)|$
+### 3.2 Power Analysis (Sample Size Estimation)
+To detect a moderate correlation ($\rho=0.5$) with $\alpha=0.05$ and Power ($1-\beta$) $= 0.80$, the minimum required sample size is **N=29**.
+*   **Study Target**: $N=50$ scripts (Ground Truth).
+*   **Holdout Target**: $N=10$ scripts (Pilot).
 
-### 3.3 Significance Testing
+### 3.3 Data Leakage Safeguards
+To ensure epistemic integrity:
+1.  **No Training**: The engine uses fixed priors derived from literature, not optimization on the test set.
+2.  **Parameter Freeze**: Constants ($\lambda, \beta, \theta$) are locked (MD5 Hash) prior to ingesting validation data.
+3.  **Physical Separation**: The "Holdout Set" is stored in a separate directory from the "Dev Set".
+
+### 3.4 Metrics
+*   **Human Alignment**: Spearman rank correlation ($\rho$) between Model $A_t$ series and Human Interest $H_t$.
+*   **Inter-Rater Reliability**: Krippendorff's $\alpha$ for human raters.
+*   **Mean Absolute Rank Error (MARE)**: $|Rank_{sys} - Rank_{human}|$.
+
+### 3.5 Significance Testing
 *   **Bootstrap Resampling**: 1000 iterations to generate 95% Confidence Intervals.
 *   **p-values**: Calculated against a null hypothesis of random signal correlation.
 

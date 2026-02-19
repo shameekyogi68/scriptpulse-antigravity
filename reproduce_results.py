@@ -56,7 +56,8 @@ class ResearchReproducer:
         dyn_params = self.config['parameters']['dynamics']
         
         features = perception.run(mock_script)
-        signals = dynamics.run_simulation({'features': features}, profile_params=dyn_params)
+        input_data = {'features': features, 'profile_params': dyn_params}
+        signals = dynamics.run_simulation(input_data, genre='drama')
         
         # Calculate Uncertainty
         uncertainty_data = interpreter.calculate_uncertainty({'temporal_signals': signals, 'features': features})
@@ -144,6 +145,17 @@ class ResearchReproducer:
         report += real_loader.generate_report()
         report += "\n"
         report += profiler.generate_report(profile_metrics)
+        
+        # New Feature Stats (v1.3)
+        report += "\n## 📈 Perceptual Feature Distributions (v1.3)\n"
+        if features:
+            novs = [f.get('novelty_score', 0) for f in features]
+            clars = [f.get('clarity_score', 0) for f in features]
+            avg_nov = sum(novs)/len(novs) if novs else 0
+            avg_clar = sum(clars)/len(clars) if clars else 0
+            report += f"*   **Average Novelty**: {avg_nov:.2f} (Target: >0.4)\n"
+            report += f"*   **Average Clarity**: {avg_clar:.2f} (Target: >0.7)\n"
+            report += f"*   **Genre Mode**: {self.config.get('parameters', {}).get('genre', 'Universal')}\n"
         
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)

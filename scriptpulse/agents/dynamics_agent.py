@@ -79,86 +79,80 @@ class DynamicsAgent:
             self.GENRE_PRIORS = {} # Fallback
 
     def get_genre_config(self, genre):
+        """Load genre-specific priors."""
+        target = genre.lower()
+        if not self.GENRE_PRIORS:
+            # Try reloading if empty
+            try:
+                base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+                schema_path = os.path.join(base_dir, 'scriptpulse', 'schemas', 'genre_priors.json')
+                if os.path.exists(schema_path):
+                    with open(schema_path, 'r') as f:
+                        data = json.load(f)
+                        self.GENRE_PRIORS = data.get('genres', {})
+            except Exception as e:
+                print(f"[Dynamics] Warning: Could not load genre priors: {e}")
+        
+        # Case insensitive match
         for k, v in self.GENRE_PRIORS.items():
-            if k.lower() == genre.lower():
+            if k.lower() == target:
                 return v
-        return self.GENRE_PRIORS.get('Drama', {'lambda_decay': 0.85})
+        
+        # Default fallback
+        return self.GENRE_PRIORS.get('Drama', {
+            'lambda_decay': 0.85, 
+            'beta_recovery': 0.25,
+            'fatigue_threshold': 1.0
+        })
 
-    def run_simulation(self, input_data, lens_config=None, genre='drama', profile_params=None, iterations=5):
+    def run_simulation(self, input_data, genre='drama', debug=False):
         """
-        MRCS: Multi-Reader Consensus Simulator (formerly simulate_consensus)
-        Runs the temporal model multiple times with slight parameter jitter.
+        Main entry point. 
+        input_data: {'features': [...]} from PerceptionAgent
+        genre: 'drama', 'thriller', 'comedy', 'action', 'horror'
+        debug: boolean, enables verbose trace logging
         """
-        if not input_data.get('features'):
+        # Validate input
+        if 'features' not in input_data:
             return []
             
-        # Use Profile Params or Defaults
+        # Initialize Profile Params based on Genre
+        # Note: We assume 'lens_config' is either in input_data or we use defaults.
+        # For v1.3, we focus on genre-based priors.
+        
+        # Check if profile_params is passed in input_data (advanced usage)
+        profile_params = input_data.get('profile_params')
+        
         if not profile_params:
+            genre_data = self.get_genre_config(genre)
             profile_params = {
-                'lambda_base': self.DEFAULT_LAMBDA,
-                'beta_recovery': self.DEFAULT_BETA,
-                'fatigue_threshold': 1.0,
-                'coherence_weight': 0.15
+                'lambda_base': genre_data.get('lambda_decay', self.DEFAULT_LAMBDA),
+                'beta_recovery': genre_data.get('beta_recovery', self.DEFAULT_BETA),
+                'fatigue_threshold': genre_data.get('fatigue_threshold', 1.0),
+                'coherence_weight': 0.15 # Default
             }
-            
+
         # Ensure we have all keys if a partial dict was passed
         defaults = ReaderProfile().get_params()
         for k, v in defaults.items():
             if k not in profile_params:
                 profile_params[k] = v
-            
-        accumulated_signals = None
-        base_lens = copy.deepcopy(lens_config) if lens_config else {}
         
-        for _ in range(iterations):
-            jitter_lens = copy.deepcopy(base_lens)
-            if 'effort_weights' in jitter_lens:
-                w = jitter_lens['effort_weights']
-                w['cognitive_mix'] *= random.uniform(0.95, 1.05)
-                w['emotional_mix'] *= random.uniform(0.95, 1.05)
-                
-            signals = self._run_single_pass(input_data, lens_config=jitter_lens, genre=genre, profile_params=profile_params)
-            
-            if accumulated_signals is None:
-                accumulated_signals = []
-                for s in signals:
-                    accumulated_signals.append({
-                        'scene_index': s['scene_index'],
-                        'instantaneous_effort': s['instantaneous_effort'],
-                        'attentional_signal': s['attentional_signal'],
-                        'recovery_credit': s['recovery_credit'],
-                        'tam_integral': s['tam_integral'],
-                        'expectation_strain': s.get('expectation_strain', 0.0), 
-                        'temporal_expectation': s.get('temporal_expectation', 0.5),
-                        'valence_score': s.get('valence_score', 0.0),
-                        'coherence_penalty': s.get('coherence_penalty', 0.0)
-                    })
-            else:
-                for i, s in enumerate(signals):
-                    accumulated_signals[i]['instantaneous_effort'] += s['instantaneous_effort']
-                    accumulated_signals[i]['attentional_signal'] += s['attentional_signal']
-                    accumulated_signals[i]['recovery_credit'] += s['recovery_credit']
-                    accumulated_signals[i]['tam_integral'] += s['tam_integral']
-                    accumulated_signals[i]['expectation_strain'] += s.get('expectation_strain', 0.0)
-                    accumulated_signals[i]['temporal_expectation'] += s.get('temporal_expectation', 0.5)
-                    accumulated_signals[i]['valence_score'] += s.get('valence_score', 0.0)
-                    accumulated_signals[i]['coherence_penalty'] += s.get('coherence_penalty', 0.0)
-                    
-        # Average
-        for sig in accumulated_signals:
-            sig['instantaneous_effort'] = round(sig['instantaneous_effort'] / iterations, 3)
-            sig['attentional_signal'] = round(sig['attentional_signal'] / iterations, 3)
-            sig['recovery_credit'] = round(sig['recovery_credit'] / iterations, 3)
-            sig['tam_integral'] = round(sig['tam_integral'] / iterations, 3)
-            sig['expectation_strain'] = round(sig['expectation_strain'] / iterations, 3)
-            sig['temporal_expectation'] = round(sig['temporal_expectation'] / iterations, 3)
-            sig['valence_score'] = round(sig['valence_score'] / iterations, 3)
-            sig['coherence_penalty'] = round(sig['coherence_penalty'] / iterations, 3)
-            
-        return accumulated_signals
+        if debug:
+             print(f"[Dynamics] Active Genre: {genre} | Lambda: {profile_params['lambda_base']} | Beta: {profile_params['beta_recovery']} | Fatigue Limit: {profile_params['fatigue_threshold']}")
 
-    def _run_single_pass(self, input_data, lens_config=None, genre='drama', profile_params=None):
-        """Core Temporal Dynamics Engine (formerly temporal.run)"""
+        # Primary Run (Deterministic)
+        # We pass lens_config from input_data if it exists
+        lens_config = input_data.get('lens_config')
+        
+        primary_trace = self._run_single_pass(input_data, lens_config=lens_config, genre=genre, profile_params=profile_params, debug=debug)
+            
+        return primary_trace
+
+    def _run_single_pass(self, input_data, lens_config=None, genre='drama', profile_params=None, debug=False):
+        """
+        Core Simulation Loop (Deterministic)
+        """
         features = input_data.get('features', [])
         coherence_scores = input_data.get('coherence_scores', [])
         valence_scores = input_data.get('valence_scores', [])
@@ -209,6 +203,9 @@ class DynamicsAgent:
         # Profile Parameters
         lambda_base = min(0.99, profile_params['lambda_base'])
         beta_rec = profile_params['beta_recovery']
+        
+        # DEBUG PARAM TRACE (Removed)
+        
         fatigue_thresh = profile_params['fatigue_threshold']
         coh_weight = profile_params['coherence_weight']
         
@@ -363,12 +360,17 @@ class DynamicsAgent:
                 'expectation_strain': round(strain, 3),
                 'temporal_expectation': round(expectation, 3),
                 'valence_score': valence_scores[i] if i < len(valence_scores) else 0.0,
-                'coherence_penalty': round(coh_penalty, 3)
+                'coherence_penalty': round(coh_penalty, 3),
+                'fatigue_state': round(min(1.0, max(0.0, signal - fatigue_thresh)), 3) # Clamped [0,1]
             })
             
             prev_signal = signal
             prev_expectation = expectation
             
+            # Detailed Trace (v1.3.1)
+            if debug:
+                print(f"[TRACE] Scene {i}: A={signal:.2f} | E={effort:.2f} (Struct={struct_load:.2f} Sem={sem_load:.2f} Syn={syn_load:.2f} Dial={dial_eng:.2f}) | R={recovery:.2f} | Fatigue={max(0.0, signal - fatigue_thresh):.2f} | Lambda={current_lambda:.2f}")
+
         return signals
 
     def _compute_length_factor(self, total_scenes):

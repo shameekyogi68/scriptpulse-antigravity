@@ -53,7 +53,8 @@ class BlindValidator:
         dyn_params = config['parameters']['dynamics']
         
         features = perception.run(holdout_script)
-        signals = dynamics.run_simulation({'features': features}, profile_params=dyn_params)
+        input_data = {'features': features, 'profile_params': dyn_params}
+        signals = dynamics.run_simulation(input_data, genre='drama')
         
         uncertainty_data = interpreter.calculate_uncertainty({'temporal_signals': signals, 'features': features})
         

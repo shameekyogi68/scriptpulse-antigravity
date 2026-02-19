@@ -120,7 +120,9 @@ class EncodingAgent:
             'max_sentence_length': max_length,
             'sentence_length_variance': round(variance, 2),
             'readability_grade': fk_grade,
-            'idea_density': round(idea_density, 3)
+            'idea_density': round(idea_density, 3),
+            'clarity_score': round(max(0.0, 1.0 - (fk_grade / 12.0)), 2), # Clamped to [0,1]. Grade > 12 yields 0.
+            'novelty_score': round(idea_density * (variance / 10.0), 2) # Heuristic: New ideas + Variety = Novelty
         }
 
     def extract_dialogue_dynamics(self, scene_lines):
