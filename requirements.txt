@@ -1,14 +1,19 @@
-streamlit>=1.25.0
-pandas>=2.0.0
-numpy>=1.24.0
-scipy>=1.10.0
-networkx>=3.0
-matplotlib>=3.7.0
-plotly>=5.15.0
-# Machine Learning (Core - vNext.11 Upgrade)
-torch>=2.0.0
-transformers>=4.30.0
-sentence-transformers>=2.2.2
-scikit-learn>=1.2.0
-scipy>=1.10.0
-regex>=2023.6.3
+# Python 3.9+ required
+# All versions pinned for reproducibility
+streamlit==1.31.0
+pandas==2.1.4
+numpy==1.26.3
+scipy==1.11.4
+networkx==3.2.1
+matplotlib==3.8.2
+plotly==5.18.0
+# Machine Learning
+torch==2.1.2
+transformers==4.36.2
+sentence-transformers==2.3.1
+scikit-learn==1.3.2
+regex==2023.12.25
+# Type Safety
+pydantic==2.5.3
+# Testing
+pytest==7.4.4

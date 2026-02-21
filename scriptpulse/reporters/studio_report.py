@@ -57,7 +57,41 @@ def generate_report(report_data, script_title="Untitled Script", user_notes=""):
     
     <div class="verdict">
         RECOMMENDATION: {rec}<br>
-        <span style="font-size: 14px; color: #666;">
+        <span style="font-size: 14px; color: #666;">Based on Engagement {avg_effort:.2f}</span>
+    </div>
+    
+    <!-- Executive Summary (Writer Mode) -->
+    <div style="background-color: #f0f7ff; padding: 25px; border: 2px solid #005a9e; margin-bottom: 40px; border-radius: 5px;">
+        <h3 style="margin-top:0; color: #005a9e; border-bottom: none;">🚀 STORY REPORT SUMMARY</h3>
+        
+        <div style="display: flex; gap: 20px; align-items: flex-start;">
+            <div style="flex: 2;">
+                <h4 style="margin: 10px 0 5px 0; color: #333;">MAIN STORY ISSUES (Top 3)</h4>
+                <ul style="margin: 0; padding-left: 20px;">
+                    {''.join([f"<li style='margin-bottom:8px;'>{item}</li>" for item in report_data.get('writer_intelligence', {}).get('narrative_diagnosis', ['No major issues detected.'])])}
+                </ul>
+            </div>
+            
+            <div style="flex: 1; background: #fff; padding: 15px; border: 1px solid #ddd; border-radius: 4px;">
+                <h4 style="margin: 0 0 10px 0; border-bottom: 2px solid #eee;">STORY STRUCTURE CHECK</h4>
+                <div style="margin-bottom: 8px;">
+                    <b>Midpoint:</b> {report_data.get('writer_intelligence', {}).get('structural_dashboard', {}).get('midpoint_status', 'N/A')}
+                </div>
+                <div>
+                    <b>Act 1 Energy:</b> {report_data.get('writer_intelligence', {}).get('structural_dashboard', {}).get('act1_energy', 'N/A')}
+                </div>
+            </div>
+        </div>
+
+        <h4 style="margin: 20px 0 10px 0; color: #333;">TOP WAYS TO FIX IT (High Impact)</h4>
+        <table style="width:100%; border-collapse: collapse; font-size: 14px;">
+            <tr style="background:#005a9e; color:white; text-align:left;">
+                <th style="padding:8px;">Action (What to do)</th>
+                <th style="padding:8px; width: 100px;">Impact</th>
+            </tr>
+            {''.join([f"<tr><td style='border:1px solid #ccc; padding:8px;'>{edit['action']}</td><td style='border:1px solid #ccc; padding:8px;'><b>{edit['leverage']}</b></td></tr>" for edit in report_data.get('writer_intelligence', {}).get('rewrite_priorities', [])[:5]])}
+        </table>
+    </div>
             CONFIDENCE: {report_data.get('meta', {}).get('confidence_score', {}).get('level', 'N/A')} 
             ({int(report_data.get('meta', {}).get('confidence_score', {}).get('score', 0)*100)}%)
         </span>

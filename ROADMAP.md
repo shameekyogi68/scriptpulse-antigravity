@@ -62,6 +62,22 @@
 - [ ] **Real World Corpus Study**: Validate distribution on 50+ produced scripts.
 - [ ] **Inter-Rater Agreement**: Establish $\alpha > 0.7$ for grounded truth annotations.
 
+### Phase 3: Writer Intelligence Layer (The Interface)
+Moves from "Engineer Tool" (10/10) to "Writer Collaborator" (10/10).
+*   [ ] **Narrative Language Translation**:
+    *   Convert "High Entropy" $\rightarrow$ "Three new plot facts introduced without reaction."
+    *   Convert "Valence Oscillation" $\rightarrow$ "Emotional tone remains negative for 27 minutes."
+*   [ ] **Rewrite Priority Ranking**:
+    *   Rank fixes by leverage (e.g., "Priority 1: Reduce exposition in Scene 12 -> +0.2 Attention").
+*   [ ] **Scene-Specific Rewrite Strategies**:
+    *   Suggest pattern fixes: "Insert recovery beat," "Clarify goal," "Split confrontation."
+*   [ ] **Deep Character Drive**:
+    *   Track *Decisions* vs *Events*.
+    *   Flag "Protagonist Inactive" sequences.
+*   [ ] **Structural Health Dashboard**:
+    *   Midpoint Energy Dip detection.
+    *   "Thread Load" tracking per scene.
+
 ### 6. Deep Narrative Structures (New)
 *   [ ] **Dialogue Function Analysis**:
     *   Classify speech intent: Conflict, Exposition, Persuasion, Bonding.

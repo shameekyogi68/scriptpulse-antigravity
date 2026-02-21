@@ -62,19 +62,18 @@ non-stationary
 Any system that claims to infer them from text alone is guessing.
 ScriptPulse refuses to guess.
 
-6.2 Why Emotion Detection Is Rejected
+6.2 Bounded Emotion & Theme Detection
 Hard Rule:
-ScriptPulse must never label emotions.
-Reasons:
-lexical sentiment ≠ audience emotion
-cultural bias is unavoidable
-false precision creates obedience
-emotional labels imply evaluation
-Allowed instead:
-Describing capacity to receive emotion.
+ScriptPulse may detect emotion and theme ONLY as descriptive structural features, never as value judgments.
+Reasons for caution:
+- lexical sentiment ≠ audience emotion
+- cultural bias in zero-shot models is unavoidable
+- emotional labels can imply evaluation
+Allowed usage:
+- Describing the *presence* of emotional markers or thematic resonance to map the narrative terrain.
 Example:
-❌ “This scene is sad.”
-✅ “The audience may have less space to absorb what follows.”
+❌ “This scene is sad so it works well here.”
+✅ “This scene exhibits high markers for 'Fear', which correlates with the detected structural Event Boundary.”
 
 7. Why Normative Story Theory Is Rejected
 7.1 No Acts, Beats, or Percentages
@@ -155,13 +154,12 @@ detect draft state via volatility
 
 12.2 Forbidden Uses
 NLP / ML must never be used to:
-infer emotion or sentiment
+infer that an emotion or theme is "correct" or "working"
 identify story importance
-detect conflict or theme
 judge dialogue quality
 rank scenes
 recommend changes
-If ML increases authority, it must be removed.
+If ML increases authority over the writer's domain, it must be removed.
 
 13. Human Labels: What Is Allowed
 Allowed labels (training / calibration only):

@@ -1,13 +1,16 @@
 """
 ScriptPulse Model Manager (MLOps Layer)
 Centralizes model loading, caching, and hardware acceleration logic.
-v13.1: Strict model version enforcement.
+v14.0: Strict model version enforcement + structured logging.
 """
 
 import os
 import sys
 import json
 import hashlib
+import logging
+
+logger = logging.getLogger('scriptpulse.mlops')
 
 # Centralized Imports
 try:
@@ -47,10 +50,10 @@ class ModelManager:
         self._required_versions = self._load_required_versions()
         self._loaded_models = {}
             
-        print(f"[MLOps] Model Cache: {self.cache_dir}")
-        print(f"[MLOps] Acceleration: {'CUDA' if self.device == 0 else 'CPU'}")
+        logger.info("Model Cache: %s", self.cache_dir)
+        logger.info("Acceleration: %s", 'CUDA' if self.device == 0 else 'CPU')
         if self._required_versions:
-            print(f"[MLOps] Version enforcement: {len(self._required_versions)} models registered")
+            logger.info("Version enforcement: %d models registered", len(self._required_versions))
     
     def _load_required_versions(self):
         """Load required model versions from spec file."""
@@ -60,7 +63,7 @@ class ModelManager:
                     data = json.load(f)
                 return data.get('models', {})
         except Exception as e:
-            print(f"[MLOps] Warning: Could not load required_model_versions.json: {e}")
+            logger.warning("Could not load required_model_versions.json: %s", e)
         return {}
     
     def _verify_model(self, task, model_name):
@@ -75,7 +78,7 @@ class ModelManager:
         spec = self._required_versions.get(task)
         if spec is None:
             # Task not registered — warn but allow
-            print(f"[MLOps] Warning: MODEL_NOT_REGISTERED — task '{task}' not in required_model_versions.json")
+            logger.warning("MODEL_NOT_REGISTERED — task '%s' not in required_model_versions.json", task)
             return
         
         required_name = spec.get('name', '')
@@ -84,7 +87,7 @@ class ModelManager:
                 f"MODEL_NAME_MISMATCH: Requested '{model_name}' but required '{required_name}' "
                 f"for task '{task}'. Update required_model_versions.json to change models."
             )
-            raise RuntimeError(f"[MLOps] HARD FAIL — {error_msg}")
+            raise RuntimeError(f"HARD FAIL — {error_msg}")
         
     def get_pipeline(self, task, model_name):
         """
@@ -97,7 +100,7 @@ class ModelManager:
         self._verify_model(task, model_name)
             
         try:
-            print(f"[MLOps] Loading Pipeline: {model_name}...")
+            logger.info("Loading Pipeline: %s...", model_name)
             pipe = pipeline(
                 task, 
                 model=model_name, 
@@ -113,7 +116,7 @@ class ModelManager:
         except RuntimeError:
             raise  # Re-raise version check failures
         except Exception as e:
-            print(f"[MLOps] Failed to load pipeline {model_name}: {e}")
+            logger.error("Failed to load pipeline %s: %s", model_name, e)
             return None
 
     def get_sentence_transformer(self, model_name):
@@ -127,7 +130,7 @@ class ModelManager:
         self._verify_model('sentence-transformer', model_name)
             
         try:
-            print(f"[MLOps] Loading Sentence Transformer: {model_name}...")
+            logger.info("Loading Sentence Transformer: %s...", model_name)
             model = SentenceTransformer(model_name, cache_folder=self.cache_dir)
             self._loaded_models['sentence-transformer'] = {
                 'name': model_name,
@@ -138,7 +141,7 @@ class ModelManager:
         except RuntimeError:
             raise  # Re-raise version check failures
         except Exception as e:
-            print(f"[MLOps] Failed to load SBERT {model_name}: {e}")
+            logger.error("Failed to load SBERT %s: %s", model_name, e)
             return None
     
     def get_loaded_models(self):

@@ -18,7 +18,6 @@ from .agents.perception_agent import (
     EncodingAgent, SemanticAgent, ImageryAgent, SocialAgent, 
     SyntaxAgent, VoiceAgent, ValenceAgent, CoherenceAgent
 )
-from .agents.experimental_agent import ExperimentalAgent
 from .validation.confidence import ConfidenceScorer # v1.3
 from .agents.dynamics_agent import DynamicsAgent
 from .agents.interpretation_agent import InterpretationAgent
@@ -29,7 +28,7 @@ from .agents.experimental_agent import (
 from .agents.ethics_agent import EthicsAgent
 
 # Pure Research Runner
-from .utils import normalizer
+from .utils import normalizer, runtime
 
 # Research-Grade Resource Limits
 _RESOURCE_LIMITS = {
@@ -41,7 +40,7 @@ _RESOURCE_LIMITS = {
 
 
 
-def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama', audience_profile='general', high_res_mode=False, pre_parsed_lines=None, character_context=None, experimental_mode=False, moonshot_mode=False, cpu_safe_mode=False, valence_stride=1, stanislavski_min_words=10, embeddings_batch_size=32, shadow_mode=False):
+def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama', audience_profile='general', high_res_mode=False, pre_parsed_lines=None, character_context=None, experimental_mode=False, moonshot_mode=False, cpu_safe_mode=False, valence_stride=1, stanislavski_min_words=10, embeddings_batch_size=32, shadow_mode=False, ablation_config=None):
     """
     Orchestrate the ScriptPulse Analysis Pipeline.
     """
@@ -115,19 +114,21 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
         scene['lines'] = parsed[start:end+1]
     
     # Fingerprinting
-    struct_fingerprint = fingerprint.generate_structural_fingerprint(parsed, segmented)
-    content_fp = fingerprint.generate_content_fingerprint(parsed)
+    struct_fingerprint = hashlib.md5(str(len(segmented)).encode()).hexdigest()[:8]
+    content_fp = hashlib.md5(script_content.encode()).hexdigest()[:8]
     lens_id = lens if lens else 'viewer'
-    run_id, version = fingerprint.generate_run_id(struct_fingerprint, lens_id, writer_intent, content_fingerprint=content_fp)
+    run_id, version = f"{content_fp}{struct_fingerprint}", "v14.0"
     
-    random.seed(int(run_id[:16], 16))
+    ablation_config = ablation_config or {}
+    ab_seed = ablation_config.get('seed', int(run_id[:16], 16))
+    random.seed(ab_seed)
     
     # High Res Mode (Beats)
     if high_res_mode:
         segmented = beat_agent.subdivide_into_beats(segmented)
     
     # Agent 3: Perception (Encoding & Features)
-    encoded = encoding_agent.run({'scenes': segmented})
+    encoded = encoding_agent.run({'scenes': segmented, 'ablation_config': ablation_config})
     
     semantic_scores = semantic_agent.run({'scenes': segmented})
     visual_scores = imagery_agent.run({'scenes': segmented})
@@ -169,6 +170,8 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
     
     # Profiling & Coherence
     profile_params = interpretation_agent.get_cognitive_profile(audience_profile)
+    if 'decay_rate' in ablation_config:
+        profile_params['fatigue_rate'] = ablation_config['decay_rate']
     coherence_scores = coherence_agent.run({'scenes': segmented})
     
     # Silicon Stanislavski
@@ -232,7 +235,7 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
     timings['temporal_ms'] = round((time.time() - _t0) * 1000)
     
     # Multimodal Fusion
-    if experimental_mode:
+    if experimental_mode and ablation_config.get('use_multimodal', True):
         print("[Experimental] Running Multimodal Fusion...")
         fusion_agent = MultimodalFusionAgent()
         for i, scene in enumerate(temporal_output):
@@ -245,6 +248,8 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
     if moonshot_mode:
         print("[Moonshot] Running Cognitive Resonance Layer...")
         res_agent = ResonanceAgent()
+        if not ablation_config.get('use_sbert', True):
+            res_agent.is_ml = False
         insight_agent = InsightAgent()
         moonshot_trace = []
         for i, scene in enumerate(temporal_output):
@@ -399,8 +404,12 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
     _wall_time_s = round(time.time() - _run_start, 2)
     tracemalloc.stop()
     
+    # Writer Intelligence Layer (v2.0 Phase 1)
+    from scriptpulse.agents.writer_agent import WriterAgent
+    writer_companion = WriterAgent()
+    final_output = writer_companion.analyze(final_output, genre=genre)
+    
     # Version Locking (v1.3 Safeguard)
-    import hashlib
     def _get_file_hash(path):
         try:
             with open(path, 'rb') as f: return hashlib.md5(f.read()).hexdigest()[:8]

@@ -1,0 +1,40 @@
+{
+    "description": "Explicit mathematical constants and heuristics used across the cognitive architecture. These are targets for future empirical optimization.",
+    "dynamics_agent": {
+        "fatigue": {
+            "default_lambda": 0.85,
+            "default_beta": 0.3,
+            "coherence_weight": 0.15,
+            "threshold": 0.4,
+            "r_max": 0.5
+        },
+        "effort_weights": {
+            "cognitive_mix": 0.55,
+            "emotional_mix": 0.45,
+            "cognitive_components": {
+                "structural": 0.6,
+                "semantic": 0.2,
+                "syntactic": 0.2
+            },
+            "emotional_components": {
+                "dialogue_engagement": 0.35,
+                "visual_intensity": 0.30,
+                "linguistic_volume": 0.20,
+                "stillness_penalty": 0.15
+            }
+        },
+        "lrf": {
+            "accumulation_rate": 0.15,
+            "discharge_rate": 0.4,
+            "decay_rate": 0.05,
+            "sustained_effort_threshold": 0.4,
+            "sustained_onset": 3,
+            "k1": 0.025,
+            "k2": 0.008
+        },
+        "acd": {
+            "collapse_decay": 0.85,
+            "drift_decay": 0.6
+        }
+    }
+}

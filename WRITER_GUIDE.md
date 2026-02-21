@@ -1,31 +1,31 @@
-# ScriptPulse: The Comprehensive Guide to Computational Narrative Analysis
+# ScriptPulse: The Diagnostic Mirror for Screenwriters
 
-> **"The objectivity of a machine. The intuition of an audience."**
+> **"A reflection of your structure, not a judge of your soul."**
 
-This document is the definitive guide to the ScriptPulse system. It explains exactly **what it does**, **how it works**, and **why it is the most advanced narrative analysis engine available**.
+This document is the guide to the ScriptPulse system. It explains **what it measures**, **how it works**, and **how to use it to protect your artistic intent**.
 
 ---
 
-## 1. What ScriptPulse Does "Perfectly"
-Unlike human readers who get tired, bored, or bring personal bias, ScriptPulse provides **consistent, quantifiable objectivity**.
+## 1. What ScriptPulse Actually Does
+ScriptPulse is not an AI that tells you how to write. It is a mathematical x-ray of your pacing and structure. It is designed to act as a **Diagnostic Mirror**, showing you the cognitive load your script places on a reader so you can make informed choices.
 
 ### A. Perfect Pacing Analysis
 *   **The Problem**: "Pacing" is subjective. One reader says "slow", another says "atmospheric".
 *   **The ScriptPulse Solution**: We measure **Information Density per Second**.
     *   We track exactly how much *new narrative information* (Entropy) enters the viewer's mind every 10 seconds.
-    *   **Perfection**: It identifies the exact page where the "Data Rate" drops below the "Boredom Threshold". It never misses a lull.
+    *   **The Tracking**: It identifies the page where the "Data Rate" drops below the "Boredom Threshold". It highlights a lull, whether intended or accidental.
 
 ### B. Fatigue & Overload Detection
 *   **The Problem**: Action movies often become "numbing" because they are too loud for too long.
 *   **The ScriptPulse Solution**: We model **Cognitive Fatigue**.
     *   Just like a muscle, the audience's attention "burned" by high-intensity scenes.
-    *   **Perfection**: It flags the *precise moment* (e.g., Minute 42) where the audience physically stops processing new information due to exhaustion, telling you exactly where to cut or slow down.
+    *   **The Tracking**: It flags moments where the audience stops processing new information due to exhaustion, giving you the choice to cut or hold the tension.
 
 ### C. Objective Character Auditing
 *   **The Problem**: Writers often think their protagonist is active, but they are actually just *watching* the plot happen.
 *   **The ScriptPulse Solution**: We measure **Agency**.
     *   We distinguish between "Speaking" (passive) and "Causal Action" (active verbs that change the world state).
-    *   **Perfection**: It proves mathematically if your hero is driving the story or being driven by it.
+    *   **The Tracking**: It shows you if your hero is driving the story or being driven by it, helping you spot Accidental Passivity versus Thematic Trapping.
 
 ---
 

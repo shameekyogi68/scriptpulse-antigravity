@@ -45,19 +45,25 @@ See `PAPER_METHODS.md` for exact formulas, constant values, and evaluation proto
 *   **Calibration**: Demonstrated signal separation (0.2-0.9) on synthetic corpus.
 *   **Confidence**: Metrics penalized for low data density or variance.
 
+### v2.0 Writer Intelligence Layer (Phase 19)
+*   **Narrative Translation**: Converts math signals (Entropy, Strain) into story diagnosis ("Clarity Gap", "Plot Density Spike").
+*   **Rewrite Prioritization**: Ranks structural edits by estimated leverage (High/Medium/Low).
+*   **Executive Summary**: Clean, one-page report format for rapid writer assessment.
+
 ### Reproducibility Protocols
-*   **Version Lock**: MD5 Hash of `genre_priors.json` embedded in all reports.
+*   **Version Lock**: MD5 Hash of constants embedded in all reports.
 *   **Deterministic Core**: Random seed fixed to `42` in `config.py`.
 *   **Hard Bounds**: All outputs clamped to $[0,1]$ for numerical stability.
-# ScriptPulse v1.3 - Calibrated Research Engine
 
-**Status**: Calibrated engine ready for external validation phase.
-**Version**: 1.3 (Gold Master)
-**date**: 2026-02-19
-*   **Production Safeguards**:
-    *   Hard bounds clamping ($A_t \in [0,1]$).
-    *   Version Locking (MD5 Hash of constants embedded in reports).
-    *   Peak Fatigue Tracking.
+# ScriptPulse v1.3 + Writer Layer (Gold Master)
+
+**Status**: Development Complete. Ready for Writer Stress Testing (Product Validation).
+**Version**: 1.3.1 (Writer Interface Verified)
+**Date**: 2026-02-20
+*   **Validation Status**:
+    *   Engineering: ✅ Complete (Deterministic)
+    *   Science: ✅ Complete (Pre-registered, Power-analyzed)
+    *   Product: 🟡 In Progress (Writer Stress Test)
 
 ## 📘 Writer's Guide
 See `WRITER_GUIDE.md` for a comprehensive, non-technical explanation of the system's capabilities, architecture, and how to interpret the reports.

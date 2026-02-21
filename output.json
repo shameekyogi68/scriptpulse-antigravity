@@ -1,0 +1,1633 @@
+[MLOps] Model Cache: /Users/shameekyogi/.scriptpulse/models
+[MLOps] Acceleration: CPU
+[MLOps] Version enforcement: 2 models registered
+[MLOps] Loading Pipeline: valhalla/distilbart-mnli-12-3...
+[MLOps] Loading Sentence Transformer: sentence-transformers/all-MiniLM-L6-v2...
+[ML] Loaded SBERT for Semantic Analysis.
+[MLOps] Loading Pipeline: valhalla/distilbart-mnli-12-3...
+{
+  "reflections": [
+    {
+      "scene_range": [
+        0,
+        2
+      ],
+      "reflection": "The mental load here is becoming heavy. The audience may struggle to track new information effectively.",
+      "confidence": "Low",
+      "confidence_score": 0.0
+    },
+    {
+      "scene_range": [
+        0,
+        6
+      ],
+      "reflection": "This run of scenes stays intense without a release valve \u2014 the audience may feel pushed without a moment to recover.",
+      "confidence": "Low",
+      "confidence_score": 0.0
+    }
+  ],
+  "silence_explanation": null,
+  "intent_acknowledgments": [],
+  "total_surfaced": 2,
+  "total_suppressed": 0,
+  "aeks_active": true,
+  "meta": {
+    "run_id": "52d40fde8f14e45f",
+    "execution_mode": "ML_Active",
+    "fingerprint": "8f14e45f",
+    "content_fingerprint": "52d40fde",
+    "version": "v14.0",
+    "lens": "viewer",
+    "agent_timings": {
+      "parser_ms": 5,
+      "segmentation_ms": 0,
+      "embeddings_ms": 43,
+      "valence_ms": 0,
+      "temporal_ms": 3
+    },
+    "confidence_score": {
+      "level": "MEDIUM",
+      "score": 0.8,
+      "reasons": [
+        "Low Scene Count (Dense)"
+      ]
+    },
+    "wall_time_s": 10.38,
+    "metric_version": "1.3",
+    "genre_profile_version": "1.0",
+    "constants_hash": "9ea7e7c2"
+  },
+  "scene_info": [
+    {
+      "scene_index": 0,
+      "heading": "EXT. ROOFTOP - SUNSET",
+      "preview": "Rain hammers the glass. ALEX stares out, jaw tight. | ALEX"
+    },
+    {
+      "scene_index": 1,
+      "heading": "INT. HOSPITAL - NIGHT",
+      "preview": "(WHISPERING) | Who sent you?"
+    },
+    {
+      "scene_index": 2,
+      "heading": "EXT. PARK - AFTERNOON",
+      "preview": "(SHOUTING) | How long have you known? Days? Weeks?"
+    },
+    {
+      "scene_index": 3,
+      "heading": "EXT. HIGHWAY - DAY",
+      "preview": "(ANGRY) | I told you this would happen. You never listen."
+    },
+    {
+      "scene_index": 4,
+      "heading": "EXT. BEACH - DAWN",
+      "preview": "(SIGHS) | Promise me you won't tell anyone."
+    },
+    {
+      "scene_index": 5,
+      "heading": "INT. SUBWAY - NIGHT",
+      "preview": "(QUIETLY) | One chance. That's all we get."
+    },
+    {
+      "scene_index": 6,
+      "heading": "Scene 7",
+      "preview": "(ANGRY) | The results came back. It's confirmed."
+    }
+  ],
+  "total_scenes": 7,
+  "temporal_trace": [
+    {
+      "scene_index": 0,
+      "instantaneous_effort": 0.287,
+      "attentional_signal": 0.287,
+      "recovery_credit": 0.037,
+      "tam_integral": 1.724,
+      "expectation_strain": 0.213,
+      "temporal_expectation": 0.436,
+      "valence_score": 0.0,
+      "coherence_penalty": 0.0,
+      "fatigue_state": 0.0,
+      "action_density": 1.0,
+      "dialogue_density": 0.0,
+      "sentiment": 0.0,
+      "conflict": 0.164,
+      "stakes": 0.23,
+      "agency": 0.7,
+      "fatigue_reserve": 0.0,
+      "sustained_fatigue_penalty": 0.0
+    },
+    {
+      "scene_index": 1,
+      "instantaneous_effort": 0.496,
+      "attentional_signal": 0.746,
+      "recovery_credit": 0.001,
+      "tam_integral": 3.125,
+      "expectation_strain": 0.06,
+      "temporal_expectation": 0.454,
+      "valence_score": -0.8,
+      "coherence_penalty": 0.09,
+      "fatigue_state": 0.0,
+      "action_density": 0.929,
+      "dialogue_density": 0.071,
+      "sentiment": -0.8,
+      "conflict": 0.48,
+      "stakes": 0.397,
+      "agency": 0.864,
+      "fatigue_reserve": 0.022,
+      "sustained_fatigue_penalty": 0.0
+    },
+    {
+      "scene_index": 2,
+      "instantaneous_effort": 0.305,
+      "attentional_signal": 0.902,
+      "recovery_credit": 0.037,
+      "tam_integral": 2.823,
+      "expectation_strain": 0.149,
+      "temporal_expectation": 0.409,
+      "valence_score": 0.488,
+      "coherence_penalty": 0.06,
+      "fatigue_state": 0.0,
+      "action_density": 1.0,
+      "dialogue_density": 0.0,
+      "sentiment": 0.488,
+      "conflict": 0.321,
+      "stakes": 0.244,
+      "agency": 0.9,
+      "fatigue_reserve": 0.018,
+      "sustained_fatigue_penalty": 0.0
+    },
+    {
+      "scene_index": 3,
+      "instantaneous_effort": 0.445,
+      "attentional_signal": 1.008,
+      "recovery_credit": 0.011,
+      "tam_integral": 3.834,
+      "expectation_strain": 0.036,
+      "temporal_expectation": 0.42,
+      "valence_score": -0.825,
+      "coherence_penalty": 0.06,
+      "fatigue_state": 0.1,
+      "action_density": 0.955,
+      "dialogue_density": 0.045,
+      "sentiment": -0.825,
+      "conflict": 0.617,
+      "stakes": 0.356,
+      "agency": 0.877,
+      "fatigue_reserve": 0.03,
+      "sustained_fatigue_penalty": 0.0
+    },
+    {
+      "scene_index": 4,
+      "instantaneous_effort": 0.36,
+      "attentional_signal": 1.008,
+      "recovery_credit": 0.026,
+      "tam_integral": 3.298,
+      "expectation_strain": 0.06,
+      "temporal_expectation": 0.402,
+      "valence_score": 0.0,
+      "coherence_penalty": 0.06,
+      "fatigue_state": 0.1,
+      "action_density": 0.929,
+      "dialogue_density": 0.071,
+      "sentiment": 0.0,
+      "conflict": 0.431,
+      "stakes": 0.288,
+      "agency": 0.864,
+      "fatigue_reserve": 0.03,
+      "sustained_fatigue_penalty": 0.0
+    },
+    {
+      "scene_index": 5,
+      "instantaneous_effort": 0.428,
+      "attentional_signal": 1.01,
+      "recovery_credit": 0.014,
+      "tam_integral": 3.638,
+      "expectation_strain": 0.026,
+      "temporal_expectation": 0.41,
+      "valence_score": 0.0,
+      "coherence_penalty": 0.06,
+      "fatigue_state": 0.1,
+      "action_density": 1.0,
+      "dialogue_density": 0.0,
+      "sentiment": 0.0,
+      "conflict": 0.563,
+      "stakes": 0.342,
+      "agency": 0.9,
+      "fatigue_reserve": 0.037,
+      "sustained_fatigue_penalty": 0.0
+    },
+    {
+      "scene_index": 6,
+      "instantaneous_effort": 0.364,
+      "attentional_signal": 1.009,
+      "recovery_credit": 0.027,
+      "tam_integral": 3.238,
+      "expectation_strain": 0.046,
+      "temporal_expectation": 0.396,
+      "valence_score": 0.0,
+      "coherence_penalty": 0.06,
+      "fatigue_state": 0.1,
+      "action_density": 0.929,
+      "dialogue_density": 0.071,
+      "sentiment": 0.0,
+      "conflict": 0.439,
+      "stakes": 0.291,
+      "agency": 0.864,
+      "fatigue_reserve": 0.035,
+      "sustained_fatigue_penalty": 0.0
+    }
+  ],
+  "xai_attribution": [
+    {
+      "scene_index": 0,
+      "drivers": {
+        "Structure": 0.5,
+        "Syntax": 0.0,
+        "Semantics": 0.13,
+        "Motion": 0.25,
+        "Dialogue": 0.12
+      },
+      "dominant_driver": "Structure"
+    },
+    {
+      "scene_index": 1,
+      "drivers": {
+        "Structure": 0.34,
+        "Syntax": 0.13,
+        "Semantics": 0.19,
+        "Motion": 0.26,
+        "Dialogue": 0.08
+      },
+      "dominant_driver": "Structure"
+    },
+    {
+      "scene_index": 2,
+      "drivers": {
+        "Structure": 0.27,
+        "Syntax": 0.0,
+        "Semantics": 0.23,
+        "Motion": 0.36,
+        "Dialogue": 0.15
+      },
+      "dominant_driver": "Motion"
+    },
+    {
+      "scene_index": 3,
+      "drivers": {
+        "Structure": 0.35,
+        "Syntax": 0.06,
+        "Semantics": 0.11,
+        "Motion": 0.37,
+        "Dialogue": 0.11
+      },
+      "dominant_driver": "Motion"
+    },
+    {
+      "scene_index": 4,
+      "drivers": {
+        "Structure": 0.38,
+        "Syntax": 0.0,
+        "Semantics": 0.14,
+        "Motion": 0.35,
+        "Dialogue": 0.13
+      },
+      "dominant_driver": "Structure"
+    },
+    {
+      "scene_index": 5,
+      "drivers": {
+        "Structure": 0.32,
+        "Syntax": 0.16,
+        "Semantics": 0.07,
+        "Motion": 0.34,
+        "Dialogue": 0.12
+      },
+      "dominant_driver": "Motion"
+    },
+    {
+      "scene_index": 6,
+      "drivers": {
+        "Structure": 0.23,
+        "Syntax": 0.14,
+        "Semantics": 0.12,
+        "Motion": 0.36,
+        "Dialogue": 0.16
+      },
+      "dominant_driver": "Motion"
+    }
+  ],
+  "macro_structure_fidelity": {
+    "best_match": "N/A",
+    "fidelity_score": 0.0
+  },
+  "suggestions": {
+    "structural_repair_strategies": []
+  },
+  "agency_analysis": {
+    "agency_metrics": [
+      {
+        "character": "SOFIA",
+        "agency_score": 0.6,
+        "centrality": 1.0,
+        "active_verb_ratio": 0.0,
+        "classification": "High Agency"
+      },
+      {
+        "character": "ALEX",
+        "agency_score": 0.6,
+        "centrality": 1.0,
+        "active_verb_ratio": 0.0,
+        "classification": "High Agency"
+      }
+    ]
+  },
+  "fairness_audit": {
+    "stereotyping_risks": [
+      "Major Character 'ALEX' has high negative sentiment (-0.16). Likely Antagonist, but ensure motivation is clear.",
+      "Protagonist 'SOFIA' has consistently negative sentiment (-0.19). Is this an Anti-Hero?"
+    ],
+    "representation_stats": {
+      "ALEX": {
+        "scene_count": 7,
+        "avg_sentiment": -0.162,
+        "agency": 0.6,
+        "role": "Major Support"
+      },
+      "SOFIA": {
+        "scene_count": 6,
+        "avg_sentiment": -0.19,
+        "agency": 0.6,
+        "role": "Protagonist"
+      }
+    }
+  },
+  "baseline_trace": [],
+  "semantic_flux": [
+    0.1,
+    0.5828222036361694,
+    0.3990360498428345,
+    0.379033625125885,
+    0.32439345121383667,
+    0.2043607234954834,
+    0.264015793800354
+  ],
+  "voice_fingerprints": {
+    "SOFIA": {
+      "complexity": 0.57,
+      "positivity": 0.0,
+      "agency": 0.0,
+      "line_count": 1,
+      "fingerprint_confidence": "low",
+      "punctuation_rate": 0.333
+    },
+    "ALEX": {
+      "complexity": 0.64,
+      "positivity": 0.0,
+      "agency": 0.0,
+      "line_count": 2,
+      "fingerprint_confidence": "low",
+      "punctuation_rate": 0.273
+    }
+  },
+  "interaction_map": {
+    "ALEX|SOFIA": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ]
+  },
+  "uncertainty_quantification": [
+    {
+      "scene_index": 0,
+      "mean": 0.255,
+      "lower_bound_95": 0.094,
+      "upper_bound_95": 0.416
+    },
+    {
+      "scene_index": 1,
+      "mean": 0.743,
+      "lower_bound_95": 0.585,
+      "upper_bound_95": 0.901
+    },
+    {
+      "scene_index": 2,
+      "mean": 0.897,
+      "lower_bound_95": 0.751,
+      "upper_bound_95": 1
+    },
+    {
+      "scene_index": 3,
+      "mean": 0.967,
+      "lower_bound_95": 0.871,
+      "upper_bound_95": 1
+    },
+    {
+      "scene_index": 4,
+      "mean": 0.975,
+      "lower_bound_95": 0.876,
+      "upper_bound_95": 1
+    },
+    {
+      "scene_index": 5,
+      "mean": 0.978,
+      "lower_bound_95": 0.904,
+      "upper_bound_95": 1
+    },
+    {
+      "scene_index": 6,
+      "mean": 0.975,
+      "lower_bound_95": 0.893,
+      "upper_bound_95": 1
+    }
+  ],
+  "polyglot_analysis": {},
+  "moonshot_resonance": {},
+  "runtime_estimate": {
+    "min_minutes": 1,
+    "max_minutes": 7,
+    "avg_minutes": 2,
+    "dialogue_ratio": 0.04
+  },
+  "writer_intelligence": {
+    "narrative_diagnosis": [
+      "\u2728 **High Tension (Scenes 0-6)**: Strong visual storytelling with minimal dialogue. Great subtext."
+    ],
+    "rewrite_priorities": [],
+    "structural_dashboard": {
+      "midpoint_energy": 1.01,
+      "midpoint_status": "Healthy",
+      "act1_energy": 0.75,
+      "total_scenes": 7
+    },
+    "genre_context": "General"
+  },
+  "runtime_ms": 51,
+  "perceptual_features": [
+    {
+      "scene_index": 0,
+      "linguistic_load": {
+        "sentence_count": 4,
+        "mean_sentence_length": 3.5,
+        "max_sentence_length": 7,
+        "sentence_length_variance": 6.75,
+        "readability_grade": 2.63,
+        "idea_density": 0.929,
+        "clarity_score": 0.78,
+        "novelty_score": 0.63
+      },
+      "dialogue_dynamics": {
+        "dialogue_turns": 0,
+        "dialogue_line_count": 0,
+        "speaker_switches": 0,
+        "turn_velocity": 0.0,
+        "monologue_runs": 0
+      },
+      "visual_abstraction": {
+        "action_lines": 3,
+        "continuous_action_runs": 1,
+        "vertical_writing_load": 3
+      },
+      "referential_load": {
+        "active_character_count": 1,
+        "character_reintroductions": 0,
+        "entity_churn": 1.0,
+        "unresolved_references": 0
+      },
+      "structural_change": {
+        "event_boundary_score": 0.0
+      },
+      "ambient_signals": {
+        "ambient_score": 0.792,
+        "is_ambient": true,
+        "component_scores": {
+          "stillness": 0.7,
+          "sparse_dialogue": 1.0,
+          "low_complexity": 0.662,
+          "short_sentences": 0.767
+        }
+      },
+      "micro_structure": [
+        {
+          "tag": "S",
+          "word_count": 4,
+          "rel_position": 0.0,
+          "line_index": 0
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.2,
+          "line_index": 1
+        },
+        {
+          "tag": "A",
+          "word_count": 9,
+          "rel_position": 0.4,
+          "line_index": 2
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.6,
+          "line_index": 3
+        },
+        {
+          "tag": "C",
+          "word_count": 1,
+          "rel_position": 0.8,
+          "line_index": 4
+        }
+      ],
+      "entropy_score": 3.547
+    },
+    {
+      "scene_index": 1,
+      "linguistic_load": {
+        "sentence_count": 9,
+        "mean_sentence_length": 5.56,
+        "max_sentence_length": 14,
+        "sentence_length_variance": 14.91,
+        "readability_grade": 7.34,
+        "idea_density": 0.84,
+        "clarity_score": 0.39,
+        "novelty_score": 1.25
+      },
+      "dialogue_dynamics": {
+        "dialogue_turns": 1,
+        "dialogue_line_count": 1,
+        "speaker_switches": 1,
+        "turn_velocity": 0.05,
+        "monologue_runs": 1
+      },
+      "visual_abstraction": {
+        "action_lines": 13,
+        "continuous_action_runs": 4,
+        "vertical_writing_load": 13
+      },
+      "referential_load": {
+        "active_character_count": 2,
+        "character_reintroductions": 1,
+        "entity_churn": 0.5,
+        "unresolved_references": 0
+      },
+      "structural_change": {
+        "event_boundary_score": 0.72
+      },
+      "ambient_signals": {
+        "ambient_score": 0.43,
+        "is_ambient": false,
+        "component_scores": {
+          "stillness": 0.0,
+          "sparse_dialogue": 0.95,
+          "low_complexity": 0.254,
+          "short_sentences": 0.629
+        }
+      },
+      "micro_structure": [
+        {
+          "tag": "M",
+          "word_count": 1,
+          "rel_position": 0.0,
+          "line_index": 5
+        },
+        {
+          "tag": "A",
+          "word_count": 3,
+          "rel_position": 0.05,
+          "line_index": 6
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.1,
+          "line_index": 7
+        },
+        {
+          "tag": "A",
+          "word_count": 10,
+          "rel_position": 0.15,
+          "line_index": 8
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.2,
+          "line_index": 9
+        },
+        {
+          "tag": "C",
+          "word_count": 1,
+          "rel_position": 0.25,
+          "line_index": 10
+        },
+        {
+          "tag": "M",
+          "word_count": 1,
+          "rel_position": 0.3,
+          "line_index": 11
+        },
+        {
+          "tag": "A",
+          "word_count": 5,
+          "rel_position": 0.35,
+          "line_index": 12
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.4,
+          "line_index": 13
+        },
+        {
+          "tag": "A",
+          "word_count": 9,
+          "rel_position": 0.45,
+          "line_index": 14
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.5,
+          "line_index": 15
+        },
+        {
+          "tag": "C",
+          "word_count": 1,
+          "rel_position": 0.55,
+          "line_index": 16
+        },
+        {
+          "tag": "D",
+          "word_count": 3,
+          "rel_position": 0.6,
+          "line_index": 17
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.65,
+          "line_index": 18
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.7,
+          "line_index": 19
+        },
+        {
+          "tag": "S",
+          "word_count": 4,
+          "rel_position": 0.75,
+          "line_index": 20
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.8,
+          "line_index": 21
+        },
+        {
+          "tag": "A",
+          "word_count": 11,
+          "rel_position": 0.85,
+          "line_index": 22
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.9,
+          "line_index": 23
+        },
+        {
+          "tag": "C",
+          "word_count": 1,
+          "rel_position": 0.95,
+          "line_index": 24
+        }
+      ],
+      "entropy_score": 5.204
+    },
+    {
+      "scene_index": 2,
+      "linguistic_load": {
+        "sentence_count": 11,
+        "mean_sentence_length": 3.73,
+        "max_sentence_length": 7,
+        "sentence_length_variance": 5.65,
+        "readability_grade": 2.56,
+        "idea_density": 0.902,
+        "clarity_score": 0.79,
+        "novelty_score": 0.51
+      },
+      "dialogue_dynamics": {
+        "dialogue_turns": 0,
+        "dialogue_line_count": 0,
+        "speaker_switches": 1,
+        "turn_velocity": 0.0,
+        "monologue_runs": 0
+      },
+      "visual_abstraction": {
+        "action_lines": 10,
+        "continuous_action_runs": 3,
+        "vertical_writing_load": 10
+      },
+      "referential_load": {
+        "active_character_count": 2,
+        "character_reintroductions": 0,
+        "entity_churn": 0.0,
+        "unresolved_references": 0
+      },
+      "structural_change": {
+        "event_boundary_score": 0.72
+      },
+      "ambient_signals": {
+        "ambient_score": 0.556,
+        "is_ambient": false,
+        "component_scores": {
+          "stillness": 0.0,
+          "sparse_dialogue": 1.0,
+          "low_complexity": 0.718,
+          "short_sentences": 0.751
+        }
+      },
+      "micro_structure": [
+        {
+          "tag": "M",
+          "word_count": 1,
+          "rel_position": 0.0,
+          "line_index": 25
+        },
+        {
+          "tag": "A",
+          "word_count": 7,
+          "rel_position": 0.06666666666666667,
+          "line_index": 26
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.13333333333333333,
+          "line_index": 27
+        },
+        {
+          "tag": "A",
+          "word_count": 12,
+          "rel_position": 0.2,
+          "line_index": 28
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.26666666666666666,
+          "line_index": 29
+        },
+        {
+          "tag": "C",
+          "word_count": 1,
+          "rel_position": 0.3333333333333333,
+          "line_index": 30
+        },
+        {
+          "tag": "M",
+          "word_count": 1,
+          "rel_position": 0.4,
+          "line_index": 31
+        },
+        {
+          "tag": "A",
+          "word_count": 6,
+          "rel_position": 0.4666666666666667,
+          "line_index": 32
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.5333333333333333,
+          "line_index": 33
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.6,
+          "line_index": 34
+        },
+        {
+          "tag": "S",
+          "word_count": 4,
+          "rel_position": 0.6666666666666666,
+          "line_index": 35
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.7333333333333333,
+          "line_index": 36
+        },
+        {
+          "tag": "A",
+          "word_count": 8,
+          "rel_position": 0.8,
+          "line_index": 37
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.8666666666666667,
+          "line_index": 38
+        },
+        {
+          "tag": "C",
+          "word_count": 1,
+          "rel_position": 0.9333333333333333,
+          "line_index": 39
+        }
+      ],
+      "entropy_score": 4.955
+    },
+    {
+      "scene_index": 3,
+      "linguistic_load": {
+        "sentence_count": 15,
+        "mean_sentence_length": 6.47,
+        "max_sentence_length": 11,
+        "sentence_length_variance": 9.98,
+        "readability_grade": 4.57,
+        "idea_density": 0.66,
+        "clarity_score": 0.62,
+        "novelty_score": 0.66
+      },
+      "dialogue_dynamics": {
+        "dialogue_turns": 1,
+        "dialogue_line_count": 1,
+        "speaker_switches": 1,
+        "turn_velocity": 0.031,
+        "monologue_runs": 2
+      },
+      "visual_abstraction": {
+        "action_lines": 21,
+        "continuous_action_runs": 6,
+        "vertical_writing_load": 21
+      },
+      "referential_load": {
+        "active_character_count": 2,
+        "character_reintroductions": 3,
+        "entity_churn": 0.0,
+        "unresolved_references": 0
+      },
+      "structural_change": {
+        "event_boundary_score": 0.72
+      },
+      "ambient_signals": {
+        "ambient_score": 0.476,
+        "is_ambient": false,
+        "component_scores": {
+          "stillness": 0.0,
+          "sparse_dialogue": 0.969,
+          "low_complexity": 0.501,
+          "short_sentences": 0.569
+        }
+      },
+      "micro_structure": [
+        {
+          "tag": "M",
+          "word_count": 1,
+          "rel_position": 0.0,
+          "line_index": 40
+        },
+        {
+          "tag": "A",
+          "word_count": 9,
+          "rel_position": 0.03125,
+          "line_index": 41
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.0625,
+          "line_index": 42
+        },
+        {
+          "tag": "A",
+          "word_count": 12,
+          "rel_position": 0.09375,
+          "line_index": 43
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.125,
+          "line_index": 44
+        },
+        {
+          "tag": "C",
+          "word_count": 1,
+          "rel_position": 0.15625,
+          "line_index": 45
+        },
+        {
+          "tag": "M",
+          "word_count": 1,
+          "rel_position": 0.1875,
+          "line_index": 46
+        },
+        {
+          "tag": "A",
+          "word_count": 3,
+          "rel_position": 0.21875,
+          "line_index": 47
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.25,
+          "line_index": 48
+        },
+        {
+          "tag": "A",
+          "word_count": 11,
+          "rel_position": 0.28125,
+          "line_index": 49
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.3125,
+          "line_index": 50
+        },
+        {
+          "tag": "C",
+          "word_count": 1,
+          "rel_position": 0.34375,
+          "line_index": 51
+        },
+        {
+          "tag": "M",
+          "word_count": 1,
+          "rel_position": 0.375,
+          "line_index": 52
+        },
+        {
+          "tag": "A",
+          "word_count": 9,
+          "rel_position": 0.40625,
+          "line_index": 53
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.4375,
+          "line_index": 54
+        },
+        {
+          "tag": "A",
+          "word_count": 8,
+          "rel_position": 0.46875,
+          "line_index": 55
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.5,
+          "line_index": 56
+        },
+        {
+          "tag": "C",
+          "word_count": 1,
+          "rel_position": 0.53125,
+          "line_index": 57
+        },
+        {
+          "tag": "M",
+          "word_count": 1,
+          "rel_position": 0.5625,
+          "line_index": 58
+        },
+        {
+          "tag": "A",
+          "word_count": 3,
+          "rel_position": 0.59375,
+          "line_index": 59
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.625,
+          "line_index": 60
+        },
+        {
+          "tag": "A",
+          "word_count": 11,
+          "rel_position": 0.65625,
+          "line_index": 61
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.6875,
+          "line_index": 62
+        },
+        {
+          "tag": "C",
+          "word_count": 1,
+          "rel_position": 0.71875,
+          "line_index": 63
+        },
+        {
+          "tag": "D",
+          "word_count": 5,
+          "rel_position": 0.75,
+          "line_index": 64
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.78125,
+          "line_index": 65
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.8125,
+          "line_index": 66
+        },
+        {
+          "tag": "S",
+          "word_count": 4,
+          "rel_position": 0.84375,
+          "line_index": 67
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.875,
+          "line_index": 68
+        },
+        {
+          "tag": "A",
+          "word_count": 13,
+          "rel_position": 0.90625,
+          "line_index": 69
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.9375,
+          "line_index": 70
+        },
+        {
+          "tag": "C",
+          "word_count": 1,
+          "rel_position": 0.96875,
+          "line_index": 71
+        }
+      ],
+      "entropy_score": 5.59
+    },
+    {
+      "scene_index": 4,
+      "linguistic_load": {
+        "sentence_count": 11,
+        "mean_sentence_length": 5.09,
+        "max_sentence_length": 11,
+        "sentence_length_variance": 10.08,
+        "readability_grade": 3.25,
+        "idea_density": 0.857,
+        "clarity_score": 0.73,
+        "novelty_score": 0.86
+      },
+      "dialogue_dynamics": {
+        "dialogue_turns": 1,
+        "dialogue_line_count": 1,
+        "speaker_switches": 2,
+        "turn_velocity": 0.05,
+        "monologue_runs": 0
+      },
+      "visual_abstraction": {
+        "action_lines": 13,
+        "continuous_action_runs": 4,
+        "vertical_writing_load": 13
+      },
+      "referential_load": {
+        "active_character_count": 2,
+        "character_reintroductions": 1,
+        "entity_churn": 0.0,
+        "unresolved_references": 0
+      },
+      "structural_change": {
+        "event_boundary_score": 0.72
+      },
+      "ambient_signals": {
+        "ambient_score": 0.483,
+        "is_ambient": false,
+        "component_scores": {
+          "stillness": 0.0,
+          "sparse_dialogue": 0.95,
+          "low_complexity": 0.496,
+          "short_sentences": 0.661
+        }
+      },
+      "micro_structure": [
+        {
+          "tag": "M",
+          "word_count": 1,
+          "rel_position": 0.0,
+          "line_index": 72
+        },
+        {
+          "tag": "A",
+          "word_count": 6,
+          "rel_position": 0.05,
+          "line_index": 73
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.1,
+          "line_index": 74
+        },
+        {
+          "tag": "A",
+          "word_count": 9,
+          "rel_position": 0.15,
+          "line_index": 75
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.2,
+          "line_index": 76
+        },
+        {
+          "tag": "C",
+          "word_count": 1,
+          "rel_position": 0.25,
+          "line_index": 77
+        },
+        {
+          "tag": "M",
+          "word_count": 1,
+          "rel_position": 0.3,
+          "line_index": 78
+        },
+        {
+          "tag": "A",
+          "word_count": 8,
+          "rel_position": 0.35,
+          "line_index": 79
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.4,
+          "line_index": 80
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.45,
+          "line_index": 81
+        },
+        {
+          "tag": "S",
+          "word_count": 4,
+          "rel_position": 0.5,
+          "line_index": 82
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.55,
+          "line_index": 83
+        },
+        {
+          "tag": "A",
+          "word_count": 10,
+          "rel_position": 0.6,
+          "line_index": 84
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.65,
+          "line_index": 85
+        },
+        {
+          "tag": "C",
+          "word_count": 1,
+          "rel_position": 0.7,
+          "line_index": 86
+        },
+        {
+          "tag": "D",
+          "word_count": 5,
+          "rel_position": 0.75,
+          "line_index": 87
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.8,
+          "line_index": 88
+        },
+        {
+          "tag": "A",
+          "word_count": 9,
+          "rel_position": 0.85,
+          "line_index": 89
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.9,
+          "line_index": 90
+        },
+        {
+          "tag": "C",
+          "word_count": 1,
+          "rel_position": 0.95,
+          "line_index": 91
+        }
+      ],
+      "entropy_score": 5.371
+    },
+    {
+      "scene_index": 5,
+      "linguistic_load": {
+        "sentence_count": 16,
+        "mean_sentence_length": 5.0,
+        "max_sentence_length": 12,
+        "sentence_length_variance": 9.38,
+        "readability_grade": 2.73,
+        "idea_density": 0.812,
+        "clarity_score": 0.77,
+        "novelty_score": 0.76
+      },
+      "dialogue_dynamics": {
+        "dialogue_turns": 0,
+        "dialogue_line_count": 0,
+        "speaker_switches": 1,
+        "turn_velocity": 0.0,
+        "monologue_runs": 1
+      },
+      "visual_abstraction": {
+        "action_lines": 18,
+        "continuous_action_runs": 5,
+        "vertical_writing_load": 18
+      },
+      "referential_load": {
+        "active_character_count": 2,
+        "character_reintroductions": 2,
+        "entity_churn": 0.0,
+        "unresolved_references": 0
+      },
+      "structural_change": {
+        "event_boundary_score": 0.72
+      },
+      "ambient_signals": {
+        "ambient_score": 0.506,
+        "is_ambient": false,
+        "component_scores": {
+          "stillness": 0.0,
+          "sparse_dialogue": 1.0,
+          "low_complexity": 0.531,
+          "short_sentences": 0.667
+        }
+      },
+      "micro_structure": [
+        {
+          "tag": "M",
+          "word_count": 1,
+          "rel_position": 0.0,
+          "line_index": 92
+        },
+        {
+          "tag": "A",
+          "word_count": 6,
+          "rel_position": 0.037037037037037035,
+          "line_index": 93
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.07407407407407407,
+          "line_index": 94
+        },
+        {
+          "tag": "A",
+          "word_count": 9,
+          "rel_position": 0.1111111111111111,
+          "line_index": 95
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.14814814814814814,
+          "line_index": 96
+        },
+        {
+          "tag": "C",
+          "word_count": 1,
+          "rel_position": 0.18518518518518517,
+          "line_index": 97
+        },
+        {
+          "tag": "M",
+          "word_count": 1,
+          "rel_position": 0.2222222222222222,
+          "line_index": 98
+        },
+        {
+          "tag": "A",
+          "word_count": 8,
+          "rel_position": 0.25925925925925924,
+          "line_index": 99
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.2962962962962963,
+          "line_index": 100
+        },
+        {
+          "tag": "A",
+          "word_count": 9,
+          "rel_position": 0.3333333333333333,
+          "line_index": 101
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.37037037037037035,
+          "line_index": 102
+        },
+        {
+          "tag": "C",
+          "word_count": 1,
+          "rel_position": 0.4074074074074074,
+          "line_index": 103
+        },
+        {
+          "tag": "M",
+          "word_count": 1,
+          "rel_position": 0.4444444444444444,
+          "line_index": 104
+        },
+        {
+          "tag": "A",
+          "word_count": 6,
+          "rel_position": 0.48148148148148145,
+          "line_index": 105
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.5185185185185185,
+          "line_index": 106
+        },
+        {
+          "tag": "A",
+          "word_count": 12,
+          "rel_position": 0.5555555555555556,
+          "line_index": 107
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.5925925925925926,
+          "line_index": 108
+        },
+        {
+          "tag": "C",
+          "word_count": 1,
+          "rel_position": 0.6296296296296297,
+          "line_index": 109
+        },
+        {
+          "tag": "M",
+          "word_count": 1,
+          "rel_position": 0.6666666666666666,
+          "line_index": 110
+        },
+        {
+          "tag": "A",
+          "word_count": 9,
+          "rel_position": 0.7037037037037037,
+          "line_index": 111
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.7407407407407407,
+          "line_index": 112
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.7777777777777778,
+          "line_index": 113
+        },
+        {
+          "tag": "S",
+          "word_count": 4,
+          "rel_position": 0.8148148148148148,
+          "line_index": 114
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.8518518518518519,
+          "line_index": 115
+        },
+        {
+          "tag": "A",
+          "word_count": 9,
+          "rel_position": 0.8888888888888888,
+          "line_index": 116
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.9259259259259259,
+          "line_index": 117
+        },
+        {
+          "tag": "C",
+          "word_count": 1,
+          "rel_position": 0.9629629629629629,
+          "line_index": 118
+        }
+      ],
+      "entropy_score": 5.702
+    },
+    {
+      "scene_index": 6,
+      "linguistic_load": {
+        "sentence_count": 14,
+        "mean_sentence_length": 4.64,
+        "max_sentence_length": 8,
+        "sentence_length_variance": 3.09,
+        "readability_grade": 4.37,
+        "idea_density": 0.846,
+        "clarity_score": 0.64,
+        "novelty_score": 0.26
+      },
+      "dialogue_dynamics": {
+        "dialogue_turns": 1,
+        "dialogue_line_count": 1,
+        "speaker_switches": 1,
+        "turn_velocity": 0.05,
+        "monologue_runs": 1
+      },
+      "visual_abstraction": {
+        "action_lines": 13,
+        "continuous_action_runs": 4,
+        "vertical_writing_load": 13
+      },
+      "referential_load": {
+        "active_character_count": 2,
+        "character_reintroductions": 1,
+        "entity_churn": 0.0,
+        "unresolved_references": 0
+      },
+      "structural_change": {
+        "event_boundary_score": 0.72
+      },
+      "ambient_signals": {
+        "ambient_score": 0.558,
+        "is_ambient": false,
+        "component_scores": {
+          "stillness": 0.0,
+          "sparse_dialogue": 0.95,
+          "low_complexity": 0.846,
+          "short_sentences": 0.691
+        }
+      },
+      "micro_structure": [
+        {
+          "tag": "M",
+          "word_count": 1,
+          "rel_position": 0.0,
+          "line_index": 119
+        },
+        {
+          "tag": "A",
+          "word_count": 6,
+          "rel_position": 0.05,
+          "line_index": 120
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.1,
+          "line_index": 121
+        },
+        {
+          "tag": "A",
+          "word_count": 10,
+          "rel_position": 0.15,
+          "line_index": 122
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.2,
+          "line_index": 123
+        },
+        {
+          "tag": "C",
+          "word_count": 1,
+          "rel_position": 0.25,
+          "line_index": 124
+        },
+        {
+          "tag": "M",
+          "word_count": 1,
+          "rel_position": 0.3,
+          "line_index": 125
+        },
+        {
+          "tag": "A",
+          "word_count": 8,
+          "rel_position": 0.35,
+          "line_index": 126
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.4,
+          "line_index": 127
+        },
+        {
+          "tag": "A",
+          "word_count": 12,
+          "rel_position": 0.45,
+          "line_index": 128
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.5,
+          "line_index": 129
+        },
+        {
+          "tag": "C",
+          "word_count": 1,
+          "rel_position": 0.55,
+          "line_index": 130
+        },
+        {
+          "tag": "D",
+          "word_count": 6,
+          "rel_position": 0.6,
+          "line_index": 131
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.65,
+          "line_index": 132
+        },
+        {
+          "tag": "A",
+          "word_count": 8,
+          "rel_position": 0.7,
+          "line_index": 133
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.75,
+          "line_index": 134
+        },
+        {
+          "tag": "C",
+          "word_count": 1,
+          "rel_position": 0.8,
+          "line_index": 135
+        },
+        {
+          "tag": "M",
+          "word_count": 1,
+          "rel_position": 0.85,
+          "line_index": 136
+        },
+        {
+          "tag": "A",
+          "word_count": 9,
+          "rel_position": 0.9,
+          "line_index": 137
+        },
+        {
+          "tag": "A",
+          "word_count": 0,
+          "rel_position": 0.95,
+          "line_index": 138
+        }
+      ],
+      "entropy_score": 5.565
+    }
+  ]
+}

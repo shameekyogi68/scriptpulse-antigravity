@@ -1,0 +1,57 @@
+{
+    "_meta": {
+        "version": "1.0",
+        "description": "Macro-structural Tension baselines for narrative genres (0.0 to 1.0 expected strain over normalized timeline)",
+        "citation": "ScriptPulse Heuristic Anchor Guidelines (2026)"
+    },
+    "genres": {
+        "Thriller / Action": {
+            "description": "Steadily rising tension with a sharp act 3 climax.",
+            "curve": [
+                0.20,
+                0.35,
+                0.45,
+                0.60,
+                0.85,
+                0.95,
+                0.40
+            ]
+        },
+        "Drama": {
+            "description": "Slow burn, moderate oscillatory tension, character-driven peaks.",
+            "curve": [
+                0.15,
+                0.30,
+                0.25,
+                0.40,
+                0.50,
+                0.70,
+                0.35
+            ]
+        },
+        "Comedy": {
+            "description": "Frequent oscillation representing joke setup/punchline rhythms.",
+            "curve": [
+                0.20,
+                0.40,
+                0.20,
+                0.50,
+                0.25,
+                0.60,
+                0.15
+            ]
+        },
+        "Horror": {
+            "description": "Low baseline punctuated by extreme, sudden high tension spikes.",
+            "curve": [
+                0.10,
+                0.80,
+                0.15,
+                0.85,
+                0.20,
+                0.95,
+                0.10
+            ]
+        }
+    }
+}

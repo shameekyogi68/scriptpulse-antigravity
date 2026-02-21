@@ -32,7 +32,7 @@ Generates a multi-dimensional feature vector for every scene:
 *   **Linguistic Load**: Sentence length variance, syntactic complexity.
 *   **Visual Density (Imagery)**: Detecting colors, optics (zoom/pan), and kinetic verbs to measure "cinematic weight."
 *   **Sonic/Voice**: Analyzing character dialogue distinctiveness (vocabulary, agency, sentiment).
-*   **Semantic Flux (Entropy)**: Using SBERT (Sentence-BERT) embeddings to measure the *semantic distance* between scenes. High distance = Novelty/Surprise; Low distance = Stagnation/Flow.
+*   **Semantic Flux (Entropy)**: Using lexical entropy (word-frequency distribution) to estimate the *information density* of each scene. High entropy = Novelty/Surprise; Low entropy = Stagnation/Flow. *(Note: SBERT-based semantic distance is a planned upgrade; current implementation uses word-frequency counting.)*
 *   **Social Dynamics**: Constructing interaction graphs to measure "Social Entropy" (tension distribution among characters).
 *   **Valence**: Emotional polarity (Positive/Negative) scoring.
 
@@ -85,7 +85,7 @@ Translates mathematical signals into natural language feedback:
 ## 5. Key Algorithms & Models
 *   **NLP**: `sentence-transformers/all-MiniLM-L6-v2` (Semantic Encodings), `valhalla/distilbart-mnli-12-3` (Zero-Shot Classification).
 *   **Graph Theory**: Interaction networks for Social Entropy.
-*   **Control Theory**: PID-like controllers for simulating Attentional Homeostasis.
+*   **Linear Autoregression**: Temporal state accumulation with decay and recovery for simulating Attentional Dynamics.
 *   **Signal Processing**: Smoothing, beat detection, and variance analysis for pacing.
 
 ## 6. Validation Framework
@@ -108,4 +108,19 @@ Translates mathematical signals into natural language feedback:
 108: | **Experimental Agent** | `silicon_stanislavski`, `resonance`, `insight`, `polyglot`, `multimodal` | ✅ Fully Integrated |
 109: | **Ethics Agent** | `agency`, `fairness` | ✅ Fully Integrated |
 110: 
-111: The "Thin Layer" mentioned in previous versions refers to the efficient orchestration logic that now rapidly switches between these modes without the overhead of instantiating 29 separate processes. **The system does the work of all 29 original agents perfectly, but faster and with shared memory Context.**
+111: The "Thin Layer" mentioned in previous versions refers to the efficient orchestration logic that now rapidly switches between these modes without the overhead of instantiating 29 separate processes. **The system does the work of all 29 original agents, but faster and with shared memory Context.**
+
+---
+
+## 8. Known Limitations
+
+> [!IMPORTANT]
+> This section is required for research integrity. All limitations must be acknowledged.
+
+1.  **No Empirical Validation**: No annotated screenplay corpus exists. All reported metrics are system-internal; none have been validated against human ground truth.
+2.  **Lexical-Only NLP**: Feature extraction (entropy, emotion, theme, stakes) relies on word-frequency counting and keyword matching. The system cannot handle subtext, irony, metaphor, or polysemy.
+3.  **Hand-Tuned Priors**: All genre parameters (λ, β, θ) are set by domain expertise. They have not been learned from data or validated empirically.
+4.  **Stub Modules**: `PolyglotValidator` (cross-cultural structure detection) and `MultimodalFusion` (text + vision) are placeholder stubs with no real functionality.
+5.  **Effort Model**: The cognitive effort function is a linear weighted sum of heuristic features, not grounded in information-theoretic Surprisal or psycholinguistic measures (e.g., eye-tracking, reading time).
+6.  **ResonanceAgent**: Uses exact string matching on 6 hardcoded themes. Cannot detect thematic content expressed through metaphor or indirect language.
+7.  **No Statistical Significance**: While `validation/significance.py` exists, it has not been run on real data. No p-values or confidence intervals have been computed.

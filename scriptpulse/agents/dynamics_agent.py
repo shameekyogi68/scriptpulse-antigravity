@@ -57,13 +57,24 @@ class DynamicsAgent:
     """
     
     def __init__(self):
+        # Load Explicit Hyperparameters
+        try:
+            base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+            hyper_path = os.path.join(base_dir, 'scriptpulse', 'config', 'hyperparameters.json')
+            with open(hyper_path, 'r') as f:
+                self.hyper = json.load(f).get('dynamics_agent', {})
+        except Exception as e:
+            print(f"[Dynamics] Warning: Could not load hyperparameters: {e}")
+            self.hyper = {}
+            
         # Configuration Defaults
-        self.DEFAULT_LAMBDA = 0.85 
-        self.DEFAULT_BETA = 0.3    
+        fatigue_cfg = self.hyper.get('fatigue', {})
+        self.DEFAULT_LAMBDA = fatigue_cfg.get('default_lambda', 0.85)
+        self.DEFAULT_BETA = fatigue_cfg.get('default_beta', 0.3)
         self.DEFAULT_GAMMA = 0.2    
         self.DEFAULT_DELTA = 0.25   
-        self.R_MAX = 0.5    
-        self.E_THRESHOLD = 0.4
+        self.R_MAX = fatigue_cfg.get('r_max', 0.5)
+        self.E_THRESHOLD = fatigue_cfg.get('threshold', 0.4)
         
         # Load Genre Priors
         try:
@@ -105,7 +116,7 @@ class DynamicsAgent:
             'fatigue_threshold': 1.0
         })
 
-    def run_simulation(self, input_data, genre='drama', debug=False):
+    def run_simulation(self, input_data, genre='drama', debug=False, **kwargs):
         """
         Main entry point. 
         input_data: {'features': [...]} from PerceptionAgent
@@ -160,14 +171,14 @@ class DynamicsAgent:
         if not features: return []
         
         # -- 1. Configuration & Weights --
-        # Allow lens_config to override defaults
-        weights = {
+        # Allow lens_config or hyper parameter config to override defaults
+        weights = self.hyper.get('effort_weights', {
             'cognitive_mix': 0.55,
             'emotional_mix': 0.45,
             'cognitive_components': {'structural': 0.6, 'semantic': 0.2, 'syntactic': 0.2},
             'emotional_components': {'dialogue_engagement': 0.35, 'visual_intensity': 0.30, 
                                    'linguistic_volume': 0.20, 'stillness_penalty': 0.15}
-        }
+        })
         if lens_config and 'effort_weights' in lens_config:
             weights.update(lens_config['effort_weights'])
             
@@ -350,6 +361,24 @@ class DynamicsAgent:
             expectation = prev_expectation * 0.7 + effort * 0.3
             strain = abs(effort - prev_expectation)
             
+            # --- Writer Nuance Context (v2.0) ---
+            action_count = vis.get('action_lines', 0)
+            dialogue_count = dial.get('dialogue_line_count', 0)
+            total_lines = max(1, action_count + dialogue_count)
+            action_density = action_count / total_lines
+            dialogue_density = dialogue_count / total_lines
+            
+            # Conflict Heuristic: High effort + high visual intensity + high dialogue velocity
+            conflict = min(1.0, (effort * 0.4) + (vis_int * 0.3) + (dial_eng * 0.3))
+            
+            # Stakes from Stanford/Stanislavski or default
+            ml_tension_scores = input_data.get('ml_tension_scores', [])
+            stakes = ml_tension_scores[i] if ml_tension_scores and i < len(ml_tension_scores) and ml_tension_scores[i] is not None else effort * 0.8
+            
+            # Agency Heuristic: Active characters taking charge (vs passive dialogue)
+            active_chars = scene_feat.get('referential_load', {}).get('active_character_count', 0)
+            agency = min(1.0, active_chars * 0.2 + (action_density * 0.5))
+
             # Store
             signals.append({
                 'scene_index': scene_feat['scene_index'],
@@ -361,7 +390,48 @@ class DynamicsAgent:
                 'temporal_expectation': round(expectation, 3),
                 'valence_score': valence_scores[i] if i < len(valence_scores) else 0.0,
                 'coherence_penalty': round(coh_penalty, 3),
-                'fatigue_state': round(min(1.0, max(0.0, signal - fatigue_thresh)), 3) # Clamped [0,1]
+                'fatigue_state': round(min(1.0, max(0.0, signal - fatigue_thresh)), 3), # Clamped [0,1]
+                # Writer Layer Appendages
+                'action_density': round(action_density, 3),
+                'dialogue_density': round(dialogue_density, 3),
+                'sentiment': round(valence_scores[i] if i < len(valence_scores) else 0.0, 3),
+                'conflict': round(conflict, 3),
+                'stakes': round(stakes, 3),
+                'agency': round(agency, 3),
+                'motifs': scene_feat.get('motifs', []),
+                'tell_vs_show': scene_feat.get('tell_vs_show', {}),
+                # Phase 23
+                'on_the_nose': scene_feat.get('on_the_nose', {}),
+                'shoe_leather': scene_feat.get('shoe_leather', {}),
+                'semantic_motifs': scene_feat.get('semantic_motifs', []),
+                'character_scene_vectors': scene_feat.get('character_scene_vectors', {}),
+                # Phase 24
+                'stakes_taxonomy': scene_feat.get('stakes_taxonomy', {}),
+                'stichomythia': scene_feat.get('stichomythia', {}),
+                'scene_purpose': scene_feat.get('scene_purpose', {}),
+                'payoff_density': scene_feat.get('payoff_density', {}),
+                # Phase 25
+                'opening_hook': scene_feat.get('opening_hook', None),
+                'generic_dialogue': scene_feat.get('generic_dialogue', {}),
+                'scene_turn': scene_feat.get('scene_turn', {}),
+                'dialogue_action_ratio': scene_feat.get('dialogue_action_ratio', {}),
+                # Phase 26
+                'passive_voice': scene_feat.get('passive_voice', {}),
+                'scene_vocabulary': scene_feat.get('scene_vocabulary', []),
+                # Phase 27
+                'interruption_patterns': scene_feat.get('interruption_patterns', {}),
+                'location_data': scene_feat.get('location_data', {}),
+                'runtime_contribution': scene_feat.get('runtime_contribution', {}),
+                # Phase 28
+                'monologue_data': scene_feat.get('monologue_data', {}),
+                'scene_economy': scene_feat.get('scene_economy', {}),
+                # Phase 29
+                'thematic_clusters': scene_feat.get('thematic_clusters', {}),
+                'nonlinear_tag': scene_feat.get('nonlinear_tag', {}),
+                'reader_frustration': scene_feat.get('reader_frustration', {}),
+                # Phase 30
+                'format_compliance': scene_feat.get('format_compliance', {}),
+                'deus_ex_signals': scene_feat.get('deus_ex_signals', {})
             })
             
             prev_signal = signal
@@ -440,12 +510,14 @@ class DynamicsAgent:
         refined_signals = []
         fatigue_reserve = 0.0
         
-        ACCUMULATION_RATE = 0.15
-        DISCHARGE_RATE = 0.4
-        DECAY_RATE = 0.05
-        SUSTAINED_EFFORT_THRESHOLD = 0.4
-        SUSTAINED_ONSET = 3
-        K1, K2 = 0.025, 0.008
+        lrf_cfg = self.hyper.get('lrf', {})
+        ACCUMULATION_RATE = lrf_cfg.get('accumulation_rate', 0.15)
+        DISCHARGE_RATE = lrf_cfg.get('discharge_rate', 0.4)
+        DECAY_RATE = lrf_cfg.get('decay_rate', 0.05)
+        SUSTAINED_EFFORT_THRESHOLD = lrf_cfg.get('sustained_effort_threshold', 0.4)
+        SUSTAINED_ONSET = lrf_cfg.get('sustained_onset', 3)
+        K1 = lrf_cfg.get('k1', 0.025)
+        K2 = lrf_cfg.get('k2', 0.008)
         
         consecutive_high = 0
         
@@ -507,8 +579,9 @@ class DynamicsAgent:
         prev_collapse = 0.0
         prev_drift = 0.0
         
-        COLLAPSE_DECAY = 0.85
-        DRIFT_DECAY = 0.6
+        acd_cfg = self.hyper.get('acd', {})
+        COLLAPSE_DECAY = acd_cfg.get('collapse_decay', 0.85)
+        DRIFT_DECAY = acd_cfg.get('drift_decay', 0.6)
         
         for i, sig in enumerate(signals):
             feat = features[i]

@@ -1,12 +1,18 @@
 
 import statistics
 import math
+import logging
+
+logger = logging.getLogger('scriptpulse.validation')
 
 class BaselineComparator:
     """
-    Compares ScriptPulse Model performance against simple heuristics:
+    Compares ScriptPulse Model performance against simple heuristics.
+    All baselines are computed from actual data — no hardcoded values.
+    
+    Baselines:
     1. Length Baseline (Effort = Line Count)
-    2. Readability Baseline (Effort = Flesch-Kincaid)
+    2. Readability Baseline (Effort = Flesch-Kincaid Grade)
     3. Action Baseline (Effort = Action Density)
     """
     
@@ -16,42 +22,61 @@ class BaselineComparator:
     def compare_baselines(self, aligned_data):
         """
         Input: aligned_data list from HumanAligner
-        containing {'human_val', 'system_val', 'scene_features'}
+        Each item must contain:
+        - 'human_val': float (ground truth)
+        - 'system_val': float (ScriptPulse output)
+        - 'scene_features': dict with keys like 'line_count', 'readability_grade', 'action_density'
         """
-        results = {}
+        if len(aligned_data) < 3:
+            return {'status': 'insufficient_data', 'n': len(aligned_data)}
         
         human_vals = [d['human_val'] for d in aligned_data]
         system_vals = [d['system_val'] for d in aligned_data]
         
-        # Baselines (need features from original data)
-        # Assuming aligned_data or external context provides features.
-        # For this implementation, we will mock the baseline correlations
-        # since we don't have easy access to the raw feature object in the aligner output list yet.
-        # In a real impl, we'd pass the full objects.
-        
-        # However, purely for demonstrating the Comparative Reporting, 
-        # we can calculate the metrics for System (already done) 
-        # and simulate the baselines which usually perform worse.
-        
+        # System correlation (real computation)
         sys_corr = self._pearson(system_vals, human_vals)
         
-        # Simulated Baseline Performance (Typical literature values)
-        # Length usually correlates ~0.3 with Effort
-        # Readability usually correlates ~0.4 with Effort
-        
         baselines = {
-            'Length (Line Count)': 0.35,
-            'Readability (FK Grade)': 0.42,
             'ScriptPulse (System)': sys_corr
         }
         
+        # Compute real baselines from features (if available)
+        features_available = all('scene_features' in d for d in aligned_data)
+        
+        if features_available:
+            # Length Baseline
+            line_counts = [d['scene_features'].get('line_count', 0) for d in aligned_data]
+            if any(v > 0 for v in line_counts):
+                baselines['Length (Line Count)'] = self._pearson(line_counts, human_vals)
+            
+            # Readability Baseline
+            readability = [d['scene_features'].get('readability_grade', 0) for d in aligned_data]
+            if any(v > 0 for v in readability):
+                baselines['Readability (FK Grade)'] = self._pearson(readability, human_vals)
+            
+            # Action Density Baseline
+            action_density = [d['scene_features'].get('action_density', 0) for d in aligned_data]
+            if any(v > 0 for v in action_density):
+                baselines['Action Density'] = self._pearson(action_density, human_vals)
+        else:
+            logger.warning(
+                "BaselineComparator: 'scene_features' not found in aligned_data. "
+                "Cannot compute feature-based baselines. Only system correlation is reported."
+            )
+
+        # Calculate lift over best baseline
+        baseline_vals = {k: v for k, v in baselines.items() if k != 'ScriptPulse (System)'}
+        best_baseline_r = max(baseline_vals.values()) if baseline_vals else 0
+        
         lift = 0
-        if baselines['Readability (FK Grade)'] > 0:
-            lift = ((sys_corr - baselines['Readability (FK Grade)']) / baselines['Readability (FK Grade)']) * 100
+        if best_baseline_r > 0:
+            lift = ((sys_corr - best_baseline_r) / best_baseline_r) * 100
             
         return {
             'correlations': baselines,
-            'lift_over_readability': lift
+            'best_baseline': max(baseline_vals, key=baseline_vals.get) if baseline_vals else 'N/A',
+            'lift_over_best_baseline': round(lift, 1),
+            'features_available': features_available
         }
 
     def _pearson(self, x, y):
@@ -64,20 +89,27 @@ class BaselineComparator:
         num = sum(a*b for a,b in zip(xm, ym))
         den = math.sqrt(sum(a*a for a in xm) * sum(b*b for b in ym))
         if den == 0: return 0
-        return num / den
+        return round(num / den, 4)
 
     def generate_report(self, metrics):
+        if metrics.get('status') == 'insufficient_data':
+            return "### Baseline Comparison\n\n**Insufficient data** (N < 3). Cannot compute baselines.\n"
+        
         md = "### Baseline Comparison\n\n"
+        
+        if not metrics.get('features_available'):
+            md += "> **Note:** Feature-based baselines could not be computed (scene_features missing).\n"
+            md += "> Only the system correlation is shown.\n\n"
+        
         md += "| Model | Human Correlation (r) | Lift |\n"
         md += "|---|---|---|\n"
         
-        # Sort by correlation desc
         sorted_bases = sorted(metrics['correlations'].items(), key=lambda x: x[1], reverse=True)
         
         for name, r in sorted_bases:
             lift_str = "-"
             if name == 'ScriptPulse (System)':
-                lift_str = f"**+{metrics['lift_over_readability']:.1f}%**"
-            md += f"| {name} | {r:.3f} | {lift_str} |\n"
+                lift_str = f"**+{metrics['lift_over_best_baseline']:.1f}%**"
+            md += f"| {name} | {r:.4f} | {lift_str} |\n"
             
         return md

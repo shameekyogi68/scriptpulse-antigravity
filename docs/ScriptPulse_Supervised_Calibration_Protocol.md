@@ -117,9 +117,9 @@ recovery metrics
 volatility measures
 boundary confidence
 7.2 Forbidden Feature Inputs
-lexical sentiment
-semantic embeddings
-topic vectors
+absolute lexical sentiment quality
+semantic embeddings (except for bounded thematic resonance mapping)
+prescriptive topic vectors
 character importance
 narrative role indicators
 

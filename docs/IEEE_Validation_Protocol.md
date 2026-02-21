@@ -24,22 +24,22 @@ This document defines the formal protocol for validating ScriptPulse's internal 
 To prove the necessity of each v5.0 internal layer, we conduct **Ablation Studies**. We remove one layer at a time and measure the resurgence of specific failure modes.
 
 #### Layer 1: TAM (Temporal Attentional Microdynamics)
-*   **Ablation:** Disable `tam.py` and `micro_structure` encoding.
+*   **Ablation:** Disable `dynamics_agent.py` temporal updates and `perception_agent.py` `micro_structure` encoding.
 *   **Hypothesis:** Without TAM, recovery timing will be inaccurate (`recovery_timing_error` increases). Short, dense scenes will be under-weighted.
 *   **Target Metric:** Recovery Lag (ms/lines).
 
 #### Layer 2: ACD (Attention Collapse vs Drift)
-*   **Ablation:** Disable `acd.py` logic.
+*   **Ablation:** Disable specific collapse computing in `dynamics_agent.py`.
 *   **Hypothesis:** High-strain signals will trigger generic alerts instead of nuanced "drift" warnings. "Boring" sections will trigger "Exhaustion" false positives.
 *   **Target Metric:** False Positive Alert Rate on "Boring" Control Scripts.
 
 #### Layer 3: SSF (Silence-as-Signal Formalization)
-*   **Ablation:** Disable `ssf.py` confidence bands.
+*   **Ablation:** Disable `interpretation_agent.py` confidence bands.
 *   **Hypothesis:** The system will fail to distinguish "Lack of Data" from "Earned Stability", reducing writer trust.
 *   **Target Metric:** Silence Confidence Precision.
 
 #### Layer 4: LRF (Long-Range Fatigue)
-*   **Ablation:** Disable `lrf.py` reserve tracking.
+*   **Ablation:** Disable `dynamics_agent.py` long-range reserve tracking.
 *   **Hypothesis:** Late-script strain will be invisible or attributed to the wrong specific scene.
 *   **Target Metric:** Late-Act Strain Correlation.
 
