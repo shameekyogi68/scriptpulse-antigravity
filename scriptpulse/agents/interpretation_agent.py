@@ -469,7 +469,6 @@ class InterpretationAgent:
                     n1, n2, n3 = nodes[i], nodes[j], nodes[k]
                     if n2 in adj[n1] and n3 in adj[n2] and n1 in adj[n3]:
                         triangles.append([n1, n2, n3])
-                        triangles.append([n1, n2, n3])
         return triangles
 
     def audit_timeline_continuity(self, scenes):
@@ -765,6 +764,10 @@ class InterpretationAgent:
         if not base_trace: return []
         
         ensemble_results = []
+        # [GOVERNANCE] Enforce deterministic mathematical boundary for Monte Carlo
+        import random
+        random.seed(42)
+        
         for _ in range(iterations):
             trace = []
             for pt in base_trace:
@@ -915,19 +918,26 @@ class InterpretationAgent:
                     'scene': pt['scene_index'],
                     'diagnosis': "Risk of Boredom",
                     'strategy': "Inject Kinetic Energy",
-                    'tactics': ["Cut sentence length", "Add visual words", "Interrupt dialogue"]
+                    'tactics': ["Cut sentence length", "Add visual words", "Interrupt dialogue"],
+                    'priority': 0.2 - eff
                 }
             elif eff > 0.85:
                 sugg = {
                     'scene': pt['scene_index'],
                     'diagnosis': "Risk of Burnout",
                     'strategy': "Induce Recovery",
-                    'tactics': ["Insert visual rest", "Simplify syntax", "Lower social tension"]
+                    'tactics': ["Insert visual rest", "Simplify syntax", "Lower social tension"],
+                    'priority': eff - 0.85
                 }
             
-            if sugg and random.random() < 0.3:
+            if sugg:
                 suggestions.append(sugg)
                 
+        # [GOVERNANCE] Enforce deterministic selection based on mathematical priority
+        suggestions.sort(key=lambda x: x.get('priority', 0), reverse=True)
+        for s in suggestions:
+            s.pop('priority', None)
+            
         return {'structural_repair_strategies': suggestions[:3]}
 
     # =========================================================================

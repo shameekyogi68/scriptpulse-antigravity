@@ -245,8 +245,8 @@ class DynamicsAgent:
             ling = scene_feat['linguistic_load']
             amb = scene_feat['ambient_signals']
             
-            # Avoid div zero
-            dial_eng = dial['turn_velocity']
+            # Avoid div zero and unbound scaling
+            dial_eng = min(1.0, dial['turn_velocity'])
             
             # -- 2a. Determine Scene Type & Adaptive Decay --
             # "Use separate decay rates for exposition, action, and dialogue heavy scenes"
@@ -298,8 +298,8 @@ class DynamicsAgent:
             ling = scene_feat['linguistic_load']
             amb = scene_feat['ambient_signals']
             
-            # Avoid div zero
-            dial_eng = dial['turn_velocity']
+            # Avoid div zero and unbound scaling
+            dial_eng = min(1.0, dial['turn_velocity'])
             vis_int = min(1.0, vis['action_lines'] / 20.0)
             ling_vol = min(1.0, ling['sentence_count'] / 50.0)
             still_pen = amb['component_scores']['stillness']
@@ -320,7 +320,7 @@ class DynamicsAgent:
                        vis_int * weights['emotional_components']['visual_intensity'] +
                        ling_vol * weights['emotional_components']['linguistic_volume'] - 
                        (still_pen * weights['emotional_components']['stillness_penalty']))
-            emo_load = max(0.0, emo_load)
+            emo_load = min(1.0, max(0.0, emo_load))
             
             # C. Mixed Effort
             base_effort = (cog_load * weights['cognitive_mix'] + 

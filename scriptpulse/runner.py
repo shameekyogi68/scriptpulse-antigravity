@@ -271,7 +271,9 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
         print("[Experimental] Running Multimodal Fusion...")
         fusion_agent = MultimodalFusionAgent()
         for i, scene in enumerate(temporal_output):
-            fused = fusion_agent.run({'effort_score': scene['attentional_signal'], 'visual_density': random.random()})
+            # [GOVERNANCE] Enforce deterministic visual density proxy instead of random float
+            vd = visual_scores[i] if visual_scores and i < len(visual_scores) else (0.5 + (i % 10)/20.0) 
+            fused = fusion_agent.run({'effort_score': scene['attentional_signal'], 'visual_density': vd})
             scene['attentional_signal'] = fused['fused_effort']
             scene['multimodal_source'] = True
 
