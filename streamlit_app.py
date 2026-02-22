@@ -197,74 +197,80 @@ with st.sidebar:
     # Trigger Preload based on user selection
     preload_models(cloud_mode=force_cloud)
 
-    if mode == "Live Sandbox":
-        st.header("⚡ Live Sandbox (Intervention)")
-        st.caption("Test edits side-by-side to see how changes affect pacing.")
-        
-        col_base, col_new = st.columns(2)
-        with col_base:
-            sandbox_base = st.text_area("Baseline Scene:", height=250, placeholder="The original scene...", key="sandbox_base")
-        with col_new:
-            sandbox_new = st.text_area("Edited Scene:", height=250, placeholder="Your revised scene...", key="sandbox_new")
-        
-        if st.button("Compare Edit"):
-            if len(sandbox_base) > 10 and len(sandbox_new) > 10:
-                with st.spinner("Analyzing Intervention..."):
+# =============================================================================
+# MODE ROUTING (Main Content Area — outside sidebar context)
+# =============================================================================
+
+if mode == "Live Sandbox":
+    st.header("⚡ Live Sandbox (Intervention)")
+    st.caption("Test edits side-by-side to see how changes affect pacing.")
+    
+    col_base, col_new = st.columns(2)
+    with col_base:
+        sandbox_base = st.text_area("Baseline Scene:", height=250, placeholder="The original scene...", key="sandbox_base")
+    with col_new:
+        sandbox_new = st.text_area("Edited Scene:", height=250, placeholder="Your revised scene...", key="sandbox_new")
+    
+    if st.button("Compare Edit"):
+        if len(sandbox_base) > 10 and len(sandbox_new) > 10:
+            with st.spinner("Analyzing Intervention..."):
+                try:
+                    report_base = runner.run_pipeline(sandbox_base, cpu_safe_mode=True, experimental_mode=False)
+                    report_new = runner.run_pipeline(sandbox_new, cpu_safe_mode=True, experimental_mode=False)
+                    
+                    trace_base = report_base.get('temporal_trace', [])[0] if report_base.get('temporal_trace') else {}
+                    trace_new = report_new.get('temporal_trace', [])[0] if report_new.get('temporal_trace') else {}
+                    
+                    c1, c2, c3 = st.columns(3)
+                    with c1:
+                        st.metric("Baseline Tension", f"{trace_base.get('strain', 0.0):.2f}")
+                    with c2:
+                        st.metric("Edited Tension", f"{trace_new.get('strain', 0.0):.2f}", delta=round(trace_new.get('strain', 0.0) - trace_base.get('strain', 0.0), 2))
+                    with c3:
+                        st.metric("Edited Density", f"{trace_new.get('effort', 0.0):.2f}", delta=round(trace_new.get('effort', 0.0) - trace_base.get('effort', 0.0), 2))
+                    
+                    st.markdown("---")
+                    # Apply XAI Highlighting on Edited Only for brevity
+                    st.subheader("Explainability (XAI) Focus Map: Edited Scene")
                     try:
-                        report_base = runner.run_pipeline(sandbox_base, cpu_safe_mode=True, experimental_mode=False)
-                        report_new = runner.run_pipeline(sandbox_new, cpu_safe_mode=True, experimental_mode=False)
-                        
-                        trace_base = report_base.get('temporal_trace', [])[0] if report_base.get('temporal_trace') else {}
-                        trace_new = report_new.get('temporal_trace', [])[0] if report_new.get('temporal_trace') else {}
-                        
-                        c1, c2, c3 = st.columns(3)
-                        with c1:
-                            st.metric("Baseline Tension", f"{trace_base.get('strain', 0.0):.2f}")
-                        with c2:
-                            st.metric("Edited Tension", f"{trace_new.get('strain', 0.0):.2f}", delta=round(trace_new.get('strain', 0.0) - trace_base.get('strain', 0.0), 2))
-                        with c3:
-                            st.metric("Edited Density", f"{trace_new.get('effort', 0.0):.2f}", delta=round(trace_new.get('effort', 0.0) - trace_base.get('effort', 0.0), 2))
-                        
-                        st.markdown("---")
-                        # Apply XAI Highlighting on Edited Only for brevity
-                        st.subheader("Explainability (XAI) Focus Map: Edited Scene")
                         import scriptpulse.utils.xai_highlighter as xai
                         highlighted_html = xai.generate_xai_html(sandbox_new)
                         st.markdown(highlighted_html, unsafe_allow_html=True)
                         st.caption("🔴 High-Density/Action Trigger | 🔵 Dialogue Focus")
-                    except Exception as e:
-                        st.error(f"Analysis failed: {e}")
-            else:
-                st.warning("Please fill both Baseline and Edited text areas to compare.")
-        st.stop()
+                    except Exception:
+                        st.info("XAI highlighting unavailable.")
+                except Exception as e:
+                    st.error(f"Analysis failed: {e}")
+        else:
+            st.warning("Please fill both Baseline and Edited text areas to compare.")
+    st.stop()
     
-    if mode == "Scene Compare":
-        st.header("⚖️ Scene A/B")
-        st.caption("Compare two versions.")
+if mode == "Scene Compare":
+    st.header("⚖️ Scene A/B")
+    st.caption("Compare two versions.")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        file_a = st.file_uploader("Version A", key="file_a")
+    with col2:
+        file_b = st.file_uploader("Version B", key="file_b")
         
-        col1, col2 = st.columns(2)
-        with col1:
-            file_a = st.file_uploader("Version A", key="file_a")
-        with col2:
-            file_b = st.file_uploader("Version B", key="file_b")
-            
-        if file_a and file_b:
-            if st.button("Compare"):
-                # ... (Logic remains same, just cleaner UI) ...
+    if file_a and file_b:
+        if st.button("Compare"):
+            try:
                 import scriptpulse.agents.parsing as p
                 import scriptpulse.agents.temporal as t
                 import scriptpulse.agents.valence as v
                 
                 def analyze_full(f):
                     txt = f.getvalue().decode('utf-8')
-                    # Run full pipeline to get scene-level tracing
                     return runner.run_pipeline(txt, experimental_mode=False, cpu_safe_mode=True)
                     
                 report_a = analyze_full(file_a)
                 report_b = analyze_full(file_b)
                 
-                trace_a = [p.get('strain', 0.0) for p in report_a.get('temporal_trace', [])]
-                trace_b = [p.get('strain', 0.0) for p in report_b.get('temporal_trace', [])]
+                trace_a = [p_item.get('strain', 0.0) for p_item in report_a.get('temporal_trace', [])]
+                trace_b = [p_item.get('strain', 0.0) for p_item in report_b.get('temporal_trace', [])]
                 
                 c1, c2, c3 = st.columns(3)
                 with c1:
@@ -287,9 +293,15 @@ with st.sidebar:
                             st.metric("Statistical Sig", "N/A (Error)")
                     else:
                         st.metric("Statistical Sig", "N/A (Too short)")
+            except Exception as e:
+                st.error(f"Comparison failed: {e}")
 
-        st.stop()
-        
+    st.stop()
+    
+# =============================================================================
+# SIDEBAR: REMAINING CONTROLS (for Script Analysis mode)
+# =============================================================================
+with st.sidebar:
     # --- INFO ---
     st.info(
         "**Reading the Pulse**\n\n"
@@ -297,6 +309,7 @@ with st.sidebar:
         "🟢 **Flow**: Balanced, engaging.\n"
         "🟠 **Risk**: Low energy, potential drift."
     )
+
     
     st.markdown("---")
     # Hide complex settings by default
