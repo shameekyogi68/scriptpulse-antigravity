@@ -128,8 +128,10 @@ with st.sidebar:
     st.caption("Writer-Native Analytics (or Research Platform)")
     
     st.markdown("---")
+    ui_mode = st.radio("Interface Mode", ["Writer Mode (Creative)", "Lab Mode (Research)"], index=0, help="Lab Mode shows advanced ML ablation and threshold controls.")
+    st.markdown("---")
     
-    with st.expander("⚡ Engine Context (RAM Usage)", expanded=True):
+    with st.expander("⚡ Engine Context (RAM Usage)", expanded=ui_mode == "Lab Mode (Research)"):
         engine_mode = st.radio(
             "Hardware Constraints", 
             ["Cloud / Fast (Heuristic Fallback)", "Local (Full AI Engine - Requires 8GB RAM)"],
@@ -151,42 +153,44 @@ with st.sidebar:
     preload_models(cloud_mode=force_cloud)
 
     if mode == "Live Sandbox":
-        st.header("⚡ Live Sandbox")
-        st.caption("Real-time scene editing for intervention studies.")
-        sandbox_input = st.text_area("Paste or type a single scene here:", height=250, placeholder="INT. COFFEE SHOP - DAY\n\nALICE\nI can't believe you did that.\n\nBOB\nIt had to be done.")
+        st.header("⚡ Live Sandbox (Intervention)")
+        st.caption("Test edits side-by-side to see how changes affect pacing.")
         
-        if st.button("Analyze Edit"):
-            if len(sandbox_input) > 10:
-                with st.spinner("Analyzing snippet..."):
+        col_base, col_new = st.columns(2)
+        with col_base:
+            sandbox_base = st.text_area("Baseline Scene:", height=250, placeholder="The original scene...", key="sandbox_base")
+        with col_new:
+            sandbox_new = st.text_area("Edited Scene:", height=250, placeholder="Your revised scene...", key="sandbox_new")
+        
+        if st.button("Compare Edit"):
+            if len(sandbox_base) > 10 and len(sandbox_new) > 10:
+                with st.spinner("Analyzing Intervention..."):
                     try:
-                        sandbox_report = runner.run_pipeline(sandbox_input, cpu_safe_mode=True, experimental_mode=False)
-                        trace = sandbox_report.get('temporal_trace', [])
+                        report_base = runner.run_pipeline(sandbox_base, cpu_safe_mode=True, experimental_mode=False)
+                        report_new = runner.run_pipeline(sandbox_new, cpu_safe_mode=True, experimental_mode=False)
                         
-                        # Apply XAI Highlighting
-                        st.subheader("Explainability (XAI) Focus Map")
+                        trace_base = report_base.get('temporal_trace', [])[0] if report_base.get('temporal_trace') else {}
+                        trace_new = report_new.get('temporal_trace', [])[0] if report_new.get('temporal_trace') else {}
+                        
+                        c1, c2, c3 = st.columns(3)
+                        with c1:
+                            st.metric("Baseline Tension", f"{trace_base.get('strain', 0.0):.2f}")
+                        with c2:
+                            st.metric("Edited Tension", f"{trace_new.get('strain', 0.0):.2f}", delta=round(trace_new.get('strain', 0.0) - trace_base.get('strain', 0.0), 2))
+                        with c3:
+                            st.metric("Edited Density", f"{trace_new.get('effort', 0.0):.2f}", delta=round(trace_new.get('effort', 0.0) - trace_base.get('effort', 0.0), 2))
+                        
+                        st.markdown("---")
+                        # Apply XAI Highlighting on Edited Only for brevity
+                        st.subheader("Explainability (XAI) Focus Map: Edited Scene")
                         import scriptpulse.utils.xai_highlighter as xai
-                        highlighted_html = xai.generate_xai_html(sandbox_input)
+                        highlighted_html = xai.generate_xai_html(sandbox_new)
                         st.markdown(highlighted_html, unsafe_allow_html=True)
                         st.caption("🔴 High-Density/Action Trigger | 🔵 Dialogue Focus")
-                        
-                        if trace:
-                            point = trace[0]
-                            col1, col2 = st.columns(2)
-                            with col1:
-                                st.metric("Snapshot Narrative Tension", f"{point.get('strain', 0.0):.2f}")
-                            with col2:
-                                st.metric("Reading Density / Effort", f"{point.get('effort', 0.0):.2f}")
-                            
-                            st.caption("Features Breakdown:")
-                            st.json({
-                                "action_density": point.get("action_density", 0),
-                                "dialogue_density": point.get("dialogue_density", 0),
-                                "coherence_penalty": point.get("coherence_penalty", 0)
-                            })
-                        else:
-                            st.warning("Could not extract signal. Try writing more text.")
                     except Exception as e:
                         st.error(f"Analysis failed: {e}")
+            else:
+                st.warning("Please fill both Baseline and Edited text areas to compare.")
         st.stop()
     
     if mode == "Scene Compare":
@@ -408,30 +412,36 @@ with col_genre:
         help="Loads 'Expected Curve' for cross-domain comparison."
     )
 
-with col_lens:
-    selected_lens = st.selectbox(
-        "Analysis Lens",
-        ["viewer", "reader", "narrator"],
-        format_func=lambda x: x.capitalize(),
-        help="Viewer=Visceral, Reader=Literary, Narrator=Structural"
+if ui_mode == "Lab Mode (Research)":
+    with col_lens:
+        selected_lens = st.selectbox(
+            "Analysis Lens",
+            ["viewer", "reader", "narrator"],
+            format_func=lambda x: x.capitalize(),
+            help="Viewer=Visceral, Reader=Literary, Narrator=Structural"
+        )
+        
+    st.markdown("---")
+    selected_profile = st.selectbox(
+        "Target Audience (Cognitive Profile)",
+        ["General", "Cinephile", "Distracted", "Child"],
+        help="Simulates the brain capacity of different viewers."
     )
-    
-st.markdown("---")
-selected_profile = st.selectbox(
-    "Target Audience (Cognitive Profile)",
-    ["General", "Cinephile", "Distracted", "Child"],
-    help="Simulates the brain capacity of different viewers."
-)
 
-if selected_profile == "Cinephile":
-    st.caption("🧠 **High Capacity**: Tolerates complexity, remembers context longer.")
-elif selected_profile == "Distracted":
-    st.caption("🧠 **Low Capacity**: Needs frequent refresh, hates confusion.")
-elif selected_profile == "Child":
-    st.caption("🧠 **Minimal Capacity**: Needs strict continuity.")
+    if selected_profile == "Cinephile":
+        st.caption("🧠 **High Capacity**: Tolerates complexity, remembers context longer.")
+    elif selected_profile == "Distracted":
+        st.caption("🧠 **Low Capacity**: Needs frequent refresh, hates confusion.")
+    elif selected_profile == "Child":
+        st.caption("🧠 **Minimal Capacity**: Needs strict continuity.")
 
-st.markdown("---")
-use_high_res = st.checkbox("High-Resolution Mode (Micro-Beats)", help="Slice scenes into beats for HD analysis (Slower).")
+    st.markdown("---")
+    use_high_res = st.checkbox("High-Resolution Mode (Micro-Beats)", help="Slice scenes into beats for HD analysis (Slower).")
+else:
+    # Writer Mode Defaults
+    selected_lens = "viewer"
+    selected_profile = "General"
+    use_high_res = False
 
 writer_intent = []
 if script_input:
@@ -669,16 +679,28 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
             repair_strategies = []
         
         if repair_strategies:
-            with st.expander("💡 Repair Strategies", expanded=False):
-                st.caption("Suggested improvements based on structural analysis")
+            with st.expander("💡 Creative Coaching & Repair", expanded=True):
+                st.caption("Heuristic-to-Creative suggestions based on structural analysis")
                 for sugg in repair_strategies:
                     # Ensure sugg is a dict
                     if isinstance(sugg, dict):
                         scene_num = sugg.get('scene', 'Unknown')
                         diagnosis = sugg.get('diagnosis', 'No diagnosis')
                         st.markdown(f"**Scene {scene_num}**: {diagnosis}")
-                        st.markdown(f"→ {sugg.get('strategy', 'N/A')}")
+                        
+                        # Heuristic Coaching Translation
+                        val = sugg.get('strategy', '')
+                        if "decrease" in val.lower() and "density" in val.lower():
+                            st.info("🎨 **Writer Tip:** This scene is heavily loaded with physical action or dense text. Try breaking up the long action blocks or insert a brief moment of character reflection to provide 'Breathing Room'.")
+                        elif "increase" in val.lower() and "tension" in val.lower():
+                            st.info("🎨 **Writer Tip:** This scene is stalling. Consider introducing a complication, raising the stakes, or cutting exposition to accelerate the pacing.")
+                        else:
+                            st.markdown(f"→ {val}")
                         st.markdown("")  # spacing
+                        
+    if ui_mode == "Writer Mode (Creative)":
+        with st.expander("🛡️ System Blindspots (Trust Management)", expanded=False):
+            st.warning("**What the AI Can't See:**\n\nScriptPulse measures *Structural Pacing* and *Lexical Density*. It does **NOT** understand narrative logic. It will not flag plot holes, continuity errors (e.g., 'Chekhov's Gun'), or character logic inconsistencies.")
                     
                     
     # === WRITER WORKSPACE ===
