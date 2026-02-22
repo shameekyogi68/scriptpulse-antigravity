@@ -30,6 +30,10 @@ class ImporterAgent:
         Returns: list of dicts [{'text': '...', 'tag': 'S/A/C/D', 'line_index': i}]
         """
         try:
+            # Mitigation for basic XXE/Billion Laughs attacks if defusedxml is unavailable.
+            if "<!DOCTYPE" in xml_content or "<!ENTITY" in xml_content:
+                print("[Security] XML Injection Attempt Detected. Halting parse.")
+                return []
             root = ET.fromstring(xml_content)
         except ET.ParseError:
             return []

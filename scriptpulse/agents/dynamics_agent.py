@@ -59,7 +59,7 @@ class DynamicsAgent:
         # Load Explicit Hyperparameters
         try:
             base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-            hyper_path = os.path.join(base_dir, 'scriptpulse', 'config', 'hyperparameters.json')
+            hyper_path = os.path.join(base_dir, 'config', 'hyperparameters.json')
             with open(hyper_path, 'r') as f:
                 self.hyper = json.load(f).get('dynamics_agent', {})
         except Exception as e:
@@ -79,7 +79,7 @@ class DynamicsAgent:
         try:
             # Adjust path relative to this file location
             base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-            schema_path = os.path.join(base_dir, 'antigravity', 'schemas', 'genre_priors.json')
+            schema_path = os.path.join(base_dir, 'config', 'genre_priors.json')
             if os.path.exists(schema_path):
                 with open(schema_path, 'r') as f:
                     self.GENRE_PRIORS = json.load(f).get('genres', {})
@@ -95,7 +95,7 @@ class DynamicsAgent:
             # Try reloading if empty
             try:
                 base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-                schema_path = os.path.join(base_dir, 'scriptpulse', 'schemas', 'genre_priors.json')
+                schema_path = os.path.join(base_dir, 'config', 'genre_priors.json')
                 if os.path.exists(schema_path):
                     with open(schema_path, 'r') as f:
                         data = json.load(f)
