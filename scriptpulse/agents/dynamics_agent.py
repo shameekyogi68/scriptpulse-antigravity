@@ -7,8 +7,7 @@ import random
 import statistics
 import json
 import os
-import math
-import copy
+
 
 # =============================================================================
 # TEMPORAL LOGIC (formerly temporal.py)
