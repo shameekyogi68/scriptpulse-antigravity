@@ -129,7 +129,44 @@ if 'health_report' not in st.session_state:
 # Exposes pipeline diagnostic endpoint for operator monitoring
 def _render_health_sidebar():
     with st.sidebar:
-        with st.expander("🩺 System Health Diagnostics", expanded=False):
+        with st.expander("🩺 System Health & Memory", expanded=False):
+
+            # ── Memory Safe Mode toggle ────────────────────────────────
+            st.caption("**⚡ Performance Mode**")
+            import os as _os
+            heuristics_env = _os.environ.get("SCRIPTPULSE_HEURISTICS_ONLY", "0") == "1"
+            if 'heuristics_only' not in st.session_state:
+                st.session_state['heuristics_only'] = heuristics_env
+
+            mem_safe = st.toggle(
+                "🧠 Memory Safe Mode (no ML models)",
+                value=st.session_state['heuristics_only'],
+                key="mem_safe_toggle",
+                help="Disables SBERT/GPT-2/DistilBART. Saves ~900MB RAM. Uses fast heuristics. Accuracy is preserved for structural analysis."
+            )
+            if mem_safe != st.session_state['heuristics_only']:
+                st.session_state['heuristics_only'] = mem_safe
+                _os.environ["SCRIPTPULSE_HEURISTICS_ONLY"] = "1" if mem_safe else "0"
+                # Invalidate model cache so next run picks up the change
+                from scriptpulse.pipeline import runner as _runner
+                _runner._AGENT_CACHE.clear()
+                st.toast("✅ Mode changed — model cache cleared." if mem_safe else "✅ Full ML mode restored.")
+
+            # ── Manual memory release ──────────────────────────────────
+            if st.button("🗑️ Free Model Memory", key="free_mem_btn",
+                         help="Releases SBERT/GPT-2 references and triggers GC. Use when RAM is low."):
+                try:
+                    from scriptpulse.utils.model_manager import manager as _mm
+                    from scriptpulse.pipeline import runner as _runner
+                    _mm.release_models()
+                    _runner._AGENT_CACHE.clear()
+                    st.success("✅ Model memory released. Next analysis will reload if needed.")
+                except Exception as _e:
+                    st.warning(f"Release partial: {_e}")
+
+            st.divider()
+
+            # ── Health check ───────────────────────────────────────────
             if st.button("Run Health Check", key="health_btn"):
                 with st.spinner("Checking pipeline health..."):
                     try:
@@ -137,7 +174,7 @@ def _render_health_sidebar():
                         st.session_state['health_report'] = h
                     except Exception as _he:
                         st.error(f"Health check failed: {_he}")
-            
+
             h = st.session_state.get('health_report')
             if h:
                 status = h.get('status', 'unknown')
@@ -145,12 +182,12 @@ def _render_health_sidebar():
                     st.success(f"✅ System Status: **{status.upper()}**")
                 else:
                     st.warning(f"⚠️ System Status: **{status.upper()}**")
-                
+
                 st.caption("**Core Agents**")
                 for agent, ok in h.get('agents', {}).items():
                     icon = "🟢" if ok else "🔴"
                     st.markdown(f"{icon} {agent}")
-                    
+
                 st.caption("**Governance & Config**")
                 st.markdown(f"{'🟢' if h.get('governance') else '🔴'} Governance Firewall")
                 for fname, exists in h.get('config_files', {}).items():

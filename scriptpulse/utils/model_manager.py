@@ -12,6 +12,16 @@ import logging
 
 logger = logging.getLogger('scriptpulse.mlops')
 
+# =============================================================================
+# PERFORMANCE: Environment-driven heuristics-only mode.
+# Set SCRIPTPULSE_HEURISTICS_ONLY=1 to skip ALL transformer models entirely.
+# This drops SBERT (~80MB), GPT-2 (~500MB), and DistilBART (~300MB) from the 
+# process heap. All agents fall through to their existing fast heuristic 
+# fallbacks. Analytical output structure is identical; only ML-specific 
+# subfields (e.g. raw embeddings) will be zeroed or approximated.
+# =============================================================================
+_HEURISTICS_ONLY = os.environ.get("SCRIPTPULSE_HEURISTICS_ONLY", "0") == "1"
+
 # Centralized Imports
 try:
     import torch
@@ -92,7 +102,11 @@ class ModelManager:
     def get_pipeline(self, task, model_name):
         """
         Get a HuggingFace pipeline with caching and version enforcement.
+        Returns None immediately if SCRIPTPULSE_HEURISTICS_ONLY=1.
         """
+        if _HEURISTICS_ONLY:
+            logger.debug("Heuristics-only mode: skipping pipeline %s", model_name)
+            return None
         if not pipeline:
             return None
         
@@ -122,7 +136,11 @@ class ModelManager:
     def get_sentence_transformer(self, model_name):
         """
         Get a SentenceTransformer model with caching and version enforcement.
+        Returns None immediately if SCRIPTPULSE_HEURISTICS_ONLY=1.
         """
+        if _HEURISTICS_ONLY:
+            logger.debug("Heuristics-only mode: skipping SBERT %s", model_name)
+            return None
         if not SentenceTransformer:
             return None
         
@@ -147,6 +165,20 @@ class ModelManager:
     def get_loaded_models(self):
         """Return dict of currently loaded model info for telemetry."""
         return dict(self._loaded_models)
+
+    def release_models(self):
+        """
+        Explicitly release all loaded model references and suggest GC.
+        Call this after analysis completes on memory-constrained machines
+        to return SBERT/GPT-2 heap to the OS before the next UI render.
+        """
+        import gc
+        self._loaded_models.clear()
+        gc.collect()
+        if torch and torch.cuda.is_available():
+            torch.cuda.empty_cache()
+        logger.info("ModelManager: model references released, GC triggered.")
+
 
 # Singleton Access
 manager = ModelManager()

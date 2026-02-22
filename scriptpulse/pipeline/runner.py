@@ -200,7 +200,10 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
         voice_map = {}
     
     _t0 = time.time()
-    stride = valence_stride if cpu_safe_mode else 1
+    # In heuristics-only mode, always run full valence (heuristic is cheap, stride unnecessary)
+    import os as _os
+    _heuristics_only = _os.environ.get("SCRIPTPULSE_HEURISTICS_ONLY", "0") == "1"
+    stride = 1 if _heuristics_only else (valence_stride if cpu_safe_mode else 1)
     try:
         if stride > 1:
             valence_scores = []
@@ -616,8 +619,23 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
     final_output['meta']['metric_version'] = "1.3"
     final_output['runtime_ms'] = sum(timings.values())
     final_output['perceptual_features'] = encoded # Expose Novelty/Clarity
-    
+
+    # v14.1 MEMORY: On cpu_safe_mode, release model references after each run.
+    # On 8GB machines this recovers ~900MB of SBERT/GPT-2 heap between analyses.
+    # The _AGENT_CACHE still holds agent objects but not their model weights
+    # (weights live inside the ModelManager singleton which we release here).
+    if cpu_safe_mode:
+        try:
+            import gc
+            from scriptpulse.utils.model_manager import manager as _mm
+            _mm.release_models()
+            gc.collect()
+            _log.debug("Post-run memory release completed (cpu_safe_mode).")
+        except Exception as _mem_e:
+            _log.debug("Post-run memory release skipped: %s", _mem_e)
+
     return final_output
+
 
 def parse_structure(screenplay_text):
     """Helper to parse structure without running full analysis."""
