@@ -434,6 +434,20 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
     except Exception as _e:
         print(f"[Warning] Mediation failed: {_e}")
         final_output = {}
+
+    # Interpretation: Semantic Labeling (Math -> Story)
+    try:
+        semantic_beats = interpretation_agent.apply_semantic_labels(temporal_output, valence_scores)
+    except Exception as _e:
+        print(f"[Warning] Semantic Labeling failed: {_e}")
+        semantic_beats = []
+        
+    # Interpretation: Structure Mapping (Acts & Beats)
+    try:
+        structure_map = interpretation_agent.map_to_structure(temporal_output)
+    except Exception as _e:
+        print(f"[Warning] Structure Mapping failed: {_e}")
+        structure_map = {'acts': [], 'beats': []}
     
     # Meta & Output Construction
     try:
@@ -470,6 +484,8 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
     final_output['uncertainty_quantification'] = uncertainty_trace
     final_output['polyglot_analysis'] = polyglot_data
     final_output['moonshot_resonance'] = moonshot_data
+    final_output['semantic_beats'] = semantic_beats
+    final_output['structure_map'] = structure_map
     
     try:
         runtime_info = runtime.estimate_runtime(segmented)

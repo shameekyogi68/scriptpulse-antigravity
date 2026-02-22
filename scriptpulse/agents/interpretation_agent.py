@@ -58,6 +58,14 @@ ADS_DISCLAIMERS = [
     "Attention varies by reader; this model tracks median structural load."
 ]
 
+CREATIVE_BEAT_LABELS = {
+    'high_strain_high_effort': "Action Climax / Intense Conflict",
+    'high_strain_low_effort': "Suspenseful Build-Up",
+    'low_strain_high_effort': "Dense Exposition / World-Building",
+    'low_strain_low_effort': "Quiet Reflection / Breathing Room",
+    'moderate_tension': "Steady Narrative Flow"
+}
+
 # =============================================================================
 # INTENT LOGIC (formerly intent.py)
 # =============================================================================
@@ -73,6 +81,81 @@ class InterpretationAgent:
             'should feel tense',
             'experimental / anti-narrative'
         }
+
+    def apply_semantic_labels(self, temporal_trace, valence_trace=None):
+        """Maps numeric signals to writer-safe story beat labels."""
+        if not temporal_trace: return []
+        
+        labeled_trace = []
+        for i, pt in enumerate(temporal_trace):
+            strain = pt.get('attentional_signal', 0.5)
+            effort = pt.get('instantaneous_effort', 0.5)
+            val = valence_trace[i] if (valence_trace and i < len(valence_trace)) else 0.0
+            
+            label = CREATIVE_BEAT_LABELS['moderate_tension']
+            
+            if strain > 0.75:
+                if effort > 0.6: label = CREATIVE_BEAT_LABELS['high_strain_high_effort']
+                else: label = CREATIVE_BEAT_LABELS['high_strain_low_effort']
+            elif strain < 0.35:
+                if effort > 0.6: label = CREATIVE_BEAT_LABELS['low_strain_high_effort']
+                else: label = CREATIVE_BEAT_LABELS['low_strain_low_effort']
+            
+            # Emotional modifiers
+            sentiment = "Neutral"
+            if val > 0.2: sentiment = "Positive / Hopeful"
+            elif val < -0.2: sentiment = "Negative / Tragic"
+            
+            labeled_trace.append({
+                'scene_index': pt['scene_index'],
+                'primary_label': label,
+                'emotional_undertone': sentiment,
+                'composite_beat': f"{label} ({sentiment})"
+            })
+        return labeled_trace
+
+    def map_to_structure(self, temporal_trace):
+        """Detects Act boundaries and Key Beats (Inciting Incident, Midpoint, Climax)."""
+        if not temporal_trace: return {}
+        
+        total = len(temporal_trace)
+        if total < 5: return {'acts': [], 'beats': []}
+        
+        # 1. Traditional 3-Act Structure (Percentage based fallback)
+        act_1_end = int(total * 0.25)
+        act_2_end = int(total * 0.75)
+        
+        acts = [
+            {'name': 'Act 1: Setup', 'range': [0, act_1_end]},
+            {'name': 'Act 2: Confrontation', 'range': [act_1_end + 1, act_2_end]},
+            {'name': 'Act 3: Resolution', 'range': [act_2_end + 1, total - 1]}
+        ]
+        
+        # 2. Dynamic Beat Detection (Local peaks in strain)
+        signals = [s.get('attentional_signal', 0) for s in temporal_trace]
+        
+        beats = []
+        # Inciting Incident (Peak in first 20%)
+        ii_window = signals[:int(total * 0.25)]
+        if ii_window:
+            ii_idx = ii_window.index(max(ii_window))
+            beats.append({'name': 'Inciting Incident', 'scene_index': ii_idx})
+            
+        # Midpoint (Peak in middle 20%)
+        m_start, m_end = int(total * 0.4), int(total * 0.6)
+        mid_window = signals[m_start:m_end]
+        if mid_window:
+            mid_idx = m_start + mid_window.index(max(mid_window))
+            beats.append({'name': 'Midpoint Turn', 'scene_index': mid_idx})
+            
+        # Climax (Max peak overall in last 25%)
+        c_start = int(total * 0.75)
+        cli_window = signals[c_start:]
+        if cli_window:
+            cli_idx = c_start + cli_window.index(max(cli_window))
+            beats.append({'name': 'Narrative Climax', 'scene_index': cli_idx})
+            
+        return {'acts': acts, 'beats': beats}
 
     def apply_writer_intent(self, input_data):
         """Writer Intent Immunity (formerly intent.run)"""

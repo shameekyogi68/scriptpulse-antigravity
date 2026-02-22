@@ -940,16 +940,21 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
     
     # Prepare Data for Chart
     trace = report.get('temporal_trace', [])
+    semantic_beats = report.get('semantic_beats', [])
+    structure_map = report.get('structure_map', {'acts': [], 'beats': []})
+    
     if trace:
         chart_data = []
         for i, point in enumerate(trace):
+            beat_info = semantic_beats[i] if i < len(semantic_beats) else {}
             # Point contains 'effort', 'recovery', 'strain'
             chart_data.append({
                 'Scene': i,
                 'Load': point.get('effort', 0.5), # E[i]
                 'Recovery': point.get('recovery', 0.5), # R[i]
-                'Net Tension': point.get('strain', 0.0), # S[i]
-                'Confidence': point.get('confidence', 0.85) # from v1.3 metrics if available
+                'Narrative Tension': point.get('strain', 0.0), # S[i]
+                'Confidence': point.get('confidence', 0.85),
+                'Creative Beat': beat_info.get('composite_beat', 'Stable Flow')
             })
             
         df = pd.DataFrame(chart_data)
@@ -985,9 +990,11 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
 
             # Top Driving Features Attribution
             hovertemplate = (
-                "Scene: %{x}<br>"
+                "Scene Index: %{x}<br>"
+                "<b>%{customdata[3]}</b><br>"
                 "Tension: %{y:.2f}<br>"
                 "---<br>"
+                "Drivers:<br>"
                 "%{customdata[0]}<br>"
                 "%{customdata[1]}<br>"
                 "%{customdata[2]}"
@@ -995,24 +1002,26 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
             
             # Determine top features for each scene
             custom_data = []
-            for scene_data in trace:
+            for i, scene_data in enumerate(trace):
                 features = [
-                    ('Surprisal', scene_data.get('effort', 0) * 0.4), # Proxies for display
+                    ('Surprisal', scene_data.get('effort', 0) * 0.4),
                     ('Action', scene_data.get('action_density', 0)),
                     ('Dialogue', scene_data.get('dialogue_density', 0)),
-                    ('Confusion', scene_data.get('coherence_penalty', 0))
+                    ('Complexity', scene_data.get('coherence_penalty', 0))
                 ]
-                # Sort by impact
                 features.sort(key=lambda x: x[1], reverse=True)
-                top_3 = [f"{k}: +{v:.2f}" for k, v in features[:3]]
+                top_3 = [f"- {k}" for k, v in features[:3]]
                 while len(top_3) < 3: top_3.append("N/A")
+                
+                beat_label = semantic_beats[i].get('composite_beat', 'Stable Flow') if i < len(semantic_beats) else "Stable Flow"
+                top_3.append(beat_label)
                 custom_data.append(top_3)
 
             # Main Line (Colorblind Safe Blue)
             fig.add_trace(go.Scatter(
                 x=df['Scene'],
-                y=df['Net Tension'],
-                line=dict(color='#1f77b4', width=2),
+                y=df['Narrative Tension'],
+                line=dict(color='#1f77b4', width=3),
                 mode='lines',
                 name='Narrative Tension',
                 customdata=custom_data,
@@ -1125,10 +1134,30 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
                 except Exception as e:
                     st.error(f"Failed to load Ground Truth: {e}")
 
+            # Add Act Structure Overlays (Vertical Lines)
+            for act in structure_map.get('acts', []):
+                act_name = act['name']
+                act_end = act['range'][1]
+                if act_end < len(df):
+                    fig.add_vline(x=act_end, line_width=1, line_dash="dash", line_color="gray")
+                    fig.add_annotation(x=act_end, y=1.05, text=act_name, showarrow=False, font=dict(color="gray", size=10))
+
+            # Add Key Beat Annotations
+            for beat in structure_map.get('beats', []):
+                b_idx = beat['scene_index']
+                if b_idx < len(df):
+                    fig.add_annotation(
+                        x=b_idx, y=df['Narrative Tension'].iloc[b_idx],
+                        text=beat['name'],
+                        showarrow=True, arrowhead=1, ax=0, ay=-40,
+                        font=dict(size=9, color="#d62728"),
+                        arrowcolor="#d62728"
+                    )
+
             fig.update_layout(
-                title='Empirical Signal Trace (High-Fidelity)',
-                xaxis_title='Scene Index',
-                yaxis_title='Normalized Signal Intensity [0-1]',
+                title='Narrative Pulse (Story Structure Map)',
+                xaxis_title='Script Progress (Scene Index)',
+                yaxis_title='Emotional / Narrative Tension',
                 template='plotly_white',
                 hovermode='x unified',
                 legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
@@ -1159,7 +1188,7 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
             )
         else:
             # Use Streamlit native chart (simpler, creative abstraction)
-            st.line_chart(df[['Scene', 'Load', 'Recovery', 'Net Tension']].set_index('Scene'))
+            st.line_chart(df[['Scene', 'Load', 'Recovery', 'Narrative Tension']].set_index('Scene'))
             st.caption("BLUE LINE: Narrative Tension | ORANGE LINE: Breathing Room")
     
     
