@@ -965,7 +965,7 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
 
             # Bootstrapped Uncertainty (Monte Carlo Feature Noise)
             import numpy as np
-            base_tensions = np.array([c['Net Tension'] for c in chart_data])
+            base_tensions = np.array([c['Narrative Tension'] for c in chart_data])
             n_iterations = 20
             perturbed_traces = []
             for _ in range(n_iterations):
