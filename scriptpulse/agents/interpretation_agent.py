@@ -157,6 +157,468 @@ class InterpretationAgent:
             
         return {'acts': acts, 'beats': beats}
 
+    def map_archetypes(self, fingerprints):
+        """Maps voice fingerprints to recognizable character archetypes."""
+        if not fingerprints: return {}
+        
+        archetypes = {}
+        for char, fp in fingerprints.items():
+            agency = fp.get('agency', 0.0)
+            complexity = fp.get('complexity', 0.5)
+            positivity = fp.get('positivity', 0.0)
+            punct = fp.get('punctuation_rate', 0.0)
+            
+            # Archetype Heuristics
+            if agency > 0.4 and complexity < 0.4:
+                arch = "The Stoic / Man of Action"
+            elif agency > 0.4 and punct > 0.15:
+                arch = "The Chaotic Rebel"
+            elif complexity > 0.7 and positivity > 0.2:
+                arch = "The Mentor / Guide"
+            elif agency < -0.2 and complexity > 0.6:
+                arch = "The Cerebral Observer"
+            elif positivity < -0.3 and agency > 0.3:
+                arch = "The Antagonist / Force of Nature"
+            elif punct > 0.2 and complexity < 0.3:
+                arch = "The Comic Relief"
+            else:
+                arch = "The Everyman"
+                
+            archetypes[char] = {
+                'archetype': arch,
+                'explanation': self._get_arch_explanation(arch, fp)
+            }
+        return archetypes
+
+    def _get_arch_explanation(self, arch, fp):
+        if "Stoic" in arch: return "Direct, high-agency dialogue with minimal fluff."
+        if "Chaotic" in arch: return "High energy, fragmented, and assertive."
+        if "Mentor" in arch: return "Complex, encouraging, and highly articulate."
+        if "Cerebral" in arch: return "Introspective and sophisticated, but less physically active."
+        if "Antagonist" in arch: return "Strong-willed, negative, and driving the conflict."
+        if "Comic" in arch: return "High-punctuation, rapid, and playful."
+        return "Balanced voice with standard narrative profile."
+
+    def audit_subtext(self, scene_features, fingerprints):
+        """Identifies characters who are 'speaking the plot' too literally."""
+        if not scene_features: return []
+        
+        audits = []
+        for feat in scene_features:
+            otn = feat.get('on_the_nose', {}).get('on_the_nose_ratio', 0.0)
+            scene_idx = feat.get('scene_index', 0)
+            
+            if otn > 0.4:
+                audits.append({
+                    'scene_index': scene_idx,
+                    'severity': 'High' if otn > 0.6 else 'Moderate',
+                    'issue': "Transparent Dialogue (On-the-Nose)",
+                    'advice': "Character is stating their feelings/intent too directly. Try using subtext or physical action instead."
+                })
+        return audits
+
+    def map_to_custom_framework(self, temporal_trace, framework_type='3_act'):
+        """Maps the tension trace to alternative storytelling frameworks."""
+        if not temporal_trace: return {}
+        total = len(temporal_trace)
+        if total < 5: return {'acts': [], 'beats': []}
+
+        if framework_type == 'heros_journey':
+            return self._map_heros_journey(total)
+        elif framework_type == 'eight_sequences':
+            return self._map_eight_sequences(total)
+        
+        # Fallback to standard 3-Act
+        return self.map_to_structure(temporal_trace)
+
+    def _map_heros_journey(self, total):
+        """Standard 12-step Hero's Journey mapping."""
+        steps = [
+            ("Ordinary World", 0, 0.1),
+            ("Call to Adventure", 0.1, 0.15),
+            ("Refusal of the Call", 0.15, 0.2),
+            ("Meeting the Mentor", 0.2, 0.25),
+            ("Crossing the Threshold", 0.25, 0.3),
+            ("Tests, Allies, Enemies", 0.3, 0.5),
+            ("Approach to the Inmost Cave", 0.5, 0.6),
+            ("The Ordeal", 0.6, 0.7),
+            ("The Reward", 0.7, 0.75),
+            ("The Road Back", 0.75, 0.85),
+            ("Resurrection", 0.85, 0.95),
+            ("Return with the Elixir", 0.95, 1.0)
+        ]
+        acts = []
+        for name, start_p, end_p in steps:
+            acts.append({'name': name, 'range': [int(total*start_p), int(total*end_p)]})
+        return {'acts': acts, 'beats': []}
+
+    def _map_eight_sequences(self, total):
+        """The 8-Sequence Method (commonly used in TV/Feature writing)."""
+        seqs = [
+            ("Sequence 1: Setup", 0, 0.125),
+            ("Sequence 2: Inciting Incident", 0.125, 0.25),
+            ("Sequence 3: Rising Action", 0.25, 0.375),
+            ("Sequence 4: First Culmination", 0.375, 0.5),
+            ("Sequence 5: Midpoint", 0.5, 0.625),
+            ("Sequence 6: Rising Tension", 0.625, 0.75),
+            ("Sequence 7: Climax", 0.75, 0.875),
+            ("Sequence 8: Resolution", 0.875, 1.0)
+        ]
+        acts = []
+        for name, start_p, end_p in seqs:
+            acts.append({'name': name, 'range': [int(total*start_p), int(total*end_p)]})
+        return {'acts': acts, 'beats': []}
+
+    def audit_narrative_intelligence(self, scenes, temporal_trace):
+        """Detects high-level narrative issues like Dropped Threads or Thematic Drift."""
+        if not scenes or not temporal_trace: return []
+        
+        audits = []
+        
+        # 1. Setup & Payoff (Item Tracking)
+        loaded_items = ["gun", "weapon", "knife", "letter", "bag", "key", "secret", "poison", "bomb", "evidence"]
+        item_usage = {} # item -> [scene_indices]
+        
+        for s in scenes:
+            lines = s.get('lines', [])
+            text_blocks = [l.get('text', '').lower() for l in lines]
+            text_blocks.append(s.get('heading', '').lower())
+            text_blocks.append(s.get('preview', '').lower())
+            
+            combined_text = " ".join(text_blocks)
+            
+            for item in loaded_items:
+                if item in combined_text:
+                    if item not in item_usage: item_usage[item] = []
+                    item_usage[item].append(s['scene_index'])
+        
+        # 2. Logic: Identify Dropped Threads (Setup without Payoff)
+        for item, indices in item_usage.items():
+            if len(indices) == 1:
+                # If item appears only once and it's in early part of script
+                scene_idx = indices[0]
+                if scene_idx < max(1, len(scenes) * 0.4): # More lenient 40% threshold
+                    audits.append({
+                        'type': 'Setup/Payoff',
+                        'severity': 'Warning',
+                        'issue': f"Dropped Thread: '{item.title()}'",
+                        'advice': f"You introduced a {item} in Scene {scene_idx+1} but it never reappears."
+                    })
+        
+        # 2. Thematic Consistency (Keyword Drift)
+        # Check first 20% vs last 20% for major keyword overlap
+        if len(scenes) > 10:
+            start_text = " ".join([" ".join([l.get('text', '').lower() for l in s['lines']]) for s in scenes[:len(scenes)//5]])
+            end_text = " ".join([" ".join([l.get('text', '').lower() for l in s['lines']]) for s in scenes[-len(scenes)//5:]])
+            
+            # Simple word sets (ignoring common stopwords)
+            stopwords = {'the', 'and', 'was', 'were', 'that', 'with', 'from', 'this'}
+            start_words = set(w for w in start_text.split() if len(w) > 4 and w not in stopwords)
+            end_words = set(w for w in end_text.split() if len(w) > 4 and w not in stopwords)
+            
+            overlap = start_words.intersection(end_words)
+            if len(overlap) < 3:
+                audits.append({
+                    'type': 'Thematic Consistency',
+                    'severity': 'Info',
+                    'issue': "Potential Thematic Drift",
+                    'advice': "The vocabulary in your opening and closing acts is very different. Ensure your core themes (e.g. motifs) are woven throughout."
+                })
+                
+        return audits
+
+    def calculate_conflict_typology(self, scene_features, valence_trace=None):
+        """Categorizes research-grade conflict types (External, Social, Internal)."""
+        if not scene_features: return []
+        
+        typologies = []
+        for i, feat in enumerate(scene_features):
+            vis = feat.get('visual_abstraction', {})
+            dial = feat.get('dialogue_dynamics', {})
+            ling = feat.get('linguistic_load', {})
+            
+            # 1. External Conflict (Kinetic/Physical)
+            # High action lines, low complexity (directness)
+            action_score = (vis.get('action_lines', 0) / 10.0) + (vis.get('continuous_action_runs', 0) / 3.0)
+            ext_score = min(1.0, action_score * 0.7 + (1.0 - ling.get('clarity_score', 0.5)) * 0.3)
+            
+            # 2. Social Conflict (Interpersonal/Dialogue)
+            # High switches, high dialogue turns
+            social_tension = (dial.get('speaker_switches', 0) / 5.0) + (dial.get('dialogue_turns', 0) / 10.0)
+            v_val = valence_trace[i] if (valence_trace and i < len(valence_trace)) else 0.0
+            v_stress = abs(v_val) * 0.4 
+            soc_score = min(1.0, social_tension * 0.6 + v_stress)
+            
+            # 3. Internal Conflict (Psychological/Subtextual)
+            # High linguistic complexity, low explicit action, high idea density
+            int_score = min(1.0, ling.get('readability_grade', 0.0) / 15.0 * 0.5 + ling.get('idea_density', 0.5) * 0.5)
+            
+            typologies.append({
+                'scene_index': i,
+                'external': round(ext_score, 2),
+                'social': round(soc_score, 2),
+                'internal': round(int_score, 2),
+                'dominant': max([('External', ext_score), ('Social', soc_score), ('Internal', int_score)], key=lambda x: x[1])[0]
+            })
+            
+        return typologies
+
+    def track_thematic_recurrence(self, scene_features):
+        """Identifies semantic echoes and thematic mirrors using scene vocabulary clusters."""
+        if not scene_features or len(scene_features) < 2: return []
+        
+        # Use scene_vocabulary clusters if available, else extract from lines
+        scene_vocabs = []
+        for feat in scene_features:
+            vocab = feat.get('scene_vocabulary', set())
+            if not vocab:
+                # Fallback: extract keywords if vocabulary missing
+                vocab = feat.get('thematic_clusters', set())
+            scene_vocabs.append(vocab if isinstance(vocab, set) else set(vocab))
+        
+        echoes = []
+        for i in range(len(scene_vocabs)):
+            for j in range(i + 1, len(scene_vocabs)):
+                v1, v2 = scene_vocabs[i], scene_vocabs[j]
+                if not v1 or not v2: continue
+                
+                # Jaccard Similarity on vocabulary
+                intersection = v1.intersection(v2)
+                union = v1.union(v2)
+                similarity = len(intersection) / len(union) if union else 0.0
+                
+                if similarity > 0.12: # Threshold for "Thematic Echo" in research contexts
+                    echoes.append({
+                        'scenes': [i, j],
+                        'similarity': round(similarity, 3),
+                        'shared_motifs': list(intersection)[:5],
+                        'type': 'Structural Mirror' if (i < len(scene_vocabs)*0.25 and j > len(scene_vocabs)*0.75) else 'Thematic Echo'
+                    })
+                    
+        echoes.sort(key=lambda x: x['similarity'], reverse=True)
+        return echoes[:15] # Top 15 echoes for research analysis
+
+    def map_interaction_networks(self, scenes, conflict_typology):
+        """Maps inter-character tension networks and identifies conflict triangles."""
+        if not scenes or not conflict_typology: return {'network': {}, 'triangles': []}
+        
+        # 1. Aggregate tension per character pair
+        tension_map = {} # pair_tuple -> {tension_sum: float, scene_count: int}
+        
+        for i, scene in enumerate(scenes):
+            chars = sorted(list(self._extract_chars_from_scene(scene)))
+            if len(chars) < 2: continue
+            
+            # Use Social Conflict score from typology if available
+            scene_social_tension = conflict_typology[i]['social'] if i < len(conflict_typology) else 0.0
+            
+            for k in range(len(chars)):
+                for j in range(k + 1, len(chars)):
+                    pair = (chars[k], chars[j])
+                    if pair not in tension_map:
+                        tension_map[pair] = {'tension_sum': 0.0, 'scene_count': 0}
+                    tension_map[pair]['tension_sum'] += scene_social_tension
+                    tension_map[pair]['scene_count'] += 1
+                    
+        # 2. Normalize and filter
+        final_edges = []
+        node_adj = {} # adjacency list for triangle detection
+        
+        for pair, data in tension_map.items():
+            avg_tension = data['tension_sum'] / data['scene_count'] if data['scene_count'] > 0 else 0.0
+            # Normalize intensity [0-1] based on total scene count or raw sum?
+            # Research standard often uses weighted edges.
+            final_edges.append({
+                'source': pair[0],
+                'target': pair[1],
+                'weight': round(avg_tension, 3),
+                'scenes': data['scene_count']
+            })
+            
+            # Build adjacency for triangles (only high tension edges)
+            if avg_tension > 0.3:
+                if pair[0] not in node_adj: node_adj[pair[0]] = set()
+                if pair[1] not in node_adj: node_adj[pair[1]] = set()
+                node_adj[pair[0]].add(pair[1])
+                node_adj[pair[1]].add(pair[0])
+                
+        # 3. Detect Triangles
+        triangles = self._detect_conflict_triangles(node_adj)
+        
+        return {
+            'edges': final_edges,
+            'triangles': triangles
+        }
+
+    def _extract_chars_from_scene(self, scene):
+        """Helper to get unique characters from scene lines."""
+        chars = set()
+        for line in scene.get('lines', []):
+            if line.get('tag') == 'C':
+                name = line.get('text', '').split('(')[0].strip()
+                if name: chars.add(name)
+        return chars
+
+    def _detect_conflict_triangles(self, adj):
+        """Finds cycles of length 3 in the character interaction graph."""
+        triangles = []
+        nodes = sorted(list(adj.keys()))
+        for i in range(len(nodes)):
+            for j in range(i + 1, len(nodes)):
+                for k in range(j + 1, len(nodes)):
+                    n1, n2, n3 = nodes[i], nodes[j], nodes[k]
+                    if n2 in adj[n1] and n3 in adj[n2] and n1 in adj[n3]:
+                        triangles.append([n1, n2, n3])
+                        triangles.append([n1, n2, n3])
+        return triangles
+
+    def audit_timeline_continuity(self, scenes):
+        """Audits time-of-day progression for logical consistency."""
+        if not scenes: return []
+        
+        audits = []
+        consecutive_nights = 0
+        last_tod = None
+        last_loc = None
+        
+        for idx, scene in enumerate(scenes):
+            heading = scene.get('heading', '').upper()
+            
+            # Simple Time-of-Day extraction
+            tod = None
+            if " DAY" in heading: tod = "DAY"
+            elif " NIGHT" in heading: tod = "NIGHT"
+            elif " CONT" in heading: tod = "CONTINUOUS"
+            elif " LATER" in heading: tod = "LATER"
+            
+            loc = heading.split('-')[0].strip() if '-' in heading else heading
+            
+            if tod == "NIGHT":
+                consecutive_nights += 1
+            else:
+                if consecutive_nights >= 5:
+                    audits.append({
+                        'scene_index': idx,
+                        'severity': 'Warning',
+                        'issue': 'Timeline Bloat (Night)',
+                        'advice': f"You have {consecutive_nights} consecutive NIGHT scenes. Ensure this much time actually passes or consider condensing."
+                    })
+                consecutive_nights = 0
+            
+            # Instantaneous Location Jump Checking
+            if tod == "DAY" and last_tod == "DAY" and loc != last_loc and "CONTINUOUS" not in heading:
+                # E.g., EXT. HOUSE - DAY immediately followed by INT. OFFICE - DAY
+                # This is common in montages, but in a standard scene sequence, it can feel jarring
+                if idx > 0: # Check if it's not the first scene
+                    audits.append({
+                        'scene_index': idx,
+                        'severity': 'Info',
+                        'issue': 'Abrupt Time/Location Jump',
+                        'advice': f"Scene jumps abruptly from {last_loc} to {loc} on the same DAY. Consider an establishing shot or 'LATER/CONT' if it's the same sequence."
+                    })
+            
+            if tod and tod != "CONTINUOUS":
+                last_tod = tod
+            last_loc = loc
+            
+        if consecutive_nights >= 5: # check tail
+             audits.append({
+                'scene_index': len(scenes)-1,
+                'severity': 'Warning',
+                'issue': 'Timeline Bloat (Night)',
+                'advice': f"You have {consecutive_nights} consecutive NIGHT scenes. Ensure this much time actually passes."
+            })
+             
+        return audits
+
+    def audit_narrative_causality(self, encoded_scenes, scenes):
+        """Tracks causal flow: setups must lead to complications or decisions."""
+        if not encoded_scenes or not scenes: return []
+        
+        audits = []
+        purposes = [enc.get('scene_purpose', {}).get('purpose', 'Transition') for enc in encoded_scenes]
+        
+        # Look for sequences of "Establishment" without "Complication" or "Decision"
+        est_streak = 0
+        for i, p in enumerate(purposes):
+            if p == 'Establishment':
+                est_streak += 1
+            elif p in ['Complication', 'Decision', 'Confrontation', 'Revelation']:
+                if est_streak >= 3:
+                     audits.append({
+                         'scene_index': i - 1,
+                         'severity': 'Moderate',
+                         'issue': 'Causal Flatline',
+                         'advice': f"You spent {est_streak} scenes merely 'Establishing'. The plot stalled. This scene finally advances it, but consider cutting the preceding setup."
+                     })
+                est_streak = 0
+            
+            # A Revelation should usually be followed by a Decision or Complication, not just a Transition
+            if i > 0 and purposes[i-1] == 'Revelation' and p == 'Transition':
+                audits.append({
+                     'scene_index': i,
+                     'severity': 'Info',
+                     'issue': 'Muted Revelation',
+                     'advice': "The previous scene contained a Revelation, but this scene immediately transitions. Give the characters a moment to process or make a Decision."
+                 })
+                 
+        if est_streak >= 3:
+            audits.append({
+                 'scene_index': len(purposes) - 1,
+                 'severity': 'Moderate',
+                 'issue': 'Causal Flatline',
+                 'advice': f"The sequence ends with {est_streak} 'Establishing' scenes. The plot is drifting without consequence."
+             })
+             
+        return audits
+
+    def calculate_dialogue_authenticity(self, encoded_scenes):
+        """Aggregates On-The-Nose, Generic, and Shoe-Leather for dialogue quality scoring."""
+        if not encoded_scenes: return []
+        
+        scores = []
+        for i, enc in enumerate(encoded_scenes):
+            otn_dict = enc.get('on_the_nose', {})
+            otn = otn_dict.get('on_the_nose_ratio', 0.0) if isinstance(otn_dict, dict) else 0.0
+            
+            gen_dict = enc.get('generic_dialogue', {})
+            gen = gen_dict.get('generic_ratio', 0.0) if isinstance(gen_dict, dict) else 0.0
+            
+            sl_dict = enc.get('shoe_leather', {})
+            if isinstance(sl_dict, dict):
+                sl = (sl_dict.get('scene_start_filler', 0) + sl_dict.get('scene_end_filler', 0)) / 6.0
+            else:
+                sl = 0.0
+            
+            # Penalize high combination of cardinal sins
+            penalty = (otn * 0.5) + (gen * 0.3) + (sl * 0.2)
+            authenticity = max(0.0, 1.0 - penalty)
+            
+            complexity = enc.get('linguistic_load', {}).get('idea_density', 0.5)
+            
+            label = "Functional"
+            if authenticity > 0.8 and complexity > 0.6:
+                label = "Brilliant (Sorkin-esque)"
+            elif authenticity < 0.4 and complexity > 0.6:
+                label = "Wordy / Over-Written"
+            elif authenticity < 0.4 and complexity < 0.4:
+                label = "Generic / Soap-Opera"
+            elif authenticity > 0.8 and complexity < 0.4:
+                label = "Punchy / Hemingway"
+                
+            scores.append({
+                'scene_index': i,
+                'authenticity_score': round(authenticity, 2),
+                'quality_label': label,
+                'red_flags': {
+                    'on_the_nose': round(otn, 2),
+                    'generic': round(gen, 2),
+                    'shoe_leather': round(sl, 2)
+                }
+            })
+            
+        return scores
+
     def apply_writer_intent(self, input_data):
         """Writer Intent Immunity (formerly intent.run)"""
         patterns = input_data.get('patterns', [])

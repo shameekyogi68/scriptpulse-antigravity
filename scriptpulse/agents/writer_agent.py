@@ -285,27 +285,42 @@ class WriterAgent:
             if "Cut" in item or "Shorten" in item: 
                 score += 2
                 impact_label = "Medium"
-            if "fatigue" in item.lower(): 
+
+            # v2.0 Fix: Robustly extract text from both string and dict suggestions
+            if isinstance(item, dict):
+                suggestion_text = item.get('strategy', item.get('diagnosis', 'Unknown Suggestion'))
+                # Also check tactics
+                tactics = item.get('tactics', [])
+                if tactics: suggestion_text += f": {', '.join(tactics)}"
+            else:
+                suggestion_text = str(item)
+
+            clean_action = suggestion_text.split(":")[0] if ":" in suggestion_text else suggestion_text
+            item_str = suggestion_text.lower()
+
+            if "fatigue" in item_str: 
                 score += 3
                 impact_label = "High" 
-            if "confusion" in item.lower(): 
+            if "confusion" in item_str: 
                 score += 3
                 impact_label = "High"
-            
-            # Formulate Actionable Advice
-            clean_action = item.split(":")[0] if ":" in item else item
-
-            # Root-Cause Contextualization
+            # Root-Cause Contextualization (Use clean_action which is now guaranteed to be a string)
             match = re.search(r'Scene (\d+)', clean_action)
             if match:
-                scene_idx = int(match.group(1))
-                if "Increase stakes" in clean_action:
-                    prior_stakes = [s.get('stakes', 0) for s in trace if s['scene_index'] < scene_idx and s['scene_index'] >= max(1, scene_idx - 10)]
-                    if prior_stakes and max(prior_stakes) < 0.5:
-                        clean_action += " (Root Cause: Stakes were never properly established in preceding scenes)"
-                
-                if "Cut" in clean_action or "Shorten" in clean_action:
-                    clean_action += " OR insert a quiet recovery beat in the preceding scene"
+                scene_idx_str = match.group(1)
+                try:
+                    scene_idx = int(scene_idx_str)
+                except ValueError:
+                    scene_idx = -1
+                    
+                if scene_idx >= 0:
+                    if "Increase stakes" in clean_action:
+                        prior_stakes = [s.get('stakes', 0) for s in trace if s['scene_index'] < scene_idx and s['scene_index'] >= max(1, scene_idx - 10)]
+                        if prior_stakes and max(prior_stakes) < 0.5:
+                            clean_action += " (Root Cause: Stakes were never properly established in preceding scenes)"
+                    
+                    if "Cut" in clean_action or "Shorten" in clean_action:
+                        clean_action += " OR insert a quiet recovery beat in the preceding scene"
             
             prioritized.append({'action': clean_action, 'leverage': impact_label, 'score': score})
             

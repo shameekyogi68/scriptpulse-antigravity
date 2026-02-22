@@ -40,7 +40,7 @@ _RESOURCE_LIMITS = {
 
 
 
-def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama', audience_profile='general', high_res_mode=False, pre_parsed_lines=None, character_context=None, experimental_mode=False, moonshot_mode=False, cpu_safe_mode=False, valence_stride=1, stanislavski_min_words=10, embeddings_batch_size=32, shadow_mode=False, ablation_config=None):
+def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama', audience_profile='general', high_res_mode=False, pre_parsed_lines=None, character_context=None, experimental_mode=False, moonshot_mode=False, cpu_safe_mode=False, valence_stride=1, stanislavski_min_words=10, embeddings_batch_size=32, shadow_mode=False, ablation_config=None, story_framework='3_act'):
     """
     Orchestrate the ScriptPulse Analysis Pipeline.
     """
@@ -444,10 +444,61 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
         
     # Interpretation: Structure Mapping (Acts & Beats)
     try:
-        structure_map = interpretation_agent.map_to_structure(temporal_output)
+        structure_map = interpretation_agent.map_to_custom_framework(temporal_output, framework_type=story_framework)
     except Exception as _e:
         print(f"[Warning] Structure Mapping failed: {_e}")
         structure_map = {'acts': [], 'beats': []}
+
+    # Interpretation: Narrative Intelligence (v2.0 Stage 3)
+    try:
+        narrative_intelligence = interpretation_agent.audit_narrative_intelligence(segmented, temporal_output)
+    except Exception as _e:
+        print(f"[Warning] NarrativeIntelligence failed: {_e}")
+        narrative_intelligence = []
+
+    # Interpretation: Stage 4 Deep-Dive (Conflict Typology & Thematic Echoes)
+    try:
+        conflict_typology = interpretation_agent.calculate_conflict_typology(encoded, valence_scores)
+        thematic_echoes = interpretation_agent.track_thematic_recurrence(encoded)
+    except Exception as _e:
+        print(f"[Warning] Stage 4 Deep-Dive failed: {_e}")
+        conflict_typology = []
+        thematic_echoes = []
+
+    # Interpretation: Stage 5 Networks (Interaction Triangles)
+    try:
+        interaction_networks = interpretation_agent.map_interaction_networks(segmented, conflict_typology)
+    except Exception as _e:
+        print(f"[Warning] Stage 5 Networks failed: {_e}")
+        interaction_networks = {'edges': [], 'triangles': []}
+
+    # Interpretation: Stage 6 Narrative Logic (Continuity & Authenticity)
+    try:
+        timeline_audit = interpretation_agent.audit_timeline_continuity(segmented)
+        causality_audit = interpretation_agent.audit_narrative_causality(encoded, segmented)
+        dialogue_audit = interpretation_agent.calculate_dialogue_authenticity(encoded)
+        narrative_logic = {
+            'timeline': timeline_audit,
+            'causality': causality_audit,
+            'dialogue': dialogue_audit
+        }
+    except Exception as _e:
+        print(f"[Warning] Stage 6 Narrative Logic failed: {_e}")
+        narrative_logic = {'timeline': [], 'causality': [], 'dialogue': []}
+
+    # Interpretation: Archetype Mapping
+    try:
+        archetypes = interpretation_agent.map_archetypes(voice_map or {})
+    except Exception as _e:
+        print(f"[Warning] Archetype Mapping failed: {_e}")
+        archetypes = {}
+        
+    # Interpretation: Subtext Audit
+    try:
+        subtext_audit = interpretation_agent.audit_subtext(encoded, voice_map or {})
+    except Exception as _e:
+        print(f"[Warning] Subtext Audit failed: {_e}")
+        subtext_audit = []
     
     # Meta & Output Construction
     try:
@@ -486,6 +537,14 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
     final_output['moonshot_resonance'] = moonshot_data
     final_output['semantic_beats'] = semantic_beats
     final_output['structure_map'] = structure_map
+    final_output['archetypes'] = archetypes
+    final_output['subtext_audit'] = subtext_audit
+    final_output['narrative_intelligence'] = narrative_intelligence
+    final_output['conflict_typology'] = conflict_typology
+    final_output['thematic_echoes'] = thematic_echoes
+    final_output['interaction_networks'] = interaction_networks
+    final_output['narrative_logic_audit'] = narrative_logic
+    final_output['segmented'] = segmented
     
     try:
         runtime_info = runtime.estimate_runtime(segmented)

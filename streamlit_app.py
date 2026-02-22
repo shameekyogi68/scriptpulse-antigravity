@@ -512,11 +512,19 @@ if ui_mode == "Lab Mode (Research)":
         st.caption("🧠 **Minimal Capacity**: Needs strict continuity.")
 
     st.markdown("---")
+    selected_framework = st.selectbox(
+        "Story Framework",
+        ["3_act", "heros_journey", "eight_sequences"],
+        format_func=lambda x: x.replace('_', ' ').title(),
+        help="Select the structural overlay for the Pulse chart."
+    )
+    
     use_high_res = st.checkbox("High-Resolution Mode (Micro-Beats)", help="Slice scenes into beats for HD analysis (Slower).")
 else:
     # Writer Mode Defaults
     selected_lens = "viewer"
     selected_profile = "General"
+    selected_framework = "3_act"
     use_high_res = False
 
 writer_intent = []
@@ -553,7 +561,7 @@ if script_input:
 
 # Caching Wrapper (Defined at top level within step context)
 @st.cache_data(show_spinner="Running Analysis...")
-def cached_analysis(text, intent, lens, genre, profile, high_res, shadow=False, high_acc=False, ablation_config=None):
+def cached_analysis(text, intent, lens, genre, profile, high_res, shadow=False, high_acc=False, ablation_config=None, story_framework='3_act'):
     # Override safe mode if session requests it
     force_safe = st.session_state.get('safe_mode_active', False)
     
@@ -583,7 +591,8 @@ def cached_analysis(text, intent, lens, genre, profile, high_res, shadow=False, 
         shadow_mode=shadow,
         valence_stride=use_stride,
         stanislavski_min_words=use_min_words,
-        ablation_config=ablation_config
+        ablation_config=ablation_config,
+        story_framework=story_framework
     )
 
 analyze_clicked = st.button("Analyze Rhythm", type="primary")
@@ -606,9 +615,10 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
                     selected_genre,
                     selected_profile,
                     use_high_res,
-                    shadow_mode,
-                    high_accuracy_mode,
-                    ablation_config
+                    shadow=shadow_mode,
+                    high_acc=high_accuracy_mode,
+                    ablation_config=ablation_config,
+                    story_framework=selected_framework
                 )
             st.session_state['last_report'] = report
          except Exception as e:
@@ -804,31 +814,67 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
                     st.text(f"{d.title()}")
                     st.progress(pct)
             
+        # Stage 4: Thematic Echoes
+        thematic_echoes = report.get('thematic_echoes', [])
+        if thematic_echoes:
+            st.markdown("---")
+            st.subheader("🔁 Thematic Echoes")
+            st.caption("Scenes that share significant semantic motifs (research-grade mirrors).")
+            for echo in thematic_echoes[:5]:
+                scenes = echo['scenes']
+                motifs = ", ".join([m.title() for m in echo['shared_motifs']])
+                st.markdown(f"🔗 **Scene {scenes[0]+1} ↔ {scenes[1]+1}**")
+                st.markdown(f"   *Motifs: {motifs}* (Sim: {echo['similarity']})")
+            
     # Prepare Data
     moonshot_data = report.get('moonshot_analysis', []) if report else []
 
     # 4. SUBTEXT (was Moonshot)
 
     with tab_subtext:
-        if moonshot_data:
+        if moonshot_data or report.get('subtext_audit'):
             st.info("🧠 **AI Subtext Reader**")
-            st.caption("The AI 'reads' the subtext (Safety, Trust, Agency).")
+            st.caption("The AI detects if characters are speaking too literally or hiding their true intent.")
             
-            # Prepare Dataframes
-            ms_records = []
-            for scene in moonshot_data:
-                state = scene['stanislavski_state']['internal_state']
-                ms_records.append({
-                    'Scene': scene['scene_index'],
-                    'Safety': state.get('safety', 0),
-                    'Trust': state.get('trust', 0),
-                    'Agency': state.get('agency', 0)
-                })
+            # Display Subtext Audit Warnings
+            subtext_audit = report.get('subtext_audit', [])
+            if subtext_audit:
+                for audit in subtext_audit:
+                    st.warning(f"**Scene {audit['scene_index']+1} Audit**: {audit['issue']} ({audit['severity']})\n\n{audit['advice']}")
             
-            df_ms = pd.DataFrame(ms_records).set_index('Scene')
-            
-            st.subheader("Emotional Arc")
-            st.line_chart(df_ms[['Safety', 'Trust', 'Agency']], color=["#00CC66", "#FFA500", "#FF4B4B"])
+            if moonshot_data:
+                # Prepare Dataframes
+                ms_records = []
+                for scene in moonshot_data:
+                    state = scene['stanislavski_state']['internal_state']
+                    ms_records.append({
+                        'Scene': scene['scene_index'],
+                        'Safety': state.get('safety', 0),
+                        'Trust': state.get('trust', 0),
+                        'Agency': state.get('agency', 0)
+                    })
+                
+                df_ms = pd.DataFrame(ms_records).set_index('Scene')
+                
+                st.subheader("Emotional Arc")
+                st.line_chart(df_ms[['Safety', 'Trust', 'Agency']], color=["#00CC66", "#FFA500", "#FF4B4B"])
+
+            # Stage 4: Conflict Typology
+            conflict_typology = report.get('conflict_typology', [])
+            if conflict_typology:
+                st.markdown("---")
+                st.subheader("⚔️ Conflict Profile")
+                st.caption("Research-grade classification of narrative tension types.")
+                
+                # Convert to DF for plotting
+                conf_df = pd.DataFrame(conflict_typology).set_index('scene_index')
+                st.area_chart(conf_df[['external', 'social', 'internal']], color=["#FF4B4B", "#1f77b4", "#FFA500"])
+                
+                # Dominant breakdown
+                from collections import Counter
+                doms = [c['dominant'] for c in conflict_typology]
+                counts = Counter(doms)
+                st.markdown(f"**Dominant Conflict Mode**: {counts.most_common(1)[0][0]}")
         else:
             st.caption("No subtext data available.")
             
@@ -841,9 +887,12 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
             # A. Voice Map
             st.subheader("🗣️ Voice Distinctiveness")
             v_data = []
+            archetypes = report.get('archetypes', {})
+            
             for char, metrics in voice_data.items():
                 v_data.append({
                     'Character': char,
+                    'Archetype': archetypes.get(char, {}).get('archetype', 'Everyman'),
                     'Complexity': metrics['complexity'],
                     'Positivity': metrics['positivity'],
                     'Agency': metrics['agency'] * 100, 
@@ -851,7 +900,9 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
                 })
             
             if v_data:
-                st.scatter_chart(pd.DataFrame(v_data), x='Complexity', y='Positivity', size='Agency', color='Character')
+                df_v = pd.DataFrame(v_data)
+                st.scatter_chart(df_v, x='Complexity', y='Positivity', size='Agency', color='Character')
+                st.dataframe(df_v[['Character', 'Archetype', 'Complexity', 'Lines']].set_index('Character'))
             
             st.markdown("---")
             
@@ -883,25 +934,34 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
                         icon = "↗️" if trend > 0.1 else "↘️" if trend < -0.1 else "➡️"
                         st.metric(f"{char}", f"{icon} {trend:.2f} Growth")
             
-            # C. Chemistry
-            interaction_map = report.get('interaction_map', {})
-            if interaction_map:
+            # C. Inter-Character Tension Network (Stage 5)
+            interaction_networks = report.get('interaction_networks', {})
+            edges = interaction_networks.get('edges', [])
+            triangles = interaction_networks.get('triangles', [])
+            
+            if edges:
                 st.markdown("---")
-                st.subheader("💞 Interaction Chemistry")
-                chem_data = []
-                val_scores = report.get('valence_scores', [])
+                st.subheader("🕸️ Inter-Character Tension Network")
+                st.caption("Research-grade social tension matrix.")
                 
-                for pair, indices in interaction_map.items():
-                    if len(indices) < 2: continue
-                    p_vals = [val_scores[i] for i in indices if i < len(val_scores)]
-                    if not p_vals: continue
-                    avg = sum(p_vals)/len(p_vals)
-                    c1, c2 = pair.split('|')
-
-                    chem_data.append({'Char A': c1, 'Char B': c2, 'Chemistry': avg})
+                # Matrix Heatmap preparation
+                nodes = sorted(list(set([e['source'] for e in edges] + [e['target'] for e in edges])))
+                matrix = pd.DataFrame(0.0, index=nodes, columns=nodes)
                 
-                if chem_data:
-                     st.dataframe(pd.DataFrame(chem_data).style.background_gradient(cmap='coolwarm', vmin=-0.5, vmax=0.5))
+                for edge in edges:
+                    s, t, w = edge['source'], edge['target'], edge['weight']
+                    matrix.at[s, t] = w
+                    matrix.at[t, s] = w # symmetric
+                    
+                st.dataframe(matrix.style.background_gradient(cmap='Reds', vmin=0, vmax=1.0))
+                
+                if triangles:
+                    st.warning(f"**⚠️ Complex Subplots Detected!** Found {len(triangles)} conflict triangles.")
+                    for t in triangles:
+                        st.markdown(f"🔺 **Triangle Cycle**: {t[0]} ↔ {t[1]} ↔ {t[2]}")
+                    st.caption("A conflict triangle indicates a highly volatile, codependent dynamic that dominates cognitive load.")
+                else:
+                    st.success("No complex conflict triangles detected. Interpersonal tension is linear/direct.")
 
     # 3. STRUCTURE (was Act Fidelity)
     with tab_struct:
@@ -927,6 +987,56 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
                     avg_t = sum(s.get('attentional_signal', 0) for s in scenes) / len(scenes)
                     act_rows.append({'Act': name, 'Avg Tension': f"{avg_t:.2f}"})
             st.table(pd.DataFrame(act_rows).set_index("Act"))
+
+        # Stage 6: Narrative Logic Audit
+        logic_audit = report.get('narrative_logic_audit', {})
+        if logic_audit:
+            st.markdown("---")
+            with st.expander("🔍 Narrative Logic Blindspots (Stage 6)", expanded=True):
+                st.caption("Advanced checks for continuity, causal flow, and dialogue authenticity.")
+                
+                # A. Timeline
+                timeline_issues = logic_audit.get('timeline', [])
+                if timeline_issues:
+                    st.subheader("🗓️ Timeline Continuity")
+                    for issue in timeline_issues:
+                        icon = "⚠️" if issue['severity'] == "Warning" else "ℹ️"
+                        st.markdown(f"**{icon} Scene {issue['scene_index']} - {issue['issue']}**")
+                        st.caption(f"↳ {issue['advice']}")
+                
+                # B. Causality
+                causality_issues = logic_audit.get('causality', [])
+                if causality_issues:
+                    st.subheader("🔗 Causal Progression")
+                    for issue in causality_issues:
+                        icon = "⚠️" if issue['severity'] == "Warning" else "🟡"
+                        st.markdown(f"**{icon} Scene {issue['scene_index']} - {issue['issue']}**")
+                        st.caption(f"↳ {issue['advice']}")
+                
+                # C. Dialogue Authenticity
+                dialogue_scores = logic_audit.get('dialogue', [])
+                if dialogue_scores:
+                    st.subheader("💬 Dialogue Authenticity")
+                    # Show the most prominent dialogue classifications
+                    from collections import Counter
+                    d_labels = [d['quality_label'] for d in dialogue_scores if d]
+                    counts = Counter(d_labels)
+                    
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.metric("Top Dialogue Style", counts.most_common(1)[0][0] if counts else "Unknown")
+                    with col2:
+                        avg_auth = sum([d['authenticity_score'] for d in dialogue_scores]) / len(dialogue_scores) if dialogue_scores else 0
+                        st.metric("Overall Authenticity", f"{avg_auth:.2f}/1.00")
+                        
+                    # Find worst scene
+                    if len(dialogue_scores) > 0:
+                        worst = min(dialogue_scores, key=lambda x: x['authenticity_score'])
+                        if worst['authenticity_score'] < 0.5:
+                            st.warning(f"**Scene {worst['scene_index']}** flagged as `{worst['quality_label']}` (High 'On-The-Nose' / 'Shoe-Leather'). Consider a rewrite.")
+                            
+                if not timeline_issues and not causality_issues:
+                    st.success("✅ **Narrative Logic is Sound.** No major timeline or causal dead-ends detected.")
 
     # Cleanup Sidebar Message
     # (Removed longitudinal info for simplicity)
@@ -1319,6 +1429,15 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
                         if notes:
                             st.warning(f"**Scene {sc_idx+1}:** {notes[0]['suggestion']}")
                             count += 1
+                
+        # --- NARRATIVE INTELLIGENCE (STAGE 3) ---
+        intelligence = report.get('narrative_intelligence', [])
+        if intelligence:
+            st.markdown("---")
+            st.subheader("🕵️ Plot Intelligence (Beta)")
+            for item in intelligence:
+                with st.expander(f"{item['type']}: {item['issue']}", expanded=True):
+                    st.write(item['advice'])
                 
         if time.time() - render_start > HARD_RENDER_LIMIT:
              st.warning("⚠️ Report Truncated: Render timeout exceeded.")
