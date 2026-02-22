@@ -483,7 +483,13 @@ class InterpretationAgent:
         for idx, scene in enumerate(scenes):
             heading = scene.get('heading', '').upper()
             
-            # Simple Time-of-Day extraction
+            # Look for actual sluglines (INT/EXT) in the first 3 lines if heading is just "SCENE X"
+            if "INT." not in heading and "EXT." not in heading:
+                for line in scene.get('lines', [])[:3]:
+                    text = line.get('text', '').upper()
+                    if "INT." in text or "EXT." in text:
+                        heading = text
+                        break
             tod = None
             if " DAY" in heading: tod = "DAY"
             elif " NIGHT" in heading: tod = "NIGHT"
