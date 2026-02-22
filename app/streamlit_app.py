@@ -106,7 +106,7 @@ preload_models(cloud_mode=IS_CLOUD)
 
 # v13.0: Simple, friendly UI for non-technical writers
 st.set_page_config(
-    page_title="ScriptPulse - Easy Script Analyzer",
+    page_title="ScriptPulse — Screenplay Rhythm Analyser",
     page_icon="🎬",
     layout="wide"
 )
@@ -222,7 +222,7 @@ st.markdown("""
     .block-container {
         padding-top: 2rem;
         padding-bottom: 5rem;
-        max_width: 900px;
+        max-width: 960px;  /* Fixed: was max_width (invalid) */
     }
     
     /* Signal Boxes - Writer Native Colors */
@@ -259,16 +259,16 @@ with st.sidebar:
     
     with st.expander("⚡ Engine Context (RAM Usage)", expanded=ui_mode == "Lab Mode (Research)"):
         engine_mode = st.radio(
-            "Hardware Constraints", 
-            ["Cloud / Fast (Heuristic Fallback)", "Local (Full AI Engine - Requires 8GB RAM)"],
+            "Processing Mode",
+            ["Fast Mode (Heuristic Engine – recommended)", "Full AI Mode (Loads SBERT + GPT-2, needs 8 GB RAM)"],
             index=0 if IS_CLOUD else 1,
-            help="Full AI loads GPT-2 and SBERT. Cloud forces mathematical heuristics."
+            help="Fast Mode uses mathematical heuristics — same output structure, no ML model loading. Full AI adds embedding-based analysis."
         )
-        force_cloud = "Cloud" in engine_mode
+        force_cloud = "Fast" in engine_mode
         if force_cloud:
-            st.caption("🟢 Running in Low-RAM Mode (< 1GB)")
+            st.caption("🟢 Fast Mode active — low memory footprint (<1 GB)")
         else:
-            st.caption("🔴 Running in High-RAM Mode (5GB+)")
+            st.caption("🟡 Full AI Mode — allocates up to 5 GB RAM. Close other apps if running locally.")
             
     st.markdown("---")
     
@@ -386,9 +386,9 @@ with st.sidebar:
     # --- INFO ---
     st.info(
         "**Reading the Pulse**\n\n"
-        "🔴 **High Tension**: Demanding, intense.\n"
-        "🟢 **Flow**: Balanced, engaging.\n"
-        "🟠 **Risk**: Low energy, potential drift."
+        "📈 **High Tension (7–10)**: Intense, high cognitive load.\n"
+        "📊 **Balanced (4–6)**: Engaging flow, sustainable pacing.\n"
+        "📉 **Low Energy (0–3)**: Risk of audience drift — consider adding pressure."
     )
 
     
@@ -581,16 +581,16 @@ if ui_mode == "Lab Mode (Research)":
     st.markdown("---")
     selected_profile = st.selectbox(
         "Target Audience (Cognitive Profile)",
-        ["General", "Cinephile", "Distracted", "Child"],
-        help="Simulates the brain capacity of different viewers."
+        ["General", "Cinephile", "Casual Viewer", "Young Audience"],
+        help="Adjusts fatigue and recovery thresholds to simulate how different viewers process the script."
     )
 
     if selected_profile == "Cinephile":
-        st.caption("🧠 **High Capacity**: Tolerates complexity, remembers context longer.")
-    elif selected_profile == "Distracted":
-        st.caption("🧠 **Low Capacity**: Needs frequent refresh, hates confusion.")
-    elif selected_profile == "Child":
-        st.caption("🧠 **Minimal Capacity**: Needs strict continuity.")
+        st.caption("🧠 **Engaged viewer**: Higher tolerance for complexity; retains context across longer scenes.")
+    elif selected_profile == "Casual Viewer":
+        st.caption("🧠 **Relaxed viewer**: Benefits from regular pacing relief and clear scene transitions.")
+    elif selected_profile == "Young Audience":
+        st.caption("🧠 **Young viewer**: Needs consistent continuity and shorter high-intensity spans.")
 
     st.markdown("---")
     selected_framework = st.selectbox(
@@ -765,13 +765,17 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
     c1, c2, c3, c4 = st.columns(4)
     
     with c1:
-        st.metric("Tension", f"{intensity_score}/10")
+        st.metric(
+            "Tension", f"{intensity_score}/10",
+            help="Average attentional load across all scenes (0 = minimal, 10 = peak intensity)."
+        )
     with c2:
-        st.metric("Mood", tone_label)
+        st.metric("Mood", tone_label, help="Dominant emotional tone derived from valence and Stanislavski state analysis.")
     with c3:
-        st.metric("Pacing", "Fast" if intensity_score > 6 else "Slow")
+        _pacing_label = "Fast" if intensity_score > 6 else ("Measured" if intensity_score < 4 else "Balanced")
+        st.metric("Pacing", _pacing_label, help="Derived from average tension score. Fast = high load, Balanced = sustainable, Measured = low pressure.")
     with c4:
-        st.metric("Runtime", f"{runtime_min} mins")
+        st.metric("Est. Runtime", f"{runtime_min} min", help="Estimated screen time based on scene count and dialogue density.")
     
     # === COLLAPSIBLE SECTIONS (v21.0) ===
     
