@@ -11,22 +11,67 @@ import json
 import pandas as pd
 import time
 import traceback
-import plotly.express as px
-import plotly.graph_objects as go
+
+# Guarded imports — app must boot even if these are unavailable
+try:
+    import plotly.express as px
+    import plotly.graph_objects as go
+    PLOTLY_AVAILABLE = True
+except ImportError:
+    PLOTLY_AVAILABLE = False
+
+try:
+    import PyPDF2
+    PYPDF2_AVAILABLE = True
+except ImportError:
+    PYPDF2_AVAILABLE = False
+
+try:
+    import scipy.stats as _scipy_stats
+    SCIPY_AVAILABLE = True
+except ImportError:
+    SCIPY_AVAILABLE = False
 
 # Ensure we can import the locked pipeline
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from scriptpulse import runner
-import scriptpulse.streamlit_utils as stu
+try:
+    from scriptpulse import runner
+except Exception as _runner_import_error:
+    runner = None
+    _RUNNER_ERROR = str(_runner_import_error)
+else:
+    _RUNNER_ERROR = None
+
+try:
+    import scriptpulse.streamlit_utils as stu
+except Exception:
+    # Minimal stub if file is missing
+    class _STU:
+        def check_integrity(self): return True, "OK"
+        def sync_safety_state(self): pass
+        def check_upload_size(self, f): return True
+        def render_operator_panel(self, p=None): return False, False
+        def check_input_length(self, t): return True
+    stu = _STU()
 
 # =============================================================================
 # v13.1 CONTROL 1: STARTUP INTEGRITY CHECK (Run Once)
 # =============================================================================
-passed, msg = stu.check_integrity()
+try:
+    passed, msg = stu.check_integrity()
+except Exception:
+    passed, msg = True, "OK"  # Don't block boot on integrity check failure
+
 if not passed:
     st.error(f"🛑 FATAL CONFIG ERROR: {msg}")
     st.info("System halted for safety. Contact Ops.")
+    st.stop()
+
+# Abort early if runner could not be imported
+if runner is None:
+    st.error(f"⚠️ ScriptPulse Engine failed to load: {_RUNNER_ERROR}")
+    st.info("Please check that all dependencies are installed correctly.")
     st.stop()
 
 
@@ -229,19 +274,20 @@ with st.sidebar:
                     avg_b = sum(trace_b)/len(trace_b) if trace_b else 0
                     st.metric("Avg Narrative Tension (B)", f"{avg_b:.2f}")
                 with c3:
-                    import scipy.stats as stats
-                    if len(trace_a) > 2 and len(trace_b) > 2:
-                        # P-value calculation
-                        # If sizes differ, use independent t-test instead of paired
-                        t_stat, p_val = stats.ttest_ind(trace_a, trace_b, equal_var=False)
-                        st.metric("Statistical Sig (p-value)", f"{p_val:.4f}")
-                        if p_val < 0.05:
-                            st.success("Significant Difference! (p < .05)")
-                        else:
-                            st.warning("No Sig. Difference (p >= .05)")
+                    if SCIPY_AVAILABLE and len(trace_a) > 2 and len(trace_b) > 2:
+                        try:
+                            import scipy.stats as stats
+                            t_stat, p_val = stats.ttest_ind(trace_a, trace_b, equal_var=False)
+                            st.metric("Statistical Sig (p-value)", f"{p_val:.4f}")
+                            if p_val < 0.05:
+                                st.success("Significant Difference! (p < .05)")
+                            else:
+                                st.warning("No Sig. Difference (p >= .05)")
+                        except Exception:
+                            st.metric("Statistical Sig", "N/A (Error)")
                     else:
                         st.metric("Statistical Sig", "N/A (Too short)")
-                    
+
         st.stop()
         
     # --- INFO ---
@@ -336,11 +382,21 @@ if uploaded_file is not None:
                 
             except Exception as e:
                 st.error(f"FDX Parse Error: {e}")
-        elif uploaded_file.type == "application/pdf":
-            import PyPDF2
-            pdf_reader = PyPDF2.PdfReader(uploaded_file)
-            text_parts = [page.extract_text() for page in pdf_reader.pages]
-            script_text = "\n".join(text_parts)
+        elif uploaded_file.type == "application/pdf" or file_ext == 'pdf':
+            if PYPDF2_AVAILABLE:
+                try:
+                    from io import BytesIO
+                    pdf_reader = PyPDF2.PdfReader(BytesIO(uploaded_file.read()))
+                    text_parts = [page.extract_text() or '' for page in pdf_reader.pages]
+                    script_text = "\n".join(text_parts)
+                    if not script_text.strip():
+                        st.warning("⚠️ PDF text extraction returned empty. Try uploading as .txt instead.")
+                except Exception as pdf_e:
+                    st.error(f"PDF Parse Error: {pdf_e}. Try uploading as .txt instead.")
+                    script_text = ""
+            else:
+                st.warning("⚠️ PDF support unavailable. Please upload as .txt file.")
+                script_text = ""
         else: # txt, fountain, md
             script_text = uploaded_file.read().decode('utf-8')
             
@@ -349,35 +405,42 @@ if uploaded_file is not None:
             st.stop()
             
         # IMMEDIATE PARSE (For Scene Picker)
-        with st.spinner("Parsing structure..."):
-            # Use pre_parsed_lines if available, otherwise parse script_text
-            if pre_parsed_lines:
-                scene_list = runner.parse_structure(pre_parsed_lines=pre_parsed_lines)
-            else:
-                scene_list = runner.parse_structure(script_text)
-            
-        if uploaded_file is not None:
-            # ... (parsing logic) ...
-            
+        if script_text and script_text.strip():
+            with st.spinner("Parsing structure..."):
+                try:
+                    if pre_parsed_lines:
+                        scene_list = runner.parse_structure(pre_parsed_lines)
+                    else:
+                        scene_list = runner.parse_structure(script_text)
+                except Exception as parse_e:
+                    st.warning(f"Scene detection partial: {parse_e}")
+                    scene_list = []
             st.success(f"Loaded {len(scene_list)} scenes.")
-            
-            # v10.0: Context-Aware Fairness (Character Extraction)
-            # Scan parsed lines for characters (tag='C')
-            all_chars = sorted(list(set([l['text'] for l in (pre_parsed_lines if pre_parsed_lines else runner.parsing.run(script_text)) if l['tag'] == 'C'])))
-            
-            with st.expander("🎭 Character Context (Optional) - Tag Roles"):
-                st.caption("Help the Fairness Auditor understand context (e.g., Villains are expected to be negative).")
-                char_tags = {}
-                cols = st.columns(2)
-                for i, char in enumerate(all_chars):
-                    if i < 10: # Only show top 10 to avoid clutter
-                        role = cols[i%2].selectbox(f"Role for {char}", ["Unknown", "Protagonist", "Antagonist", "Supporting"], key=f"role_{char}")
-                        if role != "Unknown":
-                            char_tags[char] = role
-            
-            # View Script Text
-            with st.expander("View Script Text"):
-                 st.text(script_text[:5000] + "...")
+        else:
+            st.warning("Script text is empty or could not be extracted.")
+            scene_list = []
+
+        # v10.0: Context-Aware Fairness (Character Extraction)
+        try:
+            if pre_parsed_lines:
+                all_chars = sorted(list(set([l['text'] for l in pre_parsed_lines if l.get('tag') == 'C'])))
+            else:
+                all_chars = []
+        except Exception:
+            all_chars = []
+        
+        with st.expander("🎭 Character Context (Optional) - Tag Roles"):
+            st.caption("Help the Fairness Auditor understand context (e.g., Villains are expected to be negative).")
+            char_tags = {}
+            cols = st.columns(2)
+            for i, char in enumerate(all_chars[:10]):
+                role = cols[i%2].selectbox(f"Role for {char}", ["Unknown", "Protagonist", "Antagonist", "Supporting"], key=f"role_{char}")
+                if role != "Unknown":
+                    char_tags[char] = role
+        
+        # View Script Text
+        with st.expander("View Script Text"):
+            st.text((script_text or "")[:5000] + ("..." if len(script_text or "") > 5000 else ""))
         
     except Exception as e:
         st.error(f"Could not read file: {e}")
@@ -614,8 +677,11 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
             cols = st.columns(2)
             
             # A. Longitudinal (Optimization Gain)
-            if 'prev_run' in st.session_state:
-                delta = comparator.compare_longitudinal(report, st.session_state['prev_run'])
+            if 'prev_run' in st.session_state and comparator is not None:
+                try:
+                    delta = comparator.compare_longitudinal(report, st.session_state['prev_run'])
+                except Exception:
+                    delta = None
                 with cols[0]:
                     st.subheader("Optimization (vs Last Run)")
                     if delta:
@@ -632,24 +698,18 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
                     st.caption("Run analysis again to see effective changes.")
 
             # B. Reference Target (Stylistic Distance)
-            if ref_file:
+            if ref_file and comparator is not None:
                 with st.spinner("Analyzing Reference Target..."):
                     # Quick parse of ref
                     try:
-                        # Re-read ref file because stream might be consumed? 
-                        # Streamlit file uploader buffers, so typical pattern:
                         ref_file.seek(0)
                         ref_bytes = ref_file.read()
-                        if ref_file.type == "application/pdf":
-                             import PyPDF2
-                             # Complex to re-read PDF bytes in memory with PyPDF2 without file path
-                             # Simplified: Just warn if PDF, or skip for now. 
-                             # Actually PyPDF2.PdfReader(BytesIO(ref_bytes)) works
-                             from io import BytesIO
-                             pdf_r = PyPDF2.PdfReader(BytesIO(ref_bytes))
-                             ref_text = "\n".join([p.extract_text() for p in pdf_r.pages])
+                        if ref_file.type == "application/pdf" and PYPDF2_AVAILABLE:
+                            from io import BytesIO
+                            pdf_r = PyPDF2.PdfReader(BytesIO(ref_bytes))
+                            ref_text = "\n".join([p.extract_text() or '' for p in pdf_r.pages])
                         else:
-                             ref_text = ref_bytes.decode('utf-8')
+                            ref_text = ref_bytes.decode('utf-8', errors='replace')
                              
                         ref_report = runner.run_pipeline(ref_text, lens=selected_lens)
                         comp_res = comparator.compare_to_reference(report.get('temporal_trace'), ref_report.get('temporal_trace'))

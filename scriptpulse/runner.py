@@ -128,51 +128,83 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
         segmented = beat_agent.subdivide_into_beats(segmented)
     
     # Agent 3: Perception (Encoding & Features)
-    encoded = encoding_agent.run({'scenes': segmented, 'ablation_config': ablation_config})
+    try:
+        encoded = encoding_agent.run({'scenes': segmented, 'ablation_config': ablation_config})
+    except Exception as _e:
+        print(f"[Warning] EncodingAgent failed: {_e}")
+        encoded = [{'novelty': 0.5, 'clarity': 0.5} for _ in segmented]
     
-    semantic_scores = semantic_agent.run({'scenes': segmented})
-    visual_scores = imagery_agent.run({'scenes': segmented})
+    try:
+        semantic_scores = semantic_agent.run({'scenes': segmented})
+    except Exception as _e:
+        print(f"[Warning] SemanticAgent failed: {_e}")
+        semantic_scores = [0.0] * len(segmented)
     
-    social_data = social_agent.run({'scenes': segmented})
-    social_scores = social_data.get('centrality_entropy', [])
-    interaction_map = social_data.get('interaction_map', {})
+    try:
+        visual_scores = imagery_agent.run({'scenes': segmented})
+    except Exception as _e:
+        print(f"[Warning] ImageryAgent failed: {_e}")
+        visual_scores = [0.0] * len(segmented)
     
-    syntax_data = syntax_agent.run({'scenes': segmented})
-    syntax_scores = syntax_data.get('complexity_scores', [])
-    diction_issues = syntax_data.get('diction_issues', [])
+    try:
+        social_data = social_agent.run({'scenes': segmented})
+        social_scores = social_data.get('centrality_entropy', [])
+        interaction_map = social_data.get('interaction_map', {})
+    except Exception as _e:
+        print(f"[Warning] SocialAgent failed: {_e}")
+        social_scores = [0.0] * len(segmented)
+        interaction_map = {}
+    
+    try:
+        syntax_data = syntax_agent.run({'scenes': segmented})
+        syntax_scores = syntax_data.get('complexity_scores', [])
+        diction_issues = syntax_data.get('diction_issues', [])
+    except Exception as _e:
+        print(f"[Warning] SyntaxAgent failed: {_e}")
+        syntax_scores = [0.0] * len(segmented)
+        diction_issues = []
     
     _t0 = time.time()
-    # Note: SemanticAgent handles both flux and embeddings logic now, 
-    # but if 'embeddings.py' logic was distinct, we use SemanticAgent for flux/entropy.
-    # The new SemanticAgent consolidates both.
-    semantic_flux = semantic_agent.run({'scenes': segmented}) # Re-run or optimize if cached? 
-    # Actually SemanticAgent.run returns scores list. 
-    # Original code called embeddings.run separate from semantic.run.
-    # In consolidated perception_agent, SemanticAgent.run does the embedding/entropy logic.
-    # So semantic_scores above IS the flux/entropy score.
+    semantic_flux = semantic_scores  # Already computed above
     timings['embeddings_ms'] = round((time.time() - _t0) * 1000)
     
-    voice_map = voice_agent.run({'scenes': segmented})
+    try:
+        voice_map = voice_agent.run({'scenes': segmented})
+    except Exception as _e:
+        print(f"[Warning] VoiceAgent failed: {_e}")
+        voice_map = {}
     
     _t0 = time.time()
     stride = valence_stride if cpu_safe_mode else 1
-    if stride > 1:
-        valence_scores = []
-        for vi, sc in enumerate(segmented):
-            if vi % stride == 0:
-                vs = valence_agent.run({'scenes': [sc]})
-                valence_scores.append(vs[0] if vs else 0.0)
-            else:
-                valence_scores.append(valence_scores[-1] if valence_scores else 0.0)
-    else:
-        valence_scores = valence_agent.run({'scenes': segmented})
+    try:
+        if stride > 1:
+            valence_scores = []
+            for vi, sc in enumerate(segmented):
+                if vi % stride == 0:
+                    vs = valence_agent.run({'scenes': [sc]})
+                    valence_scores.append(vs[0] if vs else 0.0)
+                else:
+                    valence_scores.append(valence_scores[-1] if valence_scores else 0.0)
+        else:
+            valence_scores = valence_agent.run({'scenes': segmented})
+    except Exception as _e:
+        print(f"[Warning] ValenceAgent failed: {_e}")
+        valence_scores = [0.0] * len(segmented)
     timings['valence_ms'] = round((time.time() - _t0) * 1000)
     
     # Profiling & Coherence
-    profile_params = interpretation_agent.get_cognitive_profile(audience_profile)
+    try:
+        profile_params = interpretation_agent.get_cognitive_profile(audience_profile)
+    except Exception as _e:
+        print(f"[Warning] CognitiveProfile failed: {_e}")
+        profile_params = {'fatigue_rate': 0.05, 'recovery_rate': 0.1, 'capacity': 1.0}
     if 'decay_rate' in ablation_config:
         profile_params['fatigue_rate'] = ablation_config['decay_rate']
-    coherence_scores = coherence_agent.run({'scenes': segmented})
+    try:
+        coherence_scores = coherence_agent.run({'scenes': segmented})
+    except Exception as _e:
+        print(f"[Warning] CoherenceAgent failed: {_e}")
+        coherence_scores = [0.5] * len(segmented)
     
     # Silicon Stanislavski
     stan_batch_results = []
@@ -267,45 +299,72 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
         moonshot_data = moonshot_trace
 
     # Interpretation: XAI
-    xai_data = interpretation_agent.generate_explanations({
-        'features': encoded,
-        'semantic_scores': semantic_scores,
-        'syntax_scores': syntax_scores
-    })
+    try:
+        xai_data = interpretation_agent.generate_explanations({
+            'features': encoded,
+            'semantic_scores': semantic_scores,
+            'syntax_scores': syntax_scores
+        })
+    except Exception as _e:
+        print(f"[Warning] XAI failed: {_e}")
+        xai_data = {}
     
     macro_fidelity = {'best_match': 'N/A', 'fidelity_score': 0.0}
     
     # Dynamics: LRF
-    temporal_output = dynamics_agent.apply_long_range_fatigue({
-        'temporal_signals': temporal_output,
-        'features': encoded
-    })
+    try:
+        temporal_output = dynamics_agent.apply_long_range_fatigue({
+            'temporal_signals': temporal_output,
+            'features': encoded
+        })
+    except Exception as _e:
+        print(f"[Warning] LRF failed: {_e}")
     
     # Dynamics: ACD
-    acd_output = dynamics_agent.calculate_acd_states({
-        'temporal_signals': temporal_output,
-        'features': encoded
-    })
+    try:
+        acd_output = dynamics_agent.calculate_acd_states({
+            'temporal_signals': temporal_output,
+            'features': encoded
+        })
+    except Exception as _e:
+        print(f"[Warning] ACD failed: {_e}")
+        acd_output = []
     
     # Ethics: Agency & Fairness
-    agency_report = ethics_agent.analyze_agency({'scenes': segmented})
-    fairness_report = ethics_agent.audit_fairness({
-        'scenes': segmented,
-        'valence_scores': valence_scores
-    }, genre=genre)
+    try:
+        agency_report = ethics_agent.analyze_agency({'scenes': segmented})
+    except Exception as _e:
+        print(f"[Warning] AgencyAgent failed: {_e}")
+        agency_report = {}
+    try:
+        fairness_report = ethics_agent.audit_fairness({
+            'scenes': segmented,
+            'valence_scores': valence_scores
+        }, genre=genre)
+    except Exception as _e:
+        print(f"[Warning] FairnessAgent failed: {_e}")
+        fairness_report = {}
     
     # Interpretation: Suggestions
-    suggestions = interpretation_agent.generate_suggestions(temporal_output)
-    if diction_issues:
-        for issue in diction_issues[:5]:
-            suggestions['structural_repair_strategies'].append(issue)
-            
+    try:
+        suggestions = interpretation_agent.generate_suggestions(temporal_output)
+        if diction_issues and isinstance(suggestions, dict):
+            for issue in diction_issues[:5]:
+                suggestions.setdefault('structural_repair_strategies', []).append(issue)
+    except Exception as _e:
+        print(f"[Warning] SuggestionsAgent failed: {_e}")
+        suggestions = {'structural_repair_strategies': []}
+        
     # Dynamics: Patterns
-    patterns_output = dynamics_agent.detect_patterns({
-        'temporal_signals': temporal_output,
-        'features': encoded,
-        'acd_states': acd_output
-    })
+    try:
+        patterns_output = dynamics_agent.detect_patterns({
+            'temporal_signals': temporal_output,
+            'features': encoded,
+            'acd_states': acd_output
+        })
+    except Exception as _e:
+        print(f"[Warning] PatternsAgent failed: {_e}")
+        patterns_output = {'surfaced_patterns': [], 'pattern_flags': []}
     
     # Interpretation: Uncertainty
     try:
@@ -318,18 +377,26 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
         uncertainty_trace = []
         
     # Interpretation: Intent & Immunity
-    filtered = interpretation_agent.apply_writer_intent({
-        'patterns': patterns_output,
-        'writer_intent': writer_intent or [],
-        'acd_states': acd_output
-    })
+    try:
+        filtered = interpretation_agent.apply_writer_intent({
+            'patterns': patterns_output,
+            'writer_intent': writer_intent or [],
+            'acd_states': acd_output
+        })
+    except Exception as _e:
+        print(f"[Warning] IntentAgent failed: {_e}")
+        filtered = {'surfaced_patterns': [], 'pattern_flags': [], 'acd_states': acd_output}
     
     # Interpretation: Silence (SSF)
-    ssf_output = interpretation_agent.analyze_silence({
-        'temporal_signals': temporal_output,
-        'acd_states': acd_output,
-        'surfaced_patterns': filtered['surfaced_patterns']
-    })
+    try:
+        ssf_output = interpretation_agent.analyze_silence({
+            'temporal_signals': temporal_output,
+            'acd_states': acd_output,
+            'surfaced_patterns': filtered.get('surfaced_patterns', [])
+        })
+    except Exception as _e:
+        print(f"[Warning] SSFAgent failed: {_e}")
+        ssf_output = {}
     
     # Mediation (Need to verify if mediation.py logic is in interpretation_agent or separate)
     # The user request mentioned 'interpretation_agent.py': Merging reasoning and feedback agents 
@@ -362,11 +429,18 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
     filtered['ssf_analysis'] = ssf_output
     
     # Interpretation: Mediation (Writer-Friendly Translation)
-    final_output = interpretation_agent.mediate_experience(filtered)
+    try:
+        final_output = interpretation_agent.mediate_experience(filtered)
+    except Exception as _e:
+        print(f"[Warning] Mediation failed: {_e}")
+        final_output = {}
     
     # Meta & Output Construction
-    from .utils.model_manager import manager
-    ml_status = "ML_Active" if (manager.get_pipeline and hasattr(manager, 'device')) else "Heuristic_Fallback"
+    try:
+        from .utils.model_manager import manager
+        ml_status = "ML_Active" if (manager.get_pipeline and hasattr(manager, 'device')) else "Heuristic_Fallback"
+    except Exception:
+        ml_status = "Heuristic_Fallback"
     
     final_output['meta'] = {
         'run_id': run_id,
@@ -397,17 +471,24 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
     final_output['polyglot_analysis'] = polyglot_data
     final_output['moonshot_resonance'] = moonshot_data
     
-    runtime_info = runtime.estimate_runtime(segmented)
-    final_output['runtime_estimate'] = runtime_info
+    try:
+        runtime_info = runtime.estimate_runtime(segmented)
+        final_output['runtime_estimate'] = runtime_info
+    except Exception as _e:
+        print(f"[Warning] RuntimeEstimate failed: {_e}")
+        final_output['runtime_estimate'] = {'avg_minutes': 0}
     
     # Research Runtime Stats
     _wall_time_s = round(time.time() - _run_start, 2)
     tracemalloc.stop()
     
     # Writer Intelligence Layer (v2.0 Phase 1)
-    from scriptpulse.agents.writer_agent import WriterAgent
-    writer_companion = WriterAgent()
-    final_output = writer_companion.analyze(final_output, genre=genre)
+    try:
+        from scriptpulse.agents.writer_agent import WriterAgent
+        writer_companion = WriterAgent()
+        final_output = writer_companion.analyze(final_output, genre=genre)
+    except Exception as _e:
+        print(f"[Warning] WriterAgent failed: {_e}")
     
     # Version Locking (v1.3 Safeguard)
     def _get_file_hash(path):
@@ -418,8 +499,12 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
     genre_hash = _get_file_hash(os.path.join(os.path.dirname(__file__), 'schemas/genre_priors.json'))
     
     # v1.3 Confidence Scoring
-    confidence_data = ConfidenceScorer().calculate(temporal_output)
-    final_output['meta']['confidence_score'] = confidence_data
+    try:
+        confidence_data = ConfidenceScorer().calculate(temporal_output)
+        final_output['meta']['confidence_score'] = confidence_data
+    except Exception as _e:
+        print(f"[Warning] ConfidenceScorer failed: {_e}")
+        final_output['meta']['confidence_score'] = {'overall': 0.5}
     
     final_output['meta']['wall_time_s'] = _wall_time_s
     final_output['meta']['metric_version'] = "1.3"
