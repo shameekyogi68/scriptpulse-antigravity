@@ -1597,9 +1597,13 @@ class SemanticAgent:
     def __init__(self):
         self.model = global_manager.get_sentence_transformer("sentence-transformers/all-MiniLM-L6-v2")
         if self.model:
-            print("[ML] Loaded SBERT for Semantic Analysis.")
+            from scriptpulse.utils.logger import get_logger as _get_logger
+            _sbert_log = _get_logger(__name__)
+            _sbert_log.info("Loaded SBERT for Semantic Analysis.")
         else:
-            print("[Warning] Semantic ML failed to load. Using Entropy Fallback.")
+            from scriptpulse.utils.logger import get_logger as _get_logger
+            _sbert_log = _get_logger(__name__)
+            _sbert_log.warning("Semantic ML failed to load. Using Entropy Fallback.")
 
     def run(self, data):
         """Calculate Semantic Entropy/Flux (merged logic from semantic.py and embeddings.py)"""

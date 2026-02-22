@@ -1,23 +1,24 @@
 {
   "summary": {
-    "passed": 40,
-    "failed": 2,
-    "total_time_s": 820.0
+    "passed": 42,
+    "failed": 5,
+    "total": 47,
+    "total_time_s": 3782.8
   },
   "checks": [
     {
       "section": "S1",
       "prompt": "P1",
       "check": "Scene count == 1",
-      "status": "FAIL",
-      "detail": "Got 2"
+      "status": "PASS",
+      "detail": "Got 1"
     },
     {
       "section": "S1",
       "prompt": "P1",
       "check": "Temporal trace exists",
       "status": "PASS",
-      "detail": "2 points"
+      "detail": "1 points"
     },
     {
       "section": "S1",
@@ -31,7 +32,7 @@
       "prompt": "P2",
       "check": "Parser still runs (no crash)",
       "status": "PASS",
-      "detail": "Time: 15.3s"
+      "detail": "Time: 22.73s"
     },
     {
       "section": "S1",
@@ -52,63 +53,63 @@
       "prompt": "P4",
       "check": "Pulse identical across 3 runs",
       "status": "PASS",
-      "detail": "R1=[0.535], R2=[0.535]"
+      "detail": "R1=[0.495], R2=[0.495]"
     },
     {
       "section": "S2",
       "prompt": "P4",
       "check": "Fingerprint identical",
       "status": "PASS",
-      "detail": "8a695ce1ee753901b17d"
+      "detail": "c4ca4238"
     },
     {
       "section": "S2",
       "prompt": "P5",
       "check": "Content fingerprint changes on edit",
       "status": "PASS",
-      "detail": "Old=bb3e22f4350aaedb, New=a3b4badd87b70f20"
+      "detail": "Old=8d613b35, New=100c00b7"
     },
     {
       "section": "S3",
       "prompt": "P6",
       "check": "Late scenes show fatigue (lower or equal attention)",
       "status": "PASS",
-      "detail": "Early=0.756, Late=0.691"
+      "detail": "Early=1.021, Late=0.652"
     },
     {
       "section": "S3",
       "prompt": "P7",
       "check": "Pulse oscillates (not monotonic)",
       "status": "PASS",
-      "detail": "Signals: [0.52, 0.43, 0.93, 0.92, 1.01, 1.01]"
+      "detail": "Signals: [0.88, 1.01, 1.02, 0.99, 0.95, 0.88]"
     },
     {
       "section": "S4",
       "prompt": "P8",
       "check": "Low tension for neutral scene",
       "status": "PASS",
-      "detail": "Avg=0.349"
+      "detail": "Avg=0.266"
     },
     {
       "section": "S4",
       "prompt": "P9",
       "check": "High tension for suspense scene",
       "status": "PASS",
-      "detail": "Avg=0.638"
+      "detail": "Avg=0.406"
     },
     {
       "section": "S5",
       "prompt": "P10",
       "check": "Semantic flux spike at topic change",
       "status": "PASS",
-      "detail": "Flux: [0.0, 0.399, 0.89]"
+      "detail": "Flux: [0.1, 0.399, 0.89]"
     },
     {
       "section": "S5",
       "prompt": "P11",
       "check": "Similar pulse for paraphrased scenes",
       "status": "PASS",
-      "detail": "A=0.429, B=0.335, Diff=0.094"
+      "detail": "A=0.216, B=0.236, Diff=0.020"
     },
     {
       "section": "S6",
@@ -136,7 +137,7 @@
       "prompt": "P16",
       "check": "Batch inference completed",
       "status": "PASS",
-      "detail": "Time=22.94s, Scenes=30"
+      "detail": "Time=2829.13s, Scenes=30"
     },
     {
       "section": "S8",
@@ -163,29 +164,29 @@
       "section": "S9",
       "prompt": "P17",
       "check": "Scene feedback generated",
-      "status": "PASS",
-      "detail": "Keys: [0]"
+      "status": "FAIL",
+      "detail": "Keys: []"
     },
     {
       "section": "S10",
       "prompt": "P18",
       "check": "Suggestion agent proposes repairs",
       "status": "PASS",
-      "detail": "Got 3 suggestions"
+      "detail": "Got 4 suggestions"
     },
     {
       "section": "S10",
       "prompt": "P18",
       "check": "Scene notes generated",
-      "status": "PASS",
+      "status": "FAIL",
       "detail": ""
     },
     {
       "section": "S11",
       "prompt": "P19",
       "check": "Different lenses produce different weights",
-      "status": "PASS",
-      "detail": "V=[0.424, 0.333], D=[0.584, 0.236]"
+      "status": "FAIL",
+      "detail": "V=[0.449], D=[0.449]"
     },
     {
       "section": "S11",
@@ -211,30 +212,16 @@
     {
       "section": "S13",
       "prompt": "P21",
-      "check": "220pg script completes",
-      "status": "PASS",
-      "detail": "Time=388.36s"
-    },
-    {
-      "section": "S13",
-      "prompt": "P21",
-      "check": "Runtime under 5 minutes",
+      "check": "Synthetic script exists",
       "status": "FAIL",
-      "detail": "388.36s"
-    },
-    {
-      "section": "S13",
-      "prompt": "P21",
-      "check": "Scene count > 100",
-      "status": "PASS",
-      "detail": "Scenes=655"
+      "detail": "Missing tests/scenarios/validation_220pg.txt"
     },
     {
       "section": "S14",
       "prompt": "P22",
       "check": "Oversized file blocked",
       "status": "PASS",
-      "detail": "Input rejected: 6,291,456 bytes exceeds maximum of 5,000,000 bytes (5 MB). Please reduce script size"
+      "detail": "Governance Audit Failed: Input exceeds maximum allowed length of 5242880 characters."
     },
     {
       "section": "S14",
@@ -248,7 +235,7 @@
       "prompt": "P22",
       "check": "Binary input blocked",
       "status": "PASS",
-      "detail": "Input rejected: Binary content detected (null bytes). Please upload a valid UTF-8 text file."
+      "detail": "Governance Audit Failed: Binary payload or null-bytes detected."
     },
     {
       "section": "S14",
@@ -298,6 +285,55 @@
       "check": "All meta fields present",
       "status": "PASS",
       "detail": "Missing: []"
+    },
+    {
+      "section": "S16",
+      "prompt": "STRESS1",
+      "check": "Unicode noise: no crash",
+      "status": "PASS",
+      "detail": "Scenes=2, Time=21.4s"
+    },
+    {
+      "section": "S16",
+      "prompt": "STRESS1",
+      "check": "Unicode noise: bounded output",
+      "status": "PASS",
+      "detail": "All signals in [0,1]"
+    },
+    {
+      "section": "S16",
+      "prompt": "STRESS2",
+      "check": "Megascene (50K words): no crash",
+      "status": "PASS",
+      "detail": "Scenes=1, Time=75.3s"
+    },
+    {
+      "section": "S16",
+      "prompt": "STRESS2",
+      "check": "Megascene: bounded output",
+      "status": "PASS",
+      "detail": "All signals in [0,1]"
+    },
+    {
+      "section": "S16",
+      "prompt": "STRESS3",
+      "check": "Dialogue-only: no crash",
+      "status": "PASS",
+      "detail": "Scenes=1, Time=24.0s"
+    },
+    {
+      "section": "S16",
+      "prompt": "STRESS3",
+      "check": "Dialogue-only: bounded output",
+      "status": "PASS",
+      "detail": "All signals in [0,1]"
+    },
+    {
+      "section": "S16",
+      "prompt": "STRESS3",
+      "check": "Dialogue-only: uncertainty elevated",
+      "status": "FAIL",
+      "detail": "Avg std_dev=0.0000"
     }
   ]
 }

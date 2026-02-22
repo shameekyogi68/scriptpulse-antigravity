@@ -122,6 +122,41 @@ if 'prev_run' not in st.session_state:
     st.session_state['prev_run'] = None
 if 'safe_mode_active' not in st.session_state:
     st.session_state['safe_mode_active'] = False
+if 'health_report' not in st.session_state:
+    st.session_state['health_report'] = None
+
+# v14.1 CONTROL: OBSERVABILITY SIDEBAR HEALTH WIDGET
+# Exposes pipeline diagnostic endpoint for operator monitoring
+def _render_health_sidebar():
+    with st.sidebar:
+        with st.expander("🩺 System Health Diagnostics", expanded=False):
+            if st.button("Run Health Check", key="health_btn"):
+                with st.spinner("Checking pipeline health..."):
+                    try:
+                        h = runner.health_check()
+                        st.session_state['health_report'] = h
+                    except Exception as _he:
+                        st.error(f"Health check failed: {_he}")
+            
+            h = st.session_state.get('health_report')
+            if h:
+                status = h.get('status', 'unknown')
+                if status == 'healthy':
+                    st.success(f"✅ System Status: **{status.upper()}**")
+                else:
+                    st.warning(f"⚠️ System Status: **{status.upper()}**")
+                
+                st.caption("**Core Agents**")
+                for agent, ok in h.get('agents', {}).items():
+                    icon = "🟢" if ok else "🔴"
+                    st.markdown(f"{icon} {agent}")
+                    
+                st.caption("**Governance & Config**")
+                st.markdown(f"{'🟢' if h.get('governance') else '🔴'} Governance Firewall")
+                for fname, exists in h.get('config_files', {}).items():
+                    st.markdown(f"{'🟢' if exists else '🔴'} {fname}")
+
+_render_health_sidebar()
 
 
 # =============================================================================

@@ -7,6 +7,9 @@ import random
 import statistics
 import json
 import os
+from scriptpulse.utils.logger import get_logger as _get_logger
+
+_log = _get_logger(__name__)
 
 
 # =============================================================================
@@ -63,7 +66,7 @@ class DynamicsAgent:
             with open(hyper_path, 'r') as f:
                 self.hyper = json.load(f).get('dynamics_agent', {})
         except Exception as e:
-            print(f"[Dynamics] Warning: Could not load hyperparameters: {e}")
+            _log.warning("Could not load hyperparameters: %s", e)
             self.hyper = {}
             
         # Configuration Defaults
@@ -101,7 +104,7 @@ class DynamicsAgent:
                         data = json.load(f)
                         self.GENRE_PRIORS = data.get('genres', {})
             except Exception as e:
-                print(f"[Dynamics] Warning: Could not load genre priors: {e}")
+                _log.warning("Could not load genre priors: %s", e)
         
         # Case insensitive match
         for k, v in self.GENRE_PRIORS.items():
@@ -149,7 +152,8 @@ class DynamicsAgent:
                 profile_params[k] = v
         
         if debug:
-             print(f"[Dynamics] Active Genre: {genre} | Lambda: {profile_params['lambda_base']} | Beta: {profile_params['beta_recovery']} | Fatigue Limit: {profile_params['fatigue_threshold']}")
+             _log.debug("Active Genre: %s | Lambda: %s | Beta: %s | Fatigue Limit: %s",
+                        genre, profile_params['lambda_base'], profile_params['beta_recovery'], profile_params['fatigue_threshold'])
 
         # Primary Run (Deterministic)
         # We pass lens_config from input_data if it exists
@@ -438,7 +442,7 @@ class DynamicsAgent:
             
             # Detailed Trace (v1.3.1)
             if debug:
-                print(f"[TRACE] Scene {i}: A={signal:.2f} | E={effort:.2f} (Struct={struct_load:.2f} Sem={sem_load:.2f} Syn={syn_load:.2f} Dial={dial_eng:.2f}) | R={recovery:.2f} | Fatigue={max(0.0, signal - fatigue_thresh):.2f} | Lambda={current_lambda:.2f}")
+                _log.debug("TRACE Scene %d: A=%.2f | E=%.2f | R=%.2f | Lambda=%.2f", i, signal, effort, recovery, current_lambda)
 
         return signals
 
