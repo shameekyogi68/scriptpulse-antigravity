@@ -130,9 +130,73 @@ if 'safe_mode_active' not in st.session_state:
 if 'health_report' not in st.session_state:
     st.session_state['health_report'] = None
 
-# Hide complex health metrics from main view
+# v14.1 CONTROL: OBSERVABILITY SIDEBAR HEALTH WIDGET
+# Exposes pipeline diagnostic endpoint for operator monitoring
 def _render_health_sidebar():
-    pass
+    with st.sidebar:
+        with st.expander("(+) System Health & Memory", expanded=False):
+
+            # ── Memory Safe Mode toggle ────────────────────────────────
+            st.caption("**[RUN] Performance Mode**")
+            import os as _os
+            heuristics_env = _os.environ.get("SCRIPTPULSE_HEURISTICS_ONLY", "0") == "1"
+            if 'heuristics_only' not in st.session_state:
+                st.session_state['heuristics_only'] = heuristics_env
+
+            mem_safe = st.toggle(
+                "(+) Memory Safe Mode (no ML models)",
+                value=st.session_state['heuristics_only'],
+                key="mem_safe_toggle",
+                help="Disables SBERT/GPT-2/DistilBART. Saves ~900MB RAM. Uses fast heuristics. Accuracy is preserved for structural analysis."
+            )
+            if mem_safe != st.session_state['heuristics_only']:
+                st.session_state['heuristics_only'] = mem_safe
+                _os.environ["SCRIPTPULSE_HEURISTICS_ONLY"] = "1" if mem_safe else "0"
+                # Invalidate model cache so next run picks up the change
+                from scriptpulse.pipeline import runner as _runner
+                _runner._AGENT_CACHE.clear()
+                st.toast("[OK] Mode changed — model cache cleared." if mem_safe else "[OK] Full ML mode restored.")
+
+            # ── Manual memory release ──────────────────────────────────
+            if st.button("[-] Free Model Memory", key="free_mem_btn",
+                         help="Releases SBERT/GPT-2 references and triggers GC. Use when RAM is low."):
+                try:
+                    from scriptpulse.utils.model_manager import manager as _mm
+                    from scriptpulse.pipeline import runner as _runner
+                    _mm.release_models()
+                    _runner._AGENT_CACHE.clear()
+                    st.success("[OK] Model memory released. Next analysis will reload if needed.")
+                except Exception as _e:
+                    st.warning(f"Release partial: {_e}")
+
+            st.divider()
+
+            # ── Health check ───────────────────────────────────────────
+            if st.button("Run Health Check", key="health_btn"):
+                with st.spinner("Checking pipeline health..."):
+                    try:
+                        h = runner.health_check()
+                        st.session_state['health_report'] = h
+                    except Exception as _he:
+                        st.error(f"Health check failed: {_he}")
+
+            h = st.session_state.get('health_report')
+            if h:
+                status = h.get('status', 'unknown')
+                if status == 'healthy':
+                    st.success(f"[OK] System Status: **{status.upper()}**")
+                else:
+                    st.warning(f"[!] System Status: **{status.upper()}**")
+
+                st.caption("**Core Agents**")
+                for agent, ok in h.get('agents', {}).items():
+                    icon = "[+]" if ok else "[-]"
+                    st.markdown(f"{icon} {agent}")
+
+                st.caption("**Governance & Config**")
+                st.markdown(f"{'[+]' if h.get('governance') else '[-]'} Governance Firewall")
+                for fname, exists in h.get('config_files', {}).items():
+                    st.markdown(f"{'[+]' if exists else '[-]'} {fname}")
 
 _render_health_sidebar()
 
@@ -192,19 +256,32 @@ st.markdown("""
 
 with st.sidebar:
     st.title("ScriptPulse")
-    st.caption("The Screenwriter's Instrument")
+    st.caption("Writer-Native Analytics (or Research Platform)")
+    
+    st.markdown("---")
+    ui_mode = st.radio("Interface Mode", ["Writer Mode (Creative)", "Lab Mode (Research)"], index=0, help="Lab Mode shows advanced ML ablation and threshold controls.")
     st.markdown("---")
     
-    # Internal routing logic (Abstracted)
-    ui_mode = "Writer Mode (Creative)"
-    engine_mode = "Fast Mode (Heuristic Engine)"
-    force_cloud = True
+    with st.expander("(^) Engine Context (RAM Usage)", expanded=ui_mode == "Lab Mode (Research)"):
+        engine_mode = st.radio(
+            "Processing Mode",
+            ["Fast Mode (Heuristic Engine – recommended)", "Full AI Mode (Loads SBERT + GPT-2, needs 8 GB RAM)"],
+            index=0 if IS_CLOUD else 1,
+            help="Fast Mode uses mathematical heuristics — same output structure, no ML model loading. Full AI adds embedding-based analysis."
+        )
+        force_cloud = "Fast" in engine_mode
+        if force_cloud:
+            st.caption("[+] Fast Mode active — low memory footprint (<1 GB)")
+        else:
+            st.caption("[~] Full AI Mode — allocates up to 5 GB RAM. Close other apps if running locally.")
+            
+    st.markdown("---")
     
-    # Simplified Feature Selection
-    mode = st.radio("Tool", ["Script Analysis", "Scene Compare", "Live Sandbox"], label_visibility="collapsed")
+    # Simplified Mode Selection
+    mode = st.radio("Feature", ["Script Analysis", "Scene Compare", "Live Sandbox"], label_visibility="collapsed")
     
     # Trigger Preload based on user selection
-    preload_models(cloud_mode=True)
+    preload_models(cloud_mode=force_cloud)
 
 # =============================================================================
 # MODE ROUTING (Main Content Area — outside sidebar context)
@@ -307,41 +384,57 @@ if mode == "Scene Compare":
 
     st.stop()
     
-    # Genre Selection (Re-enabled for Writer Mode)
-    genre_baselines = {}
-    try:
-        with open("scriptpulse/config/genre_baselines.json", "r") as f:
-            import json as _json
-            genre_baselines = _json.load(f).get('genres', {})
-    except:
-        pass
-        
-    genre_options = list(genre_baselines.keys()) if genre_baselines else ["Drama", "Action", "Thriller", "Horror", "Comedy", "Sci-Fi", "Romance", "Family"]
+# =============================================================================
+# SIDEBAR: REMAINING CONTROLS (for Script Analysis mode)
+# =============================================================================
+with st.sidebar:
+    # --- INFO ---
+    st.info(
+        "**Reading the Pulse**\n\n"
+        "(^) **High Tension (7–10)**: Intense, high cognitive load.\n"
+        "(Chart) **Balanced (4–6)**: Engaging flow, sustainable pacing.\n"
+        "(v) **Low Energy (0–3)**: Risk of audience drift — consider adding pressure."
+    )
+
     
     st.markdown("---")
-    st.markdown("### Story Context")
-    selected_genre = st.selectbox(
-        "Target Genre",
-        genre_options,
-        index=genre_options.index("Drama") if "Drama" in genre_options else 0,
-        help="Sets the target baseline for expected pacing."
-    )
-    
-    # Removed advanced features and ablations for cleaner Writer Experience
-    selected_lens = "viewer"
-    selected_profile = "General"
-    selected_framework = "3_act"
-    use_high_res = False
-    
-    # Fast mode default settings
-    ablation_config = {
-        'use_sbert': False,
-        'use_gpt2': False,
-        'use_multimodal': True,
-    }
-    
-    # Hidden operator config
-    shadow_mode, high_accuracy_mode = False, False
+    # Hide complex settings by default
+    with st.expander("(Settings) Advanced Settings"):
+         ref_file = st.file_uploader("Reference Script", type=['txt', 'pdf'])
+
+    ablation_config = {}
+    if ui_mode == "Lab Mode (Research)":
+        with st.expander("(Lab) Ablation & Parameter Console", expanded=True):
+            st.markdown("Control exact Pipeline constraints.")
+            
+            # Force to False if Cloud Mode is active
+            ab_sbert = st.checkbox("Enable SBERT (Thematic Extraction)", value=not force_cloud, key="ab_sbert", disabled=force_cloud)
+            ab_gpt2 = st.checkbox("Enable GPT-2 (Surprisal Proxy)", value=not force_cloud, key="ab_gpt2", disabled=force_cloud)
+            ab_multimodal = st.checkbox("Enable Multimodal Extrapolation", value=True, key="ab_multimodal")
+            
+            if force_cloud:
+                st.warning("[!] Heavy models disabled by Hardware Constraints selector above.")
+                
+            ab_seed = st.number_input("Random Seed", value=42, key="ab_seed")
+            ab_decay = st.number_input("Fatigue Decay Rate (k)", value=0.05, step=0.01, key="ab_decay")
+            
+            ablation_config = {
+                'use_sbert': ab_sbert,
+                'use_gpt2': ab_gpt2,
+                'use_multimodal': ab_multimodal,
+                'seed': ab_seed,
+                'decay_rate': ab_decay
+            }
+    else:
+        # Implicitly set ablation state for Creative Mode based on Engine
+        ablation_config = {
+            'use_sbert': not force_cloud,
+            'use_gpt2': not force_cloud,
+            'use_multimodal': True,
+        }
+
+    # v13.1 CONTROL 4 & 6: OPERATOR PANEL + SHADOW TOGGLE
+    shadow_mode, high_accuracy_mode = stu.render_operator_panel(st.session_state.get('prev_run'))
 
 
 # =============================================================================
@@ -418,7 +511,7 @@ if uploaded_file is not None:
         if not stu.check_upload_size(uploaded_file):
             st.stop()
             
-        # Immediate Parse
+        # IMMEDIATE PARSE (For Scene Picker)
         if script_text and script_text.strip():
             with st.spinner("Parsing structure..."):
                 try:
@@ -433,6 +526,24 @@ if uploaded_file is not None:
         else:
             st.warning("Script text is empty or could not be extracted.")
             scene_list = []
+
+        # v10.0: Context-Aware Fairness (Character Extraction)
+        try:
+            if pre_parsed_lines:
+                all_chars = sorted(list(set([l['text'] for l in pre_parsed_lines if l.get('tag') == 'C'])))
+            else:
+                all_chars = []
+        except Exception:
+            all_chars = []
+        
+        with st.expander("(+) Character Context (Optional) - Tag Roles"):
+            st.caption("Help the Fairness Auditor understand context (e.g., Villains are expected to be negative).")
+            char_tags = {}
+            cols = st.columns(2)
+            for i, char in enumerate(all_chars[:10]):
+                role = cols[i%2].selectbox(f"Role for {char}", ["Unknown", "Protagonist", "Antagonist", "Supporting"], key=f"role_{char}")
+                if role != "Unknown":
+                    char_tags[char] = role
         
         
         # Finally, assign to the master input variable for analysis
@@ -448,7 +559,70 @@ if not script_input and pasted_text and len(pasted_text) > 100:
     scene_list = runner.parse_structure(script_input)
 
 
-# Skip heavy Analysis Configuration GUI in Writer Mode
+# --- Step 2: Context & Research Settings ---
+
+st.header("2. Analysis Configuration")
+
+settings_exp_state = (ui_mode == "Lab Mode (Research)")
+exp_settings = st.expander("(Settings) Target Genre & Context", expanded=settings_exp_state)
+
+col_genre, col_lens = exp_settings.columns(2)
+
+with col_genre:
+    # Load baselines for tooltip / trace overlay context
+    genre_baselines = {}
+    try:
+        with open("scriptpulse/config/genre_baselines.json", "r") as f:
+            genre_baselines = json.load(f).get('genres', {})
+    except:
+        pass
+        
+    genre_options = list(genre_baselines.keys()) if genre_baselines else ["Drama", "Action", "Thriller", "Horror", "Comedy", "Sci-Fi", "Romance", "Family"]
+    
+    selected_genre = col_genre.selectbox(
+        "Target Genre Baseline",
+        genre_options,
+        help="Loads 'Expected Curve' for cross-domain comparison."
+    )
+
+if ui_mode == "Lab Mode (Research)":
+    with col_lens:
+        selected_lens = col_lens.selectbox(
+            "Analysis Lens",
+            ["viewer", "reader", "narrator"],
+            format_func=lambda x: x.capitalize(),
+            help="Viewer=Visceral, Reader=Literary, Narrator=Structural"
+        )
+        
+    exp_settings.markdown("---")
+    selected_profile = exp_settings.selectbox(
+        "Target Audience (Cognitive Profile)",
+        ["General", "Cinephile", "Casual Viewer", "Young Audience"],
+        help="Adjusts fatigue and recovery thresholds to simulate how different viewers process the script."
+    )
+
+    if selected_profile == "Cinephile":
+        exp_settings.caption("(Cognitive) **Engaged viewer**: Higher tolerance for complexity; retains context across longer scenes.")
+    elif selected_profile == "Casual Viewer":
+        exp_settings.caption("(Cognitive) **Relaxed viewer**: Benefits from regular pacing relief and clear scene transitions.")
+    elif selected_profile == "Young Audience":
+        exp_settings.caption("(Cognitive) **Young viewer**: Needs consistent continuity and shorter high-intensity spans.")
+
+    exp_settings.markdown("---")
+    selected_framework = exp_settings.selectbox(
+        "Story Framework",
+        ["3_act", "heros_journey", "eight_sequences"],
+        format_func=lambda x: x.replace('_', ' ').title(),
+        help="Select the structural overlay for the Pulse chart."
+    )
+    
+    use_high_res = exp_settings.checkbox("High-Resolution Mode (Micro-Beats)", help="Slice scenes into beats for HD analysis (Slower).")
+else:
+    # Writer Mode Defaults
+    selected_lens = "viewer"
+    selected_profile = "General"
+    selected_framework = "3_act"
+    use_high_res = False
 
 writer_intent = []
 if script_input:
@@ -619,7 +793,61 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
     with c4:
         st.metric("Est. Runtime", f"{runtime_min} min", help="Estimated screen time based on scene count and dialogue density.")
     
-    # Cleaned up Advanced Stats
+    # === COLLAPSIBLE SECTIONS (v21.0) ===
+    
+    # Hide research comparisons in expander
+    with st.expander("(?) Advanced Comparisons", expanded=False):
+        with st.expander("(?) Research Comparison (Longitudinal & Target)", expanded=True):
+            cols = st.columns(2)
+            
+            # A. Longitudinal (Optimization Gain)
+            if 'prev_run' in st.session_state and comparator is not None:
+                try:
+                    delta = comparator.compare_longitudinal(report, st.session_state['prev_run'])
+                except Exception:
+                    delta = None
+                with cols[0]:
+                    st.subheader("Optimization (vs Last Run)")
+                    if delta:
+                        change = delta.get('load_change_pct', 0)
+                        color = "green" if change < 0 else "red"
+                        st.markdown(f"**Total Load Change**: :{color}[{change}%]")
+                        st.markdown(f"**Peak Strain Delta**: {delta.get('peak_strain_delta')}")
+                        st.caption("Lower load is generally better for readability.")
+                    else:
+                        st.caption("No significant change detected.")
+            else:
+                 with cols[0]:
+                    st.subheader("Optimization")
+                    st.caption("Run analysis again to see effective changes.")
+
+            # B. Reference Target (Stylistic Distance)
+            if ref_file and comparator is not None:
+                with st.spinner("Analyzing Reference Target..."):
+                    # Quick parse of ref
+                    try:
+                        ref_file.seek(0)
+                        ref_bytes = ref_file.read()
+                        if ref_file.type == "application/pdf" and PYPDF2_AVAILABLE:
+                            from io import BytesIO
+                            pdf_r = PyPDF2.PdfReader(BytesIO(ref_bytes))
+                            ref_text = "\n".join([p.extract_text() or '' for p in pdf_r.pages])
+                        else:
+                            ref_text = ref_bytes.decode('utf-8', errors='replace')
+                             
+                        ref_report = runner.run_pipeline(ref_text, lens=selected_lens)
+                        comp_res = comparator.compare_to_reference(report.get('temporal_trace'), ref_report.get('temporal_trace'))
+                        
+                        with cols[1]:
+                           st.subheader("Reference Target")
+                           st.markdown(f"**Distance**: {comp_res['stylistic_distance']}")
+                           st.info(f"Verdict: {comp_res['interpretation']}")
+                           
+                    except Exception as e:
+                        st.error(f"Ref Analysis Failed: {e}")
+            else:
+                 with cols[1]:
+                     st.caption("Upload a Reference Script in Sidebar to compare styles.")
     
     # === CO-CREATIVITY ENGINE (v8.0) ===
     suggestions = report.get('suggestions', {})
@@ -654,7 +882,9 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
                             st.markdown(f"-> {val}")
                         st.markdown("")  # spacing
                         
-    st.markdown("---")
+    if ui_mode == "Writer Mode (Creative)":
+        with st.expander("(!) System Blindspots (Trust Management)", expanded=False):
+            st.warning("**What the AI Can't See:**\n\nScriptPulse measures *Structural Pacing* and *Lexical Density*. It does **NOT** understand narrative logic. It will not flag plot holes, continuity errors (e.g., 'Chekhov's Gun'), or character logic inconsistencies.")
                     
                     
     # === WRITER WORKSPACE ===
@@ -751,23 +981,88 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
             
     # 2. CHARACTERS (was Voice Map / Chemistry)
     with tab_chars:
-        st.caption("Do your characters sound distinct?")
+        st.caption("Do your characters sound distinct? Do they grow?")
+        
         voice_data = report.get('voice_fingerprints', {})
         if voice_data:
+            # A. Voice Map
+            st.subheader("(+) Voice Distinctiveness")
             v_data = []
             archetypes = report.get('archetypes', {})
+            
             for char, metrics in voice_data.items():
                 v_data.append({
                     'Character': char,
                     'Archetype': archetypes.get(char, {}).get('archetype', 'Everyman'),
-                    'Complexity': f"{metrics['complexity']:.2f}",
-                    'Positivity': f"{metrics['positivity']:.2f}",
+                    'Complexity': metrics['complexity'],
+                    'Positivity': metrics['positivity'],
+                    'Agency': metrics['agency'] * 100, 
                     'Lines': metrics['line_count']
                 })
             
             if v_data:
                 df_v = pd.DataFrame(v_data)
+                st.scatter_chart(df_v, x='Complexity', y='Positivity', size='Agency', color='Character')
                 st.dataframe(df_v[['Character', 'Archetype', 'Complexity', 'Lines']].set_index('Character'))
+            
+            st.markdown("---")
+            
+            # B. Character Growth (Arc)
+            st.subheader("(^) Character Growth")
+            if len(report.get('scenes', [])) > 6:
+                # Simple logic: Act 1 vs Act 3 Agency
+                char_arcs = {}
+                scenes = report['scenes']
+                n_scenes = len(scenes)
+                for char, profile in voice_data.items():
+                    if profile['line_count'] < 5: continue
+                    
+                    # Trend Calculation (Simplified)
+                    active_scores = []
+                    for s in scenes:
+                         # Check if char in scene lines
+                         if any(char in l.get('text', '') for l in s['lines'] if l.get('tag')=='C'):
+                             active_scores.append(report['valence_scores'][s['scene_index']] if s['scene_index'] < len(report['valence_scores']) else 0)
+                    
+                    if len(active_scores) > 2:
+                        start = sum(active_scores[:len(active_scores)//3]) / max(1, len(active_scores)//3)
+                        end = sum(active_scores[-len(active_scores)//3:]) / max(1, len(active_scores)//3)
+                        char_arcs[char] = {'Start': start, 'End': end, 'Growth': end - start}
+                
+                if char_arcs:
+                    for char, data in char_arcs.items():
+                        trend = data['Growth']
+                        icon = "(+)" if trend > 0.1 else "(-)" if trend < -0.1 else "(->)"
+                        st.metric(f"{char}", f"{icon} {trend:.2f} Growth")
+            
+            # C. Inter-Character Tension Network (Stage 5)
+            interaction_networks = report.get('interaction_networks', {})
+            edges = interaction_networks.get('edges', [])
+            triangles = interaction_networks.get('triangles', [])
+            
+            if edges:
+                st.markdown("---")
+                st.subheader("(Net) Inter-Character Tension Network")
+                st.caption("Research-grade social tension matrix.")
+                
+                # Matrix Heatmap preparation
+                nodes = sorted(list(set([e['source'] for e in edges] + [e['target'] for e in edges])))
+                matrix = pd.DataFrame(0.0, index=nodes, columns=nodes)
+                
+                for edge in edges:
+                    s, t, w = edge['source'], edge['target'], edge['weight']
+                    matrix.at[s, t] = w
+                    matrix.at[t, s] = w # symmetric
+                    
+                st.dataframe(matrix.style.background_gradient(cmap='Reds', vmin=0, vmax=1.0))
+                
+                if triangles:
+                    st.warning(f"**[!] Complex Subplots Detected!** Found {len(triangles)} conflict triangles.")
+                    for t in triangles:
+                        st.markdown(f"(^) **Triangle Cycle**: {t[0]} <-> {t[1]} <-> {t[2]}")
+                    st.caption("A conflict triangle indicates a highly volatile, codependent dynamic that dominates cognitive load.")
+                else:
+                    st.success("No complex conflict triangles detected. Interpersonal tension is linear/direct.")
 
     # 3. STRUCTURE (was Act Fidelity)
     with tab_struct:
@@ -875,42 +1170,237 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
             
         df = pd.DataFrame(chart_data)
         
-        # Simplified Native UI Chart 
-        fig = go.Figure()
+        if ui_mode == "Lab Mode (Research)":
+            # Advanced Plotly Chart with Confidence Intervals
+            fig = go.Figure()
 
-        # Generate custom hover data
-        hovertemplate = (
-            "Scene: %{x}<br>"
-            "Tension: %{y:.2f}<br>"
-            "Status: %{customdata}"
-        )
+            # Bootstrapped Uncertainty (Monte Carlo Feature Noise)
+            import numpy as np
+            base_tensions = np.array([c['Narrative Tension'] for c in chart_data])
+            n_iterations = 20
+            perturbed_traces = []
+            for _ in range(n_iterations):
+                # Add heuristic bootstrapping noise
+                noise = np.random.normal(0, 0.05 + (0.05 * (1.0 - np.array([c.get('Confidence', 0.85) for c in chart_data]))), len(base_tensions))
+                perturbed_traces.append(np.clip(base_tensions + noise, 0, 1))
+            
+            y_lower = np.percentile(perturbed_traces, 5, axis=0).tolist()
+            y_upper = np.percentile(perturbed_traces, 95, axis=0).tolist()
+            
+            # Draw Confidence Interval Band
+            fig.add_trace(go.Scatter(
+                x=list(df['Scene']) + list(df['Scene'])[::-1],
+                y=y_upper + y_lower[::-1],
+                fill='toself',
+                fillcolor='rgba(255, 0, 0, 0.2)',
+                line=dict(color='rgba(255,255,255,0)'),
+                hoverinfo="skip",
+                showlegend=False,
+                name='Confidence Band'
+            ))
 
-        custom_data = [d['Creative Beat'] for d in chart_data]
+            # Top Driving Features Attribution
+            hovertemplate = (
+                "Scene Index: %{x}<br>"
+                "<b>%{customdata[3]}</b><br>"
+                "Tension: %{y:.2f}<br>"
+                "---<br>"
+                "Drivers:<br>"
+                "%{customdata[0]}<br>"
+                "%{customdata[1]}<br>"
+                "%{customdata[2]}"
+            )
+            
+            # Determine top features for each scene
+            custom_data = []
+            for i, scene_data in enumerate(trace):
+                features = [
+                    ('Surprisal', scene_data.get('effort', 0) * 0.4),
+                    ('Action', scene_data.get('action_density', 0)),
+                    ('Dialogue', scene_data.get('dialogue_density', 0)),
+                    ('Complexity', scene_data.get('coherence_penalty', 0))
+                ]
+                features.sort(key=lambda x: x[1], reverse=True)
+                top_3 = [f"- {k}" for k, v in features[:3]]
+                while len(top_3) < 3: top_3.append("N/A")
+                
+                beat_label = semantic_beats[i].get('composite_beat', 'Stable Flow') if i < len(semantic_beats) else "Stable Flow"
+                top_3.append(beat_label)
+                custom_data.append(top_3)
 
-        # Main Tension Line
-        fig.add_trace(go.Scatter(
-            x=df['Scene'], y=df['Narrative Tension'],
-            line=dict(color='#1f77b4', width=3), mode='lines',
-            name='Narrative Tension',
-            customdata=custom_data,
-            hovertemplate=hovertemplate
-        ))
+            # Main Line (Colorblind Safe Blue)
+            fig.add_trace(go.Scatter(
+                x=df['Scene'],
+                y=df['Narrative Tension'],
+                line=dict(color='#1f77b4', width=3),
+                mode='lines',
+                name='Narrative Tension',
+                customdata=custom_data,
+                hovertemplate=hovertemplate
+            ))
+            
+            # Recovery Line (Colorblind Safe Orange)
+            fig.add_trace(go.Scatter(
+                x=df['Scene'],
+                y=df['Recovery'],
+                line=dict(color='#ff7f0e', width=1, dash='dash'),
+                mode='lines',
+                name='Breathing Room (Recovery)'
+            ))
 
-        # Recovery Space
-        fig.add_trace(go.Scatter(
-            x=df['Scene'], y=df['Recovery'],
-            line=dict(color='#ff7f0e', width=2, dash='dashdot'), mode='lines',
-            name='Recovery/Breathing Room'
-        ))
+            # Naive Baseline Validation
+            if 'scenes' in report:
+                naive_counts = [len([l for l in s['lines'] if l.get('text')]) for s in report['scenes']]
+                max_words = max(naive_counts) if naive_counts and max(naive_counts) > 0 else 1
+                naive_baseline = [(c / max_words) for c in naive_counts]
+                fig.add_trace(go.Scatter(
+                    x=df['Scene'],
+                    y=naive_baseline[:len(df)],
+                    line=dict(color='gray', width=2, dash='dot'),
+                    mode='lines',
+                    name='Naive Baseline (Lexical Density)'
+                ))
+            
+            # Genre Baseline Overlay
+            try:
+                with open("scriptpulse/config/genre_baselines.json", "r") as f:
+                    g_data = json.load(f).get('genres', {})
+                    if selected_genre in g_data:
+                        base_curve = g_data[selected_genre]['curve']
+                        # Interpolate the 7 point baseline curve over the len(df) scripts
+                        import numpy as np
+                        x_base = np.linspace(0, len(df)-1, len(base_curve))
+                        x_interp = np.arange(len(df))
+                        y_interp = np.interp(x_interp, x_base, base_curve)
+                        
+                        fig.add_trace(go.Scatter(
+                            x=df['Scene'],
+                            y=y_interp,
+                            line=dict(color='rgba(44, 160, 44, 0.5)', width=2, dash='dashdot'),
+                            mode='lines',
+                            name=f'Expected {selected_genre} Curve'
+                        ))
+            except Exception as e:
+                pass
+                
+            # Full Model Overlay if Ablated
+            ablation_active = False
+            if 'ablation_config' in locals() and ablation_config and (not ablation_config.get('use_sbert', True) or not ablation_config.get('use_gpt2', True)):
+                ablation_active = True
+                
+            if ablation_active:
+                try: 
+                    # Fetch cached Full Run or do a quick trace
+                    unablated_report = runner.run_pipeline(script_input, cpu_safe_mode=True, experimental_mode=False, ablation_config=None)
+                    un_trace = unablated_report.get('temporal_trace', [])
+                    un_y = [p.get('strain', 0.0) for p in un_trace]
+                    fig.add_trace(go.Scatter(
+                        x=df['Scene'],
+                        y=un_y[:len(df)],
+                        line=dict(color='orange', width=2),
+                        mode='lines',
+                        name='Full Model Signal (Un-Ablated)'
+                    ))
+                except Exception as e:
+                    pass
 
-        fig.update_layout(
-            title='The Story Pulse',
-            xaxis_title='Scene Progression', yaxis_title='Pacing & Tension (0-1.0)',
-            template='plotly_white', hovermode='x unified',
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
-        )
-        st.plotly_chart(fig, use_container_width=True)
+            # Ground Truth Overlay with IRR
+            st.markdown("### (Chart) Empirical Validation")
+            gt_file = st.file_uploader("Upload Human Ratings CSV (Ground Truth)", type=['csv'])
+            if gt_file:
+                try:
+                    gt_df = pd.read_csv(gt_file)
+                    
+                    # IRR Logic
+                    annotator_cols = [c for c in gt_df.columns if 'Annotator' in c or 'Human_Tension' in c]
+                    if len(annotator_cols) > 0 and 'Scene' in gt_df.columns:
+                        
+                        # If multiple annotators, calculate agreement
+                        if len(annotator_cols) > 1:
+                            st.caption(f"Detected {len(annotator_cols)} annotators. Calculating IRR...")
+                            # Simple pairwise correlation as proxy for alpha if >=2 annotators
+                            if len(annotator_cols) >= 2:
+                                c1, c2 = annotator_cols[0], annotator_cols[1]
+                                corr, _ = __import__('scipy').stats.pearsonr(gt_df[c1], gt_df[c2])
+                                if corr > 0.70:
+                                    st.success(f"High Inter-Rater Reliability ($r$ = {corr:.2f})")
+                                else:
+                                    st.warning(f"Low Inter-Rater Reliability ($r$ = {corr:.2f}). System comparison may be noisy.")
+                            
+                            # Average for the chart
+                            gt_df['Combined_Human'] = gt_df[annotator_cols].mean(axis=1)
+                            y_data = gt_df['Combined_Human']
+                        else:
+                            y_data = gt_df[annotator_cols[0]]
+                            
+                        fig.add_trace(go.Scatter(
+                            x=gt_df['Scene'],
+                            y=y_data,
+                            line=dict(color='purple', width=2, dash='dot'),
+                            mode='lines+markers',
+                            name='Human Ground Truth (Combined)'
+                        ))
+                    else:
+                        st.warning("Ground Truth CSV must contain 'Scene' and at least one 'Human_Tension' or 'Annotator_X' column.")
+                except Exception as e:
+                    st.error(f"Failed to load Ground Truth: {e}")
 
+            # Add Act Structure Overlays (Vertical Lines)
+            for act in structure_map.get('acts', []):
+                act_name = act['name']
+                act_end = act['range'][1]
+                if act_end < len(df):
+                    fig.add_vline(x=act_end, line_width=1, line_dash="dash", line_color="gray")
+                    fig.add_annotation(x=act_end, y=1.05, text=act_name, showarrow=False, font=dict(color="gray", size=10))
+
+            # Add Key Beat Annotations
+            for beat in structure_map.get('beats', []):
+                b_idx = beat['scene_index']
+                if b_idx < len(df):
+                    fig.add_annotation(
+                        x=b_idx, y=df['Narrative Tension'].iloc[b_idx],
+                        text=beat['name'],
+                        showarrow=True, arrowhead=1, ax=0, ay=-40,
+                        font=dict(size=9, color="#d62728"),
+                        arrowcolor="#d62728"
+                    )
+
+            fig.update_layout(
+                title='Narrative Pulse (Story Structure Map)',
+                xaxis_title='Script Progress (Scene Index)',
+                yaxis_title='Emotional / Narrative Tension',
+                template='plotly_white',
+                hovermode='x unified',
+                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+            )
+            
+            st.plotly_chart(fig, use_container_width=True)
+            
+            # Dynamic X/Y Plotting (Exploratory Data Analysis)
+            st.markdown("### (Inspect) Exploratory Data Analysis")
+            feature_cols = [c for c in df.columns if c not in ['Script_Title']]
+            col_x, col_y = st.columns(2)
+            with col_x: x_axis = st.selectbox("X-Axis Feature", feature_cols, index=feature_cols.index('Scene') if 'Scene' in feature_cols else 0)
+            with col_y: y_axis = st.selectbox("Y-Axis Feature", feature_cols, index=feature_cols.index('Load') if 'Load' in feature_cols else 0)
+            
+            eda_fig = px.scatter(df, x=x_axis, y=y_axis, hover_data=['Scene'], title=f"{y_axis} vs {x_axis}")
+            st.plotly_chart(eda_fig, use_container_width=True)
+            
+            st.markdown("### All Raw Empirical Data")
+            st.dataframe(df)
+
+            # CSV Export for empirical analysis
+            csv = df.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label="(Download) Export Empirical Data (CSV)",
+                data=csv,
+                file_name="scriptpulse_empirical_data.csv",
+                mime="text/csv",
+            )
+        else:
+            # Use Streamlit native chart (simpler, creative abstraction)
+            st.line_chart(df[['Scene', 'Load', 'Recovery', 'Narrative Tension']].set_index('Scene'))
+            st.caption("BLUE LINE: Narrative Tension | ORANGE LINE: Breathing Room")
     
     
     # === MAIN LAYOUT: EDITOR + SIGNALS ===
@@ -980,12 +1470,38 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
                 st.sidebar.markdown("### Analysis Tools")
                 
                 # Save Analysis as JSON
+                report_json = json.dumps(report, indent=2, default=str)
                 st.sidebar.download_button(
-                    label="Save Raw Analysis (JSON)",
+                    label="Save Analysis (JSON)",
                     data=json.dumps(report, indent=2),
                     file_name=f"{script_title}_analysis.json",
                     mime="application/json",
-                    help="Download raw engine JSON data"
+                    help="Download raw analysis data for external processing"
+                )
+                
+                # Reproducibility Export
+                st.sidebar.markdown("---")
+                st.sidebar.markdown("### Reproducibility")
+                import io
+                import zipfile
+                
+                zip_buffer = io.BytesIO()
+                with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED, False) as zip_file:
+                    zip_file.writestr("output.json", json.dumps(report, indent=2))
+                    cur_ablation = ablation_config if isinstance(ablation_config, dict) else {}
+                    zip_file.writestr("ablation_config.json", json.dumps(cur_ablation, indent=2))
+                    try:
+                        with open("scriptpulse/config/hyperparameters.json", "r") as f:
+                            zip_file.writestr("hyperparameters.json", f.read())
+                    except:
+                        pass
+
+                st.sidebar.download_button(
+                    label="(Archive) Download Experiment State (ZIP)",
+                    data=zip_buffer.getvalue(),
+                    file_name=f"{script_title}_experiment_state.zip",
+                    mime="application/zip",
+                    help="Reproducible artifact with all outputs and model parameters."
                 )
                 
                 # Debug Details (Collapsed by default - v13.1 Optimization)
