@@ -188,13 +188,15 @@ def _render_health_sidebar():
 
             st.caption("**Core Agents**")
             for agent, ok in h.get('agents', {}).items():
-                icon = ":white_check_mark:" if ok else ":x:"
-                st.markdown(f"{icon} {agent}")
+                icon = "<i class='bi bi-check-circle-fill icon-pass'></i>" if ok else "<i class='bi bi-x-circle-fill icon-fail'></i>"
+                st.markdown(f"{icon} {agent}", unsafe_allow_html=True)
 
             st.caption("**Governance & Config**")
-            st.markdown(f"{':white_check_mark:' if h.get('governance') else ':x:'} Governance Firewall")
+            gov_icon = "<i class='bi bi-check-circle-fill icon-pass'></i>" if h.get('governance') else "<i class='bi bi-x-circle-fill icon-fail'></i>"
+            st.markdown(f"{gov_icon} Governance Firewall", unsafe_allow_html=True)
             for fname, exists in h.get('config_files', {}).items():
-                st.markdown(f"{':white_check_mark:' if exists else ':x:'} {fname}")
+                f_icon = "<i class='bi bi-check-circle-fill icon-pass'></i>" if exists else "<i class='bi bi-x-circle-fill icon-fail'></i>"
+                st.markdown(f"{f_icon} {fname}", unsafe_allow_html=True)
 
 _render_health_sidebar()
 
@@ -204,6 +206,7 @@ _render_health_sidebar()
 # =============================================================================
 
 st.markdown("""
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 <style>
     /* Clean, distraction-free typography */
     body { 
@@ -225,7 +228,7 @@ st.markdown("""
     .block-container {
         padding-top: 2rem;
         padding-bottom: 5rem;
-        max-width: 960px;  /* Fixed: was max_width (invalid) */
+        max-width: 960px;
     }
     
     /* Signal Boxes - Writer Native Colors */
@@ -245,6 +248,14 @@ st.markdown("""
         border-radius: 8px;
         border: 1px solid #eee;
     }
+
+    /* Bootstrap Icon styling for Streamlit */
+    .bi { font-size: 1em; vertical-align: middle; margin-right: 4px; }
+    .icon-pass { color: #28a745; }
+    .icon-fail { color: #dc3545; }
+    .icon-up { color: #28a745; }
+    .icon-down { color: #dc3545; }
+    .icon-neutral { color: #6c757d; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -922,7 +933,7 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
             for echo in thematic_echoes[:5]:
                 scenes = echo['scenes']
                 motifs = ", ".join([m.title() for m in echo['shared_motifs']])
-                st.markdown(f":link: **Scene {scenes[0]+1} ↔ {scenes[1]+1}**")
+                st.markdown(f"<i class='bi bi-link-45deg'></i> <b>Scene {scenes[0]+1} ↔ {scenes[1]+1}</b>", unsafe_allow_html=True)
                 st.markdown(f"    *Motifs: {motifs}* (Sim: {echo['similarity']})")
             
     # Prepare Data
@@ -962,7 +973,7 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
             conflict_typology = report.get('conflict_typology', [])
             if conflict_typology:
                 st.markdown("---")
-                st.subheader(":crossed_swords: Conflict Profile")
+                st.markdown("<h3><i class='bi bi-lightning-charge-fill' style='color:#e74c3c'></i> Conflict Profile</h3>", unsafe_allow_html=True)
                 st.caption("Research-grade classification of narrative tension types.")
                 
                 # Convert to DF for plotting
@@ -1030,8 +1041,12 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
                 if char_arcs:
                     for char, data in char_arcs.items():
                         trend = data['Growth']
-                        icon = ":chart_with_upwards_trend:" if trend > 0.1 else ":chart_with_downwards_trend:" if trend < -0.1 else ":left_right_arrow:"
-                        st.metric(f"{char}", f"{trend:+.2f} Growth", delta=f"{trend:+.2f}")
+                        if trend > 0.1:
+                            st.markdown(f"<i class='bi bi-graph-up-arrow icon-up'></i> **{char}**: {trend:+.2f} Growth", unsafe_allow_html=True)
+                        elif trend < -0.1:
+                            st.markdown(f"<i class='bi bi-graph-down-arrow icon-down'></i> **{char}**: {trend:+.2f} Growth", unsafe_allow_html=True)
+                        else:
+                            st.markdown(f"<i class='bi bi-arrow-left-right icon-neutral'></i> **{char}**: {trend:+.2f} Growth", unsafe_allow_html=True)
             
             # C. Inter-Character Tension Network (Stage 5)
             interaction_networks = report.get('interaction_networks', {})
@@ -1098,7 +1113,7 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
                 # A. Timeline
                 timeline_issues = logic_audit.get('timeline', [])
                 if timeline_issues:
-                    st.subheader(":clock3: Timeline Continuity")
+                    st.markdown("<h3><i class='bi bi-clock-history' style='color:#3498db'></i> Timeline Continuity</h3>", unsafe_allow_html=True)
                     for issue in timeline_issues:
                         if issue['severity'] == "Warning":
                             st.warning(f"**Scene {issue['scene_index']}** — {issue['issue']}")
@@ -1109,7 +1124,7 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
                 # B. Causality
                 causality_issues = logic_audit.get('causality', [])
                 if causality_issues:
-                    st.subheader(":link: Causal Progression")
+                    st.markdown("<h3><i class='bi bi-diagram-3-fill' style='color:#9b59b6'></i> Causal Progression</h3>", unsafe_allow_html=True)
                     for issue in causality_issues:
                         if issue['severity'] == "Warning":
                             st.warning(f"**Scene {issue['scene_index']}** — {issue['issue']}")
@@ -1120,7 +1135,7 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
                 # C. Dialogue Authenticity
                 dialogue_scores = logic_audit.get('dialogue', [])
                 if dialogue_scores:
-                    st.subheader(":speech_balloon: Dialogue Authenticity")
+                    st.markdown("<h3><i class='bi bi-chat-quote-fill' style='color:#e67e22'></i> Dialogue Authenticity</h3>", unsafe_allow_html=True)
                     # Show the most prominent dialogue classifications
                     from collections import Counter
                     d_labels = [d['quality_label'] for d in dialogue_scores if d]
@@ -1312,7 +1327,7 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
                     pass
 
             # Ground Truth Overlay with IRR
-            st.markdown("### :bar_chart: Empirical Validation")
+            st.markdown("<h3><i class='bi bi-bar-chart-line-fill' style='color:#1abc9c'></i> Empirical Validation</h3>", unsafe_allow_html=True)
             gt_file = st.file_uploader("Upload Human Ratings CSV (Ground Truth)", type=['csv'])
             if gt_file:
                 try:
@@ -1385,7 +1400,7 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
             
             with st.expander("View Advanced Exploratory Data Formats", expanded=False):
                 # Dynamic X/Y Plotting (Exploratory Data Analysis)
-                st.markdown("### :mag: Exploratory Data Analysis")
+                st.markdown("<h3><i class='bi bi-search' style='color:#2980b9'></i> Exploratory Data Analysis</h3>", unsafe_allow_html=True)
                 feature_cols = [c for c in df.columns if c not in ['Script_Title']]
                 col_x, col_y = st.columns(2)
                 with col_x: x_axis = st.selectbox("X-Axis Feature", feature_cols, index=feature_cols.index('Scene') if 'Scene' in feature_cols else 0)
@@ -1434,7 +1449,7 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
         
         if intent_acks:
             for ack in intent_acks:
-                st.markdown(f"<div class='signal-box signal-flow'>:dart: {ack}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='signal-box signal-flow'><i class='bi bi-crosshair' style='color:#e74c3c'></i> {ack}</div>", unsafe_allow_html=True)
         
         # 2. Affective Signals (v6.5 - NEW)
         # Scan trace for high-intensity affective blocks
@@ -1513,7 +1528,7 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
                 )
                 
                 # Debug Details (Collapsed by default - v13.1 Optimization)
-                with st.expander(":wrench: Debug Output"):
+                with st.expander("Debug Output"):
                     st.json(report.get('debug_export', {}))
                 
                 # Print Summary
@@ -1544,7 +1559,7 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
         intelligence = report.get('narrative_intelligence', [])
         if intelligence:
             st.markdown("---")
-            st.subheader(":bulb: Plot Intelligence (Beta)")
+            st.markdown("<h3><i class='bi bi-lightbulb-fill' style='color:#f1c40f'></i> Plot Intelligence (Beta)</h3>", unsafe_allow_html=True)
             for item in intelligence:
                 with st.expander(f"{item['type']}: {item['issue']}", expanded=True):
                     st.write(item['advice'])
