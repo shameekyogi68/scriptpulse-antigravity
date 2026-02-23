@@ -107,7 +107,7 @@ def preload_models(cloud_mode=False):
         return False
 
 # Detect if we are on a constrained cloud environment (Streamlit Cloud, Heroku)
-IS_CLOUD = os.environ.get('STREAMLIT_SERVER_PORT') is not None or os.environ.get('CLOUD_MODE', '1') == '1'
+IS_CLOUD = True # Forced to True to prevent OOM crash on Streamlit Cloud
 
 # Trigger Preload only if local (avoid 5GB RAM spike on boot)
 preload_models(cloud_mode=IS_CLOUD)
