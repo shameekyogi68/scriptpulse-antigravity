@@ -78,7 +78,7 @@ if not passed:
 
 # Abort early if runner could not be imported
 if runner is None:
-    st.error(f"[!] ScriptPulse Engine failed to load: {_RUNNER_ERROR}")
+    st.error(f"ScriptPulse Engine failed to load: {_RUNNER_ERROR}")
     st.info("Please check that all dependencies are installed correctly.")
     st.stop()
 
@@ -132,7 +132,7 @@ if 'health_report' not in st.session_state:
 
 # We will render the health sidebar at the bottom of the script.
 def _render_health_sidebar():
-    with st.expander("🩺 System Diagnostics & Memory", expanded=False):
+    with st.expander("System Diagnostics & Memory", expanded=False):
         # ── Memory Safe Mode toggle ────────────────────────────────
         st.caption("**[RUN] Performance Mode**")
         import os as _os
@@ -141,7 +141,7 @@ def _render_health_sidebar():
             st.session_state['heuristics_only'] = heuristics_env
 
         mem_safe = st.toggle(
-            "(+) Memory Safe Mode (no ML models)",
+            "Memory Safe Mode (no ML models)",
             value=st.session_state['heuristics_only'],
             key="mem_safe_toggle",
             help="Disables SBERT/GPT-2/DistilBART. Saves ~900MB RAM. Uses fast heuristics. Accuracy is preserved for structural analysis."
@@ -152,17 +152,17 @@ def _render_health_sidebar():
             # Invalidate model cache so next run picks up the change
             from scriptpulse.pipeline import runner as _runner
             _runner._AGENT_CACHE.clear()
-            st.toast("[OK] Mode changed — model cache cleared." if mem_safe else "[OK] Full ML mode restored.")
+            st.toast("Mode changed — model cache cleared." if mem_safe else "Full ML mode restored.")
 
         # ── Manual memory release ──────────────────────────────────
-        if st.button("[-] Free Model Memory", key="free_mem_btn",
+        if st.button("Free Model Memory", key="free_mem_btn",
                      help="Releases SBERT/GPT-2 references and triggers GC. Use when RAM is low."):
             try:
                 from scriptpulse.utils.model_manager import manager as _mm
                 from scriptpulse.pipeline import runner as _runner
                 _mm.release_models()
                 _runner._AGENT_CACHE.clear()
-                st.success("[OK] Model memory released. Next analysis will reload if needed.")
+                st.success("Model memory released. Next analysis will reload if needed.")
             except Exception as _e:
                 st.warning(f"Release partial: {_e}")
 
@@ -182,19 +182,19 @@ def _render_health_sidebar():
         if h:
             status = h.get('status', 'unknown')
             if status == 'healthy':
-                st.success(f"[OK] System Status: **{status.upper()}**")
+                st.success(f"System Status: **{status.upper()}**")
             else:
-                st.warning(f"[!] System Status: **{status.upper()}**")
+                st.warning(f"System Status: **{status.upper()}**")
 
             st.caption("**Core Agents**")
             for agent, ok in h.get('agents', {}).items():
-                icon = "[+]" if ok else "[-]"
+                icon = ":white_check_mark:" if ok else ":x:"
                 st.markdown(f"{icon} {agent}")
 
             st.caption("**Governance & Config**")
-            st.markdown(f"{'[+]' if h.get('governance') else '[-]'} Governance Firewall")
+            st.markdown(f"{':white_check_mark:' if h.get('governance') else ':x:'} Governance Firewall")
             for fname, exists in h.get('config_files', {}).items():
-                st.markdown(f"{'[+]' if exists else '[-]'} {fname}")
+                st.markdown(f"{':white_check_mark:' if exists else ':x:'} {fname}")
 
 _render_health_sidebar()
 
@@ -260,7 +260,7 @@ with st.sidebar:
     ui_mode = st.radio("Interface Mode", ["Writer Mode (Creative)", "Lab Mode (Research)"], index=0, help="Lab Mode shows advanced ML ablation and threshold controls.")
     st.markdown("---")
     
-    with st.expander("(^) Engine Context (RAM Usage)", expanded=ui_mode == "Lab Mode (Research)"):
+    with st.expander("Engine Context (RAM Usage)", expanded=ui_mode == "Lab Mode (Research)"):
         engine_mode = st.radio(
             "Processing Mode",
             ["Fast Mode (Heuristic Engine – recommended)", "Full AI Mode (Loads SBERT + GPT-2, needs 8 GB RAM)"],
@@ -269,9 +269,9 @@ with st.sidebar:
         )
         force_cloud = "Fast" in engine_mode
         if force_cloud:
-            st.caption("[+] Fast Mode active — low memory footprint (<1 GB)")
+            st.caption("Fast Mode active — low memory footprint (<1 GB)")
         else:
-            st.caption("[~] Full AI Mode — allocates up to 5 GB RAM. Close other apps if running locally.")
+            st.caption("Full AI Mode — allocates up to 5 GB RAM. Close other apps if running locally.")
             
     st.markdown("---")
     
@@ -286,7 +286,7 @@ with st.sidebar:
 # =============================================================================
 
 if mode == "Live Sandbox":
-    st.header("(^) Live Sandbox (Intervention)")
+    st.header("Live Sandbox (Intervention)")
     st.caption("Test edits side-by-side to see how changes affect pacing.")
     
     col_base, col_new = st.columns(2)
@@ -320,7 +320,7 @@ if mode == "Live Sandbox":
                         import scriptpulse.utils.xai_highlighter as xai
                         highlighted_html = xai.generate_xai_html(sandbox_new)
                         st.markdown(highlighted_html, unsafe_allow_html=True)
-                        st.caption("[-] High-Density/Action Trigger | [*] Dialogue Focus")
+                        st.caption("Highlight = High-Density/Action Trigger | Italic = Dialogue Focus")
                     except Exception:
                         st.info("XAI highlighting unavailable.")
                 except Exception as e:
@@ -330,8 +330,8 @@ if mode == "Live Sandbox":
     st.stop()
     
 if mode == "Scene Compare":
-    st.header("[=] Scene A/B")
-    st.caption("Compare two versions.")
+    st.header("Scene A/B Compare")
+    st.caption("Compare two versions side by side.")
     
     col1, col2 = st.columns(2)
     with col1:
@@ -389,20 +389,20 @@ with st.sidebar:
     # --- INFO ---
     st.info(
         "**Reading the Pulse**\n\n"
-        "(^) **High Tension (7–10)**: Intense, high cognitive load.\n"
-        "(Chart) **Balanced (4–6)**: Engaging flow, sustainable pacing.\n"
+        "**High Tension (7–10)**: Intense, high cognitive load.\n"
+        "**Balanced (4–6)**: Engaging flow, sustainable pacing.\n"
         "(v) **Low Energy (0–3)**: Risk of audience drift — consider adding pressure."
     )
 
     
     st.markdown("---")
     # Hide complex settings by default
-    with st.expander("(Settings) Advanced Settings"):
+    with st.expander("Advanced Settings"):
          ref_file = st.file_uploader("Reference Script", type=['txt', 'pdf'])
 
     ablation_config = {}
     if ui_mode == "Lab Mode (Research)":
-        with st.expander("(Lab) Advanced Model Ablation Console", expanded=False):
+        with st.expander("Advanced Model Ablation Console", expanded=False):
             st.markdown("Control exact Pipeline constraints.")
             
             # Force to False if Cloud Mode is active
@@ -411,7 +411,7 @@ with st.sidebar:
             ab_multimodal = st.checkbox("Enable Multimodal Extrapolation", value=True, key="ab_multimodal")
             
             if force_cloud:
-                st.warning("[!] Heavy models disabled by Hardware Constraints selector above.")
+                st.warning("Heavy models disabled by Hardware Constraints selector above.")
                 
             ab_seed = st.number_input("Random Seed", value=42, key="ab_seed")
             ab_decay = st.number_input("Fatigue Decay Rate (k)", value=0.05, step=0.01, key="ab_decay")
@@ -453,7 +453,7 @@ st.markdown("*A visual interface for screenplay rhythm.*")
 st.header("1. Load Draft")
 st.info("Welcome to ScriptPulse! Upload a screenplay (or paste text) to analyze its pacing, emotional arcs, and semantic rhythm.")
 
-tab_up, tab_paste = st.tabs(["[+] Upload Document", "(Keyboard) Paste Text"])
+tab_up, tab_paste = st.tabs(["Upload Document", "(Keyboard) Paste Text"])
 
 script_input = None
 scene_list = []
@@ -480,7 +480,7 @@ if uploaded_file is not None:
                 from scriptpulse.agents import importers
                 string_data = uploaded_file.getvalue().decode("utf-8")
                 pre_parsed_lines = importers.run(string_data)
-                st.success(f"[OK] FDX Parsed: {len(pre_parsed_lines)} lines extracted.")
+                st.success(f"FDX Parsed: {len(pre_parsed_lines)} lines extracted.")
                 
                 # Reconstruct text for display/fallback
                 script_text = "\n".join([l['text'] for l in pre_parsed_lines])
@@ -495,12 +495,12 @@ if uploaded_file is not None:
                     text_parts = [page.extract_text() or '' for page in pdf_reader.pages]
                     script_text = "\n".join(text_parts)
                     if not script_text.strip():
-                        st.warning("[!] PDF text extraction returned empty. Try uploading as .txt instead.")
+                        st.warning("PDF text extraction returned empty. Try uploading as .txt instead.")
                 except Exception as pdf_e:
                     st.error(f"PDF Parse Error: {pdf_e}. Try uploading as .txt instead.")
                     script_text = ""
             else:
-                st.warning("[!] PDF support unavailable. Please upload as .txt file.")
+                st.warning("PDF support unavailable. Please upload as .txt file.")
                 script_text = ""
         else: # txt, fountain, md
             script_text = uploaded_file.read().decode('utf-8')
@@ -534,7 +534,7 @@ if uploaded_file is not None:
         except Exception:
             all_chars = []
         
-        with st.expander("(+) Character Context (Optional) - Tag Roles"):
+        with st.expander("Character Context (Optional) - Tag Roles"):
             st.caption("Help the Fairness Auditor understand context (e.g., Villains are expected to be negative).")
             char_tags = {}
             cols = st.columns(2)
@@ -562,7 +562,7 @@ if not script_input and pasted_text and len(pasted_text) > 100:
 st.header("2. Analysis Configuration")
 
 settings_exp_state = False
-exp_settings = st.expander("(Settings) Target Genre & Context", expanded=settings_exp_state)
+exp_settings = st.expander("Target Genre & Context", expanded=settings_exp_state)
 
 col_genre, col_lens = exp_settings.columns(2)
 
@@ -765,12 +765,12 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
             tone_label = dom_emo
             
             # Writer-Centric Emojis
-            if "Fear" in dom_emo: tone_emoji = "(!) Tension"
-            elif "Suspicion" in dom_emo: tone_emoji = "(?) Mystery"
-            elif "Empowered" in dom_emo: tone_emoji = "(^) Drive"
+            if "Fear" in dom_emo: tone_emoji = "Tension"
+            elif "Suspicion" in dom_emo: tone_emoji = "Mystery"
+            elif "Empowered" in dom_emo: tone_emoji = "Drive"
             elif "Helpless" in dom_emo: tone_emoji = "Tragedy"
-            elif "Trust" in dom_emo: tone_emoji = "(+) Warmth"
-            else: tone_emoji = "(+) Drama"
+            elif "Trust" in dom_emo: tone_emoji = "Warmth"
+            else: tone_emoji = "Drama"
     
     runtime = report.get('runtime_estimate', {})
     runtime_min = runtime.get('avg_minutes', 0)
@@ -794,8 +794,8 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
     # === COLLAPSIBLE SECTIONS (v21.0) ===
     
     # Hide research comparisons in expander
-    with st.expander("(?) Advanced Comparisons", expanded=False):
-        with st.expander("(?) Research Comparison (Longitudinal & Target)", expanded=True):
+    with st.expander("Advanced Comparisons", expanded=False):
+        with st.expander("Research Comparison (Longitudinal & Target)", expanded=True):
             cols = st.columns(2)
             
             # A. Longitudinal (Optimization Gain)
@@ -861,7 +861,7 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
             repair_strategies = []
         
         if repair_strategies:
-            with st.expander("(+) Creative Coaching & Repair", expanded=True):
+            with st.expander("Creative Coaching & Repair", expanded=True):
                 st.caption("Heuristic-to-Creative suggestions based on structural analysis")
                 for sugg in repair_strategies:
                     # Ensure sugg is a dict
@@ -873,20 +873,20 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
                         # Heuristic Coaching Translation
                         val = sugg.get('strategy', '')
                         if "decrease" in val.lower() and "density" in val.lower():
-                            st.info("(+) **Writer Tip**: Scene is too dense. Break up action blocks or insert a moment of reflection for 'breathing room'.")
+                            st.info("**Writer Tip**: Scene is too dense. Break up action blocks or insert a moment of reflection for 'breathing room'.")
                         elif "increase" in val.lower() and "tension" in val.lower():
-                            st.info("(+) **Writer Tip**: Scene is stalling. Introduce a complication, raise stakes, or cut exposition to accelerate pacing.")
+                            st.info("**Writer Tip**: Scene is stalling. Introduce a complication, raise stakes, or cut exposition to accelerate pacing.")
                         else:
-                            st.markdown(f"-> {val}")
+                            st.markdown(f"**Suggestion:** {val}")
                         st.markdown("")  # spacing
                         
     if ui_mode == "Writer Mode (Creative)":
-        with st.expander("(!) System Blindspots (Trust Management)", expanded=False):
+        with st.expander("System Blindspots (Trust Management)", expanded=False):
             st.warning("**What the AI Can't See:**\n\nScriptPulse measures *Structural Pacing* and *Lexical Density*. It does **NOT** understand narrative logic. It will not flag plot holes, continuity errors (e.g., 'Chekhov's Gun'), or character logic inconsistencies.")
                     
                     
     # === WRITER WORKSPACE ===
-    st.markdown("### (+) Story Analysis")
+    st.markdown("### Story Analysis")
     
     tabs = st.tabs(["Themes & Drivers", "Characters", "Structure", "Subtext (AI)"])
     
@@ -917,13 +917,13 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
         thematic_echoes = report.get('thematic_echoes', [])
         if thematic_echoes:
             st.markdown("---")
-            st.subheader("(+) Thematic Echoes")
+            st.subheader("Thematic Echoes")
             st.caption("Scenes that share significant semantic motifs (research-grade mirrors).")
             for echo in thematic_echoes[:5]:
                 scenes = echo['scenes']
                 motifs = ", ".join([m.title() for m in echo['shared_motifs']])
-                st.markdown(f"(Link) **Scene {scenes[0]+1} <-> {scenes[1]+1}**")
-                st.markdown(f"   *Motifs: {motifs}* (Sim: {echo['similarity']})")
+                st.markdown(f":link: **Scene {scenes[0]+1} ↔ {scenes[1]+1}**")
+                st.markdown(f"    *Motifs: {motifs}* (Sim: {echo['similarity']})")
             
     # Prepare Data
     moonshot_data = report.get('moonshot_analysis', []) if report else []
@@ -932,7 +932,7 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
 
     with tab_subtext:
         if moonshot_data or report.get('subtext_audit'):
-            st.info("(^) **AI Subtext Reader**")
+            st.info("**AI Subtext Reader**")
             st.caption("The AI detects if characters are speaking too literally or hiding their true intent.")
             
             # Display Subtext Audit Warnings
@@ -962,7 +962,7 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
             conflict_typology = report.get('conflict_typology', [])
             if conflict_typology:
                 st.markdown("---")
-                st.subheader("(X) Conflict Profile")
+                st.subheader(":crossed_swords: Conflict Profile")
                 st.caption("Research-grade classification of narrative tension types.")
                 
                 # Convert to DF for plotting
@@ -984,7 +984,7 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
         voice_data = report.get('voice_fingerprints', {})
         if voice_data:
             # A. Voice Map
-            st.subheader("(+) Voice Distinctiveness")
+            st.subheader("Voice Distinctiveness")
             v_data = []
             archetypes = report.get('archetypes', {})
             
@@ -1006,7 +1006,7 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
             st.markdown("---")
             
             # B. Character Growth (Arc)
-            st.subheader("(^) Character Growth")
+            st.subheader("Character Growth")
             if len(report.get('scenes', [])) > 6:
                 # Simple logic: Act 1 vs Act 3 Agency
                 char_arcs = {}
@@ -1030,8 +1030,8 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
                 if char_arcs:
                     for char, data in char_arcs.items():
                         trend = data['Growth']
-                        icon = "(+)" if trend > 0.1 else "(-)" if trend < -0.1 else "(->)"
-                        st.metric(f"{char}", f"{icon} {trend:.2f} Growth")
+                        icon = ":chart_with_upwards_trend:" if trend > 0.1 else ":chart_with_downwards_trend:" if trend < -0.1 else ":left_right_arrow:"
+                        st.metric(f"{char}", f"{trend:+.2f} Growth", delta=f"{trend:+.2f}")
             
             # C. Inter-Character Tension Network (Stage 5)
             interaction_networks = report.get('interaction_networks', {})
@@ -1040,8 +1040,8 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
             
             if edges:
                 st.markdown("---")
-                with st.expander("🔬 View Inter-Character Tension Network Matrix", expanded=False):
-                    st.subheader("(Net) Inter-Character Tension Network")
+                with st.expander("View Inter-Character Tension Network Matrix", expanded=False):
+                    st.subheader("Inter-Character Tension Network")
                     st.caption("Research-grade social tension matrix.")
                     
                     # Matrix Heatmap preparation
@@ -1056,9 +1056,9 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
                     st.dataframe(matrix.style.background_gradient(cmap='Reds', vmin=0, vmax=1.0), use_container_width=True)
                     
                     if triangles:
-                        st.warning(f"**[!] Complex Subplots Detected!** Found {len(triangles)} conflict triangles.")
+                        st.warning(f"**Complex Subplots Detected!** Found {len(triangles)} conflict triangles.")
                         for t in triangles:
-                            st.markdown(f"(^) **Triangle Cycle**: {t[0]} <-> {t[1]} <-> {t[2]}")
+                            st.markdown(f"**Triangle Cycle**: {t[0]} <-> {t[1]} <-> {t[2]}")
                         st.caption("A conflict triangle indicates a highly volatile, codependent dynamic that dominates cognitive load.")
                     else:
                         st.success("No complex conflict triangles detected. Interpersonal tension is linear/direct.")
@@ -1092,31 +1092,35 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
         logic_audit = report.get('narrative_logic_audit', {})
         if logic_audit:
             st.markdown("---")
-            with st.expander("(Inspect) Narrative Logic Blindspots (Stage 6)", expanded=True):
+            with st.expander("Narrative Logic Blindspots (Stage 6)", expanded=True):
                 st.caption("Advanced checks for continuity, causal flow, and dialogue authenticity.")
                 
                 # A. Timeline
                 timeline_issues = logic_audit.get('timeline', [])
                 if timeline_issues:
-                    st.subheader("(Timeline) Timeline Continuity")
+                    st.subheader(":clock3: Timeline Continuity")
                     for issue in timeline_issues:
-                        icon = "⚠️" if issue['severity'] == "Warning" else "(i)"
-                        st.markdown(f"**{icon} Scene {issue['scene_index']} - {issue['issue']}**")
-                        st.caption(f"↳ {issue['advice']}")
+                        if issue['severity'] == "Warning":
+                            st.warning(f"**Scene {issue['scene_index']}** — {issue['issue']}")
+                        else:
+                            st.info(f"**Scene {issue['scene_index']}** — {issue['issue']}")
+                        st.caption(f"  {issue['advice']}")
                 
                 # B. Causality
                 causality_issues = logic_audit.get('causality', [])
                 if causality_issues:
-                    st.subheader("(Link) Causal Progression")
+                    st.subheader(":link: Causal Progression")
                     for issue in causality_issues:
-                        icon = "⚠️" if issue['severity'] == "Warning" else "🟡"
-                        st.markdown(f"**{icon} Scene {issue['scene_index']} - {issue['issue']}**")
-                        st.caption(f"↳ {issue['advice']}")
+                        if issue['severity'] == "Warning":
+                            st.warning(f"**Scene {issue['scene_index']}** — {issue['issue']}")
+                        else:
+                            st.info(f"**Scene {issue['scene_index']}** — {issue['issue']}")
+                        st.caption(f"  {issue['advice']}")
                 
                 # C. Dialogue Authenticity
                 dialogue_scores = logic_audit.get('dialogue', [])
                 if dialogue_scores:
-                    st.subheader("(Dialogue) Dialogue Authenticity")
+                    st.subheader(":speech_balloon: Dialogue Authenticity")
                     # Show the most prominent dialogue classifications
                     from collections import Counter
                     d_labels = [d['quality_label'] for d in dialogue_scores if d]
@@ -1136,7 +1140,7 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
                             st.warning(f"**Scene {worst['scene_index']}** flagged as `{worst['quality_label']}` (High 'On-The-Nose' / 'Shoe-Leather'). Consider a rewrite.")
                             
                 if not timeline_issues and not causality_issues:
-                    st.success("[OK] **Narrative Logic is Sound.** No major timeline or causal dead-ends detected.")
+                    st.success("**Narrative Logic is Sound.** No major timeline or causal dead-ends detected.")
 
     # Cleanup Sidebar Message
     # (Removed longitudinal info for simplicity)
@@ -1308,7 +1312,7 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
                     pass
 
             # Ground Truth Overlay with IRR
-            st.markdown("### (Chart) Empirical Validation")
+            st.markdown("### :bar_chart: Empirical Validation")
             gt_file = st.file_uploader("Upload Human Ratings CSV (Ground Truth)", type=['csv'])
             if gt_file:
                 try:
@@ -1379,9 +1383,9 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
             
             st.plotly_chart(fig, use_container_width=True)
             
-            with st.expander("🔬 View Advanced Exploratory Data Formats", expanded=False):
+            with st.expander("View Advanced Exploratory Data Formats", expanded=False):
                 # Dynamic X/Y Plotting (Exploratory Data Analysis)
-                st.markdown("### (Inspect) Exploratory Data Analysis")
+                st.markdown("### :mag: Exploratory Data Analysis")
                 feature_cols = [c for c in df.columns if c not in ['Script_Title']]
                 col_x, col_y = st.columns(2)
                 with col_x: x_axis = st.selectbox("X-Axis Feature", feature_cols, index=feature_cols.index('Scene') if 'Scene' in feature_cols else 0)
@@ -1396,7 +1400,7 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
                 # CSV Export for empirical analysis
                 csv = df.to_csv(index=False).encode('utf-8')
                 st.download_button(
-                    label="(Download) Export Empirical Data (CSV)",
+                    label="Export Empirical Data (CSV)",
                     data=csv,
                     file_name="scriptpulse_empirical_data.csv",
                     mime="text/csv",
@@ -1430,7 +1434,7 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
         
         if intent_acks:
             for ack in intent_acks:
-                st.markdown(f"<div class='signal-box signal-flow'>(Target) {ack}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='signal-box signal-flow'>:dart: {ack}</div>", unsafe_allow_html=True)
         
         # 2. Affective Signals (v6.5 - NEW)
         # Scan trace for high-intensity affective blocks
@@ -1501,7 +1505,7 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
                         pass
 
                 st.sidebar.download_button(
-                    label="(Archive) Download Experiment State (ZIP)",
+                    label="Download Experiment State (ZIP)",
                     data=zip_buffer.getvalue(),
                     file_name=f"{script_title}_experiment_state.zip",
                     mime="application/zip",
@@ -1509,7 +1513,7 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
                 )
                 
                 # Debug Details (Collapsed by default - v13.1 Optimization)
-                with st.expander("(Debug) Debug Output"):
+                with st.expander(":wrench: Debug Output"):
                     st.json(report.get('debug_export', {}))
                 
                 # Print Summary
@@ -1540,13 +1544,13 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
         intelligence = report.get('narrative_intelligence', [])
         if intelligence:
             st.markdown("---")
-            st.subheader("(Intelligence) Plot Intelligence (Beta)")
+            st.subheader(":bulb: Plot Intelligence (Beta)")
             for item in intelligence:
                 with st.expander(f"{item['type']}: {item['issue']}", expanded=True):
                     st.write(item['advice'])
                 
         if time.time() - render_start > HARD_RENDER_LIMIT:
-             st.warning("[!] Report Truncated: Render timeout exceeded.")
+             st.warning("Report Truncated: Render timeout exceeded.")
              truncated = True
              
         # 3. Reflections (Structure)
@@ -1567,14 +1571,14 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
         elif silence:
              is_stable = ssf_analysis.get('is_silent', False)
              if is_stable:
-                 st.markdown(f"<div class='signal-box signal-flow'>[OK] <strong>Stable Flow.</strong><br>{silence}</div>", unsafe_allow_html=True)
+                 st.markdown(f"<div class='signal-box signal-flow'><strong>Stable Flow.</strong><br>{silence}</div>", unsafe_allow_html=True)
              else:
                  st.markdown(f"<div class='signal-box'>{silence}</div>", unsafe_allow_html=True)
                  
     # === DOWNLOAD REPORT ===
     st.markdown("---")
     st.download_button(
-        label="(Report) Download Analysis Report",
+        label="Download Analysis Report",
         data=str(report),
         file_name="scriptpulse_analysis.txt",
         mime="text/plain"

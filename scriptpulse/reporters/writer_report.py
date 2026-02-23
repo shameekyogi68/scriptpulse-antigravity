@@ -35,20 +35,19 @@ def _benchmark_tag(value, genre, signal):
     benchmarks = GENRE_BENCHMARKS.get(genre.lower(), GENRE_BENCHMARKS['general'])
     if signal not in benchmarks:
         return f"{value:.2f}"
-    low, high = benchmarks[signal]
     if value < low:
-        return f"{value:.2f} ⚠️ *(below {genre} target: {low:.2f}–{high:.2f})*"
+        return f"{value:.2f} [BELOW] *(below {genre} target: {low:.2f}-{high:.2f})*"
     elif value > high:
-        return f"{value:.2f} 🔴 *(above {genre} target: {low:.2f}–{high:.2f})*"
+        return f"{value:.2f} [ABOVE] *(above {genre} target: {low:.2f}-{high:.2f})*"
     else:
-        return f"{value:.2f} ✅ *(on target: {low:.2f}–{high:.2f} for {genre})*"
+        return f"{value:.2f} [TARGET] *(on target: {low:.2f}-{high:.2f} for {genre})*"
 
 
 def _stars(value, max_val=1.0, n=5):
     """Return a visual star bar for a 0..max_val value."""
     filled = round((value / max_val) * n)
     filled = max(0, min(n, filled))
-    return "★" * filled + "☆" * (n - filled)
+    return "*" * filled + "-" * (n - filled)
 
 
 def _section(title):
@@ -80,7 +79,7 @@ def generate_writer_report(pipeline_output, title="Untitled Script", genre=None)
     # -------------------------------------------------------------------------
     # HEADER
     # -------------------------------------------------------------------------
-    lines.append(f"# 📋 ScriptPulse Writer's Report")
+    lines.append(f"# ScriptPulse Writer's Report")
     lines.append(f"**Script:** {title.upper()}  ")
     lines.append(f"**Genre:** {genre.title()}  ")
     lines.append(f"**Generated:** {datetime.now().strftime('%B %d, %Y at %H:%M')}  ")
@@ -117,13 +116,13 @@ def generate_writer_report(pipeline_output, title="Untitled Script", genre=None)
     lines.append(f"| INT / EXT Split | {loc_profile.get('int_scenes', 0)} INT / {loc_profile.get('ext_scenes', 0)} EXT |")
 
     if loc_profile.get('location_warning'):
-        lines.append(f"\n> ⚠️ {loc_profile['location_warning']}")
+        lines.append(f"\n> [WARNING] {loc_profile['location_warning']}")
 
     # -------------------------------------------------------------------------
     # SIGNAL DASHBOARD (Genre-benchmarked)
     # -------------------------------------------------------------------------
     lines.append(_section("Signal Dashboard"))
-    lines.append("*All signals benchmarked against your genre. ✅ = on target, ⚠️ = below, 🔴 = above.*\n")
+    lines.append("*All signals benchmarked against your genre. [TARGET] = on target, [BELOW] = below, [ABOVE] = above.*\n")
 
     if trace:
         import statistics as _stats
@@ -172,7 +171,7 @@ def generate_writer_report(pipeline_output, title="Untitled Script", genre=None)
             bar = _stars(min(strength, 1.0))
             lines.append(f"- **{label}** → Scene {scene} &nbsp; {bar} (strength: {strength:.2f})")
             if warning:
-                lines.append(f"  > ⚠️ {warning}")
+                lines.append(f"  > [WARNING] {warning}")
 
     # -------------------------------------------------------------------------
     # NARRATIVE DIAGNOSIS
@@ -223,16 +222,16 @@ def generate_writer_report(pipeline_output, title="Untitled Script", genre=None)
     high_scenes = econ_map.get('high_economy_scenes', [])
 
     if cut_candidates:
-        lines.append(f"⚠️ **{low_count} Low Economy scene(s)** — potential cut candidates: Scenes {', '.join(str(s) for s in cut_candidates)}")
+        lines.append(f"[WARNING] **{low_count} Low Economy scene(s)** — potential cut candidates: Scenes {', '.join(str(s) for s in cut_candidates)}")
     if high_scenes:
-        lines.append(f"✅ **High Economy scenes** (doing the most story work): {', '.join(str(s) for s in high_scenes[:5])}")
+        lines.append(f"[GOOD] **High Economy scenes** (doing the most story work): {', '.join(str(s) for s in high_scenes[:5])}")
 
     econ_table = econ_map.get('map', [])
     if econ_table:
         lines.append(f"\n| Scene | Economy | Score |")
         lines.append(f"|-------|---------|-------|")
         for e in econ_table[:15]:
-            icon = "🟢" if e['label'] == 'High Economy' else ("🟡" if e['label'] == 'Moderate Economy' else "🔴")
+            icon = "[HIGH]" if e['label'] == 'High Economy' else ("[MOD]" if e['label'] == 'Moderate Economy' else "[LOW]")
             lines.append(f"| {e['scene']} | {icon} {e['label']} | {e['score']} |")
         if len(econ_table) > 15:
             lines.append(f"| ... | *({len(econ_table) - 15} more scenes)* | ... |")
@@ -249,9 +248,9 @@ def generate_writer_report(pipeline_output, title="Untitled Script", genre=None)
         lines.append(f"**Compliance Score:** {score}/100 &nbsp; {bar}\n")
         if issues:
             for issue in issues:
-                lines.append(f"- ⚠️ {issue}")
+                lines.append(f"- [WARNING] {issue}")
         else:
-            lines.append("✅ No format issues detected.")
+            lines.append("[OK] No format issues detected.")
     else:
         lines.append("*Format compliance check not available for this script.*")
 

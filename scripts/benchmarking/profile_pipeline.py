@@ -1,65 +1,97 @@
 #!/usr/bin/env python3
 """
-ScriptPulse Performance Profiler
-Runs cProfile + tracemalloc on a 20-scene synthetic script.
-Output: timing per function + peak memory.
+ScriptPulse Lightweight Performance Profiler
+---------------------------------------------
+Runs a SINGLE pass on a tiny 3-scene script with cpu_safe_mode=True.
+Reports wall time + peak RSS memory (no tracemalloc overhead).
+Designed to complete in under 60 seconds on 8GB machines.
 """
-import cProfile
-import pstats
-import tracemalloc
-import io
-import sys
-import os
 import time
+import os
+import sys
+import signal
+import resource  # macOS/Linux only — gives peak RSS without tracemalloc
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# Hard 120-second timeout — never hang the machine
+def _timeout_handler(signum, frame):
+    print("\n[TIMEOUT] Pipeline exceeded 120s. Aborting safely.")
+    sys.exit(1)
+
+signal.signal(signal.SIGALRM, _timeout_handler)
+signal.alarm(120)
+
 from scriptpulse.pipeline import runner
 
-# ---- Synthetic 20-scene script (moderate complexity) ----
-SCRIPT = ""
-scenes = [
-    ("INT. OFFICE - DAY", "SARAH\nWe need to close the deal today.\nTOM\nI know. The board won't wait.\n"),
-    ("INT. BOARDROOM - NIGHT", "CEO\nNumbers are down. Someone explain.\nANALYST\nMarket conditions shifted.\n"),
-    ("INT. CAFÉ - MORNING", "ANNA reads her phone. She looks pale.\nANNA\nHe's not coming back.\n"),
-    ("EXT. ROOFTOP - SUNSET", "MARCUS stares at the city skyline.\nMARCUS\nThis was never about the money.\n"),
-    ("INT. HOSPITAL ROOM - NIGHT", "The machines beep. DR. CHEN checks the chart.\nDR. CHEN\nShe's stable for now.\n"),
-]
-for i in range(20):
-    h, body = scenes[i % len(scenes)]
-    SCRIPT += f"\n{h}\n\n{body}\n"
+# ---- Minimal 3-scene script (keeps model load fast) ----
+SCRIPT = """
+INT. OFFICE - DAY
 
-print("=" * 60)
-print("SCRIPTPULSE PERFORMANCE PROFILER")
-print("=" * 60)
-print(f"Script size: {len(SCRIPT):,} chars | ~{SCRIPT.count('INT.') + SCRIPT.count('EXT.')} scenes\n")
+SARAH
+We need to close the deal today.
 
-# ---- PASS 1: Wall time baseline ----
+TOM
+I know. The board won't wait.
+
+INT. BOARDROOM - NIGHT
+
+CEO
+Numbers are down. Someone explain.
+
+ANALYST
+Market conditions shifted.
+
+EXT. ROOFTOP - SUNSET
+
+MARCUS stares at the city skyline.
+
+MARCUS
+This was never about the money.
+"""
+
+print("=" * 50)
+print("SCRIPTPULSE LIGHTWEIGHT PROFILER")
+print("=" * 50)
+print(f"Script size: {len(SCRIPT):,} chars | ~3 scenes")
+print(f"Mode: cpu_safe_mode=True, experimental=False\n")
+
+# ---- Memory before ----
+mem_before = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss  # bytes on macOS
+
+# ---- Single timed pass ----
+print("[1/1] Running pipeline...")
 t0 = time.time()
-runner.run_pipeline(SCRIPT, cpu_safe_mode=True, experimental_mode=False)
-wall_time_baseline = round(time.time() - t0, 2)
-print(f"[Baseline] Wall time (cpu_safe=True): {wall_time_baseline}s")
+try:
+    result = runner.run_pipeline(SCRIPT, cpu_safe_mode=True, experimental_mode=False)
+    wall_time = round(time.time() - t0, 2)
+    print(f"[OK] Completed in {wall_time}s")
+except Exception as e:
+    wall_time = round(time.time() - t0, 2)
+    print(f"[ERROR] Pipeline failed after {wall_time}s: {e}")
+    result = None
 
-# ---- PASS 2: cProfile ----
-pr = cProfile.Profile()
-tracemalloc.start()
+# ---- Memory after ----
+mem_after = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss  # bytes on macOS
+# macOS reports in bytes, Linux in KB
+is_mac = sys.platform == 'darwin'
+peak_mb = mem_after / (1024 * 1024) if is_mac else mem_after / 1024
 
-pr.enable()
-runner.run_pipeline(SCRIPT, cpu_safe_mode=True, experimental_mode=False)
-pr.disable()
+print(f"\n--- RESULTS ---")
+print(f"Wall time       : {wall_time}s")
+print(f"Peak RSS        : {peak_mb:.1f} MB")
+print(f"Scenes analyzed : {result.get('total_scenes', '?') if result else 'N/A'}")
 
-mem_snapshot = tracemalloc.take_snapshot()
-tracemalloc.stop()
+if result:
+    timings = result.get('meta', {}).get('agent_timings', {})
+    if timings:
+        print(f"\n--- AGENT TIMINGS (ms) ---")
+        for agent, ms in sorted(timings.items(), key=lambda x: x[1], reverse=True):
+            print(f"  {agent:25s} : {ms:>6} ms")
 
-# Top 10 memory consumers
-top_stats = mem_snapshot.statistics('lineno')
-print("\n--- TOP 10 MEMORY CONSUMERS ---")
-for stat in top_stats[:10]:
-    print(stat)
+    meta = result.get('meta', {})
+    print(f"\nExecution mode  : {meta.get('execution_mode', '?')}")
+    print(f"Total wall (meta): {meta.get('wall_time_s', '?')}s")
 
-# Top 20 CPU hogs by cumulative time
-print("\n--- TOP 20 CPU HOTSPOTS (cumtime) ---")
-s = io.StringIO()
-ps = pstats.Stats(pr, stream=s).sort_stats('cumulative')
-ps.print_stats(20)
-print(s.getvalue())
+signal.alarm(0)  # cancel timeout
+print("\n[DONE] Profiler finished cleanly.")

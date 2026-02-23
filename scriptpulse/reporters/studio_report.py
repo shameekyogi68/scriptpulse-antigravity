@@ -62,7 +62,7 @@ def generate_report(report_data, script_title="Untitled Script", user_notes=""):
     
     <!-- Executive Summary (Writer Mode) -->
     <div style="background-color: #f0f7ff; padding: 25px; border: 2px solid #005a9e; margin-bottom: 40px; border-radius: 5px;">
-        <h3 style="margin-top:0; color: #005a9e; border-bottom: none;">🚀 STORY REPORT SUMMARY</h3>
+        <h3 style="margin-top:0; color: #005a9e; border-bottom: none;">STORY REPORT SUMMARY</h3>
         
         <div style="display: flex; gap: 20px; align-items: flex-start;">
             <div style="flex: 2;">

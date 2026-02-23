@@ -68,9 +68,6 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
     script_content = normalizer.normalize_script(script_content)
     
     _run_start = time.time()
-    # Safe tracemalloc start — avoids RuntimeError on nested profiler calls
-    if not tracemalloc.is_tracing():
-        tracemalloc.start()
     
     # Research Lens Configuration (Simplified)
     lens_config = {
@@ -585,7 +582,6 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
     
     # Research Runtime Stats
     _wall_time_s = round(time.time() - _run_start, 2)
-    tracemalloc.stop()
     
     # Writer Intelligence Layer (v2.0 Phase 1)
     try:
