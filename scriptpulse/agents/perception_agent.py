@@ -1220,8 +1220,8 @@ class EncodingAgent:
 
         return {
             'scene_index': scene_index,
-            'characters': list(characters_present),
-            'prop_candidates': list(prop_candidates)[:10]
+            'characters': sorted(list(characters_present)),
+            'prop_candidates': sorted(list(prop_candidates))[:10]
         }
 
     def extract_surprisal(self, scene_lines):

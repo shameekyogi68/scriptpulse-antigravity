@@ -83,7 +83,7 @@ class EthicsAgent:
                 'classification': "High Agency" if agency_score > 0.4 else "Passive"
             })
             
-        report.sort(key=lambda x: x['agency_score'], reverse=True)
+        report.sort(key=lambda x: (x['agency_score'], x['character']), reverse=True)
         return {'agency_metrics': report}
 
     # =========================================================================
