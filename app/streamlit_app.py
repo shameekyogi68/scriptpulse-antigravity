@@ -5,6 +5,14 @@ Writer-Native Visual Interface
 """
 
 import streamlit as st
+
+# MUST BE THE FIRST STREAMLIT COMMAND
+st.set_page_config(
+    page_title="ScriptPulse V6.0 — Engine",
+    page_icon="🎬",
+    layout="wide"
+)
+
 import sys
 import os
 import json
@@ -105,11 +113,8 @@ IS_CLOUD = os.environ.get('STREAMLIT_SERVER_PORT') is not None or os.environ.get
 preload_models(cloud_mode=IS_CLOUD)
 
 # v13.0: Simple, friendly UI for non-technical writers
-st.set_page_config(
-    page_title="ScriptPulse — Screenplay Rhythm Analyser",
-    page_icon="[S]",
-    layout="wide"
-)
+# Config moved to top of file
+
 
 # v13.1 CONTROL 3: SYNC SAFETY STATE
 stu.sync_safety_state()
