@@ -17,7 +17,6 @@ from scriptpulse.agents.perception_agent import (
     EncodingAgent, SemanticAgent, ImageryAgent, SocialAgent, 
     SyntaxAgent, VoiceAgent, ValenceAgent, CoherenceAgent
 )
-from tests.unit.confidence import ConfidenceScorer # v1.3
 from scriptpulse.agents.dynamics_agent import DynamicsAgent
 from scriptpulse.agents.interpretation_agent import InterpretationAgent
 from scriptpulse.agents.experimental_agent import (

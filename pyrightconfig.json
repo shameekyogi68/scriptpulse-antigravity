@@ -1,0 +1,20 @@
+{
+    "exclude": [
+        "**/node_modules",
+        "**/__pycache__",
+        "**/venv",
+        "**/.venv",
+        "**/env",
+        "**/.env",
+        "**/data",
+        "**/.pytest_cache",
+        "**/experiments",
+        "**/output"
+    ],
+    "ignore": [
+        "**/data",
+        "**/experiments",
+        "**/output"
+    ],
+    "useLibraryCodeForTypes": true
+}
