@@ -130,73 +130,71 @@ if 'safe_mode_active' not in st.session_state:
 if 'health_report' not in st.session_state:
     st.session_state['health_report'] = None
 
-# v14.1 CONTROL: OBSERVABILITY SIDEBAR HEALTH WIDGET
-# Exposes pipeline diagnostic endpoint for operator monitoring
+# We will render the health sidebar at the bottom of the script.
 def _render_health_sidebar():
-    with st.sidebar:
-        with st.expander("(+) System Health & Memory", expanded=False):
+    with st.expander("🩺 System Diagnostics & Memory", expanded=False):
+        # ── Memory Safe Mode toggle ────────────────────────────────
+        st.caption("**[RUN] Performance Mode**")
+        import os as _os
+        heuristics_env = _os.environ.get("SCRIPTPULSE_HEURISTICS_ONLY", "0") == "1"
+        if 'heuristics_only' not in st.session_state:
+            st.session_state['heuristics_only'] = heuristics_env
 
-            # ── Memory Safe Mode toggle ────────────────────────────────
-            st.caption("**[RUN] Performance Mode**")
-            import os as _os
-            heuristics_env = _os.environ.get("SCRIPTPULSE_HEURISTICS_ONLY", "0") == "1"
-            if 'heuristics_only' not in st.session_state:
-                st.session_state['heuristics_only'] = heuristics_env
+        mem_safe = st.toggle(
+            "(+) Memory Safe Mode (no ML models)",
+            value=st.session_state['heuristics_only'],
+            key="mem_safe_toggle",
+            help="Disables SBERT/GPT-2/DistilBART. Saves ~900MB RAM. Uses fast heuristics. Accuracy is preserved for structural analysis."
+        )
+        if mem_safe != st.session_state['heuristics_only']:
+            st.session_state['heuristics_only'] = mem_safe
+            _os.environ["SCRIPTPULSE_HEURISTICS_ONLY"] = "1" if mem_safe else "0"
+            # Invalidate model cache so next run picks up the change
+            from scriptpulse.pipeline import runner as _runner
+            _runner._AGENT_CACHE.clear()
+            st.toast("[OK] Mode changed — model cache cleared." if mem_safe else "[OK] Full ML mode restored.")
 
-            mem_safe = st.toggle(
-                "(+) Memory Safe Mode (no ML models)",
-                value=st.session_state['heuristics_only'],
-                key="mem_safe_toggle",
-                help="Disables SBERT/GPT-2/DistilBART. Saves ~900MB RAM. Uses fast heuristics. Accuracy is preserved for structural analysis."
-            )
-            if mem_safe != st.session_state['heuristics_only']:
-                st.session_state['heuristics_only'] = mem_safe
-                _os.environ["SCRIPTPULSE_HEURISTICS_ONLY"] = "1" if mem_safe else "0"
-                # Invalidate model cache so next run picks up the change
+        # ── Manual memory release ──────────────────────────────────
+        if st.button("[-] Free Model Memory", key="free_mem_btn",
+                     help="Releases SBERT/GPT-2 references and triggers GC. Use when RAM is low."):
+            try:
+                from scriptpulse.utils.model_manager import manager as _mm
                 from scriptpulse.pipeline import runner as _runner
+                _mm.release_models()
                 _runner._AGENT_CACHE.clear()
-                st.toast("[OK] Mode changed — model cache cleared." if mem_safe else "[OK] Full ML mode restored.")
+                st.success("[OK] Model memory released. Next analysis will reload if needed.")
+            except Exception as _e:
+                st.warning(f"Release partial: {_e}")
 
-            # ── Manual memory release ──────────────────────────────────
-            if st.button("[-] Free Model Memory", key="free_mem_btn",
-                         help="Releases SBERT/GPT-2 references and triggers GC. Use when RAM is low."):
+        st.divider()
+
+        # ── Health check ───────────────────────────────────────────
+        if st.button("Run Health Check", key="health_btn"):
+            with st.spinner("Checking pipeline health..."):
                 try:
-                    from scriptpulse.utils.model_manager import manager as _mm
                     from scriptpulse.pipeline import runner as _runner
-                    _mm.release_models()
-                    _runner._AGENT_CACHE.clear()
-                    st.success("[OK] Model memory released. Next analysis will reload if needed.")
-                except Exception as _e:
-                    st.warning(f"Release partial: {_e}")
+                    h = _runner.health_check()
+                    st.session_state['health_report'] = h
+                except Exception as _he:
+                    st.error(f"Health check failed: {_he}")
 
-            st.divider()
+        h = st.session_state.get('health_report')
+        if h:
+            status = h.get('status', 'unknown')
+            if status == 'healthy':
+                st.success(f"[OK] System Status: **{status.upper()}**")
+            else:
+                st.warning(f"[!] System Status: **{status.upper()}**")
 
-            # ── Health check ───────────────────────────────────────────
-            if st.button("Run Health Check", key="health_btn"):
-                with st.spinner("Checking pipeline health..."):
-                    try:
-                        h = runner.health_check()
-                        st.session_state['health_report'] = h
-                    except Exception as _he:
-                        st.error(f"Health check failed: {_he}")
+            st.caption("**Core Agents**")
+            for agent, ok in h.get('agents', {}).items():
+                icon = "[+]" if ok else "[-]"
+                st.markdown(f"{icon} {agent}")
 
-            h = st.session_state.get('health_report')
-            if h:
-                status = h.get('status', 'unknown')
-                if status == 'healthy':
-                    st.success(f"[OK] System Status: **{status.upper()}**")
-                else:
-                    st.warning(f"[!] System Status: **{status.upper()}**")
-
-                st.caption("**Core Agents**")
-                for agent, ok in h.get('agents', {}).items():
-                    icon = "[+]" if ok else "[-]"
-                    st.markdown(f"{icon} {agent}")
-
-                st.caption("**Governance & Config**")
-                st.markdown(f"{'[+]' if h.get('governance') else '[-]'} Governance Firewall")
-                for fname, exists in h.get('config_files', {}).items():
-                    st.markdown(f"{'[+]' if exists else '[-]'} {fname}")
+            st.caption("**Governance & Config**")
+            st.markdown(f"{'[+]' if h.get('governance') else '[-]'} Governance Firewall")
+            for fname, exists in h.get('config_files', {}).items():
+                st.markdown(f"{'[+]' if exists else '[-]'} {fname}")
 
 _render_health_sidebar()
 
@@ -404,7 +402,7 @@ with st.sidebar:
 
     ablation_config = {}
     if ui_mode == "Lab Mode (Research)":
-        with st.expander("(Lab) Ablation & Parameter Console", expanded=True):
+        with st.expander("(Lab) Advanced Model Ablation Console", expanded=False):
             st.markdown("Control exact Pipeline constraints.")
             
             # Force to False if Cloud Mode is active
@@ -563,7 +561,7 @@ if not script_input and pasted_text and len(pasted_text) > 100:
 
 st.header("2. Analysis Configuration")
 
-settings_exp_state = (ui_mode == "Lab Mode (Research)")
+settings_exp_state = False
 exp_settings = st.expander("(Settings) Target Genre & Context", expanded=settings_exp_state)
 
 col_genre, col_lens = exp_settings.columns(2)
@@ -1042,27 +1040,28 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
             
             if edges:
                 st.markdown("---")
-                st.subheader("(Net) Inter-Character Tension Network")
-                st.caption("Research-grade social tension matrix.")
-                
-                # Matrix Heatmap preparation
-                nodes = sorted(list(set([e['source'] for e in edges] + [e['target'] for e in edges])))
-                matrix = pd.DataFrame(0.0, index=nodes, columns=nodes)
-                
-                for edge in edges:
-                    s, t, w = edge['source'], edge['target'], edge['weight']
-                    matrix.at[s, t] = w
-                    matrix.at[t, s] = w # symmetric
+                with st.expander("🔬 View Inter-Character Tension Network Matrix", expanded=False):
+                    st.subheader("(Net) Inter-Character Tension Network")
+                    st.caption("Research-grade social tension matrix.")
                     
-                st.dataframe(matrix.style.background_gradient(cmap='Reds', vmin=0, vmax=1.0))
-                
-                if triangles:
-                    st.warning(f"**[!] Complex Subplots Detected!** Found {len(triangles)} conflict triangles.")
-                    for t in triangles:
-                        st.markdown(f"(^) **Triangle Cycle**: {t[0]} <-> {t[1]} <-> {t[2]}")
-                    st.caption("A conflict triangle indicates a highly volatile, codependent dynamic that dominates cognitive load.")
-                else:
-                    st.success("No complex conflict triangles detected. Interpersonal tension is linear/direct.")
+                    # Matrix Heatmap preparation
+                    nodes = sorted(list(set([e['source'] for e in edges] + [e['target'] for e in edges])))
+                    matrix = pd.DataFrame(0.0, index=nodes, columns=nodes)
+                    
+                    for edge in edges:
+                        s, t, w = edge['source'], edge['target'], edge['weight']
+                        matrix.at[s, t] = w
+                        matrix.at[t, s] = w # symmetric
+                        
+                    st.dataframe(matrix.style.background_gradient(cmap='Reds', vmin=0, vmax=1.0), use_container_width=True)
+                    
+                    if triangles:
+                        st.warning(f"**[!] Complex Subplots Detected!** Found {len(triangles)} conflict triangles.")
+                        for t in triangles:
+                            st.markdown(f"(^) **Triangle Cycle**: {t[0]} <-> {t[1]} <-> {t[2]}")
+                        st.caption("A conflict triangle indicates a highly volatile, codependent dynamic that dominates cognitive load.")
+                    else:
+                        st.success("No complex conflict triangles detected. Interpersonal tension is linear/direct.")
 
     # 3. STRUCTURE (was Act Fidelity)
     with tab_struct:
@@ -1187,7 +1186,7 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
             y_lower = np.percentile(perturbed_traces, 5, axis=0).tolist()
             y_upper = np.percentile(perturbed_traces, 95, axis=0).tolist()
             
-            # Draw Confidence Interval Band
+            # Draw Confidence Interval Band (Hidden by default)
             fig.add_trace(go.Scatter(
                 x=list(df['Scene']) + list(df['Scene'])[::-1],
                 y=y_upper + y_lower[::-1],
@@ -1195,7 +1194,8 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
                 fillcolor='rgba(255, 0, 0, 0.2)',
                 line=dict(color='rgba(255,255,255,0)'),
                 hoverinfo="skip",
-                showlegend=False,
+                showlegend=True,
+                visible='legendonly',
                 name='Confidence Band'
             ))
 
@@ -1248,7 +1248,7 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
                 name='Breathing Room (Recovery)'
             ))
 
-            # Naive Baseline Validation
+            # Naive Baseline Validation (Hidden by default)
             if 'scenes' in report:
                 naive_counts = [len([l for l in s['lines'] if l.get('text')]) for s in report['scenes']]
                 max_words = max(naive_counts) if naive_counts and max(naive_counts) > 0 else 1
@@ -1258,10 +1258,11 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
                     y=naive_baseline[:len(df)],
                     line=dict(color='gray', width=2, dash='dot'),
                     mode='lines',
+                    visible='legendonly',
                     name='Naive Baseline (Lexical Density)'
                 ))
             
-            # Genre Baseline Overlay
+            # Genre Baseline Overlay (Hidden by default)
             try:
                 with open("scriptpulse/config/genre_baselines.json", "r") as f:
                     g_data = json.load(f).get('genres', {})
@@ -1278,12 +1279,13 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
                             y=y_interp,
                             line=dict(color='rgba(44, 160, 44, 0.5)', width=2, dash='dashdot'),
                             mode='lines',
+                            visible='legendonly',
                             name=f'Expected {selected_genre} Curve'
                         ))
             except Exception as e:
                 pass
                 
-            # Full Model Overlay if Ablated
+            # Full Model Overlay if Ablated (Hidden by default)
             ablation_active = False
             if 'ablation_config' in locals() and ablation_config and (not ablation_config.get('use_sbert', True) or not ablation_config.get('use_gpt2', True)):
                 ablation_active = True
@@ -1299,6 +1301,7 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
                         y=un_y[:len(df)],
                         line=dict(color='orange', width=2),
                         mode='lines',
+                        visible='legendonly',
                         name='Full Model Signal (Un-Ablated)'
                     ))
                 except Exception as e:
@@ -1376,27 +1379,28 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
             
             st.plotly_chart(fig, use_container_width=True)
             
-            # Dynamic X/Y Plotting (Exploratory Data Analysis)
-            st.markdown("### (Inspect) Exploratory Data Analysis")
-            feature_cols = [c for c in df.columns if c not in ['Script_Title']]
-            col_x, col_y = st.columns(2)
-            with col_x: x_axis = st.selectbox("X-Axis Feature", feature_cols, index=feature_cols.index('Scene') if 'Scene' in feature_cols else 0)
-            with col_y: y_axis = st.selectbox("Y-Axis Feature", feature_cols, index=feature_cols.index('Load') if 'Load' in feature_cols else 0)
-            
-            eda_fig = px.scatter(df, x=x_axis, y=y_axis, hover_data=['Scene'], title=f"{y_axis} vs {x_axis}")
-            st.plotly_chart(eda_fig, use_container_width=True)
-            
-            st.markdown("### All Raw Empirical Data")
-            st.dataframe(df)
+            with st.expander("🔬 View Advanced Exploratory Data Formats", expanded=False):
+                # Dynamic X/Y Plotting (Exploratory Data Analysis)
+                st.markdown("### (Inspect) Exploratory Data Analysis")
+                feature_cols = [c for c in df.columns if c not in ['Script_Title']]
+                col_x, col_y = st.columns(2)
+                with col_x: x_axis = st.selectbox("X-Axis Feature", feature_cols, index=feature_cols.index('Scene') if 'Scene' in feature_cols else 0)
+                with col_y: y_axis = st.selectbox("Y-Axis Feature", feature_cols, index=feature_cols.index('Load') if 'Load' in feature_cols else 0)
+                
+                eda_fig = px.scatter(df, x=x_axis, y=y_axis, hover_data=['Scene'], title=f"{y_axis} vs {x_axis}")
+                st.plotly_chart(eda_fig, use_container_width=True)
+                
+                st.markdown("### All Raw Empirical Data")
+                st.dataframe(df, use_container_width=True)
 
-            # CSV Export for empirical analysis
-            csv = df.to_csv(index=False).encode('utf-8')
-            st.download_button(
-                label="(Download) Export Empirical Data (CSV)",
-                data=csv,
-                file_name="scriptpulse_empirical_data.csv",
-                mime="text/csv",
-            )
+                # CSV Export for empirical analysis
+                csv = df.to_csv(index=False).encode('utf-8')
+                st.download_button(
+                    label="(Download) Export Empirical Data (CSV)",
+                    data=csv,
+                    file_name="scriptpulse_empirical_data.csv",
+                    mime="text/csv",
+                )
         else:
             # Use Streamlit native chart (simpler, creative abstraction)
             st.line_chart(df[['Scene', 'Load', 'Recovery', 'Narrative Tension']].set_index('Scene'))
