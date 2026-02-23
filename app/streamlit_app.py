@@ -448,15 +448,23 @@ st.markdown("*A visual interface for screenplay rhythm.*")
 # --- Step 1: Input & Parsing ---
 
 st.header("1. Load Draft")
-    
-uploaded_file = st.file_uploader(
-    "Upload Screenplay (PDF / TXT)",
-    type=['txt', 'pdf'],
-    help="Upload your draft to see the structural heartbeat."
-)
+st.info("Welcome to ScriptPulse! Upload a screenplay (or paste text) to analyze its pacing, emotional arcs, and semantic rhythm.")
+
+tab_up, tab_paste = st.tabs(["[+] Upload Document", "(Keyboard) Paste Text"])
 
 script_input = None
 scene_list = []
+pre_parsed_lines = None
+
+with tab_up:
+    uploaded_file = st.file_uploader(
+        "Upload Screenplay (PDF / TXT / FDX)",
+        type=['txt', 'pdf', 'fdx'],
+        help="Upload your draft to see the structural heartbeat."
+    )
+
+with tab_paste:
+    pasted_text = st.text_area("Or paste raw text here", height=250, help="Paste plain text exported from any screenwriting software.")
 
 if uploaded_file is not None:
     # READ FILE
@@ -532,25 +540,28 @@ if uploaded_file is not None:
                 if role != "Unknown":
                     char_tags[char] = role
         
-        # View Script Text
-        with st.expander("View Script Text"):
-            st.text((script_text or "")[:5000] + ("..." if len(script_text or "") > 5000 else ""))
         
+        # Finally, assign to the master input variable for analysis
+        if script_text and script_text.strip():
+            script_input = script_text
+            
     except Exception as e:
         st.error(f"Could not read file: {e}")
 
-# Paste Fallback
-if script_input is None:
-    script_input = st.text_area("Or paste text here", height=150)
-    if script_input and len(script_input) > 100:
-         scene_list = runner.parse_structure(script_input)
+# Paste Fallback Logic
+if not script_input and pasted_text and len(pasted_text) > 100:
+    script_input = pasted_text
+    scene_list = runner.parse_structure(script_input)
 
 
 # --- Step 2: Context & Research Settings ---
 
-st.header("2. Context & Settings")
+st.header("2. Analysis Configuration")
 
-col_genre, col_lens = st.columns(2)
+settings_exp_state = (ui_mode == "Lab Mode (Research)")
+exp_settings = st.expander("(Settings) Target Genre & Context", expanded=settings_exp_state)
+
+col_genre, col_lens = exp_settings.columns(2)
 
 with col_genre:
     # Load baselines for tooltip / trace overlay context
@@ -563,7 +574,7 @@ with col_genre:
         
     genre_options = list(genre_baselines.keys()) if genre_baselines else ["Drama", "Action", "Thriller", "Horror", "Comedy", "Sci-Fi", "Romance", "Family"]
     
-    selected_genre = st.selectbox(
+    selected_genre = col_genre.selectbox(
         "Target Genre Baseline",
         genre_options,
         help="Loads 'Expected Curve' for cross-domain comparison."
@@ -571,36 +582,36 @@ with col_genre:
 
 if ui_mode == "Lab Mode (Research)":
     with col_lens:
-        selected_lens = st.selectbox(
+        selected_lens = col_lens.selectbox(
             "Analysis Lens",
             ["viewer", "reader", "narrator"],
             format_func=lambda x: x.capitalize(),
             help="Viewer=Visceral, Reader=Literary, Narrator=Structural"
         )
         
-    st.markdown("---")
-    selected_profile = st.selectbox(
+    exp_settings.markdown("---")
+    selected_profile = exp_settings.selectbox(
         "Target Audience (Cognitive Profile)",
         ["General", "Cinephile", "Casual Viewer", "Young Audience"],
         help="Adjusts fatigue and recovery thresholds to simulate how different viewers process the script."
     )
 
     if selected_profile == "Cinephile":
-        st.caption("(Cognitive) **Engaged viewer**: Higher tolerance for complexity; retains context across longer scenes.")
+        exp_settings.caption("(Cognitive) **Engaged viewer**: Higher tolerance for complexity; retains context across longer scenes.")
     elif selected_profile == "Casual Viewer":
-        st.caption("(Cognitive) **Relaxed viewer**: Benefits from regular pacing relief and clear scene transitions.")
+        exp_settings.caption("(Cognitive) **Relaxed viewer**: Benefits from regular pacing relief and clear scene transitions.")
     elif selected_profile == "Young Audience":
-        st.caption("(Cognitive) **Young viewer**: Needs consistent continuity and shorter high-intensity spans.")
+        exp_settings.caption("(Cognitive) **Young viewer**: Needs consistent continuity and shorter high-intensity spans.")
 
-    st.markdown("---")
-    selected_framework = st.selectbox(
+    exp_settings.markdown("---")
+    selected_framework = exp_settings.selectbox(
         "Story Framework",
         ["3_act", "heros_journey", "eight_sequences"],
         format_func=lambda x: x.replace('_', ' ').title(),
         help="Select the structural overlay for the Pulse chart."
     )
     
-    use_high_res = st.checkbox("High-Resolution Mode (Micro-Beats)", help="Slice scenes into beats for HD analysis (Slower).")
+    use_high_res = exp_settings.checkbox("High-Resolution Mode (Micro-Beats)", help="Slice scenes into beats for HD analysis (Slower).")
 else:
     # Writer Mode Defaults
     selected_lens = "viewer"
@@ -610,8 +621,8 @@ else:
 
 writer_intent = []
 if script_input:
-    with st.expander("Declare specific intent (Optional)", expanded=False):
-        st.markdown("Select sections where you *aimed* for a specific intense experience.")
+    with st.expander("(Tip) Guide the AI Feedback (Optional)", expanded=False):
+        st.markdown("Tell the system what you were trying to achieve so it can give context-aware advice.")
         
         # Prepare dropdown options
         # Format: "1. INT. CAFE"
@@ -859,9 +870,9 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
                         # Heuristic Coaching Translation
                         val = sugg.get('strategy', '')
                         if "decrease" in val.lower() and "density" in val.lower():
-                            st.info("(+) **Writer Tip:** This scene is heavily loaded with physical action or dense text. Try breaking up the long action blocks or insert a brief moment of character reflection to provide 'Breathing Room'.")
+                            st.info("(+) **Writer Tip**: Scene is too dense. Break up action blocks or insert a moment of reflection for 'breathing room'.")
                         elif "increase" in val.lower() and "tension" in val.lower():
-                            st.info("(+) **Writer Tip:** This scene is stalling. Consider introducing a complication, raising the stakes, or cutting exposition to accelerate the pacing.")
+                            st.info("(+) **Writer Tip**: Scene is stalling. Introduce a complication, raise stakes, or cut exposition to accelerate pacing.")
                         else:
                             st.markdown(f"-> {val}")
                         st.markdown("")  # spacing
@@ -925,7 +936,7 @@ if script_input and (analyze_clicked or 'last_report' in st.session_state):
             subtext_audit = report.get('subtext_audit', [])
             if subtext_audit:
                 for audit in subtext_audit:
-                    st.warning(f"**Scene {audit['scene_index']+1} Audit**: {audit['issue']} ({audit['severity']})\n\n{audit['advice']}")
+                    st.warning(f"**Scene {audit['scene_index']+1}**: {audit['issue']}\n\n*Suggestion:* {audit['advice']}")
             
             if moonshot_data:
                 # Prepare Dataframes
