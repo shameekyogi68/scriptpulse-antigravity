@@ -307,16 +307,27 @@ if mode == "Scene Compare":
 
     st.stop()
     
-with st.sidebar:
-    # --- INFO ---
-    st.info(
-        "**Reading the Pulse Chart:**\n\n"
-        "• **Blue Line** corresponds to the overall pacing and story density.\n"
-        "• **Orange Line** indicates moments of narrative 'recovery' or breathing room."
+    # Genre Selection (Re-enabled for Writer Mode)
+    genre_baselines = {}
+    try:
+        with open("scriptpulse/config/genre_baselines.json", "r") as f:
+            import json as _json
+            genre_baselines = _json.load(f).get('genres', {})
+    except:
+        pass
+        
+    genre_options = list(genre_baselines.keys()) if genre_baselines else ["Drama", "Action", "Thriller", "Horror", "Comedy", "Sci-Fi", "Romance", "Family"]
+    
+    st.markdown("---")
+    st.markdown("### Story Context")
+    selected_genre = st.selectbox(
+        "Target Genre",
+        genre_options,
+        index=genre_options.index("Drama") if "Drama" in genre_options else 0,
+        help="Sets the target baseline for expected pacing."
     )
     
     # Removed advanced features and ablations for cleaner Writer Experience
-    selected_genre = "Drama" 
     selected_lens = "viewer"
     selected_profile = "General"
     selected_framework = "3_act"
