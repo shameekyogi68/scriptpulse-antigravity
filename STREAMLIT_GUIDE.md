@@ -62,3 +62,6 @@ streamlit run streamlit_app.py --server.port 8502
 
 **Import errors:**
 Ensure you're running from the project root directory and that `PYTHONPATH` includes the current directory.
+
+**Automated Keep-Alive:**
+A GitHub Action (`keep_alive.yml`) is configured to ping the app every 6 hours. This prevents the app from going into 'Sleep Mode' on Streamlit Cloud. If you notice the app is asleep, you can manually trigger the "Streamlit Keep-Alive" workflow from the GitHub Actions tab.
