@@ -39,8 +39,7 @@ def render_sidebar(ui_mode, is_cloud, stu):
                 
         st.markdown("---")
         
-        # Mode Selection
-        mode = st.radio("Feature", ["Script Analysis", "Scene Compare", "Live Sandbox"], label_visibility="collapsed")
+        # Mode Selection removed (only Script Analysis is core)
         
         st.markdown("---")
         # --- INFO ---
@@ -97,7 +96,6 @@ def render_sidebar(ui_mode, is_cloud, stu):
         return {
             'ui_mode': new_ui_mode,
             'force_cloud': force_cloud,
-            'feature_mode': mode,
             'ablation_config': ablation_config,
             'shadow_mode': shadow_mode,
             'high_accuracy_mode': high_accuracy_mode

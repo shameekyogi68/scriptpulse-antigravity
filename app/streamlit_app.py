@@ -61,7 +61,6 @@ sidebar_state = render_sidebar(
 
 # Update session state from sidebar
 st.session_state['ui_mode'] = sidebar_state['ui_mode']
-feature_mode = sidebar_state['feature_mode']
 
 # =============================================================================
 # MAIN CONTENT AREA
