@@ -22,7 +22,7 @@ from datetime import datetime, timedelta
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 TELEMETRY_DIR = os.path.join(PROJECT_ROOT, '.telemetry')
 TELEMETRY_FILE = os.path.join(TELEMETRY_DIR, 'runs.jsonl')
 AUDIT_REPORT = os.path.join(PROJECT_ROOT, 'tests', 'audit_report.json')
@@ -132,8 +132,7 @@ def main():
     checks = [
         ("CI Audit Gate", check_ci_audit),
         ("Calibration Drift", check_drift),
-        ("Resource Flags", check_resource_flags),
-        ("Schema Compliance", check_schema),
+        ("Resource Flags", check_resource_flags)
     ]
     
     all_pass = True

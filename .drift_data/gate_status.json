@@ -1,0 +1,42 @@
+[
+  {
+    "timestamp": "2026-03-01T13:12:28.836697",
+    "all_pass": false,
+    "results": {
+      "CI Audit Gate": {
+        "passed": false,
+        "detail": "Audit has 5 failures (42/47)"
+      },
+      "Calibration Drift": {
+        "passed": true,
+        "detail": "Drift check skipped: No module named 'scriptpulse.drift_dashboard'"
+      },
+      "Resource Flags": {
+        "passed": true,
+        "detail": "No telemetry data (first run)"
+      },
+      "Schema Compliance": {
+        "passed": false,
+        "detail": "Schema compliance failed (exit 2)"
+      }
+    }
+  },
+  {
+    "timestamp": "2026-03-01T13:28:02.693342",
+    "all_pass": true,
+    "results": {
+      "CI Audit Gate": {
+        "passed": true,
+        "detail": "Audit passes 49/49"
+      },
+      "Calibration Drift": {
+        "passed": true,
+        "detail": "Drift check skipped: No module named 'scriptpulse.drift_dashboard'"
+      },
+      "Resource Flags": {
+        "passed": true,
+        "detail": "No telemetry data (first run)"
+      }
+    }
+  }
+]

@@ -1,0 +1,24 @@
+[
+  {
+    "timestamp": "2026-03-01T13:12:11.675183",
+    "all_pass": false,
+    "results": {
+      "CI Audit Gate": {
+        "passed": false,
+        "detail": "No audit report found"
+      },
+      "Calibration Drift": {
+        "passed": true,
+        "detail": "Drift check skipped: No module named 'scriptpulse.drift_dashboard'"
+      },
+      "Resource Flags": {
+        "passed": true,
+        "detail": "No telemetry data (first run)"
+      },
+      "Schema Compliance": {
+        "passed": false,
+        "detail": "Schema compliance failed (exit 2)"
+      }
+    }
+  }
+]

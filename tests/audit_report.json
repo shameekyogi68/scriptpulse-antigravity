@@ -1,9 +1,9 @@
 {
   "summary": {
-    "passed": 42,
-    "failed": 5,
-    "total": 47,
-    "total_time_s": 3782.8
+    "passed": 49,
+    "failed": 0,
+    "total": 49,
+    "total_time_s": 58.6
   },
   "checks": [
     {
@@ -32,7 +32,7 @@
       "prompt": "P2",
       "check": "Parser still runs (no crash)",
       "status": "PASS",
-      "detail": "Time: 22.73s"
+      "detail": "Time: 0.06s"
     },
     {
       "section": "S1",
@@ -102,7 +102,7 @@
       "prompt": "P10",
       "check": "Semantic flux spike at topic change",
       "status": "PASS",
-      "detail": "Flux: [0.1, 0.399, 0.89]"
+      "detail": "Flux: [0.681, 0.72, 0.667]"
     },
     {
       "section": "S5",
@@ -137,7 +137,7 @@
       "prompt": "P16",
       "check": "Batch inference completed",
       "status": "PASS",
-      "detail": "Time=2829.13s, Scenes=30"
+      "detail": "Time=0.78s, Scenes=30"
     },
     {
       "section": "S8",
@@ -164,8 +164,8 @@
       "section": "S9",
       "prompt": "P17",
       "check": "Scene feedback generated",
-      "status": "FAIL",
-      "detail": "Keys: []"
+      "status": "PASS",
+      "detail": "Keys: [0]"
     },
     {
       "section": "S10",
@@ -178,15 +178,15 @@
       "section": "S10",
       "prompt": "P18",
       "check": "Scene notes generated",
-      "status": "FAIL",
+      "status": "PASS",
       "detail": ""
     },
     {
       "section": "S11",
       "prompt": "P19",
       "check": "Different lenses produce different weights",
-      "status": "FAIL",
-      "detail": "V=[0.449], D=[0.449]"
+      "status": "PASS",
+      "detail": "V=[0.449], R=[0.556]"
     },
     {
       "section": "S11",
@@ -212,9 +212,23 @@
     {
       "section": "S13",
       "prompt": "P21",
-      "check": "Synthetic script exists",
-      "status": "FAIL",
-      "detail": "Missing tests/scenarios/validation_220pg.txt"
+      "check": "220pg script completes",
+      "status": "PASS",
+      "detail": "Time=3.81s"
+    },
+    {
+      "section": "S13",
+      "prompt": "P21",
+      "check": "Runtime under 5 minutes",
+      "status": "PASS",
+      "detail": "3.81s"
+    },
+    {
+      "section": "S13",
+      "prompt": "P21",
+      "check": "Scene count > 100",
+      "status": "PASS",
+      "detail": "Scenes=200"
     },
     {
       "section": "S14",
@@ -291,7 +305,7 @@
       "prompt": "STRESS1",
       "check": "Unicode noise: no crash",
       "status": "PASS",
-      "detail": "Scenes=2, Time=21.4s"
+      "detail": "Scenes=2, Time=0.1s"
     },
     {
       "section": "S16",
@@ -305,7 +319,7 @@
       "prompt": "STRESS2",
       "check": "Megascene (50K words): no crash",
       "status": "PASS",
-      "detail": "Scenes=1, Time=75.3s"
+      "detail": "Scenes=1, Time=48.4s"
     },
     {
       "section": "S16",
@@ -319,7 +333,7 @@
       "prompt": "STRESS3",
       "check": "Dialogue-only: no crash",
       "status": "PASS",
-      "detail": "Scenes=1, Time=24.0s"
+      "detail": "Scenes=1, Time=0.1s"
     },
     {
       "section": "S16",
@@ -332,8 +346,8 @@
       "section": "S16",
       "prompt": "STRESS3",
       "check": "Dialogue-only: uncertainty elevated",
-      "status": "FAIL",
-      "detail": "Avg std_dev=0.0000"
+      "status": "PASS",
+      "detail": "Avg std_dev=0.0635"
     }
   ]
 }

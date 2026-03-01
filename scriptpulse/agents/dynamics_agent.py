@@ -157,7 +157,7 @@ class DynamicsAgent:
 
         # Primary Run (Deterministic)
         # We pass lens_config from input_data if it exists
-        lens_config = input_data.get('lens_config')
+        lens_config = kwargs.get('lens_config', input_data.get('lens_config'))
         
         primary_trace = self._run_single_pass(input_data, lens_config=lens_config, genre=genre, profile_params=profile_params, debug=debug)
             
@@ -338,8 +338,12 @@ class DynamicsAgent:
             effort = base_effort + coh_penalty + confusion_penalty
             
             # -- 3. TAM Integration (Micro-Dynamics) --
-            tam_modifiers = self._run_tam_integration(scene_feat, effort)
-            effort *= tam_modifiers['effort_modifier']
+            ablation = input_data.get('ablation_config', {})
+            if not ablation.get('disable_tam', False):
+                tam_modifiers = self._run_tam_integration(scene_feat, effort)
+                effort *= tam_modifiers['effort_modifier']
+            else:
+                tam_modifiers = {'effort_modifier': 1.0, 'recovery_modifier': 1.0, 'micro_fatigue_integral': 0.0}
             
             # -- 4. Recovery Calculation R[i] --
             # Recovery is inverse of effort, scaled by beta and TAM
@@ -510,6 +514,10 @@ class DynamicsAgent:
         signals = input_data.get('temporal_signals', [])
         if not signals: return []
         
+        ablation = input_data.get('ablation_config', {})
+        if ablation.get('disable_lrf', False):
+            return signals
+
         refined_signals = []
         fatigue_reserve = 0.0
         
@@ -578,6 +586,11 @@ class DynamicsAgent:
         features = input_data.get('features', [])
         if not signals or not features: return []
         
+        ablation = input_data.get('ablation_config', {})
+        if ablation.get('disable_acd', False):
+             # Return neutral states
+             return [{'scene_index': s['scene_index'], 'collapse_likelihood': 0.0, 'drift_likelihood': 0.0, 'primary_state': 'stable'} for s in signals]
+
         acd_states = []
         prev_collapse = 0.0
         prev_drift = 0.0

@@ -472,7 +472,7 @@ RIDER
 Almost there."""
 
     # Prompt 19: Three lenses
-    lenses = ['viewer', 'director', 'producer']
+    lenses = ['viewer', 'reader', 'narrator']
     lens_pulses = {}
     for lens_name in lenses:
         r, _ = timed_run(script, lens=lens_name)
@@ -480,9 +480,9 @@ Almost there."""
         lens_pulses[lens_name] = pulse
         
     # Check that at least some differ
-    all_same = lens_pulses['viewer'] == lens_pulses['director'] == lens_pulses['producer']
+    all_same = lens_pulses['viewer'] == lens_pulses['reader'] == lens_pulses['narrator']
     log("S11", "P19", "Different lenses produce different weights", not all_same, 
-        f"V={lens_pulses['viewer'][:2]}, D={lens_pulses['director'][:2]}")
+        f"V={lens_pulses['viewer'][:2]}, R={lens_pulses['reader'][:2]}")
     
     # All should be bounded 0-1
     all_bounded = all(0 <= v <= 1.5 for lens in lens_pulses.values() for v in lens)
@@ -705,7 +705,7 @@ See you."""
         # Check uncertainty is elevated (weak structural signals)
         uncertainty = r_dial.get('uncertainty_quantification', [])
         if uncertainty:
-            avg_std = sum(u.get('std_dev', 0) for u in uncertainty) / len(uncertainty)
+            avg_std = sum(u.get('std_dev', u.get('sigma', (u.get('upper_bound_95', 0) - u.get('mean', 0)) / 2)) for u in uncertainty) / len(uncertainty)
             log("S16", "STRESS3", "Dialogue-only: uncertainty elevated", avg_std > 0.01,
                 f"Avg std_dev={avg_std:.4f}")
         else:

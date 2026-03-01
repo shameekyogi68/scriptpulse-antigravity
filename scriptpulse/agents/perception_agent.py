@@ -1243,8 +1243,9 @@ class EncodingAgent:
             return {'perplexity': 0.0, 'method': 'None'}
             
         try:
-            if getattr(self, '_force_fallback', False):
-                raise Exception("Ablation: GPT-2 disabled by user configuration.")
+            import os as _os
+            if getattr(self, '_force_fallback', False) or _os.environ.get("SCRIPTPULSE_HEURISTICS_ONLY", "0") == "1":
+                raise Exception("Heuristics-only mode or ablation: GPT-2 disabled.")
                 
             import torch
             from transformers import GPT2LMHeadModel, GPT2TokenizerFast
@@ -1320,17 +1321,20 @@ class ImageryAgent:
         if self.is_ml:
             try:
                 classifier = global_manager.get_zero_shot()
-                for scene in scenes:
-                    text = " ".join([l['text'] for l in scene['lines']]).lower()
-                    if len(text.split()) < 5:
-                        scores.append(0.0)
-                        continue
-                        
-                    result = classifier(text, self.labels, multi_label=True)
-                    # Use the max score as the visual density proxy
-                    max_score = max(result['scores'])
-                    scores.append(round(max_score, 3))
-                return scores
+                if classifier:
+                    for scene in scenes:
+                        text = " ".join([l['text'] for l in scene['lines']]).lower()
+                        if len(text.split()) < 5:
+                            scores.append(0.0)
+                            continue
+                            
+                        result = classifier(text, self.labels, multi_label=True)
+                        # Use the max score as the visual density proxy
+                        max_score = max(result['scores'])
+                        scores.append(round(max_score, 3))
+                    return scores
+                else:
+                    self.is_ml = False # Fallback to lexical
             except Exception as e:
                 import logging
                 logger = logging.getLogger('scriptpulse.mlops')

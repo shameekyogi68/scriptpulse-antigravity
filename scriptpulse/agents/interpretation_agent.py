@@ -690,6 +690,10 @@ class InterpretationAgent:
 
     def analyze_silence(self, input_data):
         """Silence-as-Signal Formalization (formerly ssf.run)"""
+        ablation = input_data.get('ablation_config', {})
+        if ablation.get('disable_ssf', False):
+            return {'is_silent': False, 'silence_confidence': 0.0, 'explanation_key': 'ablation_disabled'}
+
         signals = input_data.get('temporal_signals', [])
         acd_states = input_data.get('acd_states', [])
         surfaced = input_data.get('surfaced_patterns', [])
@@ -770,7 +774,7 @@ class InterpretationAgent:
         ensemble_results = []
         # [GOVERNANCE] Enforce deterministic mathematical boundary for Monte Carlo
         import random
-        random.seed(42)
+        # random.seed(42) # Removed hardcoded seed to respect global config
         
         for _ in range(iterations):
             trace = []
@@ -885,19 +889,22 @@ class InterpretationAgent:
             s = syntax[i] if i < len(syntax) else 0
             tsn = tp.get('attentional_signal', 0)
             
-            if tsn < 0.3: notes.append({'severity': 'warning', 'issue': '⚠️ Low Conflict', 'suggestion': 'Add obstacle/stakes.'})
-            if v < -0.2: notes.append({'severity': 'info', 'issue': '😐 Heavy Tone', 'suggestion': 'Dark. Consider relief if not intended.'})
-            if s > 0.7: notes.append({'severity': 'warning', 'issue': '🔴 Complex Language', 'suggestion': 'Simplify sentences/add action.'})
+            if tsn < 0.3: 
+                notes.append({'severity': 'info', 'insight': 'Frictionless Flow', 'reflection': 'The modeled attentional demand is low here. Is this intended as a moment of rest for the audience?'})
+            if v < -0.2: 
+                notes.append({'severity': 'info', 'insight': 'Sustained Gravity', 'reflection': 'The tonal signal is consistently heavy. How might a moment of levity impact this section?'})
+            if s > 0.7: 
+                notes.append({'severity': 'info', 'insight': 'Linguistic Density', 'reflection': 'The complexity of language is high. How does this affect the intended reading rhythm?'})
             
             d_lines = [l for l in scene['lines'] if l.get('tag') == 'D']
             if any(len(l['text'].split()) > 40 for l in d_lines):
-                notes.append({'severity': 'warning', 'issue': '💬 Long Monologue', 'suggestion': 'Break up long speech.'})
+                notes.append({'severity': 'info', 'insight': 'Extended Speech', 'reflection': 'A character has a particularly long monologue. How does this volume of information serve the scene?'})
             
             if not d_lines and len(scene['lines']) > 3:
-                 notes.append({'severity': 'info', 'issue': '🔇 Silent Scene', 'suggestion': 'Pure visual. Add dialogue if clarity needed.'})
+                notes.append({'severity': 'info', 'insight': 'Silent Section', 'reflection': 'This scene relies entirely on action and visuals. Does this silence amplify or obscure the intent?'})
             
             if tsn > 0.7 and v > 0.2:
-                 notes.append({'severity': 'info', 'issue': '🎢 Tonal Mismatch?', 'suggestion': 'High tension + Positive tone. Check emotion.'})
+                notes.append({'severity': 'info', 'insight': 'Tonal Contrast', 'reflection': 'High attentional demand coincides with a positive tonal signal. Does this contrast align with the emotional goal?'})
             
             if notes: feedback[i] = notes
             
@@ -1109,22 +1116,28 @@ class InterpretationAgent:
         
         if suppressed: return "Patterns were suppressed based on provided constraints."
         return "The attentional flow is stable. No red flags, no drag, no exhaustion. A clean reading."
-
+        
     def _generate_intent_acknowledgment(self, note):
         intent = note.get('intent', 'your declared intent')
         start, end = note.get('scene_range', [0, 0])
         return f"You marked scenes {start}–{end} as '{intent}'. This matches the signal perfectly."
 
+    def generate_silence_explanation(self, suppressed, alignment_notes, ssf_analysis=None):
+        return self._generate_silence_explanation(suppressed, alignment_notes, ssf_analysis)
 
-# =============================================================================
-# COUNTERFACTUAL LOGIC (New for Research-Grade)
-# =============================================================================
+    def generate_intent_acknowledgments(self, alignment_notes):
+        acks = []
+        for note in alignment_notes:
+            acks.append(self._generate_intent_acknowledgment(note))
+        return acks
 
 class CounterfactualExplainer:
     """Run 'What-If' Simulations to explain why a score is high/low"""
     
     def __init__(self):
-        self.dynamics = dynamics_agent.DynamicsAgent()
+        # Local import to avoid circular dependency
+        from scriptpulse.agents.dynamics_agent import DynamicsAgent
+        self.dynamics = DynamicsAgent()
         
     def run(self, input_data):
         """
@@ -1135,6 +1148,7 @@ class CounterfactualExplainer:
             'suggestion': str
         }
         """
+        import copy
         original_signals = input_data.get('temporal_signals', [])
         features = input_data.get('features', [])
         

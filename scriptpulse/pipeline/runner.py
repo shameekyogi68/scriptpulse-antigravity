@@ -27,6 +27,7 @@ from scriptpulse.agents.ethics_agent import EthicsAgent
 
 # Pure Research Runner
 from scriptpulse.utils import normalizer, runtime
+from scriptpulse.utils.confidence_scorer import ConfidenceScorer
 from scriptpulse.utils.logger import get_logger
 
 _log = get_logger(__name__)
@@ -69,12 +70,9 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
     
     _run_start = time.time()
     
-    # Research Lens Configuration (Simplified)
-    lens_config = {
-        'lens_id': lens,
-        'description': 'Research Default',
-        'effort_weights': {'cognitive_mix': 0.55, 'emotional_mix': 0.45}
-    }
+    # Research Lens Configuration
+    from scriptpulse.pipeline import lenses
+    lens_config = lenses.get_lens(lens)
     
     timings = {}
 
@@ -282,7 +280,8 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
             'social_scores': social_scores,
             'valence_scores': valence_scores,
             'coherence_scores': coherence_scores,
-            'ml_tension_scores': ml_tension_scores
+            'ml_tension_scores': ml_tension_scores,
+            'ablation_config': ablation_config
         },
         lens_config=lens_config,
         genre=genre,
@@ -343,7 +342,8 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
     try:
         temporal_output = dynamics_agent.apply_long_range_fatigue({
             'temporal_signals': temporal_output,
-            'features': encoded
+            'features': encoded,
+            'ablation_config': ablation_config
         })
     except Exception as _e:
         _log.warning("LRF failed: %s", _e)
@@ -352,7 +352,8 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
     try:
         acd_output = dynamics_agent.calculate_acd_states({
             'temporal_signals': temporal_output,
-            'features': encoded
+            'features': encoded,
+            'ablation_config': ablation_config
         })
     except Exception as _e:
         _log.warning("ACD failed: %s", _e)
@@ -420,7 +421,8 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
         ssf_output = interpretation_agent.analyze_silence({
             'temporal_signals': temporal_output,
             'acd_states': acd_output,
-            'surfaced_patterns': filtered.get('surfaced_patterns', [])
+            'surfaced_patterns': filtered.get('surfaced_patterns', []),
+            'ablation_config': ablation_config
         })
     except Exception as _e:
         _log.warning("SSFAgent failed: %s", _e)
@@ -534,6 +536,17 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
         ml_status = "ML_Active" if (manager.get_pipeline and hasattr(manager, 'device')) else "Heuristic_Fallback"
     except Exception:
         ml_status = "Heuristic_Fallback"
+        
+    try:
+        scene_feedback = interpretation_agent.generate_scene_notes({
+            'scenes': segmented,
+            'temporal_trace': temporal_output,
+            'valence_scores': valence_scores,
+            'syntax_scores': syntax_scores
+        })
+    except Exception as _e:
+        _log.warning("Scene Notes failed: %s", _e)
+        scene_feedback = {}
     
     final_output['meta'] = {
         'run_id': run_id,
@@ -554,10 +567,12 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
     final_output['xai_attribution'] = xai_data
     final_output['macro_structure_fidelity'] = macro_fidelity
     final_output['suggestions'] = suggestions
+    final_output['scene_feedback'] = scene_feedback
     final_output['agency_analysis'] = agency_report
     final_output['fairness_audit'] = fairness_report # Restored v8.0 feature
     final_output['baseline_trace'] = []
     final_output['semantic_flux'] = semantic_scores # used as flux/entropy
+
     final_output['voice_fingerprints'] = voice_map
     final_output['interaction_map'] = interaction_map
     final_output['uncertainty_quantification'] = uncertainty_trace
