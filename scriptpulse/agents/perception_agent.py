@@ -795,31 +795,39 @@ class EncodingAgent:
     def extract_passive_voice(self, scene_lines):
         """
         Detect passive voice constructions in action lines.
-        Pattern: auxiliary verb (is/are/was/were/been) + past participle (-ed/-en words).
-        Returns: count, ratio, and example offenders.
+        Uses spaCy's dependency parser if available (higher accuracy),
+        otherwise falls back to regex-based heuristic.
         """
-        import re as _re
-        # Match: is/are/was/were/been/being + [word ending in -ed or common irregular pp]
-        passive_pattern = _re.compile(
-            r'\b(is|are|was|were|been|being)\s+\w*(?:ed|en|own|oken|iven|aken|ung|ung|awn|ssen|ought)\b',
-            _re.IGNORECASE
-        )
         action_lines = [l for l in scene_lines if l.get('tag') == 'A']
         if not action_lines:
             return {'passive_count': 0, 'passive_ratio': 0.0, 'examples': []}
 
+        nlp = global_manager.get_spacy()
         hits = []
-        for line in action_lines:
-            text = line['text']
-            matches = passive_pattern.findall(text)
-            if matches:
-                hits.append(text[:70].strip())
+
+        if nlp:
+            # spaCy-based accurate detection (PASSIVE dependency label 'auxpass')
+            for line in action_lines:
+                doc = nlp(line['text'])
+                if any(token.dep_ == 'auxpass' for token in doc):
+                    hits.append(line['text'][:70].strip())
+        else:
+            # Regex fallback
+            import re as _re
+            passive_pattern = _re.compile(
+                r'\b(is|are|was|were|been|being)\s+\w*(?:ed|en|own|oken|iven|aken|ung|ung|awn|ssen|ought)\b',
+                _re.IGNORECASE
+            )
+            for line in action_lines:
+                if passive_pattern.search(line['text']):
+                    hits.append(line['text'][:70].strip())
 
         ratio = len(hits) / len(action_lines)
         return {
             'passive_count': len(hits),
             'passive_ratio': round(ratio, 3),
-            'examples': hits[:2]
+            'examples': hits[:2],
+            'method': 'spaCy' if nlp else 'Regex Baseline'
         }
 
     def extract_scene_vocabulary(self, scene_lines):

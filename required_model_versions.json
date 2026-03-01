@@ -13,6 +13,11 @@
             "task": "sentence-embedding",
             "revision": "main",
             "notes": "Used for semantic embeddings, coherence similarity"
+        },
+        "spacy": {
+            "name": "en_core_web_sm",
+            "task": "nlp-pipeline",
+            "notes": "Local small model for NER and high-speed structural analysis"
         }
     },
     "error_codes": {

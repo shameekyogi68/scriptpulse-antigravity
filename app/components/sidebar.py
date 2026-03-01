@@ -19,15 +19,23 @@ def render_sidebar(ui_mode, is_cloud, stu):
         with st.expander("Engine Context (RAM Usage)", expanded=new_ui_mode == "Lab Mode (Research)"):
             engine_mode = st.radio(
                 "Processing Mode",
-                ["Fast Mode (Heuristic Engine – recommended)", "Full AI Mode (Loads SBERT + GPT-2, needs 8 GB RAM)"],
+                [
+                    "Fast Mode (Heuristic Engine – recommended)",
+                    "Full AI Mode (MiniLM + DistilBART, ~400 MB RAM)"
+                ],
                 index=0 if is_cloud else 1,
-                help="Fast Mode uses mathematical heuristics — same output structure, no ML model loading. Full AI adds embedding-based analysis."
+                help=(
+                    "Fast Mode: pure heuristics, no transformer loading. Same output structure.\n"
+                    "Full AI: loads MiniLM (~80 MB, remote first-run then cached) and "
+                    "DistilBART (~300 MB, remote first-run then cached). "
+                    "spaCy (en_core_web_sm) is always local and fast."
+                )
             )
             force_cloud = "Fast" in engine_mode
             if force_cloud:
-                st.caption("Fast Mode active — low memory footprint (<1 GB)")
+                st.caption("Fast Mode active — low memory footprint (<100 MB). spaCy still active.")
             else:
-                st.caption("Full AI Mode — allocates up to 5 GB RAM. Close other apps if running locally.")
+                st.caption("Full AI Mode — ~400 MB RAM. MiniLM & DistilBART cached after first download.")
                 
         st.markdown("---")
         
@@ -49,13 +57,22 @@ def render_sidebar(ui_mode, is_cloud, stu):
         ablation_config = {}
         if new_ui_mode == "Lab Mode (Research)":
             with st.expander("Advanced Model Ablation Console", expanded=False):
-                st.markdown("Control exact Pipeline constraints.")
-                ab_sbert = st.checkbox("Enable SBERT (Thematic Extraction)", value=not force_cloud, key="ab_sbert", disabled=force_cloud)
-                ab_gpt2 = st.checkbox("Enable GPT-2 (Surprisal Proxy)", value=not force_cloud, key="ab_gpt2", disabled=force_cloud)
+                st.markdown("Control exact pipeline model gates.")
+                st.caption("🟢 spaCy `en_core_web_sm` — always local, no toggle needed.")
+                ab_sbert = st.checkbox(
+                    "MiniLM SBERT (Semantic Embeddings & Coherence)",
+                    value=not force_cloud, key="ab_sbert", disabled=force_cloud,
+                    help="sentence-transformers/all-MiniLM-L6-v2 (~80 MB). Downloaded once, cached in ~/.scriptpulse/models."
+                )
+                ab_gpt2 = st.checkbox(
+                    "GPT-2 (Narratological Surprisal Score)",
+                    value=not force_cloud, key="ab_gpt2", disabled=force_cloud,
+                    help="gpt2 base model (~500 MB). Falls back to lexical entropy if disabled."
+                )
                 ab_multimodal = st.checkbox("Enable Multimodal Extrapolation", value=True, key="ab_multimodal")
-                
+
                 if force_cloud:
-                    st.warning("Heavy models disabled by Hardware Constraints selector above.")
+                    st.warning("MiniLM & GPT-2 disabled in Fast Mode. spaCy + heuristics active.")
                     
                 ab_seed = st.number_input("Random Seed", value=42, key="ab_seed")
                 ab_decay = st.number_input("Fatigue Decay Rate (k)", value=0.05, step=0.01, key="ab_decay")

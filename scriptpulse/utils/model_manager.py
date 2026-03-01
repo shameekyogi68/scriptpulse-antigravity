@@ -27,10 +27,12 @@ try:
     import torch
     from transformers import pipeline
     from sentence_transformers import SentenceTransformer
+    import spacy
 except ImportError:
     torch = None
     pipeline = None
     SentenceTransformer = None
+    spacy = None
 
 REQUIRED_VERSIONS_PATH = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), '..', '..', 'required_model_versions.json'
@@ -133,33 +135,57 @@ class ModelManager:
             logger.error("Failed to load pipeline %s: %s", model_name, e)
             return None
 
-    def get_sentence_transformer(self, model_name):
+    def get_sentence_transformer(self, model_name="sentence-transformers/all-MiniLM-L6-v2"):
         """
-        Get a SentenceTransformer model with caching and version enforcement.
-        Returns None immediately if SCRIPTPULSE_HEURISTICS_ONLY=1.
+        Get a SentenceTransformer model (MiniLM).
+        Loaded from HuggingFace Hub on first use, then cached locally.
         """
         if _HEURISTICS_ONLY:
-            logger.debug("Heuristics-only mode: skipping SBERT %s", model_name)
             return None
         if not SentenceTransformer:
             return None
         
-        # v13.1: Strict version check
         self._verify_model('sentence-transformer', model_name)
             
         try:
-            logger.info("Loading Sentence Transformer: %s...", model_name)
-            model = SentenceTransformer(model_name, cache_folder=self.cache_dir)
-            self._loaded_models['sentence-transformer'] = {
-                'name': model_name,
-                'type': 'sentence-transformer',
-                'loaded_at': __import__('time').time(),
-            }
-            return model
-        except RuntimeError:
-            raise  # Re-raise version check failures
+            if model_name not in self._loaded_models:
+                logger.info("Loading SBERT: %s...", model_name)
+                self._loaded_models[model_name] = SentenceTransformer(model_name, cache_folder=self.cache_dir)
+            return self._loaded_models[model_name]
         except Exception as e:
             logger.error("Failed to load SBERT %s: %s", model_name, e)
+            return None
+
+    def get_zero_shot(self):
+        """
+        Get a Zero-Shot Classifier (DistilBART).
+        Uses DistilBART-MNLI (~300MB) instead of BERT-Large (~1.3GB) to save resources.
+        """
+        if _HEURISTICS_ONLY:
+            return None
+        
+        # Consistent with required_model_versions.json
+        spec = self._required_versions.get('zero-shot-classification', {})
+        model_name = spec.get('name', "valhalla/distilbart-mnli-12-3")
+        
+        return self.get_pipeline("zero-shot-classification", model_name)
+
+    def get_spacy(self, model_name="en_core_web_sm"):
+        """
+        Get a spaCy model (small).
+        Requires 'spacy' and 'en_core_web_sm' to be installed locally.
+        Does NOT download automatically by default to remain local.
+        """
+        if _HEURISTICS_ONLY or not spacy:
+            return None
+            
+        try:
+            if model_name not in self._loaded_models:
+                logger.info("Loading spaCy model: %s...", model_name)
+                self._loaded_models[model_name] = spacy.load(model_name)
+            return self._loaded_models[model_name]
+        except Exception as e:
+            logger.warning("spaCy model %s not found locally. Instructions: 'python -m spacy download %s'", model_name, model_name)
             return None
     
     def get_loaded_models(self):

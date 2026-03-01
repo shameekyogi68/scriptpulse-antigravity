@@ -11,10 +11,14 @@ def render_diagnostics():
             st.session_state['heuristics_only'] = heuristics_env
 
         mem_safe = st.toggle(
-            "Memory Safe Mode (no ML models)",
+            "Memory Safe Mode (heuristics only)",
             value=st.session_state['heuristics_only'],
             key="mem_safe_toggle",
-            help="Disables SBERT/GPT-2/DistilBART. Saves ~900MB RAM. Uses fast heuristics. Accuracy is preserved for structural analysis."
+            help=(
+                "Disables MiniLM SBERT (~80 MB), GPT-2 (~500 MB), and DistilBART (~300 MB). "
+                "spaCy (en_core_web_sm) remains active — it is always local and lightweight. "
+                "Structural accuracy is fully preserved; only embedding-based subfields are approximated."
+            )
         )
         if mem_safe != st.session_state['heuristics_only']:
             st.session_state['heuristics_only'] = mem_safe
