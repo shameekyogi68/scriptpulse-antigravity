@@ -39,10 +39,11 @@ _RESOURCE_LIMITS = {
 
 # =============================================================================
 # PERFORMANCE: Module-level agent singleton cache.
-# Agents load heavy ML models (SBERT, GPT-2) on first instantiation.
-# Caching them at the module level prevents per-call re-loading: ~10-15s saved
-# per call on a cold process after the first run.
-# Determinism is fully preserved — agents are stateless per-run.
+# Agents that use ML models (MiniLM SBERT ~80 MB, DistilBART ~300 MB, GPT-2 ~500 MB)
+# are cached at module level after first instantiation. This avoids re-loading on
+# every call — saving 2–10s per run after warm-up.
+# spaCy (en_core_web_sm, ~12 MB) is always local and negligible overhead.
+# Agents are stateless per-run; caching does not affect determinism.
 # =============================================================================
 _AGENT_CACHE: dict = {}
 
@@ -307,6 +308,7 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
         _log.debug("Running Cognitive Resonance Layer...")
         res_agent = ResonanceAgent()
         if not ablation_config.get('use_sbert', True):
+            # MiniLM SBERT disabled — ResonanceAgent falls back to keyword similarity
             res_agent.is_ml = False
         insight_agent = InsightAgent()
         moonshot_trace = []
@@ -615,10 +617,10 @@ def run_pipeline(script_content, writer_intent=None, lens='viewer', genre='drama
     final_output['runtime_ms'] = sum(timings.values())
     final_output['perceptual_features'] = encoded # Expose Novelty/Clarity
 
-    # v14.1 MEMORY: On cpu_safe_mode, release model references after each run.
-    # On 8GB machines this recovers ~900MB of SBERT/GPT-2 heap between analyses.
-    # The _AGENT_CACHE still holds agent objects but not their model weights
-    # (weights live inside the ModelManager singleton which we release here).
+    # MEMORY: On cpu_safe_mode, release transformer model references after each run.
+    # This recovers ~400 MB (MiniLM + DistilBART) or ~900 MB (+ GPT-2) between analyses.
+    # The _AGENT_CACHE retains agent objects; only ModelManager weight tensors are freed.
+    # spaCy (en_core_web_sm) is lightweight and intentionally kept resident.
     if cpu_safe_mode:
         try:
             import gc

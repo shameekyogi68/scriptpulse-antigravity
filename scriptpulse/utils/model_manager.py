@@ -1,7 +1,14 @@
 """
 ScriptPulse Model Manager (MLOps Layer)
-Centralizes model loading, caching, and hardware acceleration logic.
-v14.0: Strict model version enforcement + structured logging.
+Centralizes model loading, caching, and hardware acceleration.
+
+Active model stack:
+  - spaCy en_core_web_sm  (~12 MB)  — always local, no download
+  - MiniLM SBERT           (~80 MB)  — remote first-run, cached in ~/.scriptpulse/models
+  - DistilBART MNLI        (~300 MB) — remote first-run, cached in ~/.scriptpulse/models
+  - GPT-2 base             (~500 MB) — optional, falls back to lexical entropy if off
+
+NO BERT Large in this stack by design (would add 1.3 GB for <3% accuracy gain).
 """
 
 import os
@@ -15,10 +22,10 @@ logger = logging.getLogger('scriptpulse.mlops')
 # =============================================================================
 # PERFORMANCE: Environment-driven heuristics-only mode.
 # Set SCRIPTPULSE_HEURISTICS_ONLY=1 to skip ALL transformer models entirely.
-# This drops SBERT (~80MB), GPT-2 (~500MB), and DistilBART (~300MB) from the 
-# process heap. All agents fall through to their existing fast heuristic 
-# fallbacks. Analytical output structure is identical; only ML-specific 
-# subfields (e.g. raw embeddings) will be zeroed or approximated.
+# This drops MiniLM SBERT (~80 MB), DistilBART (~300 MB), and GPT-2 (~500 MB).
+# spaCy en_core_web_sm is always local and lightweight — it stays ON regardless.
+# All agents fall through to their existing fast heuristic fallbacks.
+# Analytical output structure is identical; embedding subfields are approximated.
 # =============================================================================
 _HEURISTICS_ONLY = os.environ.get("SCRIPTPULSE_HEURISTICS_ONLY", "0") == "1"
 
