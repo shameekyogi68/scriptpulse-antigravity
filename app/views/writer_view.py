@@ -84,9 +84,12 @@ def render_writer_view(report, script_input):
         st.markdown("*Generate a plain-language summary of your script's structural health using Gemini 1.5 Flash.*")
     with col2:
         if st.button("🪄 Run Diagnostics", type="primary", use_container_width=True):
-            api_key = st.session_state.get('gemini_api_key')
+            import os
+            # Attempt to pull from Streamlit Secrets first, then local .env
+            api_key = st.secrets.get("GEMINI_API_KEY") if hasattr(st, "secrets") and "GEMINI_API_KEY" in st.secrets else os.environ.get("GEMINI_API_KEY")
+            
             if not api_key:
-                st.error("Please enter your Gemini API key in the sidebar.")
+                st.error("⚠️ Developer Setup Required: Please add `GEMINI_API_KEY` to the Streamlit Cloud 'Secrets' settings menu.")
             else:
                 with st.spinner("Consulting the model (Fail-safe active)..."):
                     from scriptpulse.reporters.llm_translator import generate_ai_summary
