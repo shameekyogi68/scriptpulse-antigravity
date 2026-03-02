@@ -14,10 +14,9 @@ def generate_ai_summary(script_data, model="gemini-1.5-flash", api_key=None):
         return None
         
     try:
-        from google import genai
-        from google.genai import types
+        import google.generativeai as genai
         
-        client = genai.Client(api_key=key)
+        genai.configure(api_key=key)
         
         # 1. Package ONLY the exact data we want explained (No raw script text)
         data_payload = {
@@ -39,15 +38,15 @@ def generate_ai_summary(script_data, model="gemini-1.5-flash", api_key=None):
         )
         
         # 3. Call the model
-        response = client.models.generate_content(
-            model=model,
-            contents=json.dumps(data_payload),
-            config=types.GenerateContentConfig(
-                system_instruction=system_prompt,
+        model_instance = genai.GenerativeModel(
+            model_name=model,
+            system_instruction=system_prompt,
+            generation_config=genai.GenerationConfig(
                 temperature=0.1,
                 max_output_tokens=400,
             )
         )
+        response = model_instance.generate_content(json.dumps(data_payload))
         
         return response.text
         
