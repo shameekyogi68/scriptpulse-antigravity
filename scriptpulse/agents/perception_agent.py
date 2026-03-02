@@ -132,6 +132,8 @@ class EncodingAgent:
         total_words = len(word_list)
         total_sentences = len(sentences)
         
+        word_counts = [len(s.split()) for s in sentences]
+        
         # Fix 12: Winsorize word_counts to dampen outlier sentence lengths
         if len(word_counts) >= 4:
             sorted_counts = sorted(word_counts)
