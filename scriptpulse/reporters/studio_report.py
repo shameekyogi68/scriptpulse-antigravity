@@ -30,122 +30,240 @@ def generate_report(report_data, script_title="Untitled Script", user_notes=""):
     # 2. Build HTML
     html = f"""
     <!DOCTYPE html>
-    <html>
+    <html lang="en">
     <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Script Intelligence Coverage: {script_title}</title>
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
         <style>
-            body {{ font-family: 'Courier Prime', 'Courier New', monospace; line-height: 1.6; color: #333; max_width: 800px; margin: 0 auto; padding: 40px; }}
-            h1, h2, h3 {{ color: #000; text-transform: uppercase; border-bottom: 2px solid #000; padding-bottom: 5px; }}
-            .header {{ text-align: center; margin-bottom: 50px; border: 4px solid #000; padding: 20px; }}
-            .verdict {{ font-size: 24px; font-weight: bold; padding: 10px; background: #eee; text-align: center; margin: 20px 0; }}
-            .metric-box {{ display: flex; justify-content: space-between; margin-bottom: 30px; }}
-            .metric {{ text-align: center; width: 30%; border: 1px solid #ccc; padding: 10px; }}
-            .metric h4 {{ margin: 0; font-size: 14px; color: #666; border: none; }}
-            .metric p {{ font-size: 24px; font-weight: bold; margin: 5px 0; }}
-            ul {{ list-style-type: square; }}
-            li {{ margin-bottom: 10px; }}
-            .footer {{ margin-top: 50px; font-size: 12px; text-align: center; color: #888; border-top: 1px solid #ccc; padding-top: 20px; }}
+            :root {{
+                --primary: #0f172a;
+                --accent: #3b82f6;
+                --success: #10b981;
+                --warning: #f59e0b;
+                --danger: #ef4444;
+                --bg: #f8fafc;
+                --card-bg: #ffffff;
+                --text: #1e293b;
+                --text-muted: #64748b;
+            }}
+            
+            body {{ 
+                font-family: 'Outfit', sans-serif; 
+                line-height: 1.6; 
+                color: var(--text); 
+                background-color: var(--bg);
+                margin: 0; 
+                padding: 0;
+            }}
+            
+            .container {{
+                max-width: 900px;
+                margin: 40px auto;
+                padding: 0 20px;
+            }}
+            
+            .header {{ 
+                text-align: left; 
+                margin-bottom: 40px; 
+                background: var(--primary);
+                color: white;
+                padding: 40px;
+                border-radius: 12px;
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+                position: relative;
+                overflow: hidden;
+            }}
+            
+            .header::after {{
+                content: "";
+                position: absolute;
+                top: -50%;
+                right: -10%;
+                width: 300px;
+                height: 300px;
+                background: rgba(59, 130, 246, 0.1);
+                border-radius: 50%;
+                z-index: 0;
+            }}
+            
+            .header h1 {{ margin: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 0.2em; opacity: 0.8; position: relative; z-index: 1; }}
+            .header h2 {{ margin: 10px 0 20px 0; font-size: 36px; font-weight: 700; position: relative; z-index: 1; }}
+            .header .meta {{ font-family: 'JetBrains Mono', monospace; font-size: 12px; opacity: 0.7; position: relative; z-index: 1; }}
+            
+            .verdict {{ 
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                background: var(--card-bg);
+                padding: 24px;
+                border-radius: 12px;
+                margin-bottom: 30px;
+                border-left: 8px solid var(--accent);
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            }}
+            
+            .verdict-label {{ font-size: 14px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; float: left;}}
+            .verdict-value {{ font-size: 24px; font-weight: 700; color: var(--primary); }}
+            
+            .stats-grid {{ 
+                display: grid; 
+                grid-template-columns: repeat(3, 1fr); 
+                gap: 20px; 
+                margin-bottom: 40px; 
+            }}
+            
+            .stat-card {{ 
+                background: var(--card-bg);
+                padding: 24px;
+                border-radius: 12px;
+                text-align: center;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            }}
+            
+            .stat-card h4 {{ margin: 0 0 10px 0; font-size: 12px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.1em; }}
+            .stat-card p {{ margin: 0; font-size: 28px; font-weight: 700; color: var(--primary); }}
+            
+            .section {{
+                background: var(--card-bg);
+                padding: 32px;
+                border-radius: 12px;
+                margin-bottom: 30px;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            }}
+            
+            .section h3 {{ 
+                margin-top: 0; 
+                font-size: 18px; 
+                border-bottom: 2px solid #f1f5f9; 
+                padding-bottom: 15px; 
+                margin-bottom: 20px;
+                color: var(--primary);
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }}
+            
+            .priority-table {{ width: 100%; border-collapse: collapse; margin-top: 15px; }}
+            .priority-table th {{ text-align: left; padding: 12px; background: #f1f5f9; font-size: 12px; text-transform: uppercase; color: var(--text-muted); }}
+            .priority-table td {{ padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }}
+            .tag {{ 
+                display: inline-block; 
+                padding: 2px 8px; 
+                border-radius: 4px; 
+                font-size: 11px; 
+                font-weight: 700; 
+                text-transform: uppercase;
+                background: #e2e8f0;
+            }}
+            .tag-high {{ background: #fee2e2; color: #b91c1c; }}
+            
+            .footer {{ 
+                margin-top: 60px; 
+                padding: 40px 0;
+                text-align: center; 
+                font-size: 12px; 
+                color: var(--text-muted); 
+                border-top: 1px solid #e2e8f0; 
+                font-family: 'JetBrains Mono', monospace;
+            }}
+            
+            ul {{ padding-left: 20px; }}
+            li {{ margin-bottom: 12px; }}
+            
+            .confidence-pill {{
+                background: #f1f5f9;
+                padding: 4px 12px;
+                border-radius: 20px;
+                font-size: 12px;
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+            }}
+
+            .indicator {{
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background: var(--success);
+            }}
         </style>
     </head>
     <body>
     
-    <div class="header">
-        <h1>SCRIPT COVERAGE</h1>
-        <h2>{script_title}</h2>
-        <p>Analyzed by ScriptPulse v11.0 (Gold Master)</p>
-        <p>Date: Today</p>
-    </div>
-    
-    <div class="verdict">
-        RECOMMENDATION: {rec}<br>
-        <span style="font-size: 14px; color: #666;">Based on Engagement {avg_effort:.2f}</span>
-    </div>
-    
-    <!-- Executive Summary (Writer Mode) -->
-    <div style="background-color: #f0f7ff; padding: 25px; border: 2px solid #005a9e; margin-bottom: 40px; border-radius: 5px;">
-        <h3 style="margin-top:0; color: #005a9e; border-bottom: none;">STORY REPORT SUMMARY</h3>
-        
-        <div style="display: flex; gap: 20px; align-items: flex-start;">
-            <div style="flex: 2;">
-                <h4 style="margin: 10px 0 5px 0; color: #333;">MAIN STORY ISSUES (Top 3)</h4>
-                <ul style="margin: 0; padding-left: 20px;">
-                    {''.join([f"<li style='margin-bottom:8px;'>{item}</li>" for item in report_data.get('writer_intelligence', {}).get('narrative_diagnosis', ['No major issues detected.'])])}
-                </ul>
-            </div>
-            
-            <div style="flex: 1; background: #fff; padding: 15px; border: 1px solid #ddd; border-radius: 4px;">
-                <h4 style="margin: 0 0 10px 0; border-bottom: 2px solid #eee;">STORY STRUCTURE CHECK</h4>
-                <div style="margin-bottom: 8px;">
-                    <b>Midpoint:</b> {report_data.get('writer_intelligence', {}).get('structural_dashboard', {}).get('midpoint_status', 'N/A')}
-                </div>
-                <div>
-                    <b>Act 1 Energy:</b> {report_data.get('writer_intelligence', {}).get('structural_dashboard', {}).get('act1_energy', 'N/A')}
-                </div>
+    <div class="container">
+        <div class="header">
+            <h1>Intelligence Coverage Report</h1>
+            <h2>{script_title}</h2>
+            <div class="meta">
+                ENGINE: ScriptPulse v14.0 Gold Master | DATE: {report_data.get('meta', {}).get('timestamp', 'PROCESSED')}
             </div>
         </div>
-
-        <h4 style="margin: 20px 0 10px 0; color: #333;">TOP WAYS TO FIX IT (High Impact)</h4>
-        <table style="width:100%; border-collapse: collapse; font-size: 14px;">
-            <tr style="background:#005a9e; color:white; text-align:left;">
-                <th style="padding:8px;">Action (What to do)</th>
-                <th style="padding:8px; width: 100px;">Impact</th>
-            </tr>
-            {''.join([f"<tr><td style='border:1px solid #ccc; padding:8px;'>{edit['action']}</td><td style='border:1px solid #ccc; padding:8px;'><b>{edit['leverage']}</b></td></tr>" for edit in report_data.get('writer_intelligence', {}).get('rewrite_priorities', [])[:5]])}
-        </table>
-    </div>
-            CONFIDENCE: {report_data.get('meta', {}).get('confidence_score', {}).get('level', 'N/A')} 
-            ({int(report_data.get('meta', {}).get('confidence_score', {}).get('score', 0)*100)}%)
-        </span>
-    </div>
-    
-    {f'<div style="border: 1px dashed #666; padding: 10px; margin: 20px 0; background: #ffffcc;"><strong>READER NOTES:</strong><br>{user_notes}</div>' if user_notes else ''}
-    
-    <h2>1. Executive Summary</h2>
-    <div class="metric-box">
-        <div class="metric">
-            <h4>Avg Engagement</h4>
-            <p>{avg_effort:.2f}</p>
-        </div>
-        <div class="metric">
-            <h4>Pacing Score</h4>
-            <p>{len(trace)} Scenes</p>
-        </div>
-        <div class="metric">
-            <h4>Est. Runtime</h4>
-            <p>~{len(trace)*2} Mins</p>
-        </div>
-    </div>
-    
-    <p><strong>Logline Assessment:</strong> The script demonstrates a { "steady" if avg_effort < 0.5 else "fast-paced" } narrative flow. { "However, engagement lags in Act 2." if avg_effort < 0.4 else "Tension is maintained throughout." }</p>
-    
-    <h2>2. Key Structural Flaws</h2>
-    <ul>
-    """
-    
-    # Add Top 3 Criticisms
-    for s in suggestions[:3]:
-        html += f"<li><strong>{s}</strong></li>"
         
-    if not suggestions:
-        html += "<li>No major structural flaws detected.</li>"
+        <div class="verdict">
+            <div>
+                <div class="verdict-label">Recommendation</div><br>
+                <div class="verdict-value">{rec}</div>
+            </div>
+            <div class="confidence-pill">
+                <div class="indicator"></div>
+                Confidence: {int(report_data.get('meta', {}).get('confidence_score', {}).get('score', 0)*100)}%
+            </div>
+        </div>
         
-    html += """
-    </ul>
-    
-    <h2>3. Character Analysis (Voice Map)</h2>
-    <p>Voice Distinctiveness Audit:</p>
-    <ul>
-    """
-    
-    voice = report_data.get('voice_fingerprints', {})
-    for char, metrics in list(voice.items())[:5]:
-        html += f"<li><strong>{char}:</strong> Complexity {metrics['complexity']}, Positivity {metrics['positivity']}</li>"
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h4>Avg Engagement</h4>
+                <p>{avg_effort:.2f}</p>
+            </div>
+            <div class="stat-card">
+                <h4>Pacing Units</h4>
+                <p>{len(trace)}</p>
+            </div>
+            <div class="stat-card">
+                <h4>Est. Runtime</h4>
+                <p>{report_data.get('writer_intelligence', {}).get('structural_dashboard', {}).get('runtime_estimate', {}).get('estimated_minutes', len(trace)*2)}m</p>
+            </div>
+        </div>
         
-    html += """
-    </ul>
-    
-    <div class="footer">
-        Generated by ScriptPulse v{report_data.get('meta', {}).get('metric_version', '1.3')} - The Biometric Screenplay Instrument.<br>
-        Profile: v{report_data.get('meta', {}).get('genre_profile_version', '1.0')} | Hash: {report_data.get('meta', {}).get('constants_hash', 'N/A')}
+        <div class="section">
+            <h3>Diagnostic Summary</h3>
+            <ul>
+                {''.join([f"<li>{item}</li>" for item in report_data.get('writer_intelligence', {}).get('narrative_diagnosis', ['Analysis clear. No high-risk anomalies.'])])}
+            </ul>
+        </div>
+        
+        <div class="section">
+            <h3>Rewrite Priorities</h3>
+            <table class="priority-table">
+                <thead>
+                    <tr>
+                        <th>Intervention Strategy</th>
+                        <th>Leverage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {''.join([f"<tr><td>{edit['action']}</td><td><span class='tag tag-high'>{edit['leverage']}</span></td></tr>" for edit in report_data.get('writer_intelligence', {}).get('rewrite_priorities', [])[:5]])}
+                </tbody>
+            </table>
+        </div>
+        
+        {f'<div class="section" style="background: #fffbeb; border: 1px solid #fef3c7;"><h3>Reader Perspectives</h3><p>{user_notes}</p></div>' if user_notes else ''}
+        
+        <div class="section">
+            <h3>Character Voice Audit</h3>
+            <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px;">Distinctiveness check for lead roles:</p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                {''.join([f"<div style='background: #f8fafc; padding: 15px; border-radius: 8px;'><div style='font-weight: 700; color: var(--primary);'>{char}</div><div style='font-size: 13px;'>Complexity: {metrics['complexity']:.2f} | Positivity: {metrics['positivity']:.2f}</div></div>" for char, metrics in list(report_data.get('voice_fingerprints', {}).items())[:6]])}
+            </div>
+        </div>
+        
+        <div class="footer">
+            GEN-SPEC: v{report_data.get('meta', {}).get('metric_version', '1.3')} | PROFILE: v{report_data.get('meta', {}).get('genre_profile_version', '1.0')}<br>
+            SECURE HASH: {report_data.get('meta', {}).get('constants_hash', 'N/A')}<br>
+            &copy; 2026 ScriptPulse Biometric Systems. Confidential & Proprietary.
+        </div>
     </div>
     
     </body>

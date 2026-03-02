@@ -58,6 +58,28 @@ def render_lab_view(report, script_input, selected_genre, selected_lens, ablatio
         fig.update_layout(template='plotly_white', hovermode='x unified', height=400)
         st.plotly_chart(fig, use_container_width=True)
 
+    # 4. Research Quadrant (Energy vs Entropy)
+    st.subheader("Narrative DNA (Energy vs Entropy)")
+    if trace:
+        q_data = []
+        for i, s in enumerate(trace):
+            q_data.append({
+                'Scene': i,
+                'Energy (Signal)': s.get('attentional_signal', 0.5),
+                'Entropy (Complexity)': report.get('semantic_flux', [0.5]*len(trace))[i]
+            })
+        df_q = pd.DataFrame(q_data)
+        fig_q = px.scatter(df_q, x='Entropy (Complexity)', y='Energy (Signal)', hover_data=['Scene'], 
+                           color_discrete_sequence=['#4F46E5'])
+        
+        # Add quadrant lines
+        fig_q.add_hline(y=0.5, line_dash="dash", line_color="rgba(0,0,0,0.2)")
+        fig_q.add_vline(x=0.5, line_dash="dash", line_color="rgba(0,0,0,0.2)")
+        
+        fig_q.update_layout(height=400, template='plotly_white')
+        st.plotly_chart(fig_q, use_container_width=True)
+        st.caption("Lower-Right: Dense/Expository | Upper-Right: Climax | Upper-Left: Pure Kinetic Action | Lower-Left: Recovery")
+
     # 4. Detailed Telemetry Tabs
     tabs = st.tabs(["Thematic Drivers", "Character Network", "Structural Fidelity", "Subtext Audit"])
     

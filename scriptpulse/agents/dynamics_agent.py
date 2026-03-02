@@ -229,6 +229,11 @@ class DynamicsAgent:
         
         length_factor = self._compute_length_factor(len(features))
         
+        # Fix 11: Dynamic Entropy Normalization
+        # Instead of hardcoding max 6.0, we find the actual maximum entropy observed
+        # in the script (floor of 6.0 to prevent magnifying simple scripts)
+        max_entropy = max([f.get('entropy_score', 0) for f in features] + [6.0])
+        
         for i, scene_feat in enumerate(features):
             # -- 2. Instantaneous Effort Calculation E[i] --
             
@@ -277,9 +282,9 @@ class DynamicsAgent:
             density_factor = 1.0
             if 'entropy_score' in scene_feat and ling['sentence_count'] > 0:
                  entropy = scene_feat['entropy_score']
-                 # Normalize entropy (typically 0-6 bits) against volume
+                 # Normalize entropy against script's maximum or 6.0 baseline
                  # High volume with low entropy -> Lower the effective load
-                 normalized_entropy = entropy / 6.0 # Max entropy approx 6
+                 normalized_entropy = entropy / max_entropy # Fix 11: dynamic max
                  
                  # Logic: If volume is high but entropy is low (verbose), reduce load.
                  # If volume is low but entropy is high (dense), increase load.
@@ -387,6 +392,8 @@ class DynamicsAgent:
             agency = min(1.0, active_chars * 0.2 + (action_density * 0.5))
 
             # Store
+            # Fix 3: Detect if signal was clamped at ceiling (1.0) to flag false-equivalence
+            ceiling_clipped = (effort + current_lambda * (prev_signal if i > 0 else 0.0) - recovery) > 1.0
             signals.append({
                 'scene_index': scene_feat['scene_index'],
                 'instantaneous_effort': round(effort, 3),
@@ -398,6 +405,7 @@ class DynamicsAgent:
                 'valence_score': valence_scores[i] if i < len(valence_scores) else 0.0,
                 'coherence_penalty': round(coh_penalty, 3),
                 'fatigue_state': round(min(1.0, max(0.0, signal - fatigue_thresh)), 3), # Clamped [0,1]
+                'ceiling_clipped': ceiling_clipped,  # Fix 3: True if real value exceeded 1.0
                 # Writer Layer Appendages
                 'action_density': round(action_density, 3),
                 'dialogue_density': round(dialogue_density, 3),
@@ -659,6 +667,7 @@ class DynamicsAgent:
         
         length_factor = self._compute_length_factor(len(signals))
         script_contrast = self._compute_script_contrast(signals)
+        total_scenes = len(signals)  # Fix 2: track total for position awareness
         
         patterns = []
         
@@ -667,13 +676,18 @@ class DynamicsAgent:
         patterns.extend(rep)
         
         if rep:
-            escalated = self._apply_cumulative_escalation(rep, signals, length_factor, script_contrast)
+            # Fix 5: Scale escalation threshold to script length
+            escalated = self._apply_cumulative_escalation(rep, signals, length_factor, script_contrast, total_scenes)
             patterns.extend(escalated)
             
-        patterns.extend(self._detect_sustained_demand(signals, length_factor, script_contrast, MIN_PERSISTENCE))
+        # Fix 2: Pass total_scenes for narrative position awareness
+        patterns.extend(self._detect_sustained_demand(signals, length_factor, script_contrast, MIN_PERSISTENCE, total_scenes))
         patterns.extend(self._detect_limited_recovery(signals, script_contrast, MIN_PERSISTENCE))
         patterns.extend(self._detect_constructive_strain(signals, script_contrast, MIN_PERSISTENCE))
         patterns.extend(self._detect_degenerative_fatigue(signals, script_contrast, acd_states, MIN_PERSISTENCE))
+        
+        # Fix 1: Detect low engagement / boring patterns
+        patterns.extend(self._detect_low_engagement(signals, script_contrast, MIN_PERSISTENCE))
         
         return patterns
 
@@ -740,11 +754,13 @@ class DynamicsAgent:
         except:
              return 0.5 # Fallback
 
-    def _detect_sustained_demand(self, signals, len_factor, contrast, min_scenes):
+    def _detect_sustained_demand(self, signals, len_factor, contrast, min_scenes, total_scenes=None):
         patterns = []
         THRESH = 0.6 * len_factor
         in_pat = False
         start = None
+        if total_scenes is None:
+            total_scenes = len(signals)
         
         for i, sig in enumerate(signals):
             if sig['attentional_signal'] > THRESH:
@@ -756,21 +772,32 @@ class DynamicsAgent:
                     end = i - 1
                     if end - start + 1 >= min_scenes:
                         conf = self._compute_confidence(signals[start:end+1], 'sustained', contrast, None, min_scenes)
+                        # Fix 2: Downgrade confidence if pattern sits inside expected climax zone (65%-90% of script)
+                        position_ratio = start / max(1, total_scenes)
+                        in_climax_zone = 0.65 <= position_ratio <= 0.90
+                        if in_climax_zone and conf == 'high':
+                            conf = 'medium'
                         patterns.append({
                             'pattern_type': 'sustained_attentional_demand',
                             'scene_range': [start, end],
                             'confidence': conf,
-                            'supporting_signals': ['high_signal_persistence']
+                            'supporting_signals': ['high_signal_persistence'],
+                            'in_climax_zone': in_climax_zone  # Fix 2: positional context flag
                         })
                     in_pat = False
         if in_pat and len(signals) - start >= min_scenes:
-             conf = self._compute_confidence(signals[start:], 'sustained', contrast, None, min_scenes)
-             patterns.append({
-                'pattern_type': 'sustained_attentional_demand',
-                'scene_range': [start, len(signals)-1],
-                'confidence': conf,
-                'supporting_signals': ['high_signal_persistence']
-             })
+            conf = self._compute_confidence(signals[start:], 'sustained', contrast, None, min_scenes)
+            position_ratio = start / max(1, total_scenes)
+            in_climax_zone = 0.65 <= position_ratio <= 0.90
+            if in_climax_zone and conf == 'high':
+                conf = 'medium'
+            patterns.append({
+               'pattern_type': 'sustained_attentional_demand',
+               'scene_range': [start, len(signals)-1],
+               'confidence': conf,
+               'supporting_signals': ['high_signal_persistence'],
+               'in_climax_zone': in_climax_zone
+            })
         return patterns
 
     def _detect_limited_recovery(self, signals, contrast, min_scenes):
@@ -832,8 +859,12 @@ class DynamicsAgent:
                     break
         return patterns
 
-    def _apply_cumulative_escalation(self, patterns, signals, len_factor, contrast):
+    def _apply_cumulative_escalation(self, patterns, signals, len_factor, contrast, total_scenes=None):
         escalated = []
+        if total_scenes is None:
+            total_scenes = len(signals)
+        # Fix 5: Scale escalation threshold by script length (min 5% of script, min 6 scenes)
+        min_escalation = max(6, int(total_scenes * 0.05))
         for p in patterns:
             if p['pattern_type'] == 'repetition':
                 start, end = p['scene_range']
@@ -844,11 +875,11 @@ class DynamicsAgent:
                     elif i > end + 2: break
                 
                 dur = ext_end - start + 1
-                if dur >= 6:
+                if dur >= min_escalation:
                     escalated.append({
                         'pattern_type': 'sustained_attentional_demand',
                         'scene_range': [start, min(ext_end, len(signals)-1)],
-                        'confidence': 'medium' if dur < 8 else 'high',
+                        'confidence': 'medium' if dur < min_escalation * 1.5 else 'high',
                         'supporting_signals': ['repetition_persistence']
                     })
         return escalated
@@ -867,3 +898,44 @@ class DynamicsAgent:
         if base >= 0.8: return 'high'
         elif base >= 0.5: return 'medium'
         return 'low'
+
+    # Fix 1: LOW ENGAGEMENT / BORING PATTERN DETECTION
+    def _detect_low_engagement(self, signals, contrast, min_scenes):
+        """
+        Detects sections where attentional signal stays persistently LOW.
+        A flatline-low script risks boredom, not just fatigue.
+        Requires 4+ consecutive scenes below 0.25 to fire.
+        """
+        patterns = []
+        LOW_THRESH = 0.25
+        MIN_LOW_SCENES = max(4, min_scenes + 1)  # Slightly stricter than high-load patterns
+        count = 0
+        start = None
+
+        for i, sig in enumerate(signals):
+            if sig['attentional_signal'] < LOW_THRESH:
+                if count == 0:
+                    start = i
+                count += 1
+            else:
+                if count >= MIN_LOW_SCENES:
+                    conf = self._compute_confidence(signals[start:i], 'low_engagement', contrast, None, MIN_LOW_SCENES)
+                    patterns.append({
+                        'pattern_type': 'low_engagement',
+                        'scene_range': [start, i - 1],
+                        'confidence': conf,
+                        'supporting_signals': ['low_signal_persistence']
+                    })
+                count = 0
+
+        # Check tail
+        if count >= MIN_LOW_SCENES:
+            conf = self._compute_confidence(signals[start:], 'low_engagement', contrast, None, MIN_LOW_SCENES)
+            patterns.append({
+                'pattern_type': 'low_engagement',
+                'scene_range': [start, len(signals) - 1],
+                'confidence': conf,
+                'supporting_signals': ['low_signal_persistence']
+            })
+
+        return patterns

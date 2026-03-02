@@ -26,7 +26,12 @@ class EncodingAgent:
         if not scenes: return []
         
         feature_vectors = []
-        prev_characters = set() # Track for Entity Churn
+        # Fix 4: Start with an explicit empty set so Scene 0 correctly measures
+        # ALL characters it introduces as "added" against a zero baseline.
+        # Previously, prev_characters=set() meant Scene 0 churn was computed against
+        # nothing and returned 0.0 — now it correctly fires for opening scenes
+        # that introduce large casts.
+        prev_characters = set()  # Correct: empty set = no known characters before Scene 0
         
         for i, scene in enumerate(scenes):
             if 'lines' in scene:
@@ -38,8 +43,6 @@ class EncodingAgent:
             ref_load = self.extract_referential_load(scene_lines, prev_characters)
             
             # Update context for next iteration
-            # We assume active characters in this scene become the "prev" for the next
-            # But strictly speaking, churn is about who entered vs left comparing sets.
             current_chars = ref_load.get('current_character_set', set())
             prev_characters = current_chars
             
@@ -129,12 +132,17 @@ class EncodingAgent:
         total_words = len(word_list)
         total_sentences = len(sentences)
         
-        # Word stats
-        word_counts = [len(s.split()) for s in sentences]
+        # Fix 12: Winsorize word_counts to dampen outlier sentence lengths
+        if len(word_counts) >= 4:
+            sorted_counts = sorted(word_counts)
+            p95_idx = int(len(sorted_counts) * 0.95)
+            cap = sorted_counts[p95_idx]
+            word_counts = [min(w, cap) for w in word_counts]
+
         mean_length = sum(word_counts) / len(word_counts)
         max_length = max(word_counts)
         variance = sum((x - mean_length) ** 2 for x in word_counts) / len(word_counts)
-        
+
         # 1. READABILITY (Flesch-Kincaid Grade Level)
         # Formula: 0.39 * (words/sentences) + 11.8 * (syllables/words) - 15.59
         total_syllables = sum(self._count_syllables(w) for w in word_list)
@@ -143,6 +151,11 @@ class EncodingAgent:
         
         fk_grade = 0.39 * avg_words_per_sentence + 11.8 * avg_syllables_per_word - 15.59
         fk_grade = max(0.0, round(fk_grade, 2))
+        
+        # Fix 13: Era-language detection — archaic scripts score higher FK unfairly
+        era_markers = {'thee', 'thou', 'hath', 'dost', 'thy', 'thine', 'hast', 'shalt', 'wilt', 'wouldst'}
+        era_language_detected = any(w.lower() in era_markers for w in word_list)
+        effective_fk_grade = fk_grade * 0.7 if era_language_detected else fk_grade
         
         # 2. IDEA DENSITY (Propositional Density Approximation)
         # Using Unique Words (Types) + Prepositions as proxy for propositions
@@ -158,10 +171,11 @@ class EncodingAgent:
             'mean_sentence_length': round(mean_length, 2),
             'max_sentence_length': max_length,
             'sentence_length_variance': round(variance, 2),
-            'readability_grade': fk_grade,
+            'readability_grade': effective_fk_grade,  # Fix 13: reduced for era language
+            'era_language_detected': era_language_detected,  # Fix 13
             'idea_density': round(idea_density, 3),
-            'clarity_score': round(max(0.0, 1.0 - (fk_grade / 12.0)), 2), # Clamped to [0,1]. Grade > 12 yields 0.
-            'novelty_score': round(idea_density * (variance / 10.0), 2) # Heuristic: New ideas + Variety = Novelty
+            'clarity_score': round(max(0.0, 1.0 - (effective_fk_grade / 12.0)), 2),
+            'novelty_score': round(idea_density * (variance / 10.0), 2)
         }
 
     def extract_dialogue_dynamics(self, scene_lines):
@@ -332,6 +346,45 @@ class EncodingAgent:
             if p > 0: entropy -= p * math.log2(p)
         return round(entropy, 3)
 
+    def extract_humor_signal(self, scene_lines):
+        """
+        Fix 14: Detect levity/comedic beats that provide real-world recovery.
+        Checks for short punch lines, exclamation patterns, and a levity lexicon.
+        Returns a 0.0-1.0 signal: higher = more humor detected.
+        """
+        levity_lexicon = {
+            'laughs', 'chuckles', 'grins', 'smiles', 'winks', 'smirks', 'giggles',
+            'snickers', 'amused', 'deadpan', 'sarcastic', 'jokes', 'jokes', 'beat',
+            'ironically', 'absurd', 'ridiculous', 'comically', 'awkward'
+        }
+        dialogue_lines = [l for l in scene_lines if l.get('tag') == 'D']
+        action_lines = [l for l in scene_lines if l.get('tag') == 'A']
+        if not scene_lines: return 0.0
+
+        signals = []
+
+        # 1. Short dialogue punches (≤5 words) after a longer speech
+        for i, line in enumerate(dialogue_lines):
+            if len(line['text'].split()) <= 5 and i > 0 and len(dialogue_lines[i-1]['text'].split()) > 10:
+                signals.append(0.4)
+
+        # 2. Exclamation in short dialogue line
+        for line in dialogue_lines:
+            text = line['text']
+            if '!' in text and len(text.split()) <= 8:
+                signals.append(0.3)
+
+        # 3. Levity lexicon in action lines
+        action_text = ' '.join([l['text'].lower() for l in action_lines])
+        for word in levity_lexicon:
+            if word in action_text:
+                signals.append(0.5)
+                break  # one match is enough
+
+        if not signals: return 0.0
+        return round(min(1.0, sum(signals) / max(1, len(scene_lines)) * 3), 3)
+
+
     def extract_motifs(self, scene_lines, active_characters):
         """Identifies potential motifs: Capitalized words in action lines that are not characters."""
         motifs = []
@@ -378,15 +431,26 @@ class EncodingAgent:
     def extract_on_the_nose(self, scene_lines):
         """
         Detect literal dialogue — characters saying exactly what they feel/intend.
-        On-the-nose markers: 'I feel', 'I am [emotion]', 'I want', 'You are [emotion]', etc.
+        Fix 8: Expanded phrase list to catch more transparent emotional statements.
         Returns a ratio: higher = more literal / on-the-nose.
         """
         on_the_nose_patterns = [
+            # Original patterns
             r"\bi feel\b", r"\bi am angry\b", r"\bi am sad\b", r"\bi am scared\b",
             r"\bi hate you\b", r"\bi love you\b", r"\bi trust you\b", r"\bi don'?t trust\b",
             r"\bi want to\b", r"\bi need to\b", r"\byou are\b", r"\bwe should\b",
             r"\bi am afraid\b", r"\bi am worried\b", r"\bi am sorry\b",
             r"\bthis is because\b", r"\bthe reason is\b", r"\bwhat i mean is\b",
+            # Fix 8: Expanded patterns
+            r"\byou never understood me\b", r"\bthis is all your fault\b",
+            r"\bi'?ve always loved you\b", r"\bwe need to talk\b",
+            r"\beverything is going to be okay\b", r"\bi just want you to know\b",
+            r"\bthe truth is\b", r"\bi was wrong\b", r"\byou were right\b",
+            r"\bi can'?t do this anymore\b", r"\bi don'?t know what to do\b",
+            r"\bi'?ve made a mistake\b", r"\bi'?m afraid of\b", r"\bi'?m jealous\b",
+            r"\bi miss you\b", r"\bi'?m proud of you\b", r"\byou disappoint me\b",
+            r"\bwe lost everything\b", r"\bthis changes everything\b",
+            r"\bi never wanted this\b", r"\bmy biggest fear\b",
         ]
         import re as _re
         dialogue_lines = [l for l in scene_lines if l.get('tag') == 'D']

@@ -29,6 +29,54 @@
             "beta_recovery": 0.5,
             "fatigue_threshold": 1.3,
             "description": "High tolerance for sustained intensity."
+        },
+        "psychological_thriller": {
+            "lambda_decay": 0.92,
+            "beta_recovery": 0.15,
+            "fatigue_threshold": 1.4,
+            "description": "Very slow decay — sustained dread accumulates deliberately. Very low recovery: the discomfort is the point."
+        },
+        "romantic_comedy": {
+            "lambda_decay": 0.78,
+            "beta_recovery": 0.7,
+            "fatigue_threshold": 0.7,
+            "description": "Frequent comedic relief resets tension. Low fatigue threshold — audiences expect a light touch throughout."
+        },
+        "dark_comedy": {
+            "lambda_decay": 0.82,
+            "beta_recovery": 0.45,
+            "fatigue_threshold": 1.0,
+            "description": "Moderate decay with moderate tonal whiplash expected. Balances discomfort with sardonic release."
+        },
+        "period_drama": {
+            "lambda_decay": 0.93,
+            "beta_recovery": 0.20,
+            "fatigue_threshold": 1.1,
+            "description": "Very slow decay — audiences invest in long, deliberate emotional arcs. Archaic language readability reduced by era-language fix."
+        },
+        "sci_fi": {
+            "lambda_decay": 0.82,
+            "beta_recovery": 0.35,
+            "fatigue_threshold": 1.2,
+            "description": "Moderate-slow decay. World-building exposition is expected and tolerated. Higher cognitive tolerance for density."
+        },
+        "literary_drama": {
+            "lambda_decay": 0.95,
+            "beta_recovery": 0.18,
+            "fatigue_threshold": 1.0,
+            "description": "Very slow decay. Dense monologues and high idea density are intentional and tolerated by target audience."
+        },
+        "war_film": {
+            "lambda_decay": 0.73,
+            "beta_recovery": 0.38,
+            "fatigue_threshold": 1.35,
+            "description": "Fast action-driven decay. High visual intensity throughout. Audience expects brutal peaks with tactical quiet valleys."
+        },
+        "coming_of_age": {
+            "lambda_decay": 0.88,
+            "beta_recovery": 0.40,
+            "fatigue_threshold": 0.85,
+            "description": "Moderate-slow decay with generous recovery. Audiences are emotionally porous — low fatigue threshold for harsh demands."
         }
     }
 }

@@ -31,6 +31,11 @@ WRITER_NATIVE_TRANSLATIONS = {
         "This section demands heavy lifting. "
         "The audience is working hard to keep up — ensure the payoff is worth the effort."
     ),
+    # Fix 1 / Fix 9: Low engagement translation
+    'low_engagement': (
+        "The modeled attentional demand stays consistently low across these scenes. "
+        "Is the audience's investment intentionally restrained here, or has forward momentum slowed?"
+    ),
     'degenerative_fatigue': {
         'drift': (
             "The audience may start to drift here — "
@@ -1089,16 +1094,35 @@ class InterpretationAgent:
         elif pattern_type in WRITER_NATIVE_TRANSLATIONS:
             reflection_text = WRITER_NATIVE_TRANSLATIONS[pattern_type]
             
-        if total_scenes > 30:
+        # Fix 7: Add climax-zone context note to sustained demand reflections
+        if pattern_type == 'sustained_attentional_demand' and pattern.get('in_climax_zone'):
+            reflection_text += " Note: This section falls near the expected dramatic peak — high demand here may be structurally appropriate."
+        elif total_scenes > 30:
             start, end = scene_range
             if end / max(1, total_scenes) > 0.8:
                 reflection_text += " (Deep in the script, this requires even more energy to sustain.)"
-                
+
+        # Fix 6: Attach dominant XAI driver to reflection
+        dominant_driver = None
+        if input_data:
+            xai_data = input_data.get('xai_explanations', [])
+            start, end = scene_range
+            window_xai = [x for x in xai_data if start <= x.get('scene_index', -1) <= end]
+            if window_xai:
+                driver_counts = {}
+                for x in window_xai:
+                    d = x.get('dominant_driver')
+                    if d:
+                        driver_counts[d] = driver_counts.get(d, 0) + 1
+                if driver_counts:
+                    dominant_driver = max(driver_counts, key=driver_counts.get)
+
         return {
-            'scene_range': scene_range, 
-            'reflection': reflection_text, 
+            'scene_range': scene_range,
+            'reflection': reflection_text,
             'confidence': confidence_label,
-            'confidence_score': confidence_val # Numeric score for research purposes
+            'confidence_score': confidence_val,  # Numeric score for research purposes
+            'dominant_driver': dominant_driver    # Fix 6: Why was this scene flagged?
         }
 
     def _generate_silence_explanation(self, suppressed, alignment_notes, ssf_analysis=None):
@@ -1107,12 +1131,20 @@ class InterpretationAgent:
         
         if ssf_analysis and ssf_analysis.get('is_silent'):
             key = ssf_analysis.get('explanation_key')
+            avg_effort = ssf_analysis.get('stability_metrics', {}).get('avg_effort', 0.5)
+            
+            # Fix 9: Distinguish balanced from low-engagement continuity
             if key == 'stable_continuity':
-                 return "The experience here is rock stable. Effort and recovery are balanced—the audience is breathing naturally."
+                if avg_effort < 0.3:
+                    return (
+                        "The modeled attentional demand remains very low throughout — no strain detected. "
+                        "Is the audience investment intentionally restrained here, or has the script's forward pull softened?"
+                    )
+                return "The experience here is rock stable. Effort and recovery are balanced — the audience is breathing naturally."
             elif key == 'self_correcting':
                 return "The flow feels self-correcting. Whenever tension rises, a release valve opens naturally."
             elif key == 'stable_but_drifting':
-                 return "The experience is stable, though the water is very still. No strain, but also low demand."
+                return "The experience is stable, though the water is very still. No strain, but also low demand."
         
         if suppressed: return "Patterns were suppressed based on provided constraints."
         return "The attentional flow is stable. No red flags, no drag, no exhaustion. A clean reading."

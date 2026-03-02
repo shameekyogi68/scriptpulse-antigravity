@@ -35,12 +35,15 @@ def _benchmark_tag(value, genre, signal):
     benchmarks = GENRE_BENCHMARKS.get(genre.lower(), GENRE_BENCHMARKS['general'])
     if signal not in benchmarks:
         return f"{value:.2f}"
+    
+    low, high = benchmarks[signal]
+    
     if value < low:
-        return f"{value:.2f} [BELOW] *(below {genre} target: {low:.2f}-{high:.2f})*"
+        return f"🔴 **{value:.2f}** *(below {genre} target: {low:.2f}-{high:.2f})*"
     elif value > high:
-        return f"{value:.2f} [ABOVE] *(above {genre} target: {low:.2f}-{high:.2f})*"
+        return f"🟡 **{value:.2f}** *(above {genre} target: {low:.2f}-{high:.2f})*"
     else:
-        return f"{value:.2f} [TARGET] *(on target: {low:.2f}-{high:.2f} for {genre})*"
+        return f"🟢 **{value:.2f}** *(on target: {low:.2f}-{high:.2f} for {genre})*"
 
 
 def _stars(value, max_val=1.0, n=5):
@@ -79,50 +82,55 @@ def generate_writer_report(pipeline_output, title="Untitled Script", genre=None)
     # -------------------------------------------------------------------------
     # HEADER
     # -------------------------------------------------------------------------
-    lines.append(f"# ScriptPulse Writer's Report")
-    lines.append(f"**Script:** {title.upper()}  ")
-    lines.append(f"**Genre:** {genre.title()}  ")
-    lines.append(f"**Generated:** {datetime.now().strftime('%B %d, %Y at %H:%M')}  ")
-    lines.append(f"**ScriptPulse Version:** v2.0 (Phase 30)  ")
+    analysis_date = pipeline_output.get('meta', {}).get('timestamp')
+    if not analysis_date:
+        analysis_date = datetime.now().strftime('%B %d, %Y (%H:%M)')
+        
+    lines.append(f"# 🖋️ ScriptPulse Intelligence Report")
+    lines.append(f"**PROJECT:** `{title.upper()}`  ")
+    lines.append(f"**GENRE PROFILE:** `{genre.upper()}`  ")
+    lines.append(f"**ANALYSIS DATE:** {analysis_date}  ")
+    lines.append(f"**ENGINE VERSION:** `v14.0 Gold Master`  ")
+    lines.append("\n" + "---" * 10 + "\n")
 
     # -------------------------------------------------------------------------
     # EXECUTIVE SUMMARY
     # -------------------------------------------------------------------------
-    lines.append(_section("Executive Summary"))
+    lines.append("## 📌 Executive Summary")
     if isinstance(summary_data, dict):
         summary_text = summary_data.get('summary', '')
     else:
         summary_text = str(summary_data)
 
     if summary_text:
-        lines.append(f"> {summary_text}")
+        lines.append(f"{summary_text}")
     else:
-        lines.append("> No narrative summary available.")
+        lines.append("*No narrative summary available for this analysis.*")
 
     # -------------------------------------------------------------------------
     # RUNTIME & FORMAT SNAPSHOT
     # -------------------------------------------------------------------------
-    lines.append(_section("Script Snapshot"))
+    lines.append("\n## 📊 Script Snapshot")
     runtime = dashboard.get('runtime_estimate', {})
     loc_profile = dashboard.get('location_profile', {})
     total_scenes = dashboard.get('total_scenes', len(trace))
 
-    lines.append(f"| Metric | Value |")
-    lines.append(f"|--------|-------|")
-    lines.append(f"| Total Scenes | {total_scenes} |")
-    lines.append(f"| Estimated Runtime | {runtime.get('estimated_minutes', '?')} min |")
-    lines.append(f"| Runtime Status | {runtime.get('status', 'N/A')} |")
-    lines.append(f"| Unique Locations | {loc_profile.get('unique_locations', '?')} |")
-    lines.append(f"| INT / EXT Split | {loc_profile.get('int_scenes', 0)} INT / {loc_profile.get('ext_scenes', 0)} EXT |")
+    lines.append(f"| Metric | Assessment |")
+    lines.append(f"|:-------|:-----------|")
+    lines.append(f"| **Total Scenes** | {total_scenes} |")
+    lines.append(f"| **Est. Runtime** | {runtime.get('estimated_minutes', '?')} minutes |")
+    lines.append(f"| **Runtime Status** | {runtime.get('status', 'N/A')} |")
+    lines.append(f"| **Locations** | {loc_profile.get('unique_locations', '?')} unique |")
+    lines.append(f"| **INT/EXT Split** | {loc_profile.get('int_scenes', 0)} INT / {loc_profile.get('ext_scenes', 0)} EXT |")
 
     if loc_profile.get('location_warning'):
-        lines.append(f"\n> [WARNING] {loc_profile['location_warning']}")
+        lines.append(f"\n> [!CAUTION]\n> **Location Concentration:** {loc_profile['location_warning']}")
 
     # -------------------------------------------------------------------------
     # SIGNAL DASHBOARD (Genre-benchmarked)
     # -------------------------------------------------------------------------
-    lines.append(_section("Signal Dashboard"))
-    lines.append("*All signals benchmarked against your genre. [TARGET] = on target, [BELOW] = below, [ABOVE] = above.*\n")
+    lines.append("\n## 📈 Signal Dashboard")
+    lines.append("*Biological engagement signals calibrated against **" + genre.title() + "** standards.*\n")
 
     if trace:
         import statistics as _stats
@@ -143,20 +151,20 @@ def generate_writer_report(pipeline_output, title="Untitled Script", genre=None)
         payoff_avg = avg_signal('payoff_density', 'payoff_density')
         sentiment_avg = avg_signal('sentiment')
 
-        lines.append(f"| Signal | Score | Genre Benchmark |")
-        lines.append(f"|--------|-------|-----------------|")
-        lines.append(f"| Conflict | {_stars(conflict_avg)} | {_benchmark_tag(conflict_avg, genre, 'conflict')} |")
-        lines.append(f"| Energy | {_stars(energy_avg)} | {_benchmark_tag(energy_avg, genre, 'energy')} |")
-        lines.append(f"| Information Entropy | {_stars(entropy_avg)} | {_benchmark_tag(entropy_avg, genre, 'entropy')} |")
-        lines.append(f"| Payoff Density | {_stars(payoff_avg)} | {_benchmark_tag(payoff_avg, genre, 'payoff_density')} |")
-        lines.append(f"| Avg Sentiment | {_stars((sentiment_avg + 1) / 2)} | {sentiment_avg:+.2f} *(−1 dark → +1 bright)* |")
+        lines.append(f"| Core Signal | Intensity | Benchmark Status |")
+        lines.append(f"|:------------|:----------|:-----------------|")
+        lines.append(f"| **Conflict** | `{_stars(conflict_avg)}` | {_benchmark_tag(conflict_avg, genre, 'conflict')} |")
+        lines.append(f"| **Energy** | `{_stars(energy_avg)}` | {_benchmark_tag(energy_avg, genre, 'energy')} |")
+        lines.append(f"| **Entropy** | `{_stars(entropy_avg)}` | {_benchmark_tag(entropy_avg, genre, 'entropy')} |")
+        lines.append(f"| **Payoff** | `{_stars(payoff_avg)}` | {_benchmark_tag(payoff_avg, genre, 'payoff_density')} |")
+        lines.append(f"| **Sentiment** | `{_stars((sentiment_avg + 1) / 2)}` | {sentiment_avg:+.2f} *(Dark → Bright)* |")
     else:
-        lines.append("*No trace data available.*")
+        lines.append("*[!] No temporal data found.*")
 
     # -------------------------------------------------------------------------
     # STRUCTURAL TURNING POINTS
     # -------------------------------------------------------------------------
-    lines.append(_section("Structural Turning Points"))
+    lines.append("\n## ⏳ Structural Turning Points")
     turning = dashboard.get('structural_turning_points', {})
     if turning.get('note'):
         lines.append(f"*{turning['note']}*")
@@ -169,95 +177,129 @@ def generate_writer_report(pipeline_output, title="Untitled Script", genre=None)
             strength = beat_data.get('strength', 0)
             warning = beat_data.get('warning', '')
             bar = _stars(min(strength, 1.0))
-            lines.append(f"- **{label}** → Scene {scene} &nbsp; {bar} (strength: {strength:.2f})")
+            lines.append(f"- **{label}**: Scene {scene} ` {bar} ` ({strength:.2f})")
             if warning:
-                lines.append(f"  > [WARNING] {warning}")
+                lines.append(f"  > [!WARNING] {warning}")
+
+    # -------------------------------------------------------------------------
+    # SCENE HEATMAP
+    # -------------------------------------------------------------------------
+    if trace:
+        lines.append("\n## 🌡️ Narrative Heatmap")
+        lines.append("*Visual intensity flow (░ = lower, ▓ = higher):*\n")
+        heatmap = ""
+        for i, s in enumerate(trace):
+            val = s.get('attentional_signal', 0.5)
+            if val < 0.2: char = "░"
+            elif val < 0.4: char = "▒"
+            elif val < 0.7: char = "▓"
+            else: char = "█"
+            heatmap += char
+            if (i + 1) % 50 == 0: heatmap += "\n"
+        lines.append(f"```\n{heatmap}\n```")
 
     # -------------------------------------------------------------------------
     # NARRATIVE DIAGNOSIS
     # -------------------------------------------------------------------------
-    lines.append(_section("Narrative Diagnosis"))
-    lines.append("*Issues identified across all 29 analytical dimensions:*\n")
+    lines.append("\n## 🩺 Narrative Diagnosis")
+    lines.append("*Multi-dimensional structural health check:*\n")
     if diagnosis:
         for item in diagnosis:
-            lines.append(f"- {item}\n")
+            lines.append(f" - {item}")
     else:
-        lines.append("*No issues detected.*")
+        lines.append("*Status: Clear. No structural anomalies detected.*")
 
     # -------------------------------------------------------------------------
     # REWRITE PRIORITIES
     # -------------------------------------------------------------------------
-    lines.append(_section("Top Rewrite Priorities"))
-    lines.append("*Ranked by impact. Address these first:*\n")
+    lines.append("\n## 🚀 Top Rewrite Priorities")
+    lines.append("*Prioritized sequence for the next draft:*\n")
     if priorities:
         for i, item in enumerate(priorities, 1):
-            lines.append(f"**{i}.** {item}\n")
+            if isinstance(item, dict):
+                action = item.get('action', 'Unknown Strategy')
+                leverage = item.get('leverage', 'Medium')
+                lines.append(f"{i}. **{action}** ` [{leverage} Leverage] `")
+            else:
+                lines.append(f"{i}. **{item}**")
     else:
-        lines.append("*No rewrite priorities surfaced.*")
+        lines.append("*Project optimized. No major revisions suggested.*")
+        
+    # -------------------------------------------------------------------------
+    # CREATIVE PROVOCATIONS
+    # -------------------------------------------------------------------------
+    provocations = wi.get('creative_provocations', [])
+    if provocations:
+        lines.append("\n## 💡 Creative Provocations")
+        lines.append("*Mentor-grade questions to push your craft further:*\n")
+        for p in provocations:
+            lines.append(f"> **{p}**")
 
     # -------------------------------------------------------------------------
     # CHARACTER ARCS
     # -------------------------------------------------------------------------
-    lines.append(_section("Character Arc Summary"))
+    lines.append("\n## 🎭 Character Arc Map")
     char_arcs = dashboard.get('character_arcs', {})
     if char_arcs:
-        lines.append(f"| Character | Arc | Trajectory |")
-        lines.append(f"|-----------|-----|------------|")
+        lines.append(f"| Character | Arc Type | Agency Trajectory |")
+        lines.append(f"|:----------|:---------|:------------------|")
         for char, arc_data in list(char_arcs.items())[:8]:
-            arc = arc_data.get('arc', 'Unknown')
-            start = arc_data.get('start_agency', 0)
-            end = arc_data.get('end_agency', 0)
-            traj = f"{start:.2f} → {end:.2f}"
-            lines.append(f"| {char} | {arc} | {traj} |")
+            arc_label = arc_data.get('arc_type', arc_data.get('arc', 'Unknown'))
+            start = arc_data.get('agency_start', arc_data.get('start_agency', 0))
+            end = arc_data.get('agency_end', arc_data.get('end_agency', 0))
+            delta = arc_data.get('agency_delta', end - start)
+            traj = f"`{start:+.2f}` → `{end:+.2f}` ({delta:+.2f})"
+            lines.append(f"| **{char}** | {arc_label} | {traj} |")
     else:
-        lines.append("*No character arc data available.*")
+        lines.append("*Character dynamics analysis unavailable.*")
 
     # -------------------------------------------------------------------------
     # SCENE ECONOMY MAP
     # -------------------------------------------------------------------------
-    lines.append(_section("Scene Economy Map"))
+    lines.append("\n## ✂️ Scene Economy & Cuts")
     econ_map = dashboard.get('scene_economy_map', {})
     cut_candidates = econ_map.get('cut_candidates', [])
     low_count = econ_map.get('low_economy_count', 0)
     high_scenes = econ_map.get('high_economy_scenes', [])
 
     if cut_candidates:
-        lines.append(f"[WARNING] **{low_count} Low Economy scene(s)** — potential cut candidates: Scenes {', '.join(str(s) for s in cut_candidates)}")
+        lines.append(f"> [!IMPORTANT]\n> Found **{low_count} Efficiency Gaps**. Consider trimming or merging: Scenes {', '.join(str(s) for s in cut_candidates)}")
+    
     if high_scenes:
-        lines.append(f"[GOOD] **High Economy scenes** (doing the most story work): {', '.join(str(s) for s in high_scenes[:5])}")
+        lines.append(f"🌟 **Load-Bearing Scenes:** {', '.join(str(s) for s in high_scenes[:5])}")
 
     econ_table = econ_map.get('map', [])
     if econ_table:
-        lines.append(f"\n| Scene | Economy | Score |")
-        lines.append(f"|-------|---------|-------|")
-        for e in econ_table[:15]:
-            icon = "[HIGH]" if e['label'] == 'High Economy' else ("[MOD]" if e['label'] == 'Moderate Economy' else "[LOW]")
-            lines.append(f"| {e['scene']} | {icon} {e['label']} | {e['score']} |")
-        if len(econ_table) > 15:
-            lines.append(f"| ... | *({len(econ_table) - 15} more scenes)* | ... |")
+        lines.append(f"\n| Scene | Efficiency | Delta |")
+        lines.append(f"|:------|:-----------|:------|")
+        for e in econ_table[:10]:
+            icon = "🟢" if e['label'] == 'High Economy' else ("🟡" if e['label'] == 'Moderate Economy' else "🔴")
+            lines.append(f"| {e['scene']} | {icon} {e['label']} | `{e['score']}` |")
+        if len(econ_table) > 10:
+            lines.append(f"| ... | *({len(econ_table) - 10} more)* | |")
 
     # -------------------------------------------------------------------------
     # FORMAT COMPLIANCE
     # -------------------------------------------------------------------------
-    lines.append(_section("Format Compliance"))
+    lines.append("\n## 📋 Industry Format Audit")
     fmt = dashboard.get('format_compliance', {})
     if fmt:
         issues = fmt.get('issues', [])
         score = fmt.get('compliance_score', 100)
         bar = _stars(score / 100)
-        lines.append(f"**Compliance Score:** {score}/100 &nbsp; {bar}\n")
+        lines.append(f"**Structural Integrity:** `{score}/100` &nbsp; `{bar}`\n")
         if issues:
             for issue in issues:
-                lines.append(f"- [WARNING] {issue}")
+                lines.append(f"- [!] {issue}")
         else:
-            lines.append("[OK] No format issues detected.")
+            lines.append("✅ Professional industry standards met.")
     else:
-        lines.append("*Format compliance check not available for this script.*")
+        lines.append("*Format audit not performed.*")
 
     # -------------------------------------------------------------------------
     # FOOTER
     # -------------------------------------------------------------------------
-    lines.append("\n---\n")
-    lines.append("*Generated by ScriptPulse v2.0 · For writer use only · Not for distribution*")
+    lines.append("\n" + "---" * 10 + "\n")
+    lines.append("*Created with ScriptPulse v14.0 · Private Intellectual Property · Confidential*")
 
     return "\n".join(lines)

@@ -16,6 +16,13 @@ def render_sidebar(ui_mode, is_cloud, stu):
         )
         st.markdown("---")
         
+        st.markdown("**LLM Integrations**")
+        api_key_input = st.text_input("Gemini API Key (Optional)", type="password", help="Enables plain-language AI translation. Not saved.")
+        if api_key_input:
+            st.session_state['gemini_api_key'] = api_key_input
+            
+        st.markdown("---")
+        
         with st.expander("Engine Context (RAM Usage)", expanded=new_ui_mode == "Lab Mode (Research)"):
             engine_mode = st.radio(
                 "Processing Mode",

@@ -37,11 +37,26 @@ def render_writer_view(report, script_input):
             showlegend=False
         )
         
+        # Add Milestones (Act Breaks) as soft vertical lines
+        turning_points = report.get('writer_intelligence', {}).get('structural_dashboard', {}).get('structural_turning_points', {})
+        for tp_name, tp_data in turning_points.items():
+            if isinstance(tp_data, dict) and 'scene' in tp_data:
+                scene_idx = tp_data['scene']
+                fig.add_vline(x=scene_idx, line_width=1, line_dash="dash", line_color="rgba(0,0,0,0.1)")
+        
         st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
         st.caption("*Rises represent periods of higher audience demand; valleys represent moments of recovery.*")
 
     # === REFLECTIONS (Non-Evaluative) ===
     st.markdown("### Reflections")
+    
+    provocations = report.get('writer_intelligence', {}).get('creative_provocations', [])
+    if provocations:
+        with st.expander("💡 Creative Provocations", expanded=True):
+            for p in provocations:
+                st.markdown(f"**{p}**")
+    
+    st.markdown("---")
     
     intent_acks = report.get('intent_acknowledgments', [])
     if intent_acks:
@@ -59,6 +74,31 @@ def render_writer_view(report, script_input):
         silence_msg = report.get('silence_explanation', "Attentional flow appears stable with regular recovery.")
         st.markdown(f"<div class='signal-box'><i class='bi bi-info-circle'></i> {silence_msg}</div>", unsafe_allow_html=True)
         st.caption("Silence indicates a lack of persistent signal patterns, not necessarily 'success'.")
+
+    # === EXECUTIVE AI SUMMARY ===
+    st.markdown("---")
+    st.subheader("Executive AI Summary")
+    
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        st.markdown("*Generate a plain-language summary of your script's structural health using Gemini 1.5 Flash.*")
+    with col2:
+        if st.button("🪄 Run Diagnostics", type="primary", use_container_width=True):
+            api_key = st.session_state.get('gemini_api_key')
+            if not api_key:
+                st.error("Please enter your Gemini API key in the sidebar.")
+            else:
+                with st.spinner("Consulting the model (Fail-safe active)..."):
+                    from scriptpulse.reporters.llm_translator import generate_ai_summary
+                    summary = generate_ai_summary(report, model="gemini-1.5-flash", api_key=api_key)
+                    
+                    if summary:
+                        st.session_state['ai_summary_cache'] = summary
+                    else:
+                        st.warning("AI Generation Failed. Defaulting to heuristic rule-sets.")
+
+    if st.session_state.get('ai_summary_cache'):
+        st.success(st.session_state['ai_summary_cache'])
 
     # === SCRIPT READER ===
     st.markdown("---")

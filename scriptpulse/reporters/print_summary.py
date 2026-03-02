@@ -39,31 +39,114 @@ def generate_print_summary(report_data, script_title="Untitled Script"):
     
     html = f"""
     <!DOCTYPE html>
-    <html>
+    <html lang="en">
     <head>
+        <meta charset="UTF-8">
         <style>
-            body {{ font-family: Arial, sans-serif; margin: 20px; }}
-            h1 {{ font-size: 18px; border-bottom: 2px solid #333; }}
-            h2 {{ font-size: 14px; margin-top: 15px; }}
-            .metric {{ display: inline-block; margin-right: 30px; }}
-            .problem {{ background: #ffe6e6; padding: 5px; margin: 5px 0; }}
-            .strength {{ background: #e6ffe6; padding: 5px; margin: 5px 0; }}
+            :root {{
+                --bg: #ffffff;
+                --text: #1a1a1a;
+                --muted: #666666;
+                --issue: #fee2e2;
+                --issue-text: #991b1b;
+                --strength: #dcfce7;
+                --strength-text: #166534;
+                --border: #e5e7eb;
+            }}
+            body {{ 
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+                margin: 0; 
+                padding: 40px; 
+                color: var(--text);
+                line-height: 1.5;
+            }}
+            .header {{
+                border-bottom: 3px solid var(--text);
+                padding-bottom: 20px;
+                margin-bottom: 30px;
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-end;
+            }}
+            .header h1 {{ margin: 0; font-size: 28px; font-weight: 800; text-transform: uppercase; }}
+            .header .date {{ font-size: 12px; color: var(--muted); }}
+            
+            .stats-bar {{
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 20px;
+                margin-bottom: 40px;
+            }}
+            .stat {{
+                border: 1px solid var(--border);
+                padding: 15px;
+                border-radius: 8px;
+                text-align: center;
+            }}
+            .stat-label {{ font-size: 11px; text-transform: uppercase; color: var(--muted); letter-spacing: 0.1em; margin-bottom: 5px; }}
+            .stat-value {{ font-size: 20px; font-weight: 700; }}
+            
+            h2 {{ font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; padding-left: 10px; border-left: 4px solid var(--text); }}
+            
+            .grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }}
+            
+            .card {{ margin-bottom: 15px; padding: 12px 15px; border-radius: 6px; font-size: 13px; }}
+            .card.problem {{ background: var(--issue); color: var(--issue-text); border-left: 4px solid #ef4444; }}
+            .card.strength {{ background: var(--strength); color: var(--strength-text); border-left: 4px solid #22c55e; }}
+            
+            .card b {{ display: block; margin-bottom: 4px; text-transform: uppercase; font-size: 11px; opacity: 0.8; }}
+            
+            .footer {{
+                margin-top: 50px;
+                padding-top: 20px;
+                border-top: 1px solid var(--border);
+                font-size: 10px;
+                color: var(--muted);
+                display: flex;
+                justify-content: space-between;
+            }}
         </style>
     </head>
     <body>
-        <h1>{script_title} - Quick Summary</h1>
+        <div class="header">
+            <div>
+                <h1>{script_title}</h1>
+                <div style="font-size: 14px; color: var(--muted); margin-top: 5px;">ScriptPulse Core Intelligence Summary</div>
+            </div>
+            <div class="date">v14.0 | Phase 32 Output</div>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat">
+                <div class="stat-label">Intensity Profile</div>
+                <div class="stat-value">{int(avg_tension * 100)}%</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Emotional Tone</div>
+                <div class="stat-value">{"LUMINOUS" if avg_valence > 0.15 else "SHADOW" if avg_valence < -0.15 else "NEUTRAL"}</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Est. Screen Time</div>
+                <div class="stat-value">{runtime} MIN</div>
+            </div>
+        </div>
         
-        <div class="metric">Intensity: {int(avg_tension * 10)}/10</div>
-        <div class="metric">Tone: {"Happy" if avg_valence > 0.1 else "Serious" if avg_valence < -0.1 else "Balanced"}</div>
-        <div class="metric">Length: ~{runtime} min</div>
+        <div class="grid">
+            <div>
+                <h2>Critical Revisions</h2>
+                {''.join([f'<div class="card problem"><b>SCENE {p["scene"]} REVISION</b>{p["issue"]} <br> <i style="opacity: 0.7;">Solution: {p["fix"]}</i></div>' for p in top_problems]) if top_problems else '<p style="font-size:13px;">No critical errors identified.</p>'}
+            </div>
+            
+            <div>
+                <h2>Narrative Anchors</h2>
+                {''.join([f'<div class="card strength"><b>STRENGTH</b>{s}</div>' for s in strengths[:5]]) if strengths else '<p style="font-size:13px;">Focus on increasing high-engagement beats.</p>'}
+            </div>
+        </div>
         
-        <h2>Top Problems to Fix</h2>
-        {''.join([f'<div class="problem"><b>Scene {p["scene"]}</b>: {p["issue"]} → {p["fix"]}</div>' for p in top_problems]) if top_problems else '<p>No major issues detected!</p>'}
-        
-        <h2>Top Strengths</h2>
-        {''.join([f'<div class="strength">- {s}</div>' for s in strengths[:5]]) if strengths else '<p>Build more high-energy scenes.</p>'}
-        
-        <p style="margin-top: 20px; font-size: 10px; color: #666;">Generated by ScriptPulse v14.0</p>
+        <div class="footer">
+            <div>&copy; 2026 ScriptPulse Biometric Systems. For internal writer use only.</div>
+            <div>STRIKE TEAM VALIDATED</div>
+        </div>
     </body>
     </html>
     """

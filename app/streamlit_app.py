@@ -8,6 +8,9 @@ import streamlit as st
 import sys
 import os
 import time
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # MUST BE THE FIRST STREAMLIT COMMAND
 st.set_page_config(
@@ -37,6 +40,7 @@ except Exception as e:
 
 # Import Utils
 import app.streamlit_utils as stu
+from scriptpulse.reporters import writer_report, studio_report, print_summary
 
 # =============================================================================
 # INITIALIZATION
@@ -137,6 +141,44 @@ if report and current_input:
     else:
         render_lab_view(report, current_input, selected_genre, selected_lens, sidebar_state['ablation_config'], True)
 
-# 5. Diagnostics
+# 5. Export Output
+if report and current_input:
+    st.markdown("---")
+    st.header("3. Extract Intelligence")
+    st.markdown("*Download professional exports of this analysis session.*")
+    
+    col_w, col_s, col_p = st.columns(3)
+    
+    with col_w:
+        md_report = writer_report.generate_writer_report(report, title=uploaded_file.name if 'uploaded_file' in locals() and uploaded_file else "Script", genre=selected_genre)
+        st.download_button(
+            label="📄 Writer's Intelligence (MD)",
+            data=md_report,
+            file_name=f"ScriptPulse_Writer_{selected_genre}.md",
+            mime="text/markdown",
+            help="High-depth analytical report for the writer."
+        )
+        
+    with col_s:
+        html_report = studio_report.generate_report(report, script_title=uploaded_file.name if 'uploaded_file' in locals() and uploaded_file else "Script")
+        st.download_button(
+            label="🎬 Studio Coverage (HTML)",
+            data=html_report,
+            file_name=f"ScriptPulse_Studio_{selected_genre}.html",
+            mime="text/html",
+            help="Professional studio-style coverage report."
+        )
+
+    with col_p:
+        print_html = print_summary.generate_print_summary(report, script_title=uploaded_file.name if 'uploaded_file' in locals() and uploaded_file else "Script")
+        st.download_button(
+            label="🖨️ Quick Summary (HTML)",
+            data=print_html,
+            file_name=f"ScriptPulse_Summary_{selected_genre}.html",
+            mime="text/html",
+            help="One-page summary for physical printing."
+        )
+
+# 6. Diagnostics
 st.markdown("---")
 render_diagnostics()

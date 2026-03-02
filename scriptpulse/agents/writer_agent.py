@@ -77,10 +77,11 @@ class WriterAgent:
         
         # Inject into output
         final_output['writer_intelligence'] = {
-            'narrative_diagnosis': narrative_health[:12],  # Up to 12 covering all layers
+            'narrative_diagnosis': narrative_health[:12],
             'rewrite_priorities': ranked_edits[:5],
             'structural_dashboard': dashboard,
             'narrative_summary': self._build_narrative_summary(trace, genre),
+            'creative_provocations': self._generate_creative_provocations(narrative_health, genre),
             'genre_context': genre
         }
         
@@ -1365,3 +1366,35 @@ class WriterAgent:
                     f"— consistent across Acts. Strong thematic spine."
                 )
         return assessments[:1]
+    def _generate_creative_provocations(self, diagnosis, genre):
+        """Generates mentor-like questions to push the writer's craft further."""
+        provocations = []
+        
+        # 1. Base on diagnosis content
+        diag_str = " ".join(diagnosis).lower()
+        
+        if "same voice" in diag_str:
+            provocations.append("If you removed character names from the script, would a reader still know exactly who is speaking based only on their syntax and vocabulary?")
+        
+        if "too slow" in diag_str or "boring" in diag_str:
+            provocations.append("In your slowest scenes, what is the 'Invisible Conflict'? If no one is shouting, who is winning the quiet battle for power?")
+            
+        if "too intense" in diag_str or "fatigue" in diag_str:
+            provocations.append("You have a high-octane run of scenes. Where is the 'Quiet Moment of Grace' that makes the next explosion feel earned?")
+            
+        if "passive" in diag_str:
+            provocations.append("Your protagonist is currently being pushed by the plot. What is the one thing they want so badly they would burn their own life down to get it? Can they make a choice based on that *now*?")
+
+        # 2. Genre-specific masterclass tips
+        genre_tips = {
+            'horror': "Horror lives in the anticipation. Are your 'quiet' scenes as scary as your 'loud' ones?",
+            'drama': "In a Great Drama, everyone is 'right' from their own perspective. Does your antagonist have a logical, moral reason for their actions?",
+            'thriller': "A Thriller is a race against time. What is the ticking clock in your second act that prevents the protagonist from stopping to think?",
+            'comedy': "Comedy is often about the 'Inappropriate Response'. Who is the most serious person in your funniest scene?",
+            'action': "Action is character. Every punch or chase should reveal a character's desperation or ingenuity, not just their physical skill."
+        }
+        
+        provocations.append(genre_tips.get(genre.lower(), "Every scene should start as late as possible and end as early as possible. What can you cut from the next five pages without losing the story?"))
+        
+        random.shuffle(provocations)
+        return provocations[:3]
