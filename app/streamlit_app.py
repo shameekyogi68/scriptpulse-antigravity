@@ -129,7 +129,7 @@ if script_input:
                 st.session_state['last_report'] = report
                 st.session_state['current_input'] = script_input # For view rendering
             except Exception as e:
-                st.error(f"Analysis Failed: {e}")
+                import traceback; st.error(f"Analysis Failed: {traceback.format_exc()}")
 
 # 4. Render Views
 report = st.session_state.get('last_report')
