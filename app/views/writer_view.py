@@ -93,7 +93,7 @@ def render_writer_view(report, script_input):
             else:
                 with st.spinner("Consulting the model (Fail-safe active)..."):
                     from scriptpulse.reporters.llm_translator import generate_ai_summary
-                    summary, ai_error = generate_ai_summary(report, model="gemini-2.0-flash", api_key=api_key)
+                    summary, ai_error = generate_ai_summary(report, model="gemini-2.5-flash", api_key=api_key)
                     
                     if summary:
                         st.session_state['ai_summary_cache'] = summary
