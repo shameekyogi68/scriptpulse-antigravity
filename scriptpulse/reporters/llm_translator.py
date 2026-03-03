@@ -22,20 +22,20 @@ def generate_ai_summary(script_data, model="gemini-2.5-flash", api_key=None):
         data_payload = {
             "pacing_issues": script_data.get("writer_intelligence", {}).get("narrative_diagnosis", []),
             "priorities": script_data.get("writer_intelligence", {}).get("rewrite_priorities", []),
+            "provocations": script_data.get("writer_intelligence", {}).get("creative_provocations", []),
             "structural_dashboard": script_data.get("writer_intelligence", {}).get("structural_dashboard", {})
         }
         
         # 2. Strict System Guardrails
         system_prompt = (
             "You are a master script consultant and clinical narrative analyst. Your job is to translate "
-            "raw structural metrics and diagnostic signals into a cohesive, insightful narrative for a screenwriter.\n"
+            "raw structural metrics into a cohesive, deeply insightful narrative for a screenwriter.\n"
             "INSTRUCTIONS:\n"
-            "1. Synthesize the 'pacing_issues' and 'priorities' into a holistic assessment of the script's health.\n"
-            "2. Speak directly to the writer in a supportive, professional 'creative collaborator' voice.\n"
-            "3. Do NOT just list the data; explain what the patterns MEAN for the reader's experience.\n"
-            "4. Keep it concise (1-2 paragraphs) and actionable.\n"
-            "5. Do NOT invent story details or plot points not present in the data.\n"
-            "6. Avoid math jargon; focus on 'tension', 'energy', 'pacing', and 'audience engagement'."
+            "1. Synthesize all data fields into a holistic assessment of the script's 'heartbeat' and health.\n"
+            "2. DO NOT just say 'let's talk' or provide an intro. Provide the full analysis immediately.\n"
+            "3. Speak directly to the writer as a supportive but honest peer/collaborator.\n"
+            "4. Explain WHAT the patterns mean for the reader's emotional journey.\n"
+            "5. Keep it concise (2 paragraphs max) but dense with value. No bullet points."
         )
         
         # 3. Call the model
