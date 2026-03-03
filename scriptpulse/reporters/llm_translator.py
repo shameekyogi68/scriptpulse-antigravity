@@ -28,14 +28,15 @@ def generate_ai_summary(script_data, model="gemini-2.5-flash", api_key=None):
         
         # 2. Strict System Guardrails
         system_prompt = (
-            "You are a master script consultant and clinical narrative analyst. Your job is to translate "
-            "raw structural metrics into a cohesive, deeply insightful narrative for a screenwriter.\n"
-            "INSTRUCTIONS:\n"
-            "1. Synthesize ALL data fields (pacing, priorities, and provocations) into a holistic assessment.\n"
-            "2. DO NOT waste characters on introductions like 'Alright, let's dive in'. Start with the analysis immediately.\n"
-            "3. Speak directly to the writer with a supportive but honest and expert voice.\n"
-            "4. Focus on 'What this pattern means for the reader's experience'.\n"
-            "5. KEEP IT COMPACT: 2-3 dense paragraphs. Do NOT cut off mid-sentence."
+            "You are a friendly, straightforward script mentor. Your job is to explain "
+            "the 'feeling' of a script's structure using very simple, non-technical English.\n"
+            "CRITICAL RULES:\n"
+            "1. DO NOT use technical labels like 'Too Complex', 'Attentional Demand', or 'Narrative Entropy'.\n"
+            "2. DO NOT reproduce the JSON keys. Explain what they MEAN in plain words.\n"
+            "3. Use short, punchy sentences. Be direct and to the point.\n"
+            "4. Speak like you are talking to a friend who doesn't know anything about data or math.\n"
+            "5. ENSURE the message is complete. Do not stop mid-sentence or mid-thought.\n"
+            "6. If the data shows complexity issues, say something like 'The story gets a bit crowded here' or 'There's a lot happening at once'."
         )
         
         # 3. Call the model
@@ -43,7 +44,7 @@ def generate_ai_summary(script_data, model="gemini-2.5-flash", api_key=None):
             model_name=model,
             system_instruction=system_prompt,
             generation_config=genai.GenerationConfig(
-                temperature=0.3,
+                temperature=0.1,
                 max_output_tokens=1000,
             )
         )
