@@ -93,7 +93,7 @@ def render_writer_view(report, script_input):
             else:
                 with st.spinner("Consulting the model (Fail-safe active)..."):
                     from scriptpulse.reporters.llm_translator import generate_ai_summary
-                    summary = generate_ai_summary(report, model="gemini-2.5-flash", api_key=api_key)
+                    summary, ai_error = generate_ai_summary(report, model="gemini-2.0-flash", api_key=api_key)
                     
                     if summary:
                         st.session_state['ai_summary_cache'] = summary
@@ -107,7 +107,7 @@ def render_writer_view(report, script_input):
                             else:
                                 report['writer_intelligence']['narrative_summary'] = {"summary": summary}
                     else:
-                        st.warning("AI Generation Failed. Defaulting to heuristic rule-sets.")
+                        st.warning(f"AI Generation Failed: {ai_error or 'Unknown Error'}. Defaulting to heuristic rule-sets.")
 
     if st.session_state.get('ai_summary_cache'):
         st.success(st.session_state['ai_summary_cache'])

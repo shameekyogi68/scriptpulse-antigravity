@@ -11,7 +11,7 @@ def generate_ai_summary(script_data, model="gemini-2.5-flash", api_key=None):
     """
     key = api_key or os.environ.get("GEMINI_API_KEY")
     if not key:
-        return None
+        return None, "Missing GEMINI_API_KEY environment variable."
         
     try:
         import google.generativeai as genai
@@ -49,10 +49,11 @@ def generate_ai_summary(script_data, model="gemini-2.5-flash", api_key=None):
         )
         response = model_instance.generate_content(json.dumps(data_payload))
         
-        return response.text
+        return response.text, None
         
     except Exception as e:
         # THE FAIL-SAFE: Return None if anything goes wrong, 
         # allowing the app to fall back to the hardcoded summary entirely invisibly to the user.
-        _log.error(f"LLM Generation failed: {e}")
-        return None
+        error_msg = str(e)
+        _log.error(f"LLM Generation failed: {error_msg}")
+        return None, error_msg
