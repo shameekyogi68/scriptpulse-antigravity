@@ -4,7 +4,7 @@ import logging
 
 _log = logging.getLogger(__name__)
 
-def generate_ai_summary(script_data, model="gemini-1.5-flash", api_key=None):
+def generate_ai_summary(script_data, model="gemini-2.5-flash", api_key=None):
     """
     Takes pure ScriptPulse JSON data and translates it into plain English.
     Requires GEMINI_API_KEY environment variable or explicitly passed api_key.
