@@ -81,7 +81,7 @@ def render_writer_view(report, script_input):
     
     col1, col2 = st.columns([3, 1])
     with col1:
-        st.markdown("*Generate a plain-language summary of your script's structural health using Gemini 1.5 Flash.*")
+        st.markdown("*Generate a plain-language summary of your script's structural health using AI.*")
     with col2:
         if st.button("🪄 Run Diagnostics", type="primary", use_container_width=True):
             import os
