@@ -97,6 +97,15 @@ def render_writer_view(report, script_input):
                     
                     if summary:
                         st.session_state['ai_summary_cache'] = summary
+                        # Inject back into the report object so it appears in exports
+                        if 'writer_intelligence' in report:
+                            if 'narrative_summary' not in report['writer_intelligence']:
+                                report['writer_intelligence']['narrative_summary'] = {}
+                            
+                            if isinstance(report['writer_intelligence']['narrative_summary'], dict):
+                                report['writer_intelligence']['narrative_summary']['summary'] = summary
+                            else:
+                                report['writer_intelligence']['narrative_summary'] = {"summary": summary}
                     else:
                         st.warning("AI Generation Failed. Defaulting to heuristic rule-sets.")
 
