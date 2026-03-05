@@ -53,7 +53,7 @@ def generate_ai_summary(script_data, api_key=None):
                 try:
                     client = Groq(api_key=groq_key)
                     completion = client.chat.completions.create(
-                        model="llama3-70b-8192",
+                        model="llama-3.3-70b-versatile",
                         messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_content}],
                         temperature=0.6,
                         max_tokens=1000
