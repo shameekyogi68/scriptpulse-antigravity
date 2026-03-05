@@ -10,8 +10,8 @@ def render_lab_view(report, script_input, selected_genre, selected_lens, ablatio
     Designed for data scientists, producers, and advanced analysts.
     """
     # uikit.render_lab_pipeline_header() # Removed so it flows naturally
-    uikit.render_section_header("🔬", "Advanced Diagnostics & Telemetry", 
-                                "For the data-driven writer: Dive into the raw mathematical signals driving your pacing and structure.")
+    uikit.render_section_header("🔬", "Under the Hood (Advanced View)", 
+                                "This section breaks down the individual forces driving your script's pacing — tension, effort, and recovery — so you can see exactly what's happening beneath the surface.")
     
     # =========================================================================
     # 1. PRIMARY TELEMETRY (METRICS)
@@ -21,15 +21,16 @@ def render_lab_view(report, script_input, selected_genre, selected_lens, ablatio
     avg_entropy = sum(report.get('semantic_flux', [0.5]*len(trace))) / len(trace) if report.get('semantic_flux') else 0
     
     c1, c2, c3, c4 = st.columns(4)
-    with c1: uikit.render_lab_metric("Mean Attention Signal", f"{avg_attention:.3f}")
-    with c2: uikit.render_lab_metric("Mean Semantic Entropy", f"{avg_entropy:.3f}")
-    with c3: uikit.render_lab_metric("Target Model Stratum", selected_genre)
-    with c4: uikit.render_lab_metric("Scene Array Size", f"n={len(trace)}")
+    with c1: uikit.render_lab_metric("Average Intensity", f"{avg_attention:.0%}")
+    with c2: uikit.render_lab_metric("Language Richness", f"{avg_entropy:.0%}")
+    with c3: uikit.render_lab_metric("Genre", selected_genre)
+    with c4: uikit.render_lab_metric("Total Scenes", f"{len(trace)}")
 
     # =========================================================================
     # 2. XAI TRACE - MULTI-SIGNAL PULSE
     # =========================================================================
-    uikit.render_lab_subheading("01", "SIGNAL TRACE ARRAY")
+    uikit.render_lab_subheading("01", "THE THREE FORCES (Tension • Effort • Recovery)")
+    st.caption("💡 This chart splits your main graph into its three ingredients: 🟥 **Tension** (conflict/stakes), 🟧 **Mental Effort** (how hard the reader works), and 🟩 **Recovery** (moments of calm). The purple area is the overall combination.")
     if trace:
         df = pd.DataFrame([{
             'T_Index': i+1,
@@ -45,7 +46,8 @@ def render_lab_view(report, script_input, selected_genre, selected_lens, ablatio
     # =========================================================================
     # 3. KINEMATIC ACTION VS DIALOGUE DENSITY (Energy vs Entropy)
     # =========================================================================
-    uikit.render_lab_subheading("02", "ACTION VS DIALOGUE DENSITY (ENERGY / ENTROPY)")
+    uikit.render_lab_subheading("02", "SCENE MAP: INTENSITY vs COMPLEXITY")
+    st.caption("💡 Each dot is a scene in your script. This map shows if a scene is fast-paced (top) or slow (bottom), and if the language is dense/complex (right) or simple/minimal (left).")
     if trace:
         col_ps1, col_ps2 = st.columns([3, 1])
         df_q = pd.DataFrame([{
@@ -63,41 +65,42 @@ def render_lab_view(report, script_input, selected_genre, selected_lens, ablatio
             
         with col_ps2:
             st.markdown(f"""
-            <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: {Theme.TEXT_SECONDARY};">
-                <p><strong style="color: {Theme.SEMANTIC_CRITICAL};">Q1: CLIMAX DENSITY</strong><br>Intense action, dense exposition.</p>
-                <p><strong style="color: {Theme.SEMANTIC_WARNING};">Q2: KINETIC ACTION</strong><br>Fast paced momentum.</p>
-                <p><strong style="color: {Theme.SEMANTIC_GOOD};">Q3: RECOVERY</strong><br>Low stakes, high readability.</p>
-                <p><strong style="color: {Theme.ACCENT_PRIMARY};">Q4: MYSTERY / SETUP</strong><br>Cognitively demanding.</p>
+            <div style="font-size: 12px; color: {Theme.TEXT_SECONDARY}; line-height: 1.8;">
+                <p><strong style="color: {Theme.SEMANTIC_CRITICAL};">Top-Right: CLIMAX</strong><br>Fast-paced AND complex — the most demanding scenes for the reader.</p>
+                <p><strong style="color: {Theme.SEMANTIC_WARNING};">Top-Left: ACTION</strong><br>Fast-paced but simple language — chase scenes, fights, quick dialogue.</p>
+                <p><strong style="color: {Theme.SEMANTIC_GOOD};">Bottom-Left: BREATHER</strong><br>Slow and simple — quiet recovery moments.</p>
+                <p><strong style="color: {Theme.ACCENT_PRIMARY};">Bottom-Right: MYSTERY</strong><br>Slow but complex — exposition, reveals, layered dialogue.</p>
             </div>
             """, unsafe_allow_html=True)
 
     # =========================================================================
     # 4. DEEP TELEMETRY (RADAR & HEATMAPS)
     # =========================================================================
-    uikit.render_lab_subheading("03", "SUB-SYSTEM AUDITS")
-    tabs = st.tabs(["[VOICE RADAR]", "[XAI HEATMAP]", "[LITERALISM AUDIT]"])
+    uikit.render_lab_subheading("03", "DEEP DIVES")
+    tabs = st.tabs(["🎭 Character Voices", "📊 Full Data", "📝 Writing Style Check"])
     
     with tabs[0]:
         voice = report.get('voice_fingerprints', {})
         if voice:
+            st.caption("💡 This radar shows how your top characters 'sound' differently. A bigger shape means the character is more active in that area.")
             top_chars = sorted([(k, v) for k, v in voice.items() if isinstance(v, dict)], 
                                key=lambda x: x[1].get('line_count', 0), reverse=True)[:3]
             fig_r = charts.get_voice_radar(top_chars)
             st.plotly_chart(fig_r, use_container_width=True, config={'displayModeBar': False})
-        else: st.info("Insufficient dialogue nodes.")
+        else: st.info("Not enough dialogue detected to compare character voices.")
 
     with tabs[2]:
         subtext = report.get('subtext_audit', [])
         if subtext:
-            st.markdown(f"<p style='color: {Theme.SEMANTIC_WARNING};'>WARNING: High literalism scores detected.</p>", unsafe_allow_html=True)
+            st.markdown(f"<p style='color: {Theme.SEMANTIC_WARNING};'>Some dialogue may be too 'on-the-nose' — characters are saying exactly what they mean with no subtext.</p>", unsafe_allow_html=True)
             for s in subtext[:5]:
-                st.code(f"SCENE_{s.get('scene_index', '?')} -> {s.get('issue', 'Subtext decay.')}")
-        else: st.markdown(f"<p style='color: {Theme.SEMANTIC_GOOD};'>OK: Subtext patterns stable.</p>", unsafe_allow_html=True)
+                st.code(f"Scene {s.get('scene_index', '?')}: {s.get('issue', 'Dialogue feels too literal.')}")
+        else: st.markdown(f"<p style='color: {Theme.SEMANTIC_GOOD};'>✅ Your dialogue has good layers of subtext. Characters aren't being too literal.</p>", unsafe_allow_html=True)
 
     # Export
-    uikit.render_lab_subheading("04", "ENVIRONMENT & PAYLOAD")
+    uikit.render_lab_subheading("04", "RAW DATA & EXPORT")
     st.json(report.get('meta', {}))
-    with st.expander("VIEW RAW JSON PAYLOAD ARRAY"): st.json(report)
+    with st.expander("📂 View Complete Raw Data"): st.json(report)
     if trace:
         csv = pd.DataFrame(trace).to_csv(index=False).encode('utf-8')
-        st.download_button("DOWNLOAD TELEMETRY DUMP (CSV)", csv, "lab_telemetry_dump.csv", "text/csv", type="primary", use_container_width=True)
+        st.download_button("📥 Download All Scene Data (CSV)", csv, "scriptpulse_scene_data.csv", "text/csv", type="primary", use_container_width=True)
