@@ -89,6 +89,14 @@ def render_lab_view(report, script_input, selected_genre, selected_lens, ablatio
             st.plotly_chart(fig_r, use_container_width=True, config={'displayModeBar': False})
         else: st.info("Not enough dialogue detected to compare character voices.")
 
+    with tabs[1]:
+        st.caption("💡 The raw data behind your analysis. Useful for exporting or studying the numbers yourself.")
+        st.json(report.get('meta', {}))
+        with st.expander("📂 View Complete Raw Data"): st.json(report)
+        if trace:
+            csv = pd.DataFrame(trace).to_csv(index=False).encode('utf-8')
+            st.download_button("📥 Download All Scene Data (CSV)", csv, "scriptpulse_scene_data.csv", "text/csv", type="primary", use_container_width=True)
+
     with tabs[2]:
         subtext = report.get('subtext_audit', [])
         if subtext:
@@ -97,10 +105,3 @@ def render_lab_view(report, script_input, selected_genre, selected_lens, ablatio
                 st.code(f"Scene {s.get('scene_index', '?')}: {s.get('issue', 'Dialogue feels too literal.')}")
         else: st.markdown(f"<p style='color: {Theme.SEMANTIC_GOOD};'>✅ Your dialogue has good layers of subtext. Characters aren't being too literal.</p>", unsafe_allow_html=True)
 
-    # Export
-    uikit.render_lab_subheading("04", "RAW DATA & EXPORT")
-    st.json(report.get('meta', {}))
-    with st.expander("📂 View Complete Raw Data"): st.json(report)
-    if trace:
-        csv = pd.DataFrame(trace).to_csv(index=False).encode('utf-8')
-        st.download_button("📥 Download All Scene Data (CSV)", csv, "scriptpulse_scene_data.csv", "text/csv", type="primary", use_container_width=True)

@@ -105,6 +105,24 @@ def run_pipeline(script_content, genre='drama', story_framework='3_act', **kwarg
     mid_scene = structure_map['beats'][1]['scene_index'] if len(structure_map['beats']) > 1 else 0
     ii_scene = structure_map['beats'][0]['scene_index'] if len(structure_map['beats']) > 0 else 0
 
+    # Convert interpretation_agent diagnosis (dicts) to clean readable strings
+    clean_diagnosis = []
+    for d in diagnosis:
+        if isinstance(d, dict):
+            dtype = d.get('type', 'Info')
+            issue = d.get('issue', '')
+            advice = d.get('advice', '')
+            if dtype == 'Critical':
+                clean_diagnosis.append(f"🔴 **{issue}**: {advice}")
+            elif dtype == 'Warning':
+                clean_diagnosis.append(f"🟠 **{issue}**: {advice}")
+            elif dtype == 'Insight':
+                clean_diagnosis.append(f"💡 **{issue}**: {advice}")
+            else:
+                clean_diagnosis.append(f"🟢 **{issue}**: {advice}")
+        else:
+            clean_diagnosis.append(str(d))
+
     report['writer_intelligence'] = {
         'structural_dashboard': {
             'runtime_estimate': runtime.estimate_runtime(segmented_scenes),
@@ -112,10 +130,10 @@ def run_pipeline(script_content, genre='drama', story_framework='3_act', **kwarg
             'structural_turning_points': {
                 'inciting_incident': {'scene': ii_scene},
                 'midpoint': {'scene': mid_scene},
-                'act2_break': {'scene': int(len(segmented_scenes) * 0.75)} # Simplified
+                'act2_break': {'scene': int(len(segmented_scenes) * 0.75)}
             }
         },
-        'narrative_diagnosis': diagnosis
+        'narrative_diagnosis': clean_diagnosis
     }
     
     return report

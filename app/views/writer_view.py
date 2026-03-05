@@ -98,7 +98,22 @@ def render_writer_view(report, script_input):
     diagnosis = writer_intel.get('narrative_diagnosis', [])
     if diagnosis:
         for diag in diagnosis:
-            uikit.render_insight_card(diag)
+            # Handle both string items (from writer_agent) and dict items (from interpretation_agent)
+            if isinstance(diag, dict):
+                dtype = diag.get('type', 'Info')
+                issue = diag.get('issue', '')
+                advice = diag.get('advice', '')
+                if dtype == 'Critical':
+                    text = f"🔴 **{issue}**: {advice}"
+                elif dtype == 'Warning':
+                    text = f"🟠 **{issue}**: {advice}"
+                elif dtype == 'Insight':
+                    text = f"💡 **{issue}**: {advice}"
+                else:
+                    text = f"🟢 **{issue}**: {advice}"
+                uikit.render_insight_card(text)
+            else:
+                uikit.render_insight_card(str(diag))
     else:
         uikit.render_insight_card("✨ No significant structural issues detected. Your pacing looks solid!")
 
