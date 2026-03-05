@@ -6,7 +6,7 @@ def render_sidebar(ui_mode, is_cloud, stu):
     from app.components import uikit
     with st.sidebar:
         # Brand
-        st.image("/Users/shameekyogi/Desktop/scriptpulse-antigravity/ScriptPulse_Icon.png", use_container_width=True)
+        st.image("ScriptPulse_Icon.png", use_container_width=True)
         uikit.render_sidebar_header("ScriptPulse", "SCREENPLAY INTELLIGENCE ENGINE")
         
         st.markdown("---")
