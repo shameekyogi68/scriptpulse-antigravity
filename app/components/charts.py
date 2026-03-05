@@ -5,10 +5,24 @@ from app.components.theme import Theme
 
 @st.cache_resource
 def get_engagement_chart(df_trace):
-    """Generates the engagement journey chart with caching."""
+    """Generates the engagement journey chart with color-coded zones."""
     fig = go.Figure()
     
-    # Gradient fill area for attention
+    # Color-coded background zones so the writer instantly knows what the graph means
+    # Green zone: Calm / Recovery (0% - 35%)
+    fig.add_hrect(y0=0, y1=0.35, fillcolor="rgba(0, 210, 160, 0.06)", line_width=0,
+                  annotation_text="😌 Calm / Recovery", annotation_position="top left",
+                  annotation_font=dict(size=10, color="rgba(0, 210, 160, 0.5)"))
+    # Yellow zone: Engaging / Balanced (35% - 65%)
+    fig.add_hrect(y0=0.35, y1=0.65, fillcolor="rgba(245, 121, 70, 0.06)", line_width=0,
+                  annotation_text="⚡ Engaging", annotation_position="top left",
+                  annotation_font=dict(size=10, color="rgba(245, 121, 70, 0.5)"))
+    # Red zone: High Intensity / Risk of Fatigue (65% - 100%)
+    fig.add_hrect(y0=0.65, y1=1.0, fillcolor="rgba(217, 41, 135, 0.06)", line_width=0,
+                  annotation_text="🔥 Intense (Risk of Fatigue)", annotation_position="top left",
+                  annotation_font=dict(size=10, color="rgba(217, 41, 135, 0.5)"))
+    
+    # Main engagement line
     fig.add_trace(go.Scatter(
         x=df_trace.index,
         y=df_trace['attentional_signal'],
@@ -17,14 +31,13 @@ def get_engagement_chart(df_trace):
         name='Reader Engagement',
         line=dict(color='rgba(106, 72, 187, 0.9)', width=2.5, shape='spline'),
         fillcolor='rgba(106, 72, 187, 0.12)',
-        hovertemplate='Scene %{x}<br>Engagement: %{y:.0%}<extra></extra>'
+        hovertemplate='<b>Scene %{x}</b><br>How intense: %{y:.0%}<extra></extra>'
     ))
     
-    # Base layout is already set by pio.templates.default, but we can override specifics
     fig.update_layout(
         xaxis=dict(title="Scene Number →", range=[0, len(df_trace)-1]),
-        yaxis=dict(title="Reader Engagement →", range=[0, 1], tickformat='.0%'),
-        height=350,
+        yaxis=dict(title="How Intense Does It Feel? →", range=[0, 1], tickformat='.0%'),
+        height=380,
         showlegend=False,
         hovermode='x unified'
     )

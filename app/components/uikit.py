@@ -119,12 +119,12 @@ def render_quick_guide():
     st.markdown(f"""
     <div style="background: rgba(106, 72, 187, 0.08); border-radius: 12px; 
                 padding: 16px; border: 1px solid rgba(106, 72, 187, 0.15);">
-        <div style="font-weight: 600; margin-bottom: 8px; font-size: 0.85rem;">📖 Quick Guide</div>
+        <div style="font-weight: 600; margin-bottom: 8px; font-size: 0.85rem;">📖 What Do the Colors Mean?</div>
         <div style="font-size: 0.78rem; color: {Theme.TEXT_SECONDARY}; line-height: 1.6;">
-            <b style="color: {Theme.SEMANTIC_CRITICAL};">🔴 Critical</b> — Issues that could lose your reader<br/>
-            <b style="color: {Theme.SEMANTIC_WARNING};">🟠 Warning</b> — Worth addressing in your next draft<br/>
-            <b style="color: {Theme.SEMANTIC_GOOD};">🟢 Strength</b> — Things your script does well<br/>
-            <b style="color: {Theme.ACCENT_PURPLE};">💡 Insight</b> — Observations to consider
+            <b style="color: {Theme.SEMANTIC_CRITICAL};">🔴 Red</b> — Fix this now — it could lose your reader<br/>
+            <b style="color: {Theme.SEMANTIC_WARNING};">🟠 Orange</b> — Worth a second look in your next draft<br/>
+            <b style="color: {Theme.SEMANTIC_GOOD};">🟢 Green</b> — Great job — this part works well<br/>
+            <b style="color: {Theme.ACCENT_PURPLE};">💡 Purple</b> — Something interesting to think about
         </div>
     </div>
     """, unsafe_allow_html=True)

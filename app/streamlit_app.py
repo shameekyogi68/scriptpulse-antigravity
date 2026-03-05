@@ -71,7 +71,7 @@ st.session_state['ui_mode'] = sidebar_state['ui_mode']
 # =============================================================================
 # HERO SECTION
 # =============================================================================
-render_hero_section("ScriptPulse", "Understand how your screenplay feels to a first-time reader — scene by scene.")
+render_hero_section("ScriptPulse", "See exactly how your screenplay feels to someone reading it for the very first time.")
 
 # =============================================================================
 # STEP 1: LOAD DRAFT
@@ -105,10 +105,10 @@ with tab_paste:
 # =============================================================================
 # STEP 2: CONFIGURE & RUN
 # =============================================================================
-render_section_header("⚙️", "Analysis Settings", "Calibrate feedback based on genre conventions.")
+render_section_header("⚙️", "Before We Analyze", "Tell us about your script so we can tailor the feedback.")
 col1, col2 = st.columns(2)
-genre = col1.selectbox("Target Genre", ["Drama", "Action", "Thriller", "Horror", "Comedy", "Sci-Fi", "Romance", "Avant-Garde"])
-lens = col2.selectbox("Reading Perspective", ["viewer", "reader", "narrator"])
+genre = col1.selectbox("What genre is your script?", ["Drama", "Action", "Thriller", "Horror", "Comedy", "Sci-Fi", "Romance", "Avant-Garde"])
+lens = col2.selectbox("Analyze as if you are a...", ["viewer", "reader", "narrator"])
 
 if script_input:
     st.markdown("<br/>", unsafe_allow_html=True)

@@ -76,11 +76,11 @@ def render_writer_view(report, script_input):
             
     st.plotly_chart(fig_display, use_container_width=True, config={'displayModeBar': False})
     uikit.render_tooltip_card(f"""
-        <b>Reading the Chart:</b> The colored dotted lines mark your story's major structural beats — 
-        <span style="color: {Theme.SEMANTIC_WARNING};">Inciting Incident</span>, 
-        <span style="color: {Theme.SEMANTIC_CRITICAL};">Act 1 Break</span>, 
-        <span style="color: {Theme.ACCENT_PRIMARY};">Midpoint</span>, and 
-        <span style="color: {Theme.SEMANTIC_INFO};">Darkest Moment</span>.
+        <b>How to read this chart:</b> The purple line is your story's heartbeat. 
+        When it rises into the <span style="color: {Theme.SEMANTIC_CRITICAL};">🔥 red zone</span>, the reader is on the edge of their seat — but staying there too long causes fatigue. 
+        When it dips into the <span style="color: {Theme.SEMANTIC_GOOD};">😌 green zone</span>, it's a recovery moment — a breather before the next wave. 
+        The <span style="color: {Theme.SEMANTIC_WARNING};">⚡ middle zone</span> is balanced engagement. 
+        Great scripts look like a <b>mountain range</b> — peaks and valleys, not a flat line.
     """)
 
     # =========================================================================
@@ -88,11 +88,11 @@ def render_writer_view(report, script_input):
     # =========================================================================
     uikit.render_section_header(
         icon="🩺", 
-        title="Story Health Check", 
-        explainer=f"ScriptPulse has identified the following patterns in your script. "
-                  f"<b style='color: {Theme.SEMANTIC_CRITICAL};'>Red items</b> are critical issues. "
-                  f"<b style='color: {Theme.SEMANTIC_WARNING};'>Orange items</b> are worth fixing. "
-                  f"<b style='color: {Theme.SEMANTIC_GOOD};'>Green items</b> are things you do well."
+        title="What Needs Fixing?", 
+        explainer=f"ScriptPulse reads your script like a first-time reader and flags potential problems. "
+                  f"<b style='color: {Theme.SEMANTIC_CRITICAL};'>Red</b> = Fix this now. "
+                  f"<b style='color: {Theme.SEMANTIC_WARNING};'>Orange</b> = Worth a second look. "
+                  f"<b style='color: {Theme.SEMANTIC_GOOD};'>Green</b> = You nailed it."
     )
     
     diagnosis = writer_intel.get('narrative_diagnosis', [])
@@ -180,7 +180,7 @@ def render_writer_view(report, script_input):
     # =========================================================================
     # SECTION 5: REWRITE PRIORITIES
     # =========================================================================
-    uikit.render_section_header("✏️", "Top Rewrite Priorities", "Highest-impact changes to improve the reader's experience.")
+    uikit.render_section_header("✏️", "Your Top To-Do List", "The single most impactful changes you can make in your next draft, ranked by how much they'll improve the reader's experience.")
     priorities = writer_intel.get('rewrite_priorities', [])
     if priorities:
         for i, prio in enumerate(priorities, 1):
@@ -192,7 +192,7 @@ def render_writer_view(report, script_input):
     # =========================================================================
     # SECTION 6: AI CONSULTANT
     # =========================================================================
-    uikit.render_section_header("🤖", "AI Script Consultant", "Detailed, plain-language evaluation from an AI script consultant.")
+    uikit.render_section_header("🤖", "Ask the AI Story Editor", "Get a plain-English summary of your script's strengths and weaknesses, written like notes from an experienced story editor.")
     if st.button("🪄 Generate AI Consultant Report", type="primary", use_container_width=True):
         import os
         api_key = os.environ.get("HUGGINGFACE_API_KEY")
