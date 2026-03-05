@@ -128,8 +128,7 @@ def render_writer_view(report, script_input):
         with tabs[0]:
             st.markdown(f'<p class="section-explainer">How hard the reader\'s brain works to parse your sentences.</p>', unsafe_allow_html=True)
             l1, l2 = st.columns(2)
-            # Baseline: 10.5 (Dataset: 1000+ Oscar-nominated scripts)
-            l1.metric("Avg Syntactic Variance", f"{avg_ling:.2f}", delta=f"{avg_ling - 10.5:.2f} vs. SOTA Baseline", delta_color="inverse")
+            l1.metric("Avg Syntactic Variance", f"{avg_ling:.2f}")
             l2.caption("Higher variance means complex, nested sentences. Lower means punchy, fast-reading lines.")
             with st.expander("🔬 Scientific Significance"):
                 st.caption("Correlates with **Working Memory Capacity limitations**. High variance increases sentence-parsing time in readers by requiring prolonged holding of sub-clauses in short-term memory before resolution.")
@@ -137,8 +136,7 @@ def render_writer_view(report, script_input):
         with tabs[1]:
             st.markdown(f'<p class="section-explainer">The visual, cinematic weight of your action descriptions.</p>', unsafe_allow_html=True)
             l1, l2 = st.columns(2)
-            # Baseline: 14.0 (Dataset standard action density)
-            l1.metric("Avg Action Lines per Scene", f"{avg_action:.1f}", delta=f"{avg_action - 14.0:.1f} vs. SOTA Baseline", delta_color="off")
+            l1.metric("Avg Action Lines per Scene", f"{avg_action:.1f}")
             l2.caption("Heavy action density requires the reader to use spatial imagination, increasing engagement but also fatigue over time.")
             with st.expander("🔬 Scientific Significance"):
                 st.caption("Measures **Spatial-Visual Simulation Tax**. Readers unconsciously simulate spatial environments (mental modeling). Dense action blocks require continuous updates to the mental diorama, generating higher neural recruitment than spoken dialogue.")
@@ -146,8 +144,7 @@ def render_writer_view(report, script_input):
         with tabs[2]:
             st.markdown(f'<p class="section-explainer">The tempo and volley of your conversations.</p>', unsafe_allow_html=True)
             l1, l2 = st.columns(2)
-            # Baseline: 0.35 (Dataset standard dialogue density)
-            l1.metric("Avg Turn Velocity", f"{avg_velocity:.2f}", delta=f"{avg_velocity - 0.35:.2f} vs. SOTA Baseline", delta_color="normal")
+            l1.metric("Avg Turn Velocity", f"{avg_velocity:.2f}")
             l2.caption("Turn Velocity measures how rapidly characters speak and react in a scene. High velocity = high tension/comedy. Low velocity = exposition/monologues.")
             with st.expander("🔬 Scientific Significance"):
                 st.caption("Modeled via **Conversation Analysis & Pragmatics**. High velocity mimic the physiological tempo of fight-or-flight scenarios, naturally elevating the reader's sympathetic nervous system response.")
@@ -155,8 +152,7 @@ def render_writer_view(report, script_input):
         with tabs[3]:
             st.markdown(f'<p class="section-explainer">The mental tax of tracking who is in the room.</p>', unsafe_allow_html=True)
             l1, l2 = st.columns(2)
-            # Baseline: 0.15 (Dataset standard churn)
-            l1.metric("Avg Entity Churn", f"{avg_churn:.2f}", delta=f"{avg_churn - 0.15:.2f} vs. SOTA Baseline", delta_color="inverse")
+            l1.metric("Avg Entity Churn", f"{avg_churn:.2f}")
             l2.caption("Entity Churn spikes when you introduce many new characters at once. Keep it low in action scenes to avoid confusing the reader.")
             with st.expander("🔬 Scientific Significance"):
                 st.caption("Quantifies the limit of **Dunbar's Number & Social Tracking**. Studies show human cognitive limits cap active social tracking around 4-5 dynamic agents at once; exceeding this forces the reader to continuously swap characters in and out of working memory.")
@@ -164,8 +160,7 @@ def render_writer_view(report, script_input):
         with tabs[4]:
             st.markdown(f'<p class="section-explainer">The mathematical measurement of surprise and freshness in your vocabulary.</p>', unsafe_allow_html=True)
             l1, l2 = st.columns(2)
-            # Baseline: 4.50 (Dataset standard entropy)
-            l1.metric("Avg Information Entropy", f"{avg_entropy:.2f}", delta=f"{avg_entropy - 4.50:.2f} vs. SOTA Baseline", delta_color="normal")
+            l1.metric("Avg Information Entropy", f"{avg_entropy:.2f}")
             l2.caption("Uses Shannon's Entropy. High entropy = unpredictable, rare words (Rich subtext). Low entropy = generic, expected words (Predictable/Cliché).")
             with st.expander("🔬 Scientific Significance"):
                 st.caption("Algorithm uses formal **Shannon Information Theory**. Measures linguistic non-predictability. Low-entropy predicts reader disengagement due to neural habituation; high-entropy sustains focus via continuous novel stimuli.")
@@ -174,8 +169,7 @@ def render_writer_view(report, script_input):
             st.markdown(f'<p class="section-explainer">The emotional and psychological tax on the reader.</p>', unsafe_allow_html=True)
             l1, l2 = st.columns(2)
             affective_label = "Positive" if avg_affective_compound > 0.1 else ("Negative / Tense" if avg_affective_compound < -0.1 else "Neutral")
-            # Baseline: usually around 0.05 for average feature film
-            l1.metric("Global Sentiment Polarity", f"{avg_affective_compound:.3f}", delta=f"{avg_affective_compound - 0.05:.3f} vs. SOTA Baseline", delta_color="off")
+            l1.metric("Global Sentiment Polarity", f"{avg_affective_compound:.3f}")
             l2.caption(f"Powered by VADER NLP. Overall trajectory feels **{affective_label}**. Negative valence increases cognitive pressure (tension).")
             with st.expander("🔬 Scientific Significance"):
                 st.caption("Calculates **Affective Load via Lexical Polarity**. Negative valence directly correlates with heightened amygdala activation, generating the sensation of 'suspense' or 'stress' without requiring literal spatial action.")
