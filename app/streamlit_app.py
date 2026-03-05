@@ -141,10 +141,10 @@ if report and current_input:
     render_writer_view(report, current_input)
     
     st.markdown("---")
-    st.markdown("<br><br>", unsafe_allow_html=True)
     
-    # Render the Advanced Telemetry (formerly Lab View) at the bottom
-    render_lab_view(report, current_input, genre, lens, sidebar_state['ablation_config'], True)
+    # Render the Advanced Telemetry (formerly Lab View) hidden inside an expander
+    with st.expander("🛠️ Advanced Analytics (For Producers & Editors)", expanded=False):
+        render_lab_view(report, current_input, genre, lens, sidebar_state['ablation_config'], True)
 
 # =============================================================================
 # STEP 4: EXPORT

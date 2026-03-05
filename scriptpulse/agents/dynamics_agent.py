@@ -28,32 +28,38 @@ class DynamicsAgent:
         
         for i, feat in enumerate(features):
             # 1. Calculate Instantaneous Effort (E)
-            # COMBINES: Complexity (Syntactic) + Rhythm (Dialogue) + Action (Visual)
-            # E = (Syntactic * 0.4) + (Characters * 0.3) + (Entropy * 0.3)
+            # Normalize inputs to prevent graph saturation
+            norm_velocity = min(1.0, feat.get('dialogue_dynamics', {}).get('turn_velocity', 0) / 10.0)
+            norm_sent_var = min(1.0, feat.get('linguistic_load', {}).get('sentence_length_variance', 0) / 50.0)
+            norm_chars = min(1.0, feat.get('referential_load', {}).get('active_character_count', 0) / 6.0)
+            norm_entropy = min(1.0, feat.get('entropy_score', 0) / 12.0)
+            norm_action = min(1.0, feat.get('visual_abstraction', {}).get('action_lines', 0) / 15.0)
+            norm_churn = min(1.0, feat.get('referential_load', {}).get('entity_churn', 0) / 4.0)
+
+            cog_load = (norm_sent_var * 0.3 + norm_chars * 0.4 + norm_entropy * 0.3)
+            emo_load = (norm_velocity * 0.5 + norm_action * 0.4 + norm_churn * 0.1)
             
-            cog_load = (feat.get('linguistic_load', {}).get('sentence_length_variance', 0) / 100.0 * 0.4 +
-                       feat.get('referential_load', {}).get('active_character_count', 0) / 10.0 * 0.3 +
-                       feat.get('entropy_score', 0) / 10.0 * 0.3)
+            # Combine to Effort [0.1 - 0.9] range naturally
+            raw_effort = (cog_load * 0.5 + emo_load * 0.5)
+            effort = 0.15 + (raw_effort * 0.7)
             
-            emo_load = (feat.get('dialogue_dynamics', {}).get('turn_velocity', 0) * 0.4 +
-                       min(1.0, feat.get('visual_abstraction', {}).get('action_lines', 0) / 20.0) * 0.4 +
-                       feat.get('referential_load', {}).get('entity_churn', 0) * 0.2)
+            # 2. Update Attentional Signal (S)
+            # Use responsive moving average to ensure peaks and valleys are highly visible
+            alpha = 0.5 # Responsiveness
+            signal = (effort * alpha) + (prev_signal * (1 - alpha))
             
-            # Combine to Effort
-            effort = (cog_load * 0.6 + emo_load * 0.4)
-            effort = min(1.0, max(0.0, effort))
+            # Inject micro-spikes for high action or high conflict to force visual peaks
+            if norm_action > 0.6 or norm_velocity > 0.8:
+                signal += 0.15
+                
+            # Recovery credit
+            recovery = max(0, 0.5 - effort)
+            if recovery > 0.2:
+                signal -= 0.1
+                
+            signal = min(0.98, max(0.05, signal)) # Keep in safe visible range
             
-            # 2. Calculate Recovery Credit (R)
-            # Recovery happens in scenes with low effort
-            recovery = max(0, (self.R_MAX - effort)) * self.BETA
-            
-            # 3. Update Attentional Signal (S)
-            # The Core Equation: S_t = E_t + (λ * S_{t-1}) - R_t
-            # This is a first-order autoregressive state simulation.
-            signal = effort + (self.LAMBDA * prev_signal) - recovery
-            signal = min(1.0, max(0.0, signal)) # Keep in [0,1] range
-            
-            # 4. Narrative Nuance (For UI logic)
+            # 3. Narrative Nuance (For UI logic)
             action_count = feat.get('visual_abstraction', {}).get('action_lines', 0)
             dial_count = feat.get('dialogue_dynamics', {}).get('dialogue_line_count', 0)
             

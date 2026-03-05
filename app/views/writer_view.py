@@ -33,7 +33,7 @@ def render_writer_view(report, script_input):
     tension_label = "High" if avg_tension > 0.65 else ("Balanced" if avg_tension > 0.35 else "Low")
     
     runtime_data = dashboard.get('runtime_estimate', {})
-    runtime_mins = runtime_data.get('estimated_minutes', 0) if isinstance(runtime_data, dict) else 0
+    runtime_mins = runtime_data.get('avg_minutes', 0) if isinstance(runtime_data, dict) else 0
     midpoint_status = dashboard.get('midpoint_status', 'N/A')
     
     c1, c2, c3, c4 = st.columns(4)
@@ -48,7 +48,7 @@ def render_writer_view(report, script_input):
     uikit.render_section_header(
         icon="📈", 
         title="Your Story's Emotional Journey", 
-        explainer="This chart shows how much <b>mental energy</b> your script demands from a reader, scene by scene. Peaks are intense moments. Valleys are quieter recovery moments."
+        explainer="This chart shows the <b>intensity</b> your script demands from a reader, scene by scene. Peaks are thrilling moments. Valleys are quieter recovery moments."
     )
     
     df = pd.DataFrame(trace)
