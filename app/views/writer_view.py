@@ -107,11 +107,11 @@ def render_writer_view(report, script_input):
     # =========================================================================
     uikit.render_section_header(
         icon="🏗️", 
-        title="Structural Breakdown", 
-        explainer="Dive deeper into specific aspects of your script's architecture. Each tab focuses on a different dimension."
+        title="What's Happening Inside Your Script", 
+        explainer="Each tab below examines a different aspect of how your script feels to a first-time reader. Think of it as a magnifying glass on your writing."
     )
     
-    tabs = st.tabs(["🧠 Linguistic Load", "💥 Action Density", "💬 Dialogue Rhythm", "🎭 Character Tracking", "🌀 Narrative Entropy", "❤️ Affective Load"])
+    tabs = st.tabs(["🧠 Sentence Complexity", "💥 Action Weight", "💬 Dialogue Speed", "🎭 Character Juggling", "🌀 Word Freshness", "❤️ Emotional Tone"])
     
     features = report.get('perceptual_features', [])
     if features:
@@ -126,51 +126,51 @@ def render_writer_view(report, script_input):
         avg_affective_compound = sum(f.get('affective_load', {}).get('compound', 0) for f in features) / len(features)
 
         with tabs[0]:
-            st.markdown(f'<p class="section-explainer">How hard the reader\'s brain works to parse your sentences.</p>', unsafe_allow_html=True)
+            st.markdown(f'<p class="section-explainer">Are your sentences easy to read, or do they make the reader re-read them?</p>', unsafe_allow_html=True)
             l1, l2 = st.columns(2)
-            l1.metric("Avg Syntactic Variance", f"{avg_ling:.2f}")
-            l2.caption("Higher variance means complex, nested sentences. Lower means punchy, fast-reading lines.")
-            with st.expander("🔬 Scientific Significance"):
+            l1.metric("Avg Sentence Complexity", f"{avg_ling:.2f}")
+            l2.caption("**Low number** = Your sentences are short, punchy, and easy to follow (like a thriller). **High number** = Your sentences are long and layered (like a literary drama). Neither is wrong — it depends on your genre.")
+            with st.expander("🔬 For Researchers"):
                 st.caption("Correlates with **Working Memory Capacity limitations**. High variance increases sentence-parsing time in readers by requiring prolonged holding of sub-clauses in short-term memory before resolution.")
             
         with tabs[1]:
-            st.markdown(f'<p class="section-explainer">The visual, cinematic weight of your action descriptions.</p>', unsafe_allow_html=True)
+            st.markdown(f'<p class="section-explainer">How much descriptive action ("He walks across the room. She slams the door.") fills each scene?</p>', unsafe_allow_html=True)
             l1, l2 = st.columns(2)
             l1.metric("Avg Action Lines per Scene", f"{avg_action:.1f}")
-            l2.caption("Heavy action density requires the reader to use spatial imagination, increasing engagement but also fatigue over time.")
-            with st.expander("🔬 Scientific Significance"):
+            l2.caption("**Too high?** Your scenes may feel like novels — the reader has to imagine a lot. **Too low?** Your scenes may feel like talking heads with nothing happening visually. Aim for a balance that matches your story's energy.")
+            with st.expander("🔬 For Researchers"):
                 st.caption("Measures **Spatial-Visual Simulation Tax**. Readers unconsciously simulate spatial environments (mental modeling). Dense action blocks require continuous updates to the mental diorama, generating higher neural recruitment than spoken dialogue.")
 
         with tabs[2]:
-            st.markdown(f'<p class="section-explainer">The tempo and volley of your conversations.</p>', unsafe_allow_html=True)
+            st.markdown(f'<p class="section-explainer">How fast are your characters talking back and forth? Quick volleys feel intense. Long speeches feel slow.</p>', unsafe_allow_html=True)
             l1, l2 = st.columns(2)
-            l1.metric("Avg Turn Velocity", f"{avg_velocity:.2f}")
-            l2.caption("Turn Velocity measures how rapidly characters speak and react in a scene. High velocity = high tension/comedy. Low velocity = exposition/monologues.")
-            with st.expander("🔬 Scientific Significance"):
-                st.caption("Modeled via **Conversation Analysis & Pragmatics**. High velocity mimic the physiological tempo of fight-or-flight scenarios, naturally elevating the reader's sympathetic nervous system response.")
+            l1.metric("Avg Dialogue Speed", f"{avg_velocity:.2f}")
+            l2.caption("**High number** = Characters are firing lines at each other rapidly (arguments, comedy, tension). **Low number** = One character is speaking for a long time (exposition, monologues, contemplation). Mix both for great pacing.")
+            with st.expander("🔬 For Researchers"):
+                st.caption("Modeled via **Conversation Analysis & Pragmatics**. High velocity mimics the physiological tempo of fight-or-flight scenarios, naturally elevating the reader's sympathetic nervous system response.")
 
         with tabs[3]:
-            st.markdown(f'<p class="section-explainer">The mental tax of tracking who is in the room.</p>', unsafe_allow_html=True)
+            st.markdown(f'<p class="section-explainer">How many characters does the reader have to keep track of at any given time?</p>', unsafe_allow_html=True)
             l1, l2 = st.columns(2)
-            l1.metric("Avg Entity Churn", f"{avg_churn:.2f}")
-            l2.caption("Entity Churn spikes when you introduce many new characters at once. Keep it low in action scenes to avoid confusing the reader.")
-            with st.expander("🔬 Scientific Significance"):
+            l1.metric("Avg Character Juggling", f"{avg_churn:.2f}")
+            l2.caption("**High number** = You introduce many new characters quickly. Readers can comfortably track about 4-5 characters at a time. If this number is too high, consider simplifying crowd scenes or introducing characters more gradually.")
+            with st.expander("🔬 For Researchers"):
                 st.caption("Quantifies the limit of **Dunbar's Number & Social Tracking**. Studies show human cognitive limits cap active social tracking around 4-5 dynamic agents at once; exceeding this forces the reader to continuously swap characters in and out of working memory.")
 
         with tabs[4]:
-            st.markdown(f'<p class="section-explainer">The mathematical measurement of surprise and freshness in your vocabulary.</p>', unsafe_allow_html=True)
+            st.markdown(f'<p class="section-explainer">Is your writing fresh and surprising, or does it rely on common, expected words?</p>', unsafe_allow_html=True)
             l1, l2 = st.columns(2)
-            l1.metric("Avg Information Entropy", f"{avg_entropy:.2f}")
-            l2.caption("Uses Shannon's Entropy. High entropy = unpredictable, rare words (Rich subtext). Low entropy = generic, expected words (Predictable/Cliché).")
-            with st.expander("🔬 Scientific Significance"):
+            l1.metric("Avg Word Choice Freshness", f"{avg_entropy:.2f}")
+            l2.caption("**High number** = Your word choices are unique and surprising — the reader can't predict what's coming next (great for subtext and rich storytelling). **Low number** = Your vocabulary is repetitive or generic — consider varying your word choices to keep the reader engaged.")
+            with st.expander("🔬 For Researchers"):
                 st.caption("Algorithm uses formal **Shannon Information Theory**. Measures linguistic non-predictability. Low-entropy predicts reader disengagement due to neural habituation; high-entropy sustains focus via continuous novel stimuli.")
             
         with tabs[5]:
-            st.markdown(f'<p class="section-explainer">The emotional and psychological tax on the reader.</p>', unsafe_allow_html=True)
+            st.markdown(f'<p class="section-explainer">Does your script feel emotionally positive, negative, or neutral overall?</p>', unsafe_allow_html=True)
             l1, l2 = st.columns(2)
-            affective_label = "Positive" if avg_affective_compound > 0.1 else ("Negative / Tense" if avg_affective_compound < -0.1 else "Neutral")
-            l1.metric("Global Sentiment Polarity", f"{avg_affective_compound:.3f}")
-            l2.caption(f"Powered by VADER NLP. Overall trajectory feels **{affective_label}**. Negative valence increases cognitive pressure (tension).")
+            affective_label = "Positive / Uplifting" if avg_affective_compound > 0.1 else ("Dark / Tense" if avg_affective_compound < -0.1 else "Balanced / Neutral")
+            l1.metric("Overall Emotional Tone", affective_label)
+            l2.caption(f"Your script's emotional tone reads as **{affective_label}** (Score: {avg_affective_compound:.3f}). A dark/tense tone keeps the reader on edge. A positive tone creates warmth and hope. Most great scripts shift between both across their runtime.")
             with st.expander("🔬 Scientific Significance"):
                 st.caption("Calculates **Affective Load via Lexical Polarity**. Negative valence directly correlates with heightened amygdala activation, generating the sensation of 'suspense' or 'stress' without requiring literal spatial action.")
 
