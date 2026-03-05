@@ -255,7 +255,7 @@ def generate_report(report_data, script_title="Untitled Script", user_notes=""):
             <h3>Character Voice Audit</h3>
             <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px;">Distinctiveness check for lead roles:</p>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                {''.join([f"<div style='background: #f8fafc; padding: 15px; border-radius: 8px;'><div style='font-weight: 700; color: var(--primary);'>{char}</div><div style='font-size: 13px;'>Complexity: {metrics['complexity']:.2f} | Positivity: {metrics['positivity']:.2f}</div></div>" for char, metrics in list(report_data.get('voice_fingerprints', {}).items())[:6]])}
+                {''.join([f"<div style='background: #f8fafc; padding: 15px; border-radius: 8px;'><div style='font-weight: 700; color: var(--primary);'>{char}</div><div style='font-size: 13px;'>Agency (Action): {metrics['agency']:.2f} | Sentiment: {metrics['sentiment']:.2f}</div></div>" for char, metrics in list(report_data.get('voice_fingerprints', {}).items())[:6]])}
             </div>
         </div>
         

@@ -111,74 +111,48 @@ def render_writer_view(report, script_input):
         explainer="Dive deeper into specific aspects of your script's architecture. Each tab focuses on a different dimension."
     )
     
-    tabs = st.tabs(["🎭 Character Arcs", "⚡ Stakes & Tension", "📍 Locations", "💬 Dialogue Balance", "🎯 Scene Purposes"])
+    tabs = st.tabs(["🧠 Linguistic Load", "💥 Action Density", "💬 Dialogue Rhythm", "🎭 Character Tracking", "🌀 Narrative Entropy"])
     
-    # --- TAB: Character Arcs ---
-    with tabs[0]:
-        st.markdown(f'<p class="section-explainer">How do your main characters change? Great stories are built on strong transformations.</p>', unsafe_allow_html=True)
-        arcs = dashboard.get('character_arcs', {})
-        if arcs:
-            for char, arc_data in list(arcs.items())[:6]:
-                col_char, col_arc = st.columns([1, 3])
-                with col_char:
-                    st.markdown(f"**{char}**")
-                    st.caption(f"{arc_data.get('scenes_present', 0)} scenes")
-                with col_arc:
-                    st.markdown(f"**{arc_data.get('arc_type', 'Unknown')}**")
-                    st.caption(arc_data.get('note', ''))
-                    # Mini bar chart (cached)
-                    fig_arc = charts.get_arc_chart(arc_data.get('sentiment_delta', 0), arc_data.get('agency_delta', 0))
-                    st.plotly_chart(fig_arc, use_container_width=True, config={'displayModeBar': False})
-                st.markdown("---")
-        else:
-            st.info("Character arc analysis requires longer scripts with clearly identified characters.")
-    
-    # --- TAB: Stakes & Tension ---
-    with tabs[1]:
-        st.markdown(f'<p class="section-explainer">What types of risk drive your story? Great scripts layer multiple types of stakes.</p>', unsafe_allow_html=True)
-        stakes_profile = dashboard.get('stakes_profile', {})
-        if stakes_profile and any(v > 0 for v in stakes_profile.values()):
-            filtered_stakes = {k: v for k, v in stakes_profile.items() if v > 0 and k != 'None'}
-            if filtered_stakes:
-                stake_colors_map = {
-                    'Physical': Theme.SEMANTIC_CRITICAL, 'Emotional': Theme.ACCENT_PRIMARY, 
-                    'Social': Theme.SEMANTIC_WARNING, 'Moral': Theme.SEMANTIC_INFO, 'Existential': Theme.ACCENT_PURPLE
-                }
-                fig_stakes = charts.get_stakes_chart(list(filtered_stakes.keys()), list(filtered_stakes.values()), stake_colors_map)
-                st.plotly_chart(fig_stakes, use_container_width=True, config={'displayModeBar': False})
-                uikit.render_tooltip_card("<b>What does this mean?</b> Avoid a single-colored donut. Best screenplays blend physical danger with emotional and moral complexity.")
-            else:
-                st.info("Stakes data not available.")
-        else:
-            st.info("Stakes analysis requires conflict-heavy scenes.")
-            
-    # --- TAB: Locations, Dialogue, Purposes (Keeping logical but cleaning up) ---
-    with tabs[2]:
-        loc_profile = dashboard.get('location_profile', {})
-        if loc_profile:
-            l1, l2, l3 = st.columns(3)
-            l1.metric("Unique Locations", loc_profile.get('unique_locations', 0))
-            l2.metric("INT / EXT Split", f"{loc_profile.get('int_scenes', 0)} / {loc_profile.get('ext_scenes', 0)}")
-            l3.metric("Top Location", loc_profile.get('top_location', 'N/A'))
-            if loc_profile.get('location_warning'): uikit.render_insight_card(f"🟠 {loc_profile.get('location_warning')}")
-        else: st.info("Location data not detected.")
+    features = report.get('perceptual_features', [])
+    if features:
+        # Averages from mathematical extraction
+        avg_ling = sum(f.get('linguistic_load', {}).get('sentence_length_variance', 0) for f in features) / len(features)
+        avg_action = sum(f.get('visual_abstraction', {}).get('action_lines', 0) for f in features) / len(features)
+        avg_velocity = sum(f.get('dialogue_dynamics', {}).get('turn_velocity', 0) for f in features) / len(features)
+        avg_churn = sum(f.get('referential_load', {}).get('entity_churn', 0) for f in features) / len(features)
+        avg_entropy = sum(f.get('entropy_score', 0) for f in features) / len(features)
 
-    with tabs[3]:
-        dar = dashboard.get('dialogue_action_ratio', {})
-        if dar:
+        with tabs[0]:
+            st.markdown(f'<p class="section-explainer">How hard the reader\'s brain works to parse your sentences.</p>', unsafe_allow_html=True)
             l1, l2 = st.columns(2)
-            l1.metric("Your Dialogue Ratio", f"{round(dar.get('global_dialogue_ratio', 0.5) * 100)}%")
-            l2.metric("Genre Benchmark", f"{round(dar.get('genre_benchmark', 0.55) * 100)}%")
-            st.caption(f"💡 {dar.get('assessment', '')}")
-        else: st.info("Dialogue analysis not available.")
+            l1.metric("Avg Syntactic Variance", f"{avg_ling:.2f}")
+            l2.caption("Higher variance means complex, nested sentences. Lower means punchy, fast-reading lines.")
+            
+        with tabs[1]:
+            st.markdown(f'<p class="section-explainer">The visual, cinematic weight of your action descriptions.</p>', unsafe_allow_html=True)
+            l1, l2 = st.columns(2)
+            l1.metric("Avg Action Lines per Scene", f"{avg_action:.1f}")
+            l2.caption("Heavy action density requires the reader to use spatial imagination, increasing engagement but also fatigue over time.")
 
-    with tabs[4]:
-        spm = dashboard.get('scene_purpose_map', {})
-        purpose_list = spm.get('map', []) if isinstance(spm, dict) else []
-        if purpose_list:
-            fig_p = charts.get_purpose_chart(purpose_list)
-            st.plotly_chart(fig_p, use_container_width=True, config={'displayModeBar': False})
-        else: st.info("Purpose data not available.")
+        with tabs[2]:
+            st.markdown(f'<p class="section-explainer">The tempo and volley of your conversations.</p>', unsafe_allow_html=True)
+            l1, l2 = st.columns(2)
+            l1.metric("Avg Turn Velocity", f"{avg_velocity:.2f}")
+            l2.caption("Turn Velocity measures how rapidly characters speak and react in a scene. High velocity = high tension/comedy. Low velocity = exposition/monologues.")
+
+        with tabs[3]:
+            st.markdown(f'<p class="section-explainer">The mental tax of tracking who is in the room.</p>', unsafe_allow_html=True)
+            l1, l2 = st.columns(2)
+            l1.metric("Avg Entity Churn", f"{avg_churn:.2f}")
+            l2.caption("Entity Churn spikes when you introduce many new characters at once. Keep it low in action scenes to avoid confusing the reader.")
+
+        with tabs[4]:
+            st.markdown(f'<p class="section-explainer">The mathematical measurement of surprise and freshness in your vocabulary.</p>', unsafe_allow_html=True)
+            l1, l2 = st.columns(2)
+            l1.metric("Avg Information Entropy", f"{avg_entropy:.2f}")
+            l2.caption("Uses Shannon's Entropy. High entropy = unpredictable, rare words (Rich subtext). Low entropy = generic, expected words (Predictable/Cliché).")
+    else:
+        st.info("Cognitive analysis not available.")
 
     # =========================================================================
     # SECTION 5: REWRITE PRIORITIES
@@ -205,7 +179,11 @@ def render_writer_view(report, script_input):
                 from scriptpulse.reporters.llm_translator import generate_ai_summary
                 summary, err = generate_ai_summary(report, model="gemini-2.0-flash", api_key=api_key)
                 if summary: st.session_state['ai_summary_cache'] = summary
-                else: st.warning(f"Error: {err}")
+                else: 
+                    if "429" in str(err) or "Quota" in str(err):
+                        st.warning("⚠️ Google Gemini AI Quota Exceeded. The AI Consultant is currently too busy to generate a text summary. Please rely on the highly detailed mathematical Cognitive Pillars and Diagnostic charts above, which are 100% accurate and unaffected by this AI quota!")
+                    else:
+                        st.warning(f"Error: {err}")
 
     if st.session_state.get('ai_summary_cache'):
         uikit.render_signal_box("Consultant Analysis", "", st.session_state['ai_summary_cache'], border_color=Theme.ACCENT_PRIMARY)
