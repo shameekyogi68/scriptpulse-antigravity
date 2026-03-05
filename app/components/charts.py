@@ -22,6 +22,10 @@ def get_engagement_chart(df_trace):
                   annotation_text="🔥 Intense (Risk of Fatigue)", annotation_position="top left",
                   annotation_font=dict(size=10, color="rgba(217, 41, 135, 0.5)"))
     
+    # Dynamic Hover text if available
+    hover_template = '<b>Scene %{x}</b><br>Intensity: %{y:.0%}<br>%{customdata[0]}<extra></extra>' if 'Hover_Text' in df_trace.columns else '<b>Scene %{x}</b><br>Intensity: %{y:.0%}<extra></extra>'
+    custom_data = [df_trace['Hover_Text']] if 'Hover_Text' in df_trace.columns else None
+    
     # Main engagement line
     fig.add_trace(go.Scatter(
         x=df_trace.index,
@@ -31,7 +35,8 @@ def get_engagement_chart(df_trace):
         name='Reader Engagement',
         line=dict(color='rgba(106, 72, 187, 0.9)', width=2.5, shape='spline'),
         fillcolor='rgba(106, 72, 187, 0.12)',
-        hovertemplate='<b>Scene %{x}</b><br>How intense: %{y:.0%}<extra></extra>'
+        customdata=custom_data[0] if custom_data else None,
+        hovertemplate=hover_template
     ))
     
     fig.update_layout(

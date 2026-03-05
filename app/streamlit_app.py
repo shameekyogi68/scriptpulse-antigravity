@@ -138,7 +138,7 @@ current_input = st.session_state.get('current_input')
 if report and current_input:
     st.markdown("---")
     # Render unified dashboard: Writer insights first, followed by Lab telemetry
-    render_writer_view(report, current_input)
+    render_writer_view(report, current_input, genre)
     
     st.markdown("---")
     
