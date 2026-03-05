@@ -134,11 +134,12 @@ else: st.info("👆 Upload or paste or screenplay above to begin.")
 # =============================================================================
 report = st.session_state.get('last_report')
 current_input = st.session_state.get('current_input')
+current_genre = st.session_state.get('current_genre', 'Drama')
 
 if report and current_input:
     st.markdown("---")
     # Render unified dashboard: Writer insights first, followed by Lab telemetry
-    render_writer_view(report, current_input, genre)
+    render_writer_view(report, current_input, current_genre)
     
     st.markdown("---")
     
