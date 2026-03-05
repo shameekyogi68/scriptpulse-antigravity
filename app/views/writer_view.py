@@ -158,7 +158,7 @@ def render_writer_view(report, script_input, genre="Drama"):
         explainer="A deep dive into how your specific word choices affect the reader's experience."
     )
     
-    tabs = st.tabs(["🧠 Sentence Style", "💥 Action Density", "💬 Dialogue Rhythm", "� Ensemble Size", "❤️ Emotional Subtext"])
+    tabs = st.tabs(["🧠 Sentence Style", "💥 Action Density", "💬 Dialogue Rhythm", "👥 Ensemble Size", "❤️ Emotional Subtext"])
     
     features = report.get('perceptual_features', [])
     if features:

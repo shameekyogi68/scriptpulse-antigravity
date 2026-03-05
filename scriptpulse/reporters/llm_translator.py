@@ -1,18 +1,20 @@
 import os
 import json
 import logging
-import requests
+from openai import OpenAI
 
 _log = logging.getLogger(__name__)
 
-def generate_ai_summary(script_data, api_key=None, model="mistralai/Mistral-7B-Instruct-v0.2"):
+def generate_ai_summary(script_data, api_key=None, model="moonshotai/Kimi-K2-Instruct-0905"):
     """
-    Takes pure ScriptPulse JSON data and translates it into plain English.
-    Uses Hugging Face's Free Inference API to avoid memory overhead and API costs.
+    Takes pure ScriptPulse JSON data and translates it into professional coverage.
+    Uses Hugging Face's OpenAI-compatible router for high-quality LLM notes.
     """
-    key = api_key or os.environ.get("HUGGINGFACE_API_KEY")
+    # Accept either name for the token
+    key = api_key or os.environ.get("HUGGINGFACE_API_KEY") or os.environ.get("HF_TOKEN")
+    
     if not key:
-        return None, "Missing HUGGINGFACE_API_KEY. Please provide a free Hugging Face API key."
+        return None, "Missing HUGGINGFACE_API_KEY / HF_TOKEN. Please provide your Hugging Face API key."
         
     try:
         # 1. Package ONLY the exact data we want explained (No raw script text)
@@ -23,55 +25,48 @@ def generate_ai_summary(script_data, api_key=None, model="mistralai/Mistral-7B-I
             "structural_dashboard": script_data.get("writer_intelligence", {}).get("structural_dashboard", {})
         }
         
-        # 2. Strict System Guardrails for a Knowledgeable Consultant
-        prompt = (
-            "You are an expert Hollywood script consultant. Your job is to analyze the structural data "
-            "provided by ScriptPulse and translate it into a comprehensive, actionable, and insightful "
-            "report for the screenwriter.\n\n"
-            "CRITICAL RULES:\n"
-            "1. Be thorough and detailed. Explain the 'why' behind the data, not just the 'what'. Provide depth.\n"
-            "2. Offer actionable advice: suggest specific narrative techniques to fix identified pacing or structural issues.\n"
-            "3. DO NOT just list out the data. Synthesize it into a cohesive narrative evaluation of the script.\n"
-            "4. DO NOT cut off your thoughts. Ensure your final response is completely finished and well-rounded.\n"
-            "5. Speak professionally and knowledgeably, like an experienced story editor giving notes to a writer.\n"
-            "6. Translate technical terms into their storytelling equivalents.\n\n"
-            "SCRIPT DATA:\n"
-            f"{json.dumps(data_payload)}\n\n"
-            "WRITE THE CONSULTANT REPORT NOW:"
+        # 2. Setup OpenAI-compatible client for Hugging Face Router
+        client = OpenAI(
+            base_url="https://router.huggingface.co/v1",
+            api_key=key,
         )
         
-        # 3. Call the HuggingFace Inference API
-        headers = {
-            "Authorization": f"Bearer {key}",
-            "Content-Type": "application/json"
-        }
+        system_prompt = (
+            "You are an expert Hollywood script consultant (Story Editor). "
+            "Analyze the provided ScriptPulse structural data and write professional, "
+            "actionable 'Studio Coverage' notes for the writer.\n\n"
+            "RULES:\n"
+            "1. Be thorough. Explain the psychological impact of pacing issues on the reader.\n"
+            "2. Suggest specific narrative fixes (e.g., 'Combine these two scenes into one high-stakes interaction').\n"
+            "3. Format your report like a professional industry memo.\n"
+            "4. DO NOT reference the raw JSON numbers directly; translate them into terms like 'Slow Burn' or 'Highly Dynamic'.\n"
+            "5. Ensure the tone is encouraging but firm on craft standards."
+        )
         
-        API_URL = f"https://api-inference.huggingface.co/models/{model}"
+        user_content = f"Here is the ScriptPulse analysis data for my draft:\n\n{json.dumps(data_payload, indent=2)}\n\nPlease provide your expert consultation report."
         
-        payload = {
-            "inputs": prompt,
-            "parameters": {
-                "max_new_tokens": 800,
-                "temperature": 0.5,
-                "return_full_text": False
-            }
-        }
+        # 3. Request Completion from the Kimi-K2 model (via HF Router)
+        completion = client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_content}
+            ],
+            max_tokens=1000,
+            temperature=0.7
+        )
         
-        response = requests.post(API_URL, headers=headers, json=payload)
-        
-        if response.status_code == 200:
-            result = response.json()
-            if isinstance(result, list) and "generated_text" in result[0]:
-                return result[0]["generated_text"], None
-            elif isinstance(result, dict) and "error" in result:
-                return None, f"Model Error: {result['error']}"
-            else:
-                return None, f"Unexpected response format: {result}"
+        if completion.choices:
+            return completion.choices[0].message.content, None
         else:
-            return None, f"API Error {response.status_code}: {response.text}"
+            return None, "Empty response from the AI model."
             
     except Exception as e:
-        # THE FAIL-SAFE: Return None if anything goes wrong
         error_msg = str(e)
-        _log.error(f"LLM Generation failed: {error_msg}")
+        _log.error(f"AI Consultant Generation failed: {error_msg}")
+        # Check for specific HF errors like rate limiting or credits
+        if "rate limit" in error_msg.lower():
+            return None, "Hugging Face rate limit reached. Please try again in a few minutes."
+        elif "insufficient" in error_msg.lower():
+            return None, "Hugging Face account credits exhausted."
         return None, error_msg
