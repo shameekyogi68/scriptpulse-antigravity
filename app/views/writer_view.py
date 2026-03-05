@@ -183,18 +183,15 @@ def render_writer_view(report, script_input):
     uikit.render_section_header("🤖", "AI Script Consultant", "Detailed, plain-language evaluation from an AI script consultant.")
     if st.button("🪄 Generate AI Consultant Report", type="primary", use_container_width=True):
         import os
-        api_key = os.environ.get("GEMINI_API_KEY")
-        if not api_key: st.error("⚠️ API key missing.")
+        api_key = os.environ.get("HUGGINGFACE_API_KEY")
+        if not api_key: st.error("⚠️ HUGGINGFACE_API_KEY environment variable missing.")
         else:
-            with st.spinner("🤖 Consulting..."):
+            with st.spinner("🤖 Consulting... This might take a moment."):
                 from scriptpulse.reporters.llm_translator import generate_ai_summary
-                summary, err = generate_ai_summary(report, model="gemini-2.0-flash", api_key=api_key)
+                summary, err = generate_ai_summary(report, api_key=api_key)
                 if summary: st.session_state['ai_summary_cache'] = summary
                 else: 
-                    if "429" in str(err) or "Quota" in str(err):
-                        st.warning("⚠️ Google Gemini AI Quota Exceeded. The AI Consultant is currently too busy to generate a text summary. Please rely on the highly detailed mathematical Cognitive Pillars and Diagnostic charts above, which are 100% accurate and unaffected by this AI quota!")
-                    else:
-                        st.warning(f"Error: {err}")
+                    st.warning(f"Error: {err}\n\nPlease rely on the highly detailed mathematical Cognitive Pillars and Diagnostic charts above, which are 100% accurate and unaffected by this AI status!")
 
     if st.session_state.get('ai_summary_cache'):
         uikit.render_signal_box("Consultant Analysis", "", st.session_state['ai_summary_cache'], border_color=Theme.ACCENT_PRIMARY)
