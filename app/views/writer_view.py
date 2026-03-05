@@ -197,16 +197,24 @@ def render_writer_view(report, script_input, genre="Drama"):
     # SECTION 6: STUDIO MEMO (AI EDITOR)
     # =========================================================================
     uikit.render_section_header("📝", "Studio Notes", "One page of professional coverage summarizing the script.")
+    
+    # Check if we have either provider available
+    import os
+    has_groq = st.secrets.get("GROQ_API_KEY") or os.environ.get("GROQ_API_KEY")
+    has_hf = st.secrets.get("HF_TOKEN") or os.environ.get("HF_TOKEN") or os.environ.get("HUGGINGFACE_API_KEY")
+
     if st.button("🪄 Generate Studio Notes", type="primary", use_container_width=True):
-        import os
-        api_key = os.environ.get("HUGGINGFACE_API_KEY")
-        if not api_key: st.error("⚠️ AI Consultant is offline (Missing HuggingFace API Key).")
+        if not (has_groq or has_hf):
+            st.error("⚠️ AI Consultant is offline (Missing API Keys). Please set GROQ_API_KEY or HF_TOKEN in your secrets.")
         else:
             with st.spinner("🤖 Reviewing..."):
                 from scriptpulse.reporters.llm_translator import generate_ai_summary
-                summary, err = generate_ai_summary(report, api_key=api_key)
-                if summary: st.session_state['ai_summary_cache'] = summary
-                else: st.warning(f"Error: {err}")
+                summary, err = generate_ai_summary(report)
+                if summary: 
+                    st.session_state['ai_summary_cache'] = summary
+                    st.rerun()
+                else: 
+                    st.error(f"AI Consultant Error: {err}")
 
     if st.session_state.get('ai_summary_cache'):
         uikit.render_signal_box("Coverage", "", st.session_state['ai_summary_cache'], border_color=Theme.SEMANTIC_INFO)
