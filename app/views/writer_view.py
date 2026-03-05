@@ -84,7 +84,7 @@ def render_writer_view(report, script_input, genre="Drama"):
                 annotation_font_size=10, annotation_font_color=color
             )
             
-    st.plotly_chart(fig_display, use_container_width=True, config={'displayModeBar': False})
+    st.plotly_chart(fig_display, use_container_width=True, config={'displayModeBar': False}, key="writer_pulse_chart")
     
     # =========================================================================
     # SECTION 3: THE STYLE QUADRANT
@@ -105,7 +105,7 @@ def render_writer_view(report, script_input, genre="Drama"):
     } for i, s in enumerate(trace)])
     
     fig_q = charts.get_phase_space_chart(df_q)
-    st.plotly_chart(fig_q, use_container_width=True, config={'displayModeBar': False})
+    st.plotly_chart(fig_q, use_container_width=True, config={'displayModeBar': False}, key="writer_dna_chart")
     st.markdown("<div style='text-align: center; color: #888; font-size: 13px;'><i>Action/Thrillers sit in the top-left. Dramas sit in the bottom-right.</i></div><br>", unsafe_allow_html=True)
     
     # =========================================================================

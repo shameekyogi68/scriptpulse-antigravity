@@ -41,42 +41,12 @@ def render_lab_view(report, script_input, selected_genre, selected_lens, ablatio
         } for i, p in enumerate(trace)])
         
         fig = charts.get_lab_trace_chart(df)
-        st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+        st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False}, key="lab_three_forces_chart")
 
     # =========================================================================
-    # 3. SCENE MAP
+    # 3. SCENE DATA & VOICES
     # =========================================================================
-    uikit.render_lab_subheading("02", "SCENE MAP: INTENSITY vs COMPLEXITY")
-    st.caption("💡 Each dot is a scene in your script. This map shows if a scene is fast-paced (top) or slow (bottom), and if the language is dense/complex (right) or simple/minimal (left).")
-    if trace:
-        col_ps1, col_ps2 = st.columns([3, 1])
-        df_q = pd.DataFrame([{
-            'T_Index': i+1,
-            'Energy_Signal': s.get('attentional_signal', 0.5),
-            'Entropy_Complexity': report.get('semantic_flux', [0.5]*len(trace))[i],
-            'Quadrant': '🔥 Climax' if s.get('attentional_signal', 0.5) > 0.5 and report.get('semantic_flux', [0.5]*len(trace))[i] > 0.5 else
-                        '⚡ Action' if s.get('attentional_signal', 0.5) > 0.5 and report.get('semantic_flux', [0.5]*len(trace))[i] <= 0.5 else
-                        '😌 Breather' if s.get('attentional_signal', 0.5) <= 0.5 and report.get('semantic_flux', [0.5]*len(trace))[i] <= 0.5 else '🔮 Mystery'
-        } for i, s in enumerate(trace)])
-        
-        with col_ps1:
-            fig_q = charts.get_phase_space_chart(df_q)
-            st.plotly_chart(fig_q, use_container_width=True, config={'displayModeBar': False})
-            
-        with col_ps2:
-            st.markdown(f"""
-            <div style="font-size: 12px; color: {Theme.TEXT_SECONDARY}; line-height: 1.8;">
-                <p><strong style="color: {Theme.SEMANTIC_CRITICAL};">Top-Right: CLIMAX</strong><br>Fast-paced AND complex — the most demanding scenes for the reader.</p>
-                <p><strong style="color: {Theme.SEMANTIC_WARNING};">Top-Left: ACTION</strong><br>Fast-paced but simple language — chase scenes, fights, quick dialogue.</p>
-                <p><strong style="color: {Theme.SEMANTIC_GOOD};">Bottom-Left: BREATHER</strong><br>Slow and simple — quiet recovery moments.</p>
-                <p><strong style="color: {Theme.ACCENT_PRIMARY};">Bottom-Right: MYSTERY</strong><br>Slow but complex — exposition, reveals, layered dialogue.</p>
-            </div>
-            """, unsafe_allow_html=True)
-
-    # =========================================================================
-    # 4. DEEP DIVES
-    # =========================================================================
-    uikit.render_lab_subheading("03", "DEEP DIVES")
+    uikit.render_lab_subheading("02", "CRAFT DATA")
     tabs = st.tabs(["🎭 Character Voices", "📊 Full Data", "📝 Writing Style Check"])
     
     with tabs[0]:
@@ -86,7 +56,7 @@ def render_lab_view(report, script_input, selected_genre, selected_lens, ablatio
             top_chars = sorted([(k, v) for k, v in voice.items() if isinstance(v, dict)], 
                                key=lambda x: x[1].get('line_count', 0), reverse=True)[:3]
             fig_r = charts.get_voice_radar(top_chars)
-            st.plotly_chart(fig_r, use_container_width=True, config={'displayModeBar': False})
+            st.plotly_chart(fig_r, use_container_width=True, config={'displayModeBar': False}, key="lab_voice_radar_chart")
         else: st.info("Not enough dialogue detected to compare character voices.")
 
     with tabs[1]:

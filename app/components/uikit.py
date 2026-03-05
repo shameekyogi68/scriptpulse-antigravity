@@ -43,15 +43,17 @@ def render_tooltip_card(content: str):
 def render_signal_box(title: str, badge_html: str, action: str, border_color: str = None):
     """Renders a premium signal box for priorities or AI summaries."""
     style = f' style="border-left: 3px solid {border_color};"' if border_color else ""
-    st.markdown(f"""
-    <div class="signal-box"{style}>
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <span style="font-weight: 600; color: {Theme.TEXT_PRIMARY};">{title}</span>
-            {badge_html}
-        </div>
-        <div style="color: {Theme.TEXT_SECONDARY}; line-height: 1.6;">{action}</div>
-    </div>
-    """, unsafe_allow_html=True)
+    # Use a single-line joined string to avoid Markdown parser breaking the HTML tags
+    html = (
+        f'<div class="signal-box"{style}>'
+        f'<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">'
+        f'<span style="font-weight: 600; color: {Theme.TEXT_PRIMARY};">{title}</span>'
+        f'{badge_html}'
+        f'</div>'
+        f'<div style="color: {Theme.TEXT_SECONDARY}; line-height: 1.6;">{action}</div>'
+        f'</div>'
+    )
+    st.markdown(html, unsafe_allow_html=True)
 
 def get_score_badge(value: float, label: str) -> str:
     """Returns the HTML for a score badge based on percentage value."""
