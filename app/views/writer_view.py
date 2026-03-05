@@ -111,7 +111,7 @@ def render_writer_view(report, script_input):
         explainer="Dive deeper into specific aspects of your script's architecture. Each tab focuses on a different dimension."
     )
     
-    tabs = st.tabs(["🧠 Linguistic Load", "💥 Action Density", "💬 Dialogue Rhythm", "🎭 Character Tracking", "🌀 Narrative Entropy"])
+    tabs = st.tabs(["🧠 Linguistic Load", "💥 Action Density", "💬 Dialogue Rhythm", "🎭 Character Tracking", "🌀 Narrative Entropy", "❤️ Affective Load"])
     
     features = report.get('perceptual_features', [])
     if features:
@@ -121,6 +121,9 @@ def render_writer_view(report, script_input):
         avg_velocity = sum(f.get('dialogue_dynamics', {}).get('turn_velocity', 0) for f in features) / len(features)
         avg_churn = sum(f.get('referential_load', {}).get('entity_churn', 0) for f in features) / len(features)
         avg_entropy = sum(f.get('entropy_score', 0) for f in features) / len(features)
+        
+        # New Affective Load (VADER)
+        avg_affective_compound = sum(f.get('affective_load', {}).get('compound', 0) for f in features) / len(features)
 
         with tabs[0]:
             st.markdown(f'<p class="section-explainer">How hard the reader\'s brain works to parse your sentences.</p>', unsafe_allow_html=True)
@@ -151,6 +154,14 @@ def render_writer_view(report, script_input):
             l1, l2 = st.columns(2)
             l1.metric("Avg Information Entropy", f"{avg_entropy:.2f}")
             l2.caption("Uses Shannon's Entropy. High entropy = unpredictable, rare words (Rich subtext). Low entropy = generic, expected words (Predictable/Cliché).")
+            
+        with tabs[5]:
+            st.markdown(f'<p class="section-explainer">The emotional and psychological tax on the reader.</p>', unsafe_allow_html=True)
+            l1, l2 = st.columns(2)
+            affective_label = "Positive" if avg_affective_compound > 0.1 else ("Negative / Tense" if avg_affective_compound < -0.1 else "Neutral")
+            l1.metric("Global Sentiment Polarity", f"{avg_affective_compound:.3f}")
+            l2.caption(f"Powered by VADER NLP. Overall trajectory feels **{affective_label}**. Negative valence increases cognitive pressure (tension).")
+
     else:
         st.info("Cognitive analysis not available.")
 

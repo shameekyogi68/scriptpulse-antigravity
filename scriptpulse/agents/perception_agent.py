@@ -11,6 +11,12 @@ Focuses on 5 Core Cognitive Pillars:
 import re
 import math
 from collections import Counter
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+
+try:
+    vader_analyzer = SentimentIntensityAnalyzer()
+except:
+    vader_analyzer = None
 
 class EncodingAgent:
     """Consolidated Encoding Agent - High Performance, Low Complexity"""
@@ -43,6 +49,9 @@ class EncodingAgent:
             # 5. Information Theory (Entropy/Surprisal)
             entropy = self._extract_entropy(scene_lines)
             
+            # 6. Affective Load (VADER Emotional Valence/Sentiment)
+            affective = self._extract_affective_load(scene_lines)
+            
             # 6. Narrative Metadata (For Charts/UI)
             metadata = self._extract_narrative_metadata(scene_lines)
             
@@ -54,6 +63,7 @@ class EncodingAgent:
                 'referential_load': {k:v for k,v in referential.items() if k != 'current_character_set'},
                 'structural_change': self._extract_structural(scene, scenes, i),
                 'entropy_score': entropy,
+                'affective_load': affective,
                 'ambient_signals': self._extract_ambient(linguistic, dialogue, visual),
                 'micro_structure': self._extract_micro(scene_lines),
                 # Supporting metrics for UI consistency
@@ -147,6 +157,22 @@ class EncodingAgent:
         total = len(words)
         entropy = -sum((c/total) * math.log2(c/total) for c in counts.values())
         return round(entropy, 3)
+
+    def _extract_affective_load(self, lines):
+        if not vader_analyzer:
+            return {'pos': 0.0, 'neg': 0.0, 'neu': 1.0, 'compound': 0.0}
+            
+        text = " ".join([l['text'] for l in lines])
+        if not text.strip():
+            return {'pos': 0.0, 'neg': 0.0, 'neu': 1.0, 'compound': 0.0}
+            
+        scores = vader_analyzer.polarity_scores(text)
+        return {
+            'pos': round(scores['pos'], 3),
+            'neg': round(scores['neg'], 3),
+            'neu': round(scores['neu'], 3),
+            'compound': round(scores['compound'], 3)
+        }
 
     def _extract_structural(self, scene, all_scenes, idx):
         if idx == 0: return {'event_boundary_score': 0.0}
