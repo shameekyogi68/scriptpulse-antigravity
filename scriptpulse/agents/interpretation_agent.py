@@ -25,7 +25,7 @@ class InterpretationAgent:
         structure = self.map_to_structure(temporal_trace)
         
         # 2. Pattern Diagnosis
-        diagnosis = self.diagnose_patterns(temporal_trace)
+        diagnosis = self.diagnose_patterns(temporal_trace, None) # Fallback if no features
         
         # 3. Strategic Advice
         suggestions = self.generate_suggestions(temporal_trace)
@@ -75,8 +75,8 @@ class InterpretationAgent:
         
         return {'acts': acts, 'beats': beats}
 
-    def diagnose_patterns(self, temporal_trace):
-        """Identifies simple diagnostic flags based on attention signals."""
+    def diagnose_patterns(self, temporal_trace, features=None):
+        """Identifies diagnostic flags, including semantic emotional climaxes."""
         diagnosis = []
         signals = [s['attentional_signal'] for s in temporal_trace]
         if not signals: return diagnosis
@@ -100,6 +100,23 @@ class InterpretationAgent:
             if high_runs >= 4:
                 diagnosis.append({'type': 'Warning', 'issue': 'Reader Fatigue', 'advice': 'Too many high-intensity scenes in a row. Needs a breather.'})
                 break
+                
+        # 4. Semantic Emotional Climax Detection (The 10/10 Writer Feature)
+        if features and len(features) == len(temporal_trace):
+            for i, (trace, feat) in enumerate(zip(temporal_trace, features)):
+                att_sig = trace['attentional_signal']
+                sentiment = feat.get('affective_load', {}).get('compound', 0)
+                entropy = feat.get('entropy_score', 0)
+                
+                # Rule: If mathematical tempo is LOW (like a breather) 
+                # BUT Emotional valence is extreme AND entropy is high -> It's a Subtextual Plot Climax.
+                if att_sig < 0.4 and (sentiment > 0.6 or sentiment < -0.6) and entropy > 4.0:
+                    diagnosis.append({
+                        'type': 'Insight', 
+                        'issue': f'Emotional Focal Point (Scene {i+1})', 
+                        'advice': f'Pacing is slow mathematically, but VADER detects extreme emotional subtext (Polarity: {sentiment}). This is functioning as a crucial theme/character focal point, NOT just a breather.'
+                    })
+                    break # Just find the biggest one to avoid spamming the UI
                 
         return diagnosis
 

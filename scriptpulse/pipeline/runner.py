@@ -54,7 +54,7 @@ def run_pipeline(script_content, genre='drama', story_framework='3_act', **kwarg
     
     # Analysis outputs
     structure_map = interpreter.map_to_structure(temporal_trace)
-    diagnosis = interpreter.diagnose_patterns(temporal_trace)
+    diagnosis = interpreter.diagnose_patterns(temporal_trace, perceptual_features)
     suggestions = interpreter.generate_suggestions(temporal_trace)
     semantic_beats = interpreter.apply_semantic_labels(temporal_trace)
     
