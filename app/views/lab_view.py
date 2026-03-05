@@ -1,120 +1,103 @@
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
-import plotly.express as px
-from collections import Counter
+from app.components.theme import Theme
+from app.components import uikit, charts
 
 def render_lab_view(report, script_input, selected_genre, selected_lens, ablation_config, SCIPY_AVAILABLE):
-    """Renders the advanced research/lab interface with full telemetry."""
-    st.header("Lab Mode (Research Platform)")
+    """
+    Renders the advanced research/lab interface with full telemetry.
+    Designed for data scientists, producers, and advanced analysts.
+    """
+    # uikit.render_lab_pipeline_header() # Removed so it flows naturally
+    uikit.render_section_header("🔬", "Advanced Diagnostics & Telemetry", 
+                                "For the data-driven writer: Dive into the raw mathematical signals driving your pacing and structure.")
     
-    # 1. High-Level Metrics (Research Grade)
+    # =========================================================================
+    # 1. PRIMARY TELEMETRY (METRICS)
+    # =========================================================================
     trace = report.get('temporal_trace', [])
-    avg_intensity = sum(p.get('attentional_signal', 0) for p in trace) / len(trace) if trace else 0
-    intensity_score = int(avg_intensity * 10)
-    
-    runtime = report.get('runtime_estimate', {}).get('avg_minutes', 0)
+    avg_attention = sum(p.get('attentional_signal', 0) for p in trace) / len(trace) if trace else 0
+    avg_entropy = sum(report.get('semantic_flux', [0.5]*len(trace))) / len(trace) if report.get('semantic_flux') else 0
     
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Raw Tension", f"{intensity_score}/10")
-    c2.metric("Avg Signal", f"{avg_intensity:.2f}")
-    c3.metric("Genre Match", selected_genre)
-    c4.metric("Est. Runtime", f"{runtime} min")
+    with c1: uikit.render_lab_metric("Mean Attention Signal", f"{avg_attention:.3f}")
+    with c2: uikit.render_lab_metric("Mean Semantic Entropy", f"{avg_entropy:.3f}")
+    with c3: uikit.render_lab_metric("Target Model Stratum", selected_genre)
+    with c4: uikit.render_lab_metric("Scene Array Size", f"n={len(trace)}")
 
-    # 2. Advanced Comparisons
-    with st.expander("Longitudinal & Style Comparison", expanded=False):
-        cols = st.columns(2)
-        if 'prev_run' in st.session_state:
-            cols[0].subheader("Optimization Delta")
-            cols[0].caption("Comparison to last analysis run.")
-            # Simplified delta logic
-            cols[0].info("Delta tracking active. Next run will show precise shifts.")
-        
-        cols[1].subheader("Style Reference")
-        cols[1].caption("Stylistic distance to target baseline.")
-        cols[1].info(f"Target: {selected_genre}")
-
-    # 3. The Pulse Line (Research Grade)
-    st.subheader("Narrative Pulse (Story Structure Map)")
+    # =========================================================================
+    # 2. XAI TRACE - MULTI-SIGNAL PULSE
+    # =========================================================================
+    uikit.render_lab_subheading("01", "SIGNAL TRACE ARRAY")
     if trace:
-        chart_data = []
-        semantic_beats = report.get('semantic_beats', [])
-        for i, point in enumerate(trace):
-            beat_info = semantic_beats[i] if i < len(semantic_beats) else {}
-            chart_data.append({
-                'Scene': i,
-                'Load': point.get('effort', 0.5),
-                'Recovery': point.get('recovery', 0.5),
-                'Tension': point.get('strain', 0.0),
-                'Beat': beat_info.get('composite_beat', 'Stable')
-            })
+        df = pd.DataFrame([{
+            'T_Index': i+1,
+            'Load_Effort': p.get('effort', 0.5),
+            'Recovery_Valence': p.get('recovery', 0.5),
+            'Strain_Tension': p.get('strain', 0.0),
+            'Composite_Attention': p.get('attentional_signal', 0.5)
+        } for i, p in enumerate(trace)])
+        
+        fig = charts.get_lab_trace_chart(df)
+        st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+
+    # =========================================================================
+    # 3. KINEMATIC ACTION VS DIALOGUE DENSITY (Energy vs Entropy)
+    # =========================================================================
+    uikit.render_lab_subheading("02", "ACTION VS DIALOGUE DENSITY (ENERGY / ENTROPY)")
+    if trace:
+        col_ps1, col_ps2 = st.columns([3, 1])
+        df_q = pd.DataFrame([{
+            'T_Index': i+1,
+            'Energy_Signal': s.get('attentional_signal', 0.5),
+            'Entropy_Complexity': report.get('semantic_flux', [0.5]*len(trace))[i],
+            'Quadrant': 'Q1' if s.get('attentional_signal', 0.5) > 0.5 and report.get('semantic_flux', [0.5]*len(trace))[i] > 0.5 else
+                        'Q2' if s.get('attentional_signal', 0.5) > 0.5 and report.get('semantic_flux', [0.5]*len(trace))[i] <= 0.5 else
+                        'Q3' if s.get('attentional_signal', 0.5) <= 0.5 and report.get('semantic_flux', [0.5]*len(trace))[i] <= 0.5 else 'Q4'
+        } for i, s in enumerate(trace)])
+        
+        with col_ps1:
+            fig_q = charts.get_phase_space_chart(df_q)
+            st.plotly_chart(fig_q, use_container_width=True, config={'displayModeBar': False})
             
-        df = pd.DataFrame(chart_data)
-        fig = go.Figure()
-        
-        fig.add_trace(go.Scatter(x=df['Scene'], y=df['Tension'], name='Narrative Tension', line=dict(color='#1f77b4', width=3)))
-        fig.add_trace(go.Scatter(x=df['Scene'], y=df['Recovery'], name='Recovery', line=dict(color='#ff7f0e', width=1, dash='dash')))
-        
-        fig.update_layout(template='plotly_white', hovermode='x unified', height=400)
-        st.plotly_chart(fig, use_container_width=True)
+        with col_ps2:
+            st.markdown(f"""
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: {Theme.TEXT_SECONDARY};">
+                <p><strong style="color: {Theme.SEMANTIC_CRITICAL};">Q1: CLIMAX DENSITY</strong><br>Intense action, dense exposition.</p>
+                <p><strong style="color: {Theme.SEMANTIC_WARNING};">Q2: KINETIC ACTION</strong><br>Fast paced momentum.</p>
+                <p><strong style="color: {Theme.SEMANTIC_GOOD};">Q3: RECOVERY</strong><br>Low stakes, high readability.</p>
+                <p><strong style="color: {Theme.ACCENT_PRIMARY};">Q4: MYSTERY / SETUP</strong><br>Cognitively demanding.</p>
+            </div>
+            """, unsafe_allow_html=True)
 
-    # 4. Research Quadrant (Energy vs Entropy)
-    st.subheader("Narrative DNA (Energy vs Entropy)")
-    if trace:
-        q_data = []
-        for i, s in enumerate(trace):
-            q_data.append({
-                'Scene': i,
-                'Energy (Signal)': s.get('attentional_signal', 0.5),
-                'Entropy (Complexity)': report.get('semantic_flux', [0.5]*len(trace))[i]
-            })
-        df_q = pd.DataFrame(q_data)
-        fig_q = px.scatter(df_q, x='Entropy (Complexity)', y='Energy (Signal)', hover_data=['Scene'], 
-                           color_discrete_sequence=['#4F46E5'])
-        
-        # Add quadrant lines
-        fig_q.add_hline(y=0.5, line_dash="dash", line_color="rgba(0,0,0,0.2)")
-        fig_q.add_vline(x=0.5, line_dash="dash", line_color="rgba(0,0,0,0.2)")
-        
-        fig_q.update_layout(height=400, template='plotly_white')
-        st.plotly_chart(fig_q, use_container_width=True)
-        st.caption("Lower-Right: Dense/Expository | Upper-Right: Climax | Upper-Left: Pure Kinetic Action | Lower-Left: Recovery")
-
-    # 4. Detailed Telemetry Tabs
-    tabs = st.tabs(["Thematic Drivers", "Character Network", "Structural Fidelity", "Subtext Audit"])
+    # =========================================================================
+    # 4. DEEP TELEMETRY (RADAR & HEATMAPS)
+    # =========================================================================
+    uikit.render_lab_subheading("03", "SUB-SYSTEM AUDITS")
+    tabs = st.tabs(["[VOICE RADAR]", "[XAI HEATMAP]", "[LITERALISM AUDIT]"])
     
     with tabs[0]:
-        st.caption("Thematic attribution and XAI drivers.")
-        xai = report.get('xai_attribution', [{}])[0]
-        if xai:
-            drivers = xai.get('drivers', {})
-            for d, pct in drivers.items():
-                st.text(d.title())
-                st.progress(pct)
-
-    with tabs[1]:
-        st.caption("Inter-character tension and voice fingerprints.")
         voice = report.get('voice_fingerprints', {})
         if voice:
-            df_v = pd.DataFrame([{'Char': k, 'Comp': v['complexity'], 'Lines': v['line_count']} for k, v in voice.items()])
-            st.scatter_chart(df_v, x='Comp', y='Lines', color='Char')
+            top_chars = sorted([(k, v) for k, v in voice.items() if isinstance(v, dict)], 
+                               key=lambda x: x[1].get('line_count', 0), reverse=True)[:3]
+            fig_r = charts.get_voice_radar(top_chars)
+            st.plotly_chart(fig_r, use_container_width=True, config={'displayModeBar': False})
+        else: st.info("Insufficient dialogue nodes.")
 
     with tabs[2]:
-        st.caption("Fidelity to standard story templates.")
-        macro = report.get('macro_structure_fidelity', {})
-        st.metric("Structure Fidelity", f"{macro.get('fidelity_score', 0)}%")
-        st.info(f"Best Template Fit: {macro.get('best_fit_template', 'Unknown')}")
-
-    with tabs[3]:
-        st.caption("AI-detected subtext and literalism audit.")
         subtext = report.get('subtext_audit', [])
         if subtext:
-            for s in subtext:
-                st.warning(f"**Scene {s['scene_index']+1}**: {s['issue']}")
+            st.markdown(f"<p style='color: {Theme.SEMANTIC_WARNING};'>WARNING: High literalism scores detected.</p>", unsafe_allow_html=True)
+            for s in subtext[:5]:
+                st.code(f"SCENE_{s.get('scene_index', '?')} -> {s.get('issue', 'Subtext decay.')}")
+        else: st.markdown(f"<p style='color: {Theme.SEMANTIC_GOOD};'>OK: Subtext patterns stable.</p>", unsafe_allow_html=True)
 
-    # 5. Raw Data Export
-    st.markdown("---")
-    with st.expander("Debug Output & Reproducibility"):
-        st.json(report.get('debug_export', {}))
-        csv = df.to_csv(index=False).encode('utf-8')
-        st.download_button("Export Empirical Data (CSV)", csv, "lab_report.csv", "text/csv")
+    # Export
+    uikit.render_lab_subheading("04", "ENVIRONMENT & PAYLOAD")
+    st.json(report.get('meta', {}))
+    with st.expander("VIEW RAW JSON PAYLOAD ARRAY"): st.json(report)
+    if trace:
+        csv = pd.DataFrame(trace).to_csv(index=False).encode('utf-8')
+        st.download_button("DOWNLOAD TELEMETRY DUMP (CSV)", csv, "lab_telemetry_dump.csv", "text/csv", type="primary", use_container_width=True)

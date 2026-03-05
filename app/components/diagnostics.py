@@ -63,14 +63,15 @@ def render_diagnostics():
             else:
                 st.warning(f"System Status: **{status.upper()}**")
 
+            from app.components import uikit
             st.caption("**Core Agents**")
             for agent, ok in h.get('agents', {}).items():
-                icon = "<i class='bi bi-check-circle-fill icon-pass'></i>" if ok else "<i class='bi bi-x-circle-fill icon-fail'></i>"
-                st.markdown(f"{icon} {agent}", unsafe_allow_html=True)
+                icon_html = uikit.get_status_icon_html(ok)
+                st.markdown(f"{icon_html} {agent}", unsafe_allow_html=True)
 
             st.caption("**Governance & Config**")
-            gov_icon = "<i class='bi bi-check-circle-fill icon-pass'></i>" if h.get('governance') else "<i class='bi bi-x-circle-fill icon-fail'></i>"
+            gov_icon = uikit.get_status_icon_html(h.get('governance'))
             st.markdown(f"{gov_icon} Governance Firewall", unsafe_allow_html=True)
             for fname, exists in h.get('config_files', {}).items():
-                f_icon = "<i class='bi bi-check-circle-fill icon-pass'></i>" if exists else "<i class='bi bi-x-circle-fill icon-fail'></i>"
+                f_icon = uikit.get_status_icon_html(exists)
                 st.markdown(f"{f_icon} {fname}", unsafe_allow_html=True)

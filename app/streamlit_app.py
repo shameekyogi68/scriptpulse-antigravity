@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-ScriptPulse v6.0 - Main Entry Point
-Modularized Architecture
+ScriptPulse v7.0 - Main Entry Point
+Writer-First Design — Industry Standard Interface
 """
 
 import streamlit as st
@@ -14,8 +14,8 @@ load_dotenv()
 
 # MUST BE THE FIRST STREAMLIT COMMAND
 st.set_page_config(
-    page_title="ScriptPulse V6.0 — Engine",
-    page_icon="🎬",
+    page_title="ScriptPulse — Screenplay Intelligence",
+    page_icon="/Users/shameekyogi/Desktop/scriptpulse-antigravity/ScriptPulse_Icon.png",
     layout="wide"
 )
 
@@ -26,8 +26,9 @@ if ROOT_DIR not in sys.path:
 
 # Import Modular Components
 from app.components.styles import apply_custom_styles
+from app.components.theme import init_plotly_template
 from app.components.sidebar import render_sidebar
-from app.components.diagnostics import render_diagnostics
+from app.components.uikit import render_hero_section, render_section_header
 from app.views.writer_view import render_writer_view
 from app.views.lab_view import render_lab_view
 
@@ -45,140 +46,120 @@ from scriptpulse.reporters import writer_report, studio_report, print_summary
 # =============================================================================
 # INITIALIZATION
 # =============================================================================
-apply_custom_styles()
+@st.cache_resource
+def init_application():
+    """Application-level initialization logic."""
+    apply_custom_styles()
+    init_plotly_template()
+    return True
+
+init_application()
 stu.sync_safety_state()
 
-if 'last_report' not in st.session_state:
-    st.session_state['last_report'] = None
-if 'prev_run' not in st.session_state:
-    st.session_state['prev_run'] = None
+if 'last_report' not in st.session_state: st.session_state['last_report'] = None
 
 # =============================================================================
 # SIDEBAR & CONFIG
 # =============================================================================
-IS_CLOUD = True # Standard for cloud deployment
 sidebar_state = render_sidebar(
     ui_mode=st.session_state.get('ui_mode', "Writer Mode (Creative)"),
-    is_cloud=IS_CLOUD,
+    is_cloud=True,
     stu=stu
 )
-
-# Update session state from sidebar
 st.session_state['ui_mode'] = sidebar_state['ui_mode']
 
 # =============================================================================
-# MAIN CONTENT AREA
+# HERO SECTION
 # =============================================================================
-st.title("The Instrument")
-st.markdown("*A visual interface for screenplay rhythm.*")
+render_hero_section("ScriptPulse", "Understand how your screenplay feels to a first-time reader — scene by scene.")
 
-# 1. Load Draft
-st.header("1. Load Draft")
-tab_up, tab_paste = st.tabs(["Upload Document", "Paste Text"])
+# =============================================================================
+# STEP 1: LOAD DRAFT
+# =============================================================================
+render_section_header("📄", "Load Your Draft", 
+                      "Upload your screenplay file or paste text directly. ScriptPulse reads your script and analyzes its structure.")
+
+tab_up, tab_paste = st.tabs(["📁 Upload File", "📝 Paste Text"])
 
 script_input = None
 with tab_up:
-    uploaded_file = st.file_uploader("Upload Screenplay (PDF/TXT/FDX)", type=['pdf', 'txt', 'fdx'])
-    if uploaded_file:
-        if stu.check_upload_size(uploaded_file):
-            with st.spinner("Reading file..."):
-                file_ext = uploaded_file.name.split('.')[-1].lower()
-                if file_ext == 'pdf':
-                    try:
-                        import PyPDF2
-                        from io import BytesIO
-                        pdf_reader = PyPDF2.PdfReader(BytesIO(uploaded_file.read()))
-                        script_input = "\n".join([p.extract_text() for p in pdf_reader.pages])
-                    except Exception as e:
-                        st.error(f"PDF Error: {e}")
-                elif file_ext == 'fdx':
-                    try:
-                        from scriptpulse.agents import importers
-                        script_input = importers.run(uploaded_file.getvalue().decode("utf-8"))
-                        if isinstance(script_input, list): # Reconstruct if pre-parsed
-                             script_input = "\n".join([l['text'] for l in script_input])
-                    except Exception as e:
-                        st.error(f"FDX Error: {e}")
-                else:
-                    script_input = uploaded_file.read().decode('utf-8')
+    uploaded_file = st.file_uploader("Drop your screenplay here (PDF, TXT, or FDX)", type=['pdf', 'txt', 'fdx'])
+    if uploaded_file and stu.check_upload_size(uploaded_file):
+        with st.spinner("Reading script..."):
+            ext = uploaded_file.name.split('.')[-1].lower()
+            if ext == 'pdf':
+                from io import BytesIO
+                import PyPDF2
+                script_input = "\n".join([p.extract_text() for p in PyPDF2.PdfReader(BytesIO(uploaded_file.read())).pages])
+            elif ext == 'fdx':
+                from scriptpulse.agents import importers
+                script_input = importers.run(uploaded_file.getvalue().decode("utf-8"))
+                if isinstance(script_input, list): script_input = "\n".join([l['text'] for l in script_input])
+            else:
+                script_input = uploaded_file.read().decode('utf-8')
 
 with tab_paste:
-    pasted_text = st.text_area("Paste text here", height=200)
-    if not script_input and len(pasted_text) > 100:
-        script_input = pasted_text
+    pasted = st.text_area("Paste text here", height=200, placeholder="INT. COFFEE SHOP - DAY...")
+    if not script_input and len(pasted) > 100: script_input = pasted
 
-# 2. Configuration
-st.header("2. Analysis Configuration")
-with st.expander("Target Genre & Context", expanded=False):
-    col1, col2 = st.columns(2)
-    selected_genre = col1.selectbox("Target Genre", ["Drama", "Action", "Thriller", "Horror", "Comedy", "Sci-Fi"])
-    selected_lens = col2.selectbox("Analysis Lens", ["viewer", "reader", "narrator"])
+# =============================================================================
+# STEP 2: CONFIGURE & RUN
+# =============================================================================
+render_section_header("⚙️", "Analysis Settings", "Calibrate feedback based on genre conventions.")
+col1, col2 = st.columns(2)
+genre = col1.selectbox("Target Genre", ["Drama", "Action", "Thriller", "Horror", "Comedy", "Sci-Fi", "Romance", "Avant-Garde"])
+lens = col2.selectbox("Reading Perspective", ["viewer", "reader", "narrator"])
 
-# 3. Execution
 if script_input:
-    if st.button("Analyze Rhythm", type="primary"):
-        with st.spinner("Processing story architecture..."):
-            try:
-                report = runner.run_pipeline(
-                    script_input,
-                    genre=selected_genre,
-                    lens=selected_lens,
-                    ablation_config=sidebar_state['ablation_config'],
-                    cpu_safe_mode=sidebar_state['force_cloud']
-                )
-                st.session_state['last_report'] = report
-                st.session_state['current_input'] = script_input # For view rendering
-            except Exception as e:
-                import traceback; st.error(f"Analysis Failed: {traceback.format_exc()}")
+    st.markdown("<br/>", unsafe_allow_html=True)
+    if st.button("🎬 Analyze My Script", type="primary", use_container_width=True):
+        bar = st.progress(0, text="Stoking engine...")
+        try:
+            report = runner.run_pipeline(script_input, genre=genre, lens=lens, 
+                                        ablation_config=sidebar_state['ablation_config'],
+                                        cpu_safe_mode=sidebar_state['force_cloud'])
+            st.session_state['last_report'] = report
+            st.session_state['current_input'] = script_input
+            st.session_state['current_genre'] = genre
+            bar.progress(100, text="Complete!")
+            time.sleep(0.5)
+            bar.empty()
+        except Exception as e:
+            bar.empty()
+            st.error(f"Analysis failed: {e}")
+else: st.info("👆 Upload or paste or screenplay above to begin.")
 
-# 4. Render Views
+# =============================================================================
+# STEP 3: RENDER RESULTS
+# =============================================================================
 report = st.session_state.get('last_report')
 current_input = st.session_state.get('current_input')
 
 if report and current_input:
-    if st.session_state['ui_mode'] == "Writer Mode (Creative)":
-        render_writer_view(report, current_input)
-    else:
-        render_lab_view(report, current_input, selected_genre, selected_lens, sidebar_state['ablation_config'], True)
+    st.markdown("---")
+    # Render unified dashboard: Writer insights first, followed by Lab telemetry
+    render_writer_view(report, current_input)
+    
+    st.markdown("---")
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    
+    # Render the Advanced Telemetry (formerly Lab View) at the bottom
+    render_lab_view(report, current_input, genre, lens, sidebar_state['ablation_config'], True)
 
-# 5. Export Output
+# =============================================================================
+# STEP 4: EXPORT
+# =============================================================================
 if report and current_input:
     st.markdown("---")
-    st.header("3. Extract Intelligence")
-    st.markdown("*Download professional exports of this analysis session.*")
+    render_section_header("📥", "Export Your Analysis", "Download professional reports for shared use.")
+    c1, c2, c3 = st.columns(3)
+    title = uploaded_file.name if 'uploaded_file' in locals() and uploaded_file else "Script"
     
-    col_w, col_s, col_p = st.columns(3)
-    
-    with col_w:
-        md_report = writer_report.generate_writer_report(report, title=uploaded_file.name if 'uploaded_file' in locals() and uploaded_file else "Script", genre=selected_genre)
-        st.download_button(
-            label="📄 Writer's Intelligence (MD)",
-            data=md_report,
-            file_name=f"ScriptPulse_Writer_{selected_genre}.md",
-            mime="text/markdown",
-            help="High-depth analytical report for the writer."
-        )
-        
-    with col_s:
-        html_report = studio_report.generate_report(report, script_title=uploaded_file.name if 'uploaded_file' in locals() and uploaded_file else "Script")
-        st.download_button(
-            label="🎬 Studio Coverage (HTML)",
-            data=html_report,
-            file_name=f"ScriptPulse_Studio_{selected_genre}.html",
-            mime="text/html",
-            help="Professional studio-style coverage report."
-        )
+    with c1: st.download_button("📄 Writer Report (MD)", writer_report.generate_writer_report(report, title=title, genre=genre), f"ScriptPulse_Writer_{genre}.md", "text/markdown", use_container_width=True)
+    with c2: st.download_button("🎬 Studio Coverage (HTML)", studio_report.generate_report(report, script_title=title), f"ScriptPulse_Studio_{genre}.html", "text/html", use_container_width=True)
+    with c3: st.download_button("🖨️ One-Page Summary (HTML)", print_summary.generate_print_summary(report, script_title=title), f"ScriptPulse_Summary_{genre}.html", "text/html", use_container_width=True)
 
-    with col_p:
-        print_html = print_summary.generate_print_summary(report, script_title=uploaded_file.name if 'uploaded_file' in locals() and uploaded_file else "Script")
-        st.download_button(
-            label="🖨️ Quick Summary (HTML)",
-            data=print_html,
-            file_name=f"ScriptPulse_Summary_{selected_genre}.html",
-            mime="text/html",
-            help="One-page summary for physical printing."
-        )
-
-# 6. Diagnostics
+# Diagnostics
 st.markdown("---")
+from app.components.diagnostics import render_diagnostics
 render_diagnostics()

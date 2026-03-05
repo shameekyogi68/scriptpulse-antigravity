@@ -1,0 +1,941 @@
+"""
+Dynamics Agent - Handling Temporal Simulation & Pattern Detection
+Consolidates: temporal.py, tam.py, lrf.py, acd.py, patterns.py
+"""
+
+import random
+import statistics
+import json
+import os
+from scriptpulse.utils.logger import get_logger as _get_logger
+
+_log = _get_logger(__name__)
+
+
+# =============================================================================
+# TEMPORAL LOGIC (formerly temporal.py)
+# =============================================================================
+
+class ReaderProfile:
+    """
+    User-configurable profile for the target audience.
+    Affects fatigue accumulation, recovery capability, and complexity tolerance.
+    """
+    def __init__(self, familiarity=0.5, speed=250, tolerance=0.5):
+        self.familiarity = max(0.0, min(1.0, familiarity)) # 0.0 (Novice) to 1.0 (Expert)
+        self.speed = max(100, min(1000, speed)) # Words Per Minute
+        self.tolerance = max(0.0, min(1.0, tolerance)) # Tolerance for high complexity
+        
+    def get_params(self):
+        """Map profile attributes to dynamics parameters."""
+        # 1. Lambda (Decay): Higher tolerance = slower decay (sustains interest longer)
+        # Base 0.85 -> Range [0.80, 0.95]
+        lambda_base = 0.80 + (self.tolerance * 0.15)
+        
+        # 2. Beta (Recovery): Higher familiarity = faster recovery (better processing)
+        # Base 0.3 -> Range [0.2, 0.5]
+        beta_recovery = 0.2 + (self.familiarity * 0.3)
+        
+        # 3. Fatigue Threshold: Higher tolerance = higher threshold
+        # Base 1.0 -> Range [0.8, 1.2]
+        fatigue_threshold = 0.8 + (self.tolerance * 0.4)
+        
+        # 4. Coherence Weight: Higher familiarity = less penalty for confusion
+        # Base 0.15 -> Range [0.2, 0.05]
+        coherence_weight = 0.2 - (self.familiarity * 0.15)
+        
+        return {
+            'lambda_base': lambda_base,
+            'beta_recovery': beta_recovery,
+            'fatigue_threshold': fatigue_threshold,
+            'coherence_weight': coherence_weight
+        }
+
+
+class DynamicsAgent:
+    """
+    Dynamics Agent - Temporal Simulation & Pattern Detection
+    Handles the core cognitive simulation of the reader/viewer experience.
+    """
+    
+    def __init__(self):
+        # Load Explicit Hyperparameters
+        try:
+            base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+            hyper_path = os.path.join(base_dir, 'config', 'hyperparameters.json')
+            with open(hyper_path, 'r') as f:
+                self.hyper = json.load(f).get('dynamics_agent', {})
+        except Exception as e:
+            _log.warning("Could not load hyperparameters: %s", e)
+            self.hyper = {}
+            
+        # Configuration Defaults
+        fatigue_cfg = self.hyper.get('fatigue', {})
+        self.DEFAULT_LAMBDA = fatigue_cfg.get('default_lambda', 0.85)
+        self.DEFAULT_BETA = fatigue_cfg.get('default_beta', 0.3)
+        self.DEFAULT_GAMMA = 0.2    
+        self.DEFAULT_DELTA = 0.25   
+        self.R_MAX = fatigue_cfg.get('r_max', 0.5)
+        self.E_THRESHOLD = fatigue_cfg.get('threshold', 0.4)
+        
+        # Load Genre Priors
+        try:
+            # Adjust path relative to this file location
+            base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+            schema_path = os.path.join(base_dir, 'config', 'genre_priors.json')
+            if os.path.exists(schema_path):
+                with open(schema_path, 'r') as f:
+                    self.GENRE_PRIORS = json.load(f).get('genres', {})
+            else:
+                self.GENRE_PRIORS = {}
+        except Exception:
+            self.GENRE_PRIORS = {} # Fallback
+
+    def get_genre_config(self, genre):
+        """Load genre-specific priors."""
+        target = genre.lower()
+        if not self.GENRE_PRIORS:
+            # Try reloading if empty
+            try:
+                base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+                schema_path = os.path.join(base_dir, 'config', 'genre_priors.json')
+                if os.path.exists(schema_path):
+                    with open(schema_path, 'r') as f:
+                        data = json.load(f)
+                        self.GENRE_PRIORS = data.get('genres', {})
+            except Exception as e:
+                _log.warning("Could not load genre priors: %s", e)
+        
+        # Case insensitive match
+        for k, v in self.GENRE_PRIORS.items():
+            if k.lower() == target:
+                return v
+        
+        # Default fallback
+        return self.GENRE_PRIORS.get('Drama', {
+            'lambda_decay': 0.85, 
+            'beta_recovery': 0.25,
+            'fatigue_threshold': 1.0
+        })
+
+    def run_simulation(self, input_data, genre='drama', debug=False, **kwargs):
+        """
+        Main entry point. 
+        input_data: {'features': [...]} from PerceptionAgent
+        genre: 'drama', 'thriller', 'comedy', 'action', 'horror'
+        debug: boolean, enables verbose trace logging
+        """
+        # Validate input
+        if 'features' not in input_data:
+            return []
+            
+        # Initialize Profile Params based on Genre
+        # Note: We assume 'lens_config' is either in input_data or we use defaults.
+        # For v1.3, we focus on genre-based priors.
+        
+        # Check if profile_params is passed in input_data (advanced usage)
+        profile_params = input_data.get('profile_params')
+        
+        if not profile_params:
+            genre_data = self.get_genre_config(genre)
+            profile_params = {
+                'lambda_base': genre_data.get('lambda_decay', self.DEFAULT_LAMBDA),
+                'beta_recovery': genre_data.get('beta_recovery', self.DEFAULT_BETA),
+                'fatigue_threshold': genre_data.get('fatigue_threshold', 1.0),
+                'coherence_weight': 0.15 # Default
+            }
+
+        # Ensure we have all keys if a partial dict was passed
+        defaults = ReaderProfile().get_params()
+        for k, v in defaults.items():
+            if k not in profile_params:
+                profile_params[k] = v
+        
+        if debug:
+             _log.debug("Active Genre: %s | Lambda: %s | Beta: %s | Fatigue Limit: %s",
+                        genre, profile_params['lambda_base'], profile_params['beta_recovery'], profile_params['fatigue_threshold'])
+
+        # Primary Run (Deterministic)
+        # We pass lens_config from input_data if it exists
+        lens_config = kwargs.get('lens_config', input_data.get('lens_config'))
+        
+        primary_trace = self._run_single_pass(input_data, lens_config=lens_config, genre=genre, profile_params=profile_params, debug=debug)
+            
+        return primary_trace
+
+    def _run_single_pass(self, input_data, lens_config=None, genre='drama', profile_params=None, debug=False):
+        """
+        Core Simulation Loop (Deterministic)
+        """
+        features = input_data.get('features', [])
+        coherence_scores = input_data.get('coherence_scores', [])
+        valence_scores = input_data.get('valence_scores', [])
+        
+        if not features: return []
+        
+        # -- 1. Configuration & Weights --
+        # Allow lens_config or hyper parameter config to override defaults
+        weights = self.hyper.get('effort_weights', {
+            'cognitive_mix': 0.55,
+            'emotional_mix': 0.45,
+            'cognitive_components': {'structural': 0.6, 'semantic': 0.2, 'syntactic': 0.2},
+            'emotional_components': {'dialogue_engagement': 0.35, 'visual_intensity': 0.30, 
+                                   'linguistic_volume': 0.20, 'stillness_penalty': 0.15}
+        })
+        if lens_config and 'effort_weights' in lens_config:
+            weights.update(lens_config['effort_weights'])
+            
+        genre_cfg = self.get_genre_config(genre)
+        
+        # Compatibility / Normalization of weights
+        cog = weights.get('cognitive_components', {})
+        if 'structural' not in cog:
+            # Map legacy (lenses.py) to v14 schema
+            # REVISION 3: Matching Golden Baselines
+            # Monologue (High Text/Dial) needs HIGH weight -> Semantic/Dialogue.
+            # Action (High Visual/Struct) needs MODERATE weight -> Structural.
+            
+            # 1. Structural: Keep purely structural (Event Boundaries).
+            # Ref Score (Candidates) moved to Semantic to boost Text/Entropy.
+            cog['structural'] = cog.get('struct_score', 0.25)
+            
+            # 2. Semantic: Map 'ref_score' (Referential) and 'dial_tracking' here.
+            # Rationale: Entropy correlates with Tracking Load and References.
+            # Base (0.1) + Ref(0.3) + Dial(0.15) = ~0.55.
+            cog['semantic'] = 0.1 + cog.get('ref_score', 0.3) + cog.get('dial_tracking', 0.15)
+            
+            # 3. Syntactic: standard mapping
+            cog['syntactic'] = cog.get('ling_complexity', 0.3)
+            
+        emo = weights.get('emotional_components', {})
+        if 'visual_intensity' not in emo:
+            emo['visual_intensity'] = emo.get('visual_score', 0.3)
+            emo['stillness_penalty'] = emo.get('stillness_factor', 0.15)
+            emo['linguistic_volume'] = emo.get('ling_volume', 0.2)
+            emo['dialogue_engagement'] = emo.get('dial_engagement', 0.35)
+        
+        # Profile Parameters
+        lambda_base = min(0.99, profile_params['lambda_base'])
+        beta_rec = profile_params['beta_recovery']
+        
+        # DEBUG PARAM TRACE (Removed)
+        
+        fatigue_thresh = profile_params['fatigue_threshold']
+        coh_weight = profile_params['coherence_weight']
+        
+        signals = []
+        prev_signal = 0.5 # S[0]
+        prev_expectation = 0.5
+        
+        length_factor = self._compute_length_factor(len(features))
+        
+        # Fix 11: Dynamic Entropy Normalization
+        # Instead of hardcoding max 6.0, we find the actual maximum entropy observed
+        # in the script (floor of 6.0 to prevent magnifying simple scripts)
+        max_entropy = max([f.get('entropy_score', 0) for f in features] + [6.0])
+        
+        for i, scene_feat in enumerate(features):
+            # -- 2. Instantaneous Effort Calculation E[i] --
+            
+            # A. Cognitive Load
+            struct_load = (scene_feat['referential_load']['active_character_count'] / 10.0 + 
+                          scene_feat['structural_change']['event_boundary_score'] / 100.0) / 2.0
+            sem_load = scene_feat.get('entropy_score', 0) / 8.0 # Approx normalization
+            syn_load = scene_feat['linguistic_load']['sentence_length_variance'] / 100.0
+            
+            cog_load = (struct_load * weights['cognitive_components']['structural'] +
+                       sem_load * weights['cognitive_components']['semantic'] +
+                       syn_load * weights['cognitive_components']['syntactic'])
+            
+            # B. Emotional Load
+            dial = scene_feat['dialogue_dynamics']
+            vis = scene_feat['visual_abstraction']
+            ling = scene_feat['linguistic_load']
+            amb = scene_feat['ambient_signals']
+            
+            # Avoid div zero and unbound scaling
+            dial_eng = min(1.0, dial['turn_velocity'])
+            
+            # -- 2a. Determine Scene Type & Adaptive Decay --
+            # "Use separate decay rates for exposition, action, and dialogue heavy scenes"
+            scene_type = 'balanced'
+            lambda_mod = 0.0
+            
+            # Simple heuristic based on feature dominance
+            if vis['action_lines'] > dial['dialogue_line_count'] * 1.5:
+                scene_type = 'action'
+                lambda_mod = -0.05 # Faster decay (Action needs constant stimulation)
+            elif dial['dialogue_line_count'] > vis['action_lines'] * 2.0:
+                scene_type = 'dialogue'
+                lambda_mod = 0.05 # Slower decay (Dialogue sustains attention longer via thread tracking)
+            elif scene_feat.get('is_exposition', False): # Future proofing
+                 scene_type = 'exposition'
+                 lambda_mod = 0.10 # Slowest decay (Reader invests effort expecting payoff)
+                 
+            # -- 2b. Instantaneous Effort Calculation E[i] --
+            
+            # "Normalize effort by information units, not scene length"
+            # Calculate Density Factor (Propensity of info per unit length)
+            # Default density is 1.0. High entropy/short length = High Density.
+            # Low entropy/long length = Low Density.
+            
+            density_factor = 1.0
+            if 'entropy_score' in scene_feat and ling['sentence_count'] > 0:
+                 entropy = scene_feat['entropy_score']
+                 # Normalize entropy against script's maximum or 6.0 baseline
+                 # High volume with low entropy -> Lower the effective load
+                 normalized_entropy = entropy / max_entropy # Fix 11: dynamic max
+                 
+                 # Logic: If volume is high but entropy is low (verbose), reduce load.
+                 # If volume is low but entropy is high (dense), increase load.
+                 density_factor = 0.5 + normalized_entropy
+            
+            # A. Cognitive Load
+            struct_load = (scene_feat['referential_load']['active_character_count'] / 10.0 + 
+                          scene_feat['structural_change']['event_boundary_score'] / 100.0) / 2.0
+            sem_load = scene_feat.get('entropy_score', 0) / 8.0 # Approx normalization
+            syn_load = scene_feat['linguistic_load']['sentence_length_variance'] / 100.0
+            
+            cog_load = (struct_load * weights['cognitive_components']['structural'] +
+                       sem_load * weights['cognitive_components']['semantic'] +
+                       syn_load * weights['cognitive_components']['syntactic'])
+            
+            # B. Emotional Load (Normalized by Density)
+            dial = scene_feat['dialogue_dynamics']
+            vis = scene_feat['visual_abstraction']
+            ling = scene_feat['linguistic_load']
+            amb = scene_feat['ambient_signals']
+            
+            # Avoid div zero and unbound scaling
+            dial_eng = min(1.0, dial['turn_velocity'])
+            vis_int = min(1.0, vis['action_lines'] / 20.0)
+            ling_vol = min(1.0, ling['sentence_count'] / 50.0)
+            still_pen = amb['component_scores']['stillness']
+            
+            # Apply Density Normalization to Volume Metrics
+            # "Long but simple scenes still trigger overload flags" -> Fix by scaling volume by density
+            ling_vol *= density_factor
+            vis_int *= density_factor
+            
+            # Confusion Markers (Entity Churn) - "Add confusion markers"
+            confusion_penalty = 0.0
+            if 'entity_churn' in scene_feat.get('referential_load', {}):
+                 confusion_penalty = scene_feat['referential_load']['entity_churn'] * 0.2
+            if 'unresolved_references' in scene_feat.get('referential_load', {}):
+                 confusion_penalty += scene_feat['referential_load']['unresolved_references'] * 0.1
+            
+            emo_load = (dial_eng * weights['emotional_components']['dialogue_engagement'] +
+                       vis_int * weights['emotional_components']['visual_intensity'] +
+                       ling_vol * weights['emotional_components']['linguistic_volume'] - 
+                       (still_pen * weights['emotional_components']['stillness_penalty']))
+            emo_load = min(1.0, max(0.0, emo_load))
+            
+            # C. Mixed Effort
+            base_effort = (cog_load * weights['cognitive_mix'] + 
+                          emo_load * weights['emotional_mix'])
+            
+            # D. Coherence Penalty (Confusion adds effort)
+            coh_penalty = 0.0
+            if coherence_scores and i < len(coherence_scores):
+                coh_penalty = coherence_scores[i] * coh_weight
+            
+            # Total Effort with Confusion
+            effort = base_effort + coh_penalty + confusion_penalty
+            
+            # -- 3. TAM Integration (Micro-Dynamics) --
+            ablation = input_data.get('ablation_config', {})
+            if not ablation.get('disable_tam', False):
+                tam_modifiers = self._run_tam_integration(scene_feat, effort)
+                effort *= tam_modifiers['effort_modifier']
+            else:
+                tam_modifiers = {'effort_modifier': 1.0, 'recovery_modifier': 1.0, 'micro_fatigue_integral': 0.0}
+            
+            # -- 4. Recovery Calculation R[i] --
+            # Recovery is inverse of effort, scaled by beta and TAM
+            raw_recovery = max(0, (self.R_MAX - effort))
+            recovery = raw_recovery * beta_rec * tam_modifiers['recovery_modifier']
+            
+            # -- 5. Signal State Update S[i] --
+            # Autoregressive decay + Input
+            # Apply Scene Type Modifier to Lambda
+            current_lambda = max(0.1, min(0.99, lambda_base + lambda_mod))
+            
+            if i == 0:
+                signal = effort
+            else:
+                signal = effort + current_lambda * prev_signal - recovery
+                
+            # Bounds checking
+            signal = max(0.0, min(1.0, signal))
+            
+            # -- 6. Expectation Strain --
+            # Surprise = deviation from prediction
+            expectation = prev_expectation * 0.7 + effort * 0.3
+            strain = abs(effort - prev_expectation)
+            
+            # --- Writer Nuance Context (v2.0) ---
+            action_count = vis.get('action_lines', 0)
+            dialogue_count = dial.get('dialogue_line_count', 0)
+            total_lines = max(1, action_count + dialogue_count)
+            action_density = action_count / total_lines
+            dialogue_density = dialogue_count / total_lines
+            
+            # Conflict Heuristic: High effort + high visual intensity + high dialogue velocity
+            conflict = min(1.0, (effort * 0.4) + (vis_int * 0.3) + (dial_eng * 0.3))
+            
+            # Stakes from Stanford/Stanislavski or default
+            ml_tension_scores = input_data.get('ml_tension_scores', [])
+            stakes = ml_tension_scores[i] if ml_tension_scores and i < len(ml_tension_scores) and ml_tension_scores[i] is not None else effort * 0.8
+            
+            # Agency Heuristic: Active characters taking charge (vs passive dialogue)
+            active_chars = scene_feat.get('referential_load', {}).get('active_character_count', 0)
+            agency = min(1.0, active_chars * 0.2 + (action_density * 0.5))
+
+            # Store
+            # Fix 3: Detect if signal was clamped at ceiling (1.0) to flag false-equivalence
+            ceiling_clipped = (effort + current_lambda * (prev_signal if i > 0 else 0.0) - recovery) > 1.0
+            signals.append({
+                'scene_index': scene_feat['scene_index'],
+                'instantaneous_effort': round(effort, 3),
+                'attentional_signal': round(signal, 3),
+                'recovery_credit': round(recovery, 3),
+                'tam_integral': round(tam_modifiers['micro_fatigue_integral'], 3),
+                'expectation_strain': round(strain, 3),
+                'temporal_expectation': round(expectation, 3),
+                'valence_score': valence_scores[i] if i < len(valence_scores) else 0.0,
+                'coherence_penalty': round(coh_penalty, 3),
+                'fatigue_state': round(min(1.0, max(0.0, signal - fatigue_thresh)), 3), # Clamped [0,1]
+                'ceiling_clipped': ceiling_clipped,  # Fix 3: True if real value exceeded 1.0
+                # Writer Layer Appendages
+                'action_density': round(action_density, 3),
+                'dialogue_density': round(dialogue_density, 3),
+                'sentiment': round(valence_scores[i] if i < len(valence_scores) else 0.0, 3),
+                'conflict': round(conflict, 3),
+                'stakes': round(stakes, 3),
+                'agency': round(agency, 3),
+                'motifs': scene_feat.get('motifs', []),
+                'tell_vs_show': scene_feat.get('tell_vs_show', {}),
+                # Phase 23
+                'on_the_nose': scene_feat.get('on_the_nose', {}),
+                'shoe_leather': scene_feat.get('shoe_leather', {}),
+                'semantic_motifs': scene_feat.get('semantic_motifs', []),
+                'character_scene_vectors': scene_feat.get('character_scene_vectors', {}),
+                # Phase 24
+                'stakes_taxonomy': scene_feat.get('stakes_taxonomy', {}),
+                'stichomythia': scene_feat.get('stichomythia', {}),
+                'scene_purpose': scene_feat.get('scene_purpose', {}),
+                'payoff_density': scene_feat.get('payoff_density', {}),
+                # Phase 25
+                'opening_hook': scene_feat.get('opening_hook', None),
+                'generic_dialogue': scene_feat.get('generic_dialogue', {}),
+                'scene_turn': scene_feat.get('scene_turn', {}),
+                'dialogue_action_ratio': scene_feat.get('dialogue_action_ratio', {}),
+                # Phase 26
+                'passive_voice': scene_feat.get('passive_voice', {}),
+                'scene_vocabulary': scene_feat.get('scene_vocabulary', []),
+                # Phase 27
+                'interruption_patterns': scene_feat.get('interruption_patterns', {}),
+                'location_data': scene_feat.get('location_data', {}),
+                'runtime_contribution': scene_feat.get('runtime_contribution', {}),
+                # Phase 28
+                'monologue_data': scene_feat.get('monologue_data', {}),
+                'scene_economy': scene_feat.get('scene_economy', {}),
+                # Phase 29
+                'thematic_clusters': scene_feat.get('thematic_clusters', {}),
+                'nonlinear_tag': scene_feat.get('nonlinear_tag', {}),
+                'reader_frustration': scene_feat.get('reader_frustration', {}),
+                # Phase 30
+                'format_compliance': scene_feat.get('format_compliance', {}),
+                'deus_ex_signals': scene_feat.get('deus_ex_signals', {})
+            })
+            
+            prev_signal = signal
+            prev_expectation = expectation
+            
+            # Detailed Trace (v1.3.1)
+            if debug:
+                _log.debug("TRACE Scene %d: A=%.2f | E=%.2f | R=%.2f | Lambda=%.2f", i, signal, effort, recovery, current_lambda)
+
+        return signals
+
+    def _compute_length_factor(self, total_scenes):
+        if total_scenes >= 50: return 1.0
+        elif total_scenes >= 20: return 1.0 + (50 - total_scenes) / (50 - 20) * 0.5
+        else: return 2.0
+
+    # =========================================================================
+    # TAM LOGIC (formerly tam.py)
+    # =========================================================================
+    
+    def _run_tam_integration(self, scene_features, base_effort):
+        micro = scene_features.get('micro_structure', [])
+        if not micro:
+            return {'effort_modifier': 1.0, 'recovery_modifier': 1.0, 'micro_fatigue_integral': 0.0}
+        
+        # 1. Map Micro-Effort e(tau)
+        e_tau = []
+        for item in micro:
+            tag = item['tag']
+            words = item['word_count']
+            if tag == 'A': val = 0.5 + min(0.5, words / 20.0) 
+            elif tag == 'D': val = 0.3 + min(0.4, words / 15.0)
+            elif tag == 'S': val = 0.8
+            elif tag == 'C': val = 0.1
+            else: val = 0.2
+            e_tau.append(val)
+            
+        if not e_tau: return {'effort_modifier': 1.0, 'recovery_modifier': 1.0, 'micro_fatigue_integral': 0.0}
+            
+        # 2. Micro-Fatigue Accumulation
+        sigma = []
+        prev_s = 0.0
+        micro_lambda = 0.9
+        for e in e_tau:
+            s = e + micro_lambda * prev_s
+            sigma.append(s)
+            prev_s = s
+            
+        # 3. Derive Modifiers
+        peak_sigma = max(sigma) if sigma else 0
+        avg_sigma = sum(sigma) / len(sigma) if sigma else 0
+        uniformity = avg_sigma / peak_sigma if peak_sigma > 0 else 1.0
+        
+        effort_mod = 1.0 + (1.0 - uniformity) * 0.2
+        
+        # Recovery requires continuous low-load windows
+        low_load_count = sum(1 for e in e_tau if e < 0.3)
+        recovery_potential = low_load_count / len(e_tau)
+        recovery_mod = 0.5 + recovery_potential # 0.5 to 1.5
+        
+        return {
+            'effort_modifier': effort_mod,
+            'recovery_modifier': recovery_mod,
+            'micro_fatigue_integral': round(avg_sigma, 3)
+        }
+
+    # =========================================================================
+    # LRF LOGIC (formerly lrf.py)
+    # =========================================================================
+
+    def apply_long_range_fatigue(self, input_data):
+        """Apply long-range fatigue dynamics (formerly lrf.run)"""
+        signals = input_data.get('temporal_signals', [])
+        if not signals: return []
+        
+        ablation = input_data.get('ablation_config', {})
+        if ablation.get('disable_lrf', False):
+            return signals
+
+        refined_signals = []
+        fatigue_reserve = 0.0
+        
+        lrf_cfg = self.hyper.get('lrf', {})
+        ACCUMULATION_RATE = lrf_cfg.get('accumulation_rate', 0.15)
+        DISCHARGE_RATE = lrf_cfg.get('discharge_rate', 0.4)
+        DECAY_RATE = lrf_cfg.get('decay_rate', 0.05)
+        SUSTAINED_EFFORT_THRESHOLD = lrf_cfg.get('sustained_effort_threshold', 0.4)
+        SUSTAINED_ONSET = lrf_cfg.get('sustained_onset', 3)
+        K1 = lrf_cfg.get('k1', 0.025)
+        K2 = lrf_cfg.get('k2', 0.008)
+        
+        consecutive_high = 0
+        
+        for i, sig in enumerate(signals):
+            new_sig = sig.copy()
+            e_i = sig['instantaneous_effort']
+            r_i = sig['recovery_credit']
+            s_i = sig['attentional_signal']
+            
+            if e_i >= SUSTAINED_EFFORT_THRESHOLD: consecutive_high += 1
+            else: consecutive_high = max(0, consecutive_high - 2)
+            
+            accumulation = 0.0
+            if 0.3 < e_i < 0.6 and r_i < 0.2:
+                accumulation = (e_i - 0.3) * ACCUMULATION_RATE
+            if e_i >= 0.6:
+                accumulation += e_i * ACCUMULATION_RATE * 0.5
+                
+            fatigue_reserve += accumulation
+            
+            discharge = 0.0
+            if r_i > 0.3: discharge = fatigue_reserve * DISCHARGE_RATE
+            elif s_i > 0.7: discharge = fatigue_reserve * 0.2
+                 
+            # Apply discharge to signal (latent fatigue manifests as higher signal/stress)
+            # Original LRF logic: added discharge to S_i
+            new_s_i = s_i + discharge
+            fatigue_reserve -= discharge
+            
+            sustained_penalty = 0.0
+            if consecutive_high > SUSTAINED_ONSET:
+                excess = consecutive_high - SUSTAINED_ONSET
+                sustained_penalty = min(0.4, K1 * excess + K2 * (excess ** 2))
+                
+            # Penalty reduces attention (tuning out)
+            new_s_i = new_s_i * (1.0 - sustained_penalty)
+            
+            fatigue_reserve *= (1.0 - DECAY_RATE)
+            
+            new_sig['attentional_signal'] = round(new_s_i, 3)
+            new_sig['fatigue_reserve'] = round(fatigue_reserve, 3)
+            new_sig['sustained_fatigue_penalty'] = round(sustained_penalty, 3)
+            
+            refined_signals.append(new_sig)
+            
+        return refined_signals
+
+    # =========================================================================
+    # ACD LOGIC (formerly acd.py)
+    # =========================================================================
+
+    def calculate_acd_states(self, input_data):
+        """Calculate Attention Collapse vs Drift (formerly acd.run)"""
+        signals = input_data.get('temporal_signals', [])
+        features = input_data.get('features', [])
+        if not signals or not features: return []
+        
+        ablation = input_data.get('ablation_config', {})
+        if ablation.get('disable_acd', False):
+             # Return neutral states
+             return [{'scene_index': s['scene_index'], 'collapse_likelihood': 0.0, 'drift_likelihood': 0.0, 'primary_state': 'stable'} for s in signals]
+
+        acd_states = []
+        prev_collapse = 0.0
+        prev_drift = 0.0
+        
+        acd_cfg = self.hyper.get('acd', {})
+        COLLAPSE_DECAY = acd_cfg.get('collapse_decay', 0.85)
+        DRIFT_DECAY = acd_cfg.get('drift_decay', 0.6)
+        
+        for i, sig in enumerate(signals):
+            feat = features[i]
+            effort = sig['instantaneous_effort']
+            recovery = sig['recovery_credit']
+            struct_change = feat['structural_change']['event_boundary_score']
+            
+            # Collapse
+            collapse_pressure = 0.0
+            if effort > 0.6: collapse_pressure += (effort - 0.6) * 2.0
+            if recovery < 0.1: collapse_pressure += 0.2
+            if struct_change > 70: collapse_pressure *= 1.2
+            
+            collapse = collapse_pressure + COLLAPSE_DECAY * prev_collapse
+            collapse = min(1.0, collapse)
+            
+            # Drift
+            drift_pressure = 0.0
+            effort_delta = 0.0
+            if i > 0:
+                effort_delta = abs(effort - signals[i-1]['instantaneous_effort'])
+                
+            if effort_delta < 0.1 and effort < 0.5: drift_pressure += 0.15
+            if struct_change < 20: drift_pressure += 0.15
+            
+            drift = drift_pressure + DRIFT_DECAY * prev_drift
+            drift = min(1.0, drift)
+            
+            if struct_change > 60 or effort_delta > 0.3:
+                drift *= 0.2 # Novelty reset
+                
+            primary = 'stable'
+            if collapse > 0.6 and collapse > drift: primary = 'collapse'
+            elif drift > 0.6 and drift > collapse: primary = 'drift'
+            
+            acd_states.append({
+                'scene_index': sig['scene_index'],
+                'collapse_likelihood': round(collapse, 3),
+                'drift_likelihood': round(drift, 3),
+                'primary_state': primary
+            })
+            prev_collapse = collapse
+            prev_drift = drift
+            
+        return acd_states
+
+    # =========================================================================
+    # PATTERNS LOGIC (formerly patterns.py)
+    # =========================================================================
+    
+    def detect_patterns(self, input_data):
+        """Detect persistent experiential patterns"""
+        signals = input_data.get('temporal_signals', [])
+        features = input_data.get('features', [])
+        acd_states = input_data.get('acd_states', [])
+        
+        MIN_PERSISTENCE = 3
+        if len(signals) < MIN_PERSISTENCE: return []
+        
+        length_factor = self._compute_length_factor(len(signals))
+        script_contrast = self._compute_script_contrast(signals)
+        total_scenes = len(signals)  # Fix 2: track total for position awareness
+        
+        patterns = []
+        
+        # 1. Repetition
+        rep = self._detect_repetition(signals, features, script_contrast, MIN_PERSISTENCE)
+        patterns.extend(rep)
+        
+        if rep:
+            # Fix 5: Scale escalation threshold to script length
+            escalated = self._apply_cumulative_escalation(rep, signals, length_factor, script_contrast, total_scenes)
+            patterns.extend(escalated)
+            
+        # Fix 2: Pass total_scenes for narrative position awareness
+        patterns.extend(self._detect_sustained_demand(signals, length_factor, script_contrast, MIN_PERSISTENCE, total_scenes))
+        patterns.extend(self._detect_limited_recovery(signals, script_contrast, MIN_PERSISTENCE))
+        patterns.extend(self._detect_constructive_strain(signals, script_contrast, MIN_PERSISTENCE))
+        patterns.extend(self._detect_degenerative_fatigue(signals, script_contrast, acd_states, MIN_PERSISTENCE))
+        
+        # Fix 1: Detect low engagement / boring patterns
+        patterns.extend(self._detect_low_engagement(signals, script_contrast, MIN_PERSISTENCE))
+        
+        return patterns
+
+    def _compute_script_contrast(self, signals):
+        vals = [s['attentional_signal'] for s in signals]
+        contrast = max(vals) - min(vals)
+        return {
+            'contrast_score': contrast,
+            'normalized_contrast': min(1.0, contrast / 2.0),
+            'is_low_contrast': contrast < 0.8,
+            'is_high_contrast': contrast > 2.0
+        }
+
+    def _detect_repetition(self, signals, features, contrast, min_scenes):
+        patterns = []
+        EFFORT_THRESH = 0.1
+        DIV_THRESH = 0.2
+        
+        for start in range(len(signals) - min_scenes + 1):
+            window = signals[start:start+min_scenes]
+            efforts = [s['instantaneous_effort'] for s in window]
+            mean_e = statistics.mean(efforts)
+            var_e = statistics.variance(efforts) if len(efforts) > 1 else 0.0
+            
+            diversity = 1.0
+            if features:
+                 w_feat = features[start:start+min_scenes]
+                 diversity = self._compute_feature_diversity(w_feat)
+            
+            if var_e < EFFORT_THRESH and diversity < DIV_THRESH:
+                rep_density = {
+                    'is_early': start == 0,
+                    'effort_variance': var_e,
+                    'diversity_score': diversity,
+                    'is_extreme': var_e < 0.05 and diversity < 0.1
+                }
+                conf = self._compute_confidence(window, 'repetition', contrast, rep_density, min_scenes)
+                patterns.append({
+                    'pattern_type': 'repetition',
+                    'scene_range': [start, start + min_scenes - 1],
+                    'confidence': conf,
+                    'supporting_signals': ['low_effort_variance', 'low_diversity']
+                })
+                break # Only report first
+        return patterns
+
+    def _compute_feature_diversity(self, window_features):
+        if len(window_features) < 2: return 0.0
+        # ... (Simplified reimplementation of feature diversity logic) ...
+        # For brevity, returning a placeholder calculation or fully implementing if critical.
+        # Fully implementing core logic:
+        try:
+             chars = [f['referential_load']['active_character_count'] for f in window_features]
+             char_var = sum(abs(chars[i]-chars[i+1]) for i in range(len(chars)-1)) / (len(window_features)*5.0)
+             
+             dials = [f['dialogue_dynamics']['turn_velocity'] for f in window_features]
+             dial_chg = sum(abs(dials[i]-dials[i+1]) for i in range(len(dials)-1)) / len(dials)
+             
+             bounds = [f['structural_change']['event_boundary_score'] for f in window_features]
+             bound_div = (max(bounds) - min(bounds)) / 100.0
+             
+             display = (0.3*char_var + 0.25*dial_chg + 0.25*bound_div)
+             return min(1.0, display)
+        except:
+             return 0.5 # Fallback
+
+    def _detect_sustained_demand(self, signals, len_factor, contrast, min_scenes, total_scenes=None):
+        patterns = []
+        THRESH = 0.6 * len_factor
+        in_pat = False
+        start = None
+        if total_scenes is None:
+            total_scenes = len(signals)
+        
+        for i, sig in enumerate(signals):
+            if sig['attentional_signal'] > THRESH:
+                if not in_pat: 
+                    start = i
+                    in_pat = True
+            else:
+                if in_pat:
+                    end = i - 1
+                    if end - start + 1 >= min_scenes:
+                        conf = self._compute_confidence(signals[start:end+1], 'sustained', contrast, None, min_scenes)
+                        # Fix 2: Downgrade confidence if pattern sits inside expected climax zone (65%-90% of script)
+                        position_ratio = start / max(1, total_scenes)
+                        in_climax_zone = 0.65 <= position_ratio <= 0.90
+                        if in_climax_zone and conf == 'high':
+                            conf = 'medium'
+                        patterns.append({
+                            'pattern_type': 'sustained_attentional_demand',
+                            'scene_range': [start, end],
+                            'confidence': conf,
+                            'supporting_signals': ['high_signal_persistence'],
+                            'in_climax_zone': in_climax_zone  # Fix 2: positional context flag
+                        })
+                    in_pat = False
+        if in_pat and len(signals) - start >= min_scenes:
+            conf = self._compute_confidence(signals[start:], 'sustained', contrast, None, min_scenes)
+            position_ratio = start / max(1, total_scenes)
+            in_climax_zone = 0.65 <= position_ratio <= 0.90
+            if in_climax_zone and conf == 'high':
+                conf = 'medium'
+            patterns.append({
+               'pattern_type': 'sustained_attentional_demand',
+               'scene_range': [start, len(signals)-1],
+               'confidence': conf,
+               'supporting_signals': ['high_signal_persistence'],
+               'in_climax_zone': in_climax_zone
+            })
+        return patterns
+
+    def _detect_limited_recovery(self, signals, contrast, min_scenes):
+        patterns = []
+        THRESH = 0.05
+        count = 0
+        start = None
+        for i, sig in enumerate(signals):
+            if sig['recovery_credit'] < THRESH:
+                if count == 0: start = i
+                count += 1
+            else:
+                if count >= min_scenes:
+                    conf = self._compute_confidence(signals[start:i], 'limited', contrast, None, min_scenes)
+                    patterns.append({
+                        'pattern_type': 'limited_recovery',
+                        'scene_range': [start, i-1],
+                        'confidence': conf
+                    })
+                count = 0
+        if count >= min_scenes:
+              patterns.append({'pattern_type': 'limited_recovery', 'scene_range': [start, len(signals)-1], 'confidence': 'high'})
+        return patterns
+
+    def _detect_constructive_strain(self, signals, contrast, min_scenes):
+        patterns = []
+        for start in range(len(signals) - min_scenes + 1):
+            window = signals[start:start+min_scenes]
+            avg_s = statistics.mean([s['attentional_signal'] for s in window])
+            avg_r = statistics.mean([s['recovery_credit'] for s in window])
+            if avg_s > 0.6 and avg_r > 0.2:
+                conf = self._compute_confidence(window, 'constructive', contrast, None, min_scenes)
+                patterns.append({
+                    'pattern_type': 'constructive_strain',
+                    'scene_range': [start, start+min_scenes-1],
+                    'confidence': conf
+                })
+                break
+        return patterns
+
+    def _detect_degenerative_fatigue(self, signals, contrast, acd_states, min_scenes):
+        patterns = []
+        for start in range(len(signals) - min_scenes + 1):
+            window = signals[start:start+min_scenes]
+            is_increasing = all(window[i+1]['attentional_signal'] >= window[i]['attentional_signal'] for i in range(len(window)-1))
+            if is_increasing:
+                avg_r = statistics.mean([s['recovery_credit'] for s in window])
+                if avg_r < 0.1:
+                    conf = self._compute_confidence(window, 'degenerative', contrast, None, min_scenes)
+                    if acd_states and len(acd_states) > start:
+                         w_acd = acd_states[start:start+min_scenes]
+                         avg_c = statistics.mean([a['collapse_likelihood'] for a in w_acd])
+                         if avg_c > 0.6 and conf == 'medium': conf = 'high'
+                    patterns.append({
+                        'pattern_type': 'degenerative_fatigue',
+                        'scene_range': [start, start+min_scenes-1],
+                        'confidence': conf
+                    })
+                    break
+        return patterns
+
+    def _apply_cumulative_escalation(self, patterns, signals, len_factor, contrast, total_scenes=None):
+        escalated = []
+        if total_scenes is None:
+            total_scenes = len(signals)
+        # Fix 5: Scale escalation threshold by script length (min 5% of script, min 6 scenes)
+        min_escalation = max(6, int(total_scenes * 0.05))
+        for p in patterns:
+            if p['pattern_type'] == 'repetition':
+                start, end = p['scene_range']
+                base_e = signals[start]['instantaneous_effort']
+                ext_end = end
+                for i in range(end+1, len(signals)):
+                    if abs(signals[i]['instantaneous_effort'] - base_e) < 0.2: ext_end = i
+                    elif i > end + 2: break
+                
+                dur = ext_end - start + 1
+                if dur >= min_escalation:
+                    escalated.append({
+                        'pattern_type': 'sustained_attentional_demand',
+                        'scene_range': [start, min(ext_end, len(signals)-1)],
+                        'confidence': 'medium' if dur < min_escalation * 1.5 else 'high',
+                        'supporting_signals': ['repetition_persistence']
+                    })
+        return escalated
+
+    def _compute_confidence(self, window, ctx, contrast, rep_density, min_scenes):
+        base = 0.7
+        if rep_density and rep_density['is_extreme']: base += 0.25
+        if contrast and contrast['is_low_contrast'] and not (rep_density and rep_density['is_extreme']): base -= 0.2
+        
+        vals = [s['attentional_signal'] for s in window]
+        var = statistics.variance(vals) if len(vals) > 1 else 0.0
+        if not rep_density:
+             if var > 0.2: base -= 0.3
+             elif var > 0.1: base -= 0.2
+             
+        if base >= 0.8: return 'high'
+        elif base >= 0.5: return 'medium'
+        return 'low'
+
+    # Fix 1: LOW ENGAGEMENT / BORING PATTERN DETECTION
+    def _detect_low_engagement(self, signals, contrast, min_scenes):
+        """
+        Detects sections where attentional signal stays persistently LOW.
+        A flatline-low script risks boredom, not just fatigue.
+        Requires 4+ consecutive scenes below 0.25 to fire.
+        """
+        patterns = []
+        LOW_THRESH = 0.25
+        MIN_LOW_SCENES = max(4, min_scenes + 1)  # Slightly stricter than high-load patterns
+        count = 0
+        start = None
+
+        for i, sig in enumerate(signals):
+            if sig['attentional_signal'] < LOW_THRESH:
+                if count == 0:
+                    start = i
+                count += 1
+            else:
+                if count >= MIN_LOW_SCENES:
+                    conf = self._compute_confidence(signals[start:i], 'low_engagement', contrast, None, MIN_LOW_SCENES)
+                    patterns.append({
+                        'pattern_type': 'low_engagement',
+                        'scene_range': [start, i - 1],
+                        'confidence': conf,
+                        'supporting_signals': ['low_signal_persistence']
+                    })
+                count = 0
+
+        # Check tail
+        if count >= MIN_LOW_SCENES:
+            conf = self._compute_confidence(signals[start:], 'low_engagement', contrast, None, MIN_LOW_SCENES)
+            patterns.append({
+                'pattern_type': 'low_engagement',
+                'scene_range': [start, len(signals) - 1],
+                'confidence': conf,
+                'supporting_signals': ['low_signal_persistence']
+            })
+
+        return patterns
