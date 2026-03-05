@@ -121,6 +121,7 @@ if script_input:
             st.session_state['last_report'] = report
             st.session_state['current_input'] = script_input
             st.session_state['current_genre'] = genre
+            st.session_state.pop('ai_summary_cache', None) # Clear previous AI notes
             bar.progress(100, text="Complete!")
             time.sleep(0.5)
             bar.empty()
