@@ -135,3 +135,20 @@ def get_status_icon_html(is_ok: bool) -> str:
     """Returns the themed HTML for a status icon (pass/fail)."""
     icon_class = "bi-check-circle-fill icon-pass" if is_ok else "bi-x-circle-fill icon-fail"
     return f"<i class='bi {icon_class}'></i>"
+
+def render_ai_consultant_box(insight_text: str):
+    """Renders a premium, distinctive box for AI-powered consultant insights."""
+    html = (
+        f'<div style="background: rgba(106, 72, 187, 0.05); border-radius: 12px; padding: 16px; '
+        f'border-left: 4px solid {Theme.ACCENT_PRIMARY}; margin-top: 15px; border-top: 1px solid rgba(106, 72, 187, 0.1);'
+        f'border-right: 1px solid rgba(106, 72, 187, 0.1); border-bottom: 1px solid rgba(106, 72, 187, 0.1);">'
+        f'<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">'
+        f'<span style="font-size: 1.2rem;">🧠</span>'
+        f'<span style="font-weight: 700; color: {Theme.ACCENT_PRIMARY}; font-size: 0.85rem; letter-spacing: 0.5px; text-transform: uppercase;">'
+        f'Consultant Insight</span>'
+        f'</div>'
+        f'<div style="color: {Theme.TEXT_PRIMARY}; font-size: 0.95rem; line-height: 1.5; font-style: italic;">'
+        f'"{insight_text}"</div>'
+        f'</div>'
+    )
+    st.markdown(html, unsafe_allow_html=True)

@@ -86,6 +86,11 @@ def render_writer_view(report, script_input, genre="Drama"):
             
     st.plotly_chart(fig_display, use_container_width=True, config={'displayModeBar': False}, key="writer_pulse_chart")
     
+    # Display AI Pulse Insight
+    pulse_insight = st.session_state.get('ai_pulse_insight')
+    if pulse_insight:
+        uikit.render_ai_consultant_box(pulse_insight)
+    
     # =========================================================================
     # SECTION 3: THE STYLE QUADRANT
     # =========================================================================
@@ -106,7 +111,13 @@ def render_writer_view(report, script_input, genre="Drama"):
     
     fig_q = charts.get_phase_space_chart(df_q)
     st.plotly_chart(fig_q, use_container_width=True, config={'displayModeBar': False}, key="writer_dna_chart")
-    st.markdown("<div style='text-align: center; color: #888; font-size: 13px;'><i>Action/Thrillers sit in the top-left. Dramas sit in the bottom-right.</i></div><br>", unsafe_allow_html=True)
+    st.markdown("<div style='text-align: center; color: #888; font-size: 13px;'><i>Action/Thrillers sit in the top-left. Dramas sit in the bottom-right.</i></div>", unsafe_allow_html=True)
+    
+    # Display AI DNA Insight
+    dna_insight = st.session_state.get('ai_dna_insight')
+    if dna_insight:
+        uikit.render_ai_consultant_box(dna_insight)
+    st.markdown("<br>", unsafe_allow_html=True)
     
     # =========================================================================
     # SECTION 4: THE EDITOR'S DESK (ACTION PLAN)
@@ -192,6 +203,11 @@ def render_writer_view(report, script_input, genre="Drama"):
             affective_label = "Positive / Hopeful" if avg_affective_compound > 0.1 else ("Dark / Suspenseful" if avg_affective_compound < -0.1 else "Neutral")
             st.markdown(f"**Dominant Tone:** {affective_label}")
             st.caption("The mathematical sentiment of your word choices. A **Dark** tone inherently creates unconscious stress for the reader.")
+
+    # Display AI Habits Insight
+    habits_insight = st.session_state.get('ai_habits_insight')
+    if habits_insight:
+        uikit.render_ai_consultant_box(habits_insight)
 
     # =========================================================================
     # SECTION 6: STUDIO MEMO (AI EDITOR)

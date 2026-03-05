@@ -122,6 +122,13 @@ if script_input:
             st.session_state['current_input'] = script_input
             st.session_state['current_genre'] = genre
             st.session_state.pop('ai_summary_cache', None) # Clear previous AI notes
+            
+            # Auto-generate Section Insights
+            from scriptpulse.reporters.llm_translator import generate_section_insight
+            st.session_state['ai_pulse_insight'] = generate_section_insight(report, 'pulse')
+            st.session_state['ai_dna_insight'] = generate_section_insight(report, 'dna')
+            st.session_state['ai_habits_insight'] = generate_section_insight(report, 'habits')
+            
             bar.progress(100, text="Complete!")
             time.sleep(0.5)
             bar.empty()
