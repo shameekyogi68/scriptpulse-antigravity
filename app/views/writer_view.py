@@ -130,14 +130,14 @@ def render_writer_view(report, script_input):
     
     features = report.get('perceptual_features', [])
     if features:
-        # Averages from mathematical extraction
+        # Averages from script analysis
         avg_ling = sum(f.get('linguistic_load', {}).get('sentence_length_variance', 0) for f in features) / len(features)
         avg_action = sum(f.get('visual_abstraction', {}).get('action_lines', 0) for f in features) / len(features)
         avg_velocity = sum(f.get('dialogue_dynamics', {}).get('turn_velocity', 0) for f in features) / len(features)
         avg_churn = sum(f.get('referential_load', {}).get('entity_churn', 0) for f in features) / len(features)
         avg_entropy = sum(f.get('entropy_score', 0) for f in features) / len(features)
         
-        # New Affective Load (VADER)
+        # Emotional Tone (VADER)
         avg_affective_compound = sum(f.get('affective_load', {}).get('compound', 0) for f in features) / len(features)
 
         with tabs[0]:
@@ -146,7 +146,7 @@ def render_writer_view(report, script_input):
             l1.metric("Avg Sentence Complexity", f"{avg_ling:.2f}")
             l2.caption("**Low number** = Your sentences are short, punchy, and easy to follow (like a thriller). **High number** = Your sentences are long and layered (like a literary drama). Neither is wrong — it depends on your genre.")
             with st.expander("🔬 For Researchers"):
-                st.caption("Correlates with **Working Memory Capacity limitations**. High variance increases sentence-parsing time in readers by requiring prolonged holding of sub-clauses in short-term memory before resolution.")
+                st.caption("This measures how much a reader's short-term memory is taxed by long, complex sentences. Longer sentences with multiple sub-clauses require the reader to 'hold' more information before they reach the point.")
             
         with tabs[1]:
             st.markdown(f'<p class="section-explainer">How much descriptive action ("He walks across the room. She slams the door.") fills each scene?</p>', unsafe_allow_html=True)
@@ -154,7 +154,7 @@ def render_writer_view(report, script_input):
             l1.metric("Avg Action Lines per Scene", f"{avg_action:.1f}")
             l2.caption("**Too high?** Your scenes may feel like novels — the reader has to imagine a lot. **Too low?** Your scenes may feel like talking heads with nothing happening visually. Aim for a balance that matches your story's energy.")
             with st.expander("🔬 For Researchers"):
-                st.caption("Measures **Spatial-Visual Simulation Tax**. Readers unconsciously simulate spatial environments (mental modeling). Dense action blocks require continuous updates to the mental diorama, generating higher neural recruitment than spoken dialogue.")
+                st.caption("Readers mentally picture what's happening on screen. Lots of action description makes the reader's brain work harder to 'see' the scene, which is more tiring than reading spoken dialogue.")
 
         with tabs[2]:
             st.markdown(f'<p class="section-explainer">How fast are your characters talking back and forth? Quick volleys feel intense. Long speeches feel slow.</p>', unsafe_allow_html=True)
@@ -162,7 +162,7 @@ def render_writer_view(report, script_input):
             l1.metric("Avg Dialogue Speed", f"{avg_velocity:.2f}")
             l2.caption("**High number** = Characters are firing lines at each other rapidly (arguments, comedy, tension). **Low number** = One character is speaking for a long time (exposition, monologues, contemplation). Mix both for great pacing.")
             with st.expander("🔬 For Researchers"):
-                st.caption("Modeled via **Conversation Analysis & Pragmatics**. High velocity mimics the physiological tempo of fight-or-flight scenarios, naturally elevating the reader's sympathetic nervous system response.")
+                st.caption("Quick dialogue exchanges naturally raise the reader's heartbeat and sense of urgency — it's the literary equivalent of a ticking clock. Slower, longer speeches let the reader breathe.")
 
         with tabs[3]:
             st.markdown(f'<p class="section-explainer">How many characters does the reader have to keep track of at any given time?</p>', unsafe_allow_html=True)
@@ -170,7 +170,7 @@ def render_writer_view(report, script_input):
             l1.metric("Avg Character Juggling", f"{avg_churn:.2f}")
             l2.caption("**High number** = You introduce many new characters quickly. Readers can comfortably track about 4-5 characters at a time. If this number is too high, consider simplifying crowd scenes or introducing characters more gradually.")
             with st.expander("🔬 For Researchers"):
-                st.caption("Quantifies the limit of **Dunbar's Number & Social Tracking**. Studies show human cognitive limits cap active social tracking around 4-5 dynamic agents at once; exceeding this forces the reader to continuously swap characters in and out of working memory.")
+                st.caption("Studies show people can comfortably track about 4-5 characters at once. Introducing too many characters in a short span forces the reader to keep 'swapping' who's who, which is mentally exhausting and can cause confusion.")
 
         with tabs[4]:
             st.markdown(f'<p class="section-explainer">Is your writing fresh and surprising, or does it rely on common, expected words?</p>', unsafe_allow_html=True)
@@ -178,16 +178,16 @@ def render_writer_view(report, script_input):
             l1.metric("Avg Word Choice Freshness", f"{avg_entropy:.2f}")
             l2.caption("**High number** = Your word choices are unique and surprising — the reader can't predict what's coming next (great for subtext and rich storytelling). **Low number** = Your vocabulary is repetitive or generic — consider varying your word choices to keep the reader engaged.")
             with st.expander("🔬 For Researchers"):
-                st.caption("Algorithm uses formal **Shannon Information Theory**. Measures linguistic non-predictability. Low-entropy predicts reader disengagement due to neural habituation; high-entropy sustains focus via continuous novel stimuli.")
+                st.caption("This measures how unpredictable your word choices are. Repetitive, predictable language makes the reader's brain 'tune out' because there's nothing new. Fresh, surprising vocabulary keeps the reader alert and curious.")
             
         with tabs[5]:
             st.markdown(f'<p class="section-explainer">Does your script feel emotionally positive, negative, or neutral overall?</p>', unsafe_allow_html=True)
             l1, l2 = st.columns(2)
             affective_label = "Positive / Uplifting" if avg_affective_compound > 0.1 else ("Dark / Tense" if avg_affective_compound < -0.1 else "Balanced / Neutral")
             l1.metric("Overall Emotional Tone", affective_label)
-            l2.caption(f"Your script's emotional tone reads as **{affective_label}** (Score: {avg_affective_compound:.3f}). A dark/tense tone keeps the reader on edge. A positive tone creates warmth and hope. Most great scripts shift between both across their runtime.")
-            with st.expander("🔬 Scientific Significance"):
-                st.caption("Calculates **Affective Load via Lexical Polarity**. Negative valence directly correlates with heightened amygdala activation, generating the sensation of 'suspense' or 'stress' without requiring literal spatial action.")
+            l2.caption(f"Your script's emotional tone reads as **{affective_label}**. A dark/tense tone keeps the reader on edge. A positive tone creates warmth and hope. Most great scripts shift between both across their runtime.")
+            with st.expander("🔬 For Researchers"):
+                st.caption("Negative emotional language (anger, fear, sadness) creates a physical stress response in readers — their brain treats fictional tension like real-world danger. This is what makes thrillers and horror 'work' without any actual action on screen.")
 
     else:
         st.info("Cognitive analysis not available.")
@@ -218,7 +218,7 @@ def render_writer_view(report, script_input):
                 summary, err = generate_ai_summary(report, api_key=api_key)
                 if summary: st.session_state['ai_summary_cache'] = summary
                 else: 
-                    st.warning(f"Error: {err}\n\nPlease rely on the highly detailed mathematical Cognitive Pillars and Diagnostic charts above, which are 100% accurate and unaffected by this AI status!")
+                    st.warning(f"Error: {err}\n\nDon't worry — the detailed analysis and charts above are 100% accurate and don't need AI to work!")
 
     if st.session_state.get('ai_summary_cache'):
         uikit.render_signal_box("Consultant Analysis", "", st.session_state['ai_summary_cache'], border_color=Theme.ACCENT_PRIMARY)

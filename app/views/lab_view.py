@@ -6,15 +6,15 @@ from app.components import uikit, charts
 
 def render_lab_view(report, script_input, selected_genre, selected_lens, ablation_config, SCIPY_AVAILABLE):
     """
-    Renders the advanced research/lab interface with full telemetry.
-    Designed for data scientists, producers, and advanced analysts.
+    Renders the advanced view with detailed breakdowns.
+    Provides deeper insight for producers and advanced writers.
     """
     # uikit.render_lab_pipeline_header() # Removed so it flows naturally
     uikit.render_section_header("🔬", "Under the Hood (Advanced View)", 
                                 "This section breaks down the individual forces driving your script's pacing — tension, effort, and recovery — so you can see exactly what's happening beneath the surface.")
     
     # =========================================================================
-    # 1. PRIMARY TELEMETRY (METRICS)
+    # 1. KEY NUMBERS
     # =========================================================================
     trace = report.get('temporal_trace', [])
     avg_attention = sum(p.get('attentional_signal', 0) for p in trace) / len(trace) if trace else 0
@@ -27,7 +27,7 @@ def render_lab_view(report, script_input, selected_genre, selected_lens, ablatio
     with c4: uikit.render_lab_metric("Total Scenes", f"{len(trace)}")
 
     # =========================================================================
-    # 2. XAI TRACE - MULTI-SIGNAL PULSE
+    # 2. THREE FORCES BREAKDOWN
     # =========================================================================
     uikit.render_lab_subheading("01", "THE THREE FORCES (Tension • Effort • Recovery)")
     st.caption("💡 This chart splits your main graph into its three ingredients: 🟥 **Tension** (conflict/stakes), 🟧 **Mental Effort** (how hard the reader works), and 🟩 **Recovery** (moments of calm). The purple area is the overall combination.")
@@ -44,7 +44,7 @@ def render_lab_view(report, script_input, selected_genre, selected_lens, ablatio
         st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
     # =========================================================================
-    # 3. KINEMATIC ACTION VS DIALOGUE DENSITY (Energy vs Entropy)
+    # 3. SCENE MAP
     # =========================================================================
     uikit.render_lab_subheading("02", "SCENE MAP: INTENSITY vs COMPLEXITY")
     st.caption("💡 Each dot is a scene in your script. This map shows if a scene is fast-paced (top) or slow (bottom), and if the language is dense/complex (right) or simple/minimal (left).")
@@ -54,9 +54,9 @@ def render_lab_view(report, script_input, selected_genre, selected_lens, ablatio
             'T_Index': i+1,
             'Energy_Signal': s.get('attentional_signal', 0.5),
             'Entropy_Complexity': report.get('semantic_flux', [0.5]*len(trace))[i],
-            'Quadrant': 'Q1' if s.get('attentional_signal', 0.5) > 0.5 and report.get('semantic_flux', [0.5]*len(trace))[i] > 0.5 else
-                        'Q2' if s.get('attentional_signal', 0.5) > 0.5 and report.get('semantic_flux', [0.5]*len(trace))[i] <= 0.5 else
-                        'Q3' if s.get('attentional_signal', 0.5) <= 0.5 and report.get('semantic_flux', [0.5]*len(trace))[i] <= 0.5 else 'Q4'
+            'Quadrant': '🔥 Climax' if s.get('attentional_signal', 0.5) > 0.5 and report.get('semantic_flux', [0.5]*len(trace))[i] > 0.5 else
+                        '⚡ Action' if s.get('attentional_signal', 0.5) > 0.5 and report.get('semantic_flux', [0.5]*len(trace))[i] <= 0.5 else
+                        '😌 Breather' if s.get('attentional_signal', 0.5) <= 0.5 and report.get('semantic_flux', [0.5]*len(trace))[i] <= 0.5 else '🔮 Mystery'
         } for i, s in enumerate(trace)])
         
         with col_ps1:
@@ -74,7 +74,7 @@ def render_lab_view(report, script_input, selected_genre, selected_lens, ablatio
             """, unsafe_allow_html=True)
 
     # =========================================================================
-    # 4. DEEP TELEMETRY (RADAR & HEATMAPS)
+    # 4. DEEP DIVES
     # =========================================================================
     uikit.render_lab_subheading("03", "DEEP DIVES")
     tabs = st.tabs(["🎭 Character Voices", "📊 Full Data", "📝 Writing Style Check"])

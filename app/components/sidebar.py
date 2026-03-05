@@ -7,19 +7,19 @@ def render_sidebar(ui_mode, is_cloud, stu):
     with st.sidebar:
         # Brand
         st.image("ScriptPulse_Icon.png", use_container_width=True)
-        uikit.render_sidebar_header("ScriptPulse", "SCREENPLAY INTELLIGENCE ENGINE")
+        uikit.render_sidebar_header("ScriptPulse", "YOUR SCREENPLAY ASSISTANT")
         
         st.markdown("---")
         
         # Interface Mode
-        st.markdown("### 🎭 Interface")
-        st.info("ScriptPulse is currently running in Unified Mode, providing actionable insights for screenwriters backed by deep structural telemetry.")
+        st.markdown("### 🎭 How It Works")
+        st.info("ScriptPulse reads your script like a first-time reader and gives you clear, actionable feedback on pacing, dialogue, and structure.")
 
         st.markdown("---")
         
         # Engine Mode — simplified language
-        st.markdown("### ⚡ Processing Speed")
-        st.success("Fast Analysis Engine Enabled. Deep AI heuristics are bypassed for maximum performance and determinism.")
+        st.markdown("### ⚡ Speed")
+        st.success("Fast mode is on. Your script will be analyzed in under a second.")
         
         st.markdown("---")
         

@@ -117,10 +117,10 @@ def get_phase_space_chart(df_q):
         df_q, x='Entropy_Complexity', y='Energy_Signal', 
         hover_data=['T_Index'], color='Quadrant',
         color_discrete_map={
-            'Q1': Theme.SEMANTIC_CRITICAL, 
-            'Q2': Theme.SEMANTIC_WARNING, 
-            'Q3': Theme.SEMANTIC_GOOD, 
-            'Q4': Theme.ACCENT_PRIMARY
+            '🔥 Climax': Theme.SEMANTIC_CRITICAL, 
+            '⚡ Action': Theme.SEMANTIC_WARNING, 
+            '😌 Breather': Theme.SEMANTIC_GOOD, 
+            '🔮 Mystery': Theme.ACCENT_PRIMARY
         },
         labels={'T_Index': 'Scene', 'Energy_Signal': 'How Intense?', 'Entropy_Complexity': 'How Complex?'}
     )
