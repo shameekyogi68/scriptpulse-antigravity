@@ -123,6 +123,26 @@ def run_pipeline(script_content, genre='drama', story_framework='3_act', **kwarg
         else:
             clean_diagnosis.append(str(d))
 
+    # Calculate Stakes Distribution (derived from semantics)
+    physical, emotional, social, moral, existential = 0, 0, 0, 0, 0
+    cut_candidates = []
+    
+    for i, (feat, trace) in enumerate(zip(perceptual_features, temporal_trace)):
+        comp = feat.get('affective_load', {}).get('compound', 0)
+        action = feat.get('visual_abstraction', {}).get('action_lines', 0)
+        tension = trace.get('attentional_signal', 0)
+        
+        if action > 8: physical += 1
+        elif comp > 0.5 or comp < -0.5: emotional += 1
+        elif tension > 0.6: moral += 1
+        else: social += 1
+        
+        # Detect Cut Candidates: High word count (entropy) but low tension
+        if feat.get('entropy_score', 0) > 4.5 and tension < 0.35:
+            cut_candidates.append(trace['scene_index'])
+
+    total_stakes = max(1, physical + emotional + social + moral + existential)
+
     report['writer_intelligence'] = {
         'structural_dashboard': {
             'runtime_estimate': runtime.estimate_runtime(segmented_scenes),
@@ -131,6 +151,16 @@ def run_pipeline(script_content, genre='drama', story_framework='3_act', **kwarg
                 'inciting_incident': {'scene': ii_scene},
                 'midpoint': {'scene': mid_scene},
                 'act2_break': {'scene': int(len(segmented_scenes) * 0.75)}
+            },
+            'stakes_distribution': {
+                'Physical': round(physical/total_stakes, 2),
+                'Emotional': round(emotional/total_stakes, 2),
+                'Social': round(social/total_stakes, 2),
+                'Moral': round(moral/total_stakes, 2),
+                'Existential': round(existential/total_stakes, 2)
+            },
+            'scene_economy_map': {
+                'cut_candidates': cut_candidates[:3] # Top 3 worst offenders
             }
         },
         'narrative_diagnosis': clean_diagnosis
