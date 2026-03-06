@@ -114,7 +114,7 @@ def render_writer_view(report, script_input, genre="Drama"):
     with c_dna1:
         fig_q = charts.get_phase_space_chart(df_q)
         st.plotly_chart(fig_q, use_container_width=True, config={'displayModeBar': False}, key="writer_dna_chart")
-        st.markdown("<div style='text-align: center; color: #888; font-size: 13px;'><i>Action/Thrillers sit in the top-left. Dramas sit in the bottom-right.</i></div>", unsafe_allow_html=True)
+        st.markdown("<div style='text-align: center; color: #888; font-size: 13px;'><i>Action/Thrillers usually sit in the top-left (fast). Dramas sit in the bottom-right (detailed).</i></div>", unsafe_allow_html=True)
 
     with c_dna2:
         stakes_data = dashboard.get('stakes_distribution', {})
@@ -185,16 +185,16 @@ def render_writer_view(report, script_input, genre="Drama"):
             
         provocations = writer_intel.get('creative_provocations', [])
         if provocations:
-            st.markdown("<br>##### 💡 Creative Provocations", unsafe_allow_html=True)
+            st.markdown("<br>##### 💡 Questions to Spark Your Rewrite", unsafe_allow_html=True)
             for p in provocations[:2]:
                 uikit.render_insight_card(f"💭 {p}")
                 
         econ_map = dashboard.get('scene_economy_map', {})
         cut_candidates = econ_map.get('cut_candidates', [])
         if cut_candidates:
-            st.markdown("<br>##### ✂️ Scene Economy", unsafe_allow_html=True)
+            st.markdown("<br>##### ✂️ Scenes to Trim", unsafe_allow_html=True)
             scenes_str = ", ".join(map(str, cut_candidates))
-            uikit.render_insight_card(f"**Trim Candidates:** Consider tightening **Scenes {scenes_str}**. High word count, low narrative movement.")
+            uikit.render_insight_card(f"**Trim Candidates:** Consider tightening **Scenes {scenes_str}**. They have a lot of words but don't move the story forward quickly.")
 
     # =========================================================================
     # SECTION 5: CRAFT HABITS
@@ -217,34 +217,34 @@ def render_writer_view(report, script_input, genre="Drama"):
 
         with tabs[0]:
             label = get_label(avg_ling, 20, 50, "Punchy & Direct", "Varied Flow", "Layered & Rich")
-            st.markdown(f"**Style:** {label} (Avg Score: {avg_ling:.1f})")
-            st.caption("Do your action lines read fast like a thriller, or are they poetic and layered like a novel?")
+            st.markdown(f"**Style:** {label}")
+            st.caption("Do your sentences read fast and punchy like a thriller, or are they poetic and descriptive like a novel?")
             
         with tabs[1]:
             label = get_label(avg_action, 5, 12, "Sparse", "Visual", "Novelistic")
-            st.markdown(f"**Action Density:** {label} (Avg {avg_action:.1f} lines/scene)")
-            st.caption("How much physical description exists per scene. **Novelistic** means you describe a lot; **Sparse** means you rely heavily on dialogue.")
+            st.markdown(f"**Action Density:** {label}")
+            st.caption("How much physical action you describe. 'Novelistic' means you describe the world in detail; 'Sparse' means scenes are mostly driven by dialogue.")
 
         with tabs[2]:
             label = get_label(avg_velocity, 0.4, 0.7, "Monologues", "Natural", "Rapid-Fire Exhanges")
             st.markdown(f"**Dialogue Rhythm:** {label}")
-            st.caption("How fast characters trade lines. **Rapid-Fire** raises the reader's heart rate. **Monologues** slow the pace down to focus on theme.")
+            st.caption("How fast characters trade lines. Rapid-Fire dialogue raises the reader's heart rate. Monologues slow the pace to focus on emotion or theme.")
 
         with tabs[3]:
             label = get_label(avg_churn, 2, 5, "Tight Cast", "Medium", "Large Ensemble")
             st.markdown(f"**Speaking Cast:** {label}")
-            st.caption("How many characters actively talk per scene. Readers can usually track 4-5 maximum before getting confused.")
+            st.caption("How many characters speak in each scene. A 'Tight Cast' keeps the focus intimate; a 'Large Ensemble' can feel epic but risks confusing the reader.")
             
         with tabs[4]:
             affective_label = "Positive / Hopeful" if avg_affective_compound > 0.1 else ("Dark / Suspenseful" if avg_affective_compound < -0.1 else "Neutral")
             st.markdown(f"**Dominant Tone:** {affective_label}")
-            st.caption("The mathematical sentiment of your word choices. A **Dark** tone inherently creates unconscious stress for the reader.")
+            st.caption("The overall emotional feel of your words. A 'Dark' tone naturally builds stress and suspense for the audience.")
             
         with tabs[5]:
             subtext = report.get('subtext_audit', [])
             if subtext:
                 st.markdown(f"**Literal Dialogue Detected**")
-                st.caption("Some dialogue may be too 'on-the-nose' where characters state their exact feelings.")
+                st.caption("Some scenes might have characters stating exactly how they feel, leaving no room for subtext.")
                 for s in subtext[:3]:
                     st.code(f"Scene {s.get('scene_index', '?')}: {s.get('issue', 'Dialogue feels literal.')}")
             else:
