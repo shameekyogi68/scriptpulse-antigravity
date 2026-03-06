@@ -32,16 +32,16 @@ def _get_api_config():
         "hf": get_token("HF_TOKEN") or get_token("HUGGINGFACE_API_KEY")
     }
 
-def generate_ai_summary(script_data, api_key=None):
+def generate_ai_summary(script_data, lens='viewer', api_key=None):
     """
-    Translates ScriptPulse data into professional coverage.
+    Translates ScriptPulse data into an emotional audience reaction.
     Rotates through providers to ensure high uptime and quality.
     """
     keys = _get_api_config()
     if api_key: keys["groq"] = api_key # Manual override usually for groq
     
     if not any(keys.values()):
-        return None, "All AI providers are offline. Please check your API Keys (GROQ, GEMINI, or HF)."
+        return None, "All AI providers are offline. Please check your API Keys."
         
     data_payload = {
         "pacing_issues": script_data.get("writer_intelligence", {}).get("narrative_diagnosis", []),
@@ -50,12 +50,15 @@ def generate_ai_summary(script_data, api_key=None):
     }
     
     system_prompt = (
-        "You are an expert Hollywood script consultant. Look past the numbers and focus on the story's soul. "
-        "Summarize the script's health in a professional memo based on the data provided. "
-        "CRITICAL RULES: NEVER give advice. NEVER suggest fixes. NEVER tell the writer what they 'need' to do. "
-        "Your only job is to act as a mirror, reflecting the script's current structural and emotional condition with brutal honesty and high-level professionalism."
+        f"You are a test {lens} experiencing this script for the first time. "
+        "Summarize how the script made you FEEL using the provided emotional data. "
+        "CRITICAL RULES: \n"
+        "1. NEVER act like an editor, consultant, or AI. You are a human audience member expressing your visceral reaction.\n"
+        "2. BAN these words: 'Structure, Midpoint, Climax, Pacing, Narrative, Tension Map, Act 2, Pacing'.\n"
+        "3. FORCE these words (or similar): 'Felt, gripping, exhausted, thrilled, confused, excited, dragged, flew by, breath'.\n"
+        "4. NEVER give advice or suggest fixes. Just give your brutal, honest emotional reaction to the journey."
     )
-    user_content = f"Data Analysis Packet: {json.dumps(data_payload)}"
+    user_content = f"Experience Data: {json.dumps(data_payload)}"
 
     # 1. Try GEMINI (Best for long-form reasoning and "Story Soul")
     if keys["gemini"] and GEMINI_AVAILABLE:
@@ -93,49 +96,46 @@ def generate_ai_summary(script_data, api_key=None):
             
     return None, "Ran out of AI API calls. Please try again in 60 seconds."
 
-def generate_section_insight(script_data, section_type, api_key=None):
+def generate_section_insight(script_data, section_type, lens='viewer', api_key=None):
     """
-    Generates a high-impact AI insight that bridges the gap between 'math' and 'story'.
+    Generates a high-impact visceral reaction that bridges the gap between 'math' and 'human feeling'.
     """
     keys = _get_api_config()
     if api_key: keys["groq"] = api_key
     
     if not any(keys.values()):
-        return "Connect an API key (Groq, Gemini, or HF) to unlock AI story coaching."
+        return "Connect an API key (Groq, Gemini, or HF) to hear audience reactions."
 
     if section_type == 'pulse':
         tp = script_data.get('writer_intelligence', {}).get('structural_dashboard', {}).get('structural_turning_points', {})
-        payload = {"turning_points": tp}
+        payload = {"peaks": tp}
         system_msg = (
-            "You are a master story analyzer sitting with the writer, looking at their 'Emotional Rollercoaster' graph. "
-            "Explain exactly WHY the graph looks this way based on what they have ALREADY written. "
-            "For example: 'You have a massive peak at scene 40 because your Midpoint climax has intense emotional stakes. "
-            "The flatline after it shows a long period of low tension.' "
-            "CRITICAL RULES: NEVER give advice. NEVER suggest how to fix it. NEVER tell the writer what they 'need' to do. "
-            "Only act as a mirror reflecting their current narrative choices. Max 2 simple, punchy sentences. No jargon."
+            f"You are a test {lens}. Look at the graph data. "
+            "Explain exactly how that specific part of the story made you FEEL. "
+            "For example: 'I found myself violently leaning forward around scene 40 because the stakes got so intense, "
+            "but then I was able to catch my breath for a long stretch.' "
+            "CRITICAL RULES: NEVER give advice. BAN structural jargon like 'Midpoint', 'Act', or 'Pacing'. "
+            "Only give a human, visceral reaction to the experience. Max 2 simple, punchy sentences."
         )
     elif section_type == 'dna':
-        payload = {"distribution": "The Speed vs Detail balance of the scenes."}
+        payload = {"distribution": "Speed vs Detail balance"}
         system_msg = (
-            "You are a cinematic analyzer looking at the 'Scene Pacing Map'. Explain WHY their script sits in its current quadrant. "
-            "For example: 'Your script is sitting heavily in the World-Building corner because your scenes favor rich descriptions over rapid action.' "
-            "CRITICAL RULES: NEVER give advice. NEVER tell them to 'try tightening' or 'pull it toward' another quadrant. "
-            "Only reflect the current 'vibe' of their script as a statement of fact. One punchy, evocative sentence."
+            f"You are a test {lens}. Look at the 'Speed vs Detail' vibe data. Explain the VIBE of the story you just experienced. "
+            "For example: 'The world felt so incredibly rich and detailed that I was lost in the descriptions, even if it meant slower action.' "
+            "CRITICAL RULES: NEVER give advice. BAN structural jargon. "
+            "Give a human, visceral reaction about the speed and depth of the world. One punchy sentence."
         )
     else: # habits
         perceptual = script_data.get('perceptual_features', [])[:10]
         payload = {"samples": perceptual}
         system_msg = (
-            "You are a vocal analyzer looking at the 'Writer's Voice' radar chart. Explain WHY the spikes look the way they do based on their text. "
-            "For example: 'The massive spike in Dialogue Rhythm means you write rapid-fire, Sorkin-style exchanges, "
-            "while your low Action Density shows scenes driven almost entirely by talking.' "
-            "CRITICAL RULES: NEVER give advice. NEVER say they are 'neglecting' something or should change their style."
-            "Make them understand the visual shape of their talent as it currently exists. One single sentence."
+            f"You are a test {lens} listening to the characters. Look at the 'Voice' data. Explain how the dialogue sounded to your ears. "
+            "For example: 'The conversations hit me like a machine gun, flying back and forth so fast I could barely breathe.' "
+            "CRITICAL RULES: NEVER give advice. BAN structural jargon. "
+            "Give a human, visceral reaction to how the characters speak. One single sentence."
         )
 
-    user_content = f"Narrative Telemetry: {json.dumps(payload)}\nConsultant Coaching:"
-
-    user_content = f"Narrative Telemetry: {json.dumps(payload)}\nConsultant Coaching:"
+    user_content = f"Raw Experience Math: {json.dumps(payload)}\nAudience Reaction:"
 
     # PURPOSE-BASED DISTRIBUTION (To avoid free-tier rate limits)
     # Gemini: 'pulse' (Story/Emotion) | Groq: 'dna' and 'habits' (Structure/Pattern)

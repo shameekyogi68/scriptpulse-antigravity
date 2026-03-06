@@ -145,22 +145,23 @@ def render_writer_view(report, script_input, genre="Drama"):
     if dna_insight: uikit.render_ai_consultant_box(dna_insight)
 
     # -------------------------------------------------------------------------
-    # SECTION 5: STUDIO COVERAGE MEMO
+    # SECTION 5: THE AUDIENCE REACTION MEMO
     st.markdown("<br>", unsafe_allow_html=True)
-    uikit.render_section_header(icon="📝", title="Studio Coverage Memo", explainer="A single-page, brutally honest summary of the script's architectural health.")
+    uikit.render_section_header(icon="📝", title="Audience Reaction Memo", explainer="A single-page, brutally honest summary of how the script feels to read or watch.")
     
     import os
     has_groq = st.secrets.get("GROQ_API_KEY") or os.environ.get("GROQ_API_KEY")
     has_gemin = st.secrets.get("GOOGLE_API_KEY") or st.secrets.get("GEMINI_API_KEY") or os.environ.get("GEMINI_API_KEY")
     has_hf = st.secrets.get("HF_TOKEN") or os.environ.get("HF_TOKEN")
 
-    if st.button("🪄 Generate Studio Coverage", type="primary", use_container_width=True):
+    if st.button("🪄 Generate Audience Reaction", type="primary", use_container_width=True):
         if not (has_groq or has_hf or has_gemin):
             st.error("⚠️ AI Consultant is offline (Missing API Keys).")
         else:
-            with st.spinner("🤖 Writing Studio Memo... (This takes 10-20 seconds)"):
+            with st.spinner("🤖 Experiencing the story... (This takes 10-20 seconds)"):
                 from scriptpulse.reporters.llm_translator import generate_ai_summary
-                summary, err = generate_ai_summary(report)
+                lens_persona = st.session_state.get('current_lens', 'viewer')
+                summary, err = generate_ai_summary(report, lens=lens_persona)
                 if summary: 
                     st.session_state['ai_summary_cache'] = summary
                     st.rerun()
