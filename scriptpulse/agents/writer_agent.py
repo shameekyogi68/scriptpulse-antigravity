@@ -1420,7 +1420,9 @@ class WriterAgent:
             'Horror': ["Hereditary", "Get Out", "A Quiet Place"],
             'Comedy': ["Booksmart", "The Hangover", "Superbad"],
             'Sci-Fi': ["Arrival", "Ex Machina", "Blade Runner 2049"],
-            'Avant-Garde': ["The Lighthouse", "Mulholland Drive", "Enter the Void"]
+            'Avant-Garde': ["The Lighthouse", "Mulholland Drive", "Enter the Void"],
+            'Fantasy': ["Pan's Labyrinth", "Lord of the Rings", "The Princess Bride"],
+            'Documentary': ["Flee", "Waltz with Bashir", "Apollo 11"]
         }
         return comps.get(genre, ["Professional Industry Standard"])
 

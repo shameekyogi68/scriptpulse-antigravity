@@ -133,7 +133,7 @@ def get_status_icon_html(is_ok: bool) -> str:
     icon_class = "bi-check-circle-fill icon-pass" if is_ok else "bi-x-circle-fill icon-fail"
     return f"<i class='bi {icon_class}'></i>"
 
-def render_ai_consultant_box(insight_text: str):
+def render_ai_consultant_box(insight_text: str, persona: str = "Script Consultant"):
     """Renders a premium, distinctive box for AI-powered consultant insights."""
     html = (
         f'<div style="background: rgba(106, 72, 187, 0.05); border-radius: 12px; padding: 16px; '
@@ -142,7 +142,7 @@ def render_ai_consultant_box(insight_text: str):
         f'<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">'
         f'<span style="font-size: 1.2rem;">🧠</span>'
         f'<span style="font-weight: 700; color: {Theme.ACCENT_PRIMARY}; font-size: 0.85rem; letter-spacing: 0.5px; text-transform: uppercase;">'
-        f'Consultant Insight</span>'
+        f'{persona} Insight</span>'
         f'</div>'
         f'<div style="color: {Theme.TEXT_PRIMARY}; font-size: 0.95rem; line-height: 1.5; font-style: italic;">'
         f'"{insight_text}"</div>'
