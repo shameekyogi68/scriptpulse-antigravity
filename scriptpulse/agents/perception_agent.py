@@ -76,7 +76,8 @@ class EncodingAgent:
                 'tell_vs_show': metadata['tell_vs_show'],
                 'is_exposition': metadata['purpose']['purpose'] == 'Exposition',
                 'scene_vocabulary': metadata['scene_vocabulary'],
-                'reader_frustration': self._extract_reader_frustration(scene_lines, referential['active_character_count'])
+                'reader_frustration': self._extract_reader_frustration(scene_lines, referential['active_character_count']),
+                'research_telemetry': metadata.get('research_telemetry', {})
             }
             feature_vectors.append(features)
             
