@@ -52,8 +52,33 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
     def render_score_card():
         icon = PERSONA_ICONS.get(lens, "🎬")
         tagline = PERSONA_TAGLINES.get(lens, "")
-        st.markdown(f"### {icon} {lens} Dashboard")
-        st.caption(tagline)
+        
+        # --- ScriptPulse Score (Hero Metric) ---
+        sp_score = dashboard.get('scriptpulse_score', 50)
+        if sp_score >= 70:
+            score_color = Theme.SEMANTIC_GOOD
+            score_label = "Strong Draft"
+        elif sp_score >= 45:
+            score_color = Theme.SEMANTIC_WARNING
+            score_label = "Needs Work"
+        else:
+            score_color = Theme.SEMANTIC_CRITICAL
+            score_label = "Major Revision"
+        
+        st.markdown(f"""
+        <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 10px;">
+            <div style="background: rgba({','.join(str(int(score_color.lstrip('#')[i:i+2], 16)) for i in (0,2,4))}, 0.1); 
+                        border: 2px solid {score_color}; border-radius: 16px; padding: 12px 24px; text-align: center; min-width: 120px;">
+                <div style="font-size: 2.2rem; font-weight: 800; color: {score_color}; font-family: 'Outfit', sans-serif;">{sp_score}</div>
+                <div style="font-size: 0.7rem; color: {Theme.TEXT_SECONDARY}; text-transform: uppercase; letter-spacing: 1px;">ScriptPulse Score</div>
+                <div style="font-size: 0.75rem; color: {score_color}; font-weight: 600; margin-top: 2px;">{score_label}</div>
+            </div>
+            <div>
+                <h3 style="margin: 0 !important; padding: 0 !important;">{icon} {lens} Dashboard</h3>
+                <p style="color: {Theme.TEXT_SECONDARY}; font-size: 0.88rem; margin: 4px 0 0 0;">{tagline}</p>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
         pacing = "Balanced"
         if avg_tension < 0.35: pacing = "Slow Burn 🐢"
@@ -97,6 +122,49 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
                       help="Is the script's structural midpoint healthy?")
             c4.metric("Scenes", total_scenes)
             c5.metric("Runtime", rt_label)
+
+        # --- Act Structure & Dialogue Ratio ---
+        act = dashboard.get('act_structure', {})
+        dar = dashboard.get('dialogue_action_ratio', {})
+        
+        if act or dar:
+            st.markdown("<br>", unsafe_allow_html=True)
+            ac1, ac2 = st.columns(2)
+            
+            with ac1:
+                if act and act.get('act1_pct', 0) > 0:
+                    st.markdown(f"""
+                    <div style="background: {Theme.BG_CARD}; border: 1px solid rgba(106,72,187,0.2); border-radius: 12px; padding: 16px;">
+                        <div style="font-weight: 600; margin-bottom: 10px; font-size: 0.9rem;">🎬 Act Structure</div>
+                        <div style="display: flex; gap: 4px; height: 24px; border-radius: 6px; overflow: hidden; margin-bottom: 8px;">
+                            <div style="width: {act['act1_pct']}%; background: {Theme.SEMANTIC_WARNING}; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 600; color: white;">I</div>
+                            <div style="width: {act['act2_pct']}%; background: {Theme.ACCENT_PRIMARY}; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 600; color: white;">II</div>
+                            <div style="width: {max(5, act['act3_pct'])}%; background: {Theme.SEMANTIC_GOOD}; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 600; color: white;">III</div>
+                        </div>
+                        <div style="font-size: 0.78rem; color: {Theme.TEXT_SECONDARY};">
+                            Act 1: {act['act1']} scenes ({act['act1_pct']}%) · Act 2: {act['act2']} scenes ({act['act2_pct']}%) · Act 3: {act['act3']} scenes ({act['act3_pct']}%)
+                        </div>
+                        <div style="font-size: 0.78rem; color: {Theme.TEXT_MUTED}; margin-top: 4px;">Balance: {act.get('balance', 'N/A')}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+            
+            with ac2:
+                if isinstance(dar, dict) and dar.get('global_dialogue_ratio') is not None:
+                    d_pct = round(dar.get('global_dialogue_ratio', 0.5) * 100)
+                    a_pct = 100 - d_pct
+                    st.markdown(f"""
+                    <div style="background: {Theme.BG_CARD}; border: 1px solid rgba(106,72,187,0.2); border-radius: 12px; padding: 16px;">
+                        <div style="font-weight: 600; margin-bottom: 10px; font-size: 0.9rem;">💬 Dialogue vs Action</div>
+                        <div style="display: flex; gap: 4px; height: 24px; border-radius: 6px; overflow: hidden; margin-bottom: 8px;">
+                            <div style="width: {d_pct}%; background: {Theme.SEMANTIC_INFO}; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 600; color: #1A1729;">💬 {d_pct}%</div>
+                            <div style="width: {a_pct}%; background: {Theme.ACCENT_WARM}; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 600; color: white;">🎬 {a_pct}%</div>
+                        </div>
+                        <div style="font-size: 0.78rem; color: {Theme.TEXT_SECONDARY};">
+                            Dialogue: {d_pct}% · Action/Description: {a_pct}%
+                        </div>
+                        <div style="font-size: 0.78rem; color: {Theme.TEXT_MUTED}; margin-top: 4px;">Ideal for {genre}: ~{dar.get('genre_benchmark', 50)}% dialogue</div>
+                    </div>
+                    """, unsafe_allow_html=True)
         
         # --- Narrative Summary ---
         if isinstance(summary, dict) and summary.get('summary'):

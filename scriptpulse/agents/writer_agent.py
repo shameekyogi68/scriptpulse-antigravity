@@ -81,6 +81,10 @@ class WriterAgent:
         dashboard['page_turner_index'] = self._calculate_page_turner_index(trace)
         dashboard['writing_texture'] = self._diagnose_writing_texture(trace)
         dashboard['commercial_comps'] = self._find_commercial_comps(genre)
+        dashboard['act_structure'] = self._build_act_structure(trace)
+        
+        # Composite ScriptPulse Score (0-100)
+        dashboard['scriptpulse_score'] = self._calculate_scriptpulse_score(dashboard, narrative_health)
         
         # Inject into output
         final_output['writer_intelligence'] = {
@@ -1465,3 +1469,78 @@ class WriterAgent:
             else:
                 assessments.append(f"👥 **Character Dynamic**: {risk}")
         return assessments[:2]
+
+    # =========================================================================
+    # SCRIPTPULSE SCORE & ACT STRUCTURE
+    # =========================================================================
+
+    def _build_act_structure(self, trace):
+        """Calculates act-by-act scene distribution following standard screenplay structure."""
+        n = len(trace)
+        if n == 0:
+            return {'act1': 0, 'act2': 0, 'act3': 0, 'act1_pct': 0, 'act2_pct': 0, 'act3_pct': 0, 'balance': 'Unknown'}
+        
+        # Standard screenplay structure: Act 1 = 25%, Act 2 = 50%, Act 3 = 25%
+        act1_end = max(1, n // 4)
+        act3_start = max(act1_end + 1, n - (n // 4))
+        
+        act1_count = act1_end
+        act2_count = act3_start - act1_end
+        act3_count = n - act3_start
+        
+        act1_pct = round(act1_count / n * 100)
+        act2_pct = round(act2_count / n * 100)
+        act3_pct = round(act3_count / n * 100)
+        
+        # Ideal: 25/50/25. Tolerance: ±10%
+        balance = "Balanced"
+        if act1_pct > 35:
+            balance = "Act 1 Heavy (slow setup)"
+        elif act3_pct > 35:
+            balance = "Act 3 Heavy (rushed setup)"
+        elif act2_pct > 65:
+            balance = "Sagging Middle"
+        elif act2_pct < 35:
+            balance = "Thin Middle"
+        
+        return {
+            'act1': act1_count, 'act2': act2_count, 'act3': act3_count,
+            'act1_pct': act1_pct, 'act2_pct': act2_pct, 'act3_pct': act3_pct,
+            'balance': balance
+        }
+
+    def _calculate_scriptpulse_score(self, dashboard, diagnostics):
+        """
+        Composite ScriptPulse Score (0-100).
+        Weighs: Page-Turner (30%), Market Readiness (20%), Low Risk (20%),
+                Pacing Balance (15%), Stakes Diversity (15%).
+        """
+        pti = dashboard.get('page_turner_index', 50)
+        mr = dashboard.get('market_readiness', 50)
+        risk = dashboard.get('production_risk_score', 50)
+        
+        # Pacing balance: penalize extreme values
+        act_struct = dashboard.get('act_structure', {})
+        balance_label = act_struct.get('balance', 'Unknown')
+        pacing_score = 80 if balance_label == 'Balanced' else 50
+        
+        # Stakes diversity bonus
+        stakes = dashboard.get('stakes_profile', {})
+        unique_stakes = len([v for v in stakes.values() if isinstance(v, (int, float)) and v > 0])
+        stakes_score = min(100, unique_stakes * 20)
+        
+        # Diagnostic health: fewer critical issues = higher score
+        critical_count = sum(1 for d in diagnostics if isinstance(d, str) and any(x in d for x in ['🔴', '🚫']))
+        warning_count = sum(1 for d in diagnostics if isinstance(d, str) and any(x in d for x in ['🟠', '🟡', '⬜']))
+        health_penalty = min(30, (critical_count * 8) + (warning_count * 3))
+        
+        raw = (
+            (pti * 0.30) +
+            (mr * 0.20) +
+            ((100 - risk) * 0.20) +
+            (pacing_score * 0.15) +
+            (stakes_score * 0.15)
+        )
+        
+        final = max(0, min(100, round(raw - health_penalty)))
+        return final
