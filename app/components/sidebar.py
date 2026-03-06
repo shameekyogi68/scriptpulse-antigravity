@@ -6,7 +6,7 @@ def render_sidebar(ui_mode, is_cloud, stu):
     from app.components import uikit
     with st.sidebar:
         # Brand
-        _, col_logo, _ = st.columns([1.5, 1, 1.5])
+        _, col_logo, _ = st.columns([0.8, 1.4, 0.8])
         with col_logo:
             st.image("ScriptPulse_Icon.png", use_container_width=True)
         
