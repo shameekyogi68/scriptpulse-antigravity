@@ -199,3 +199,41 @@ def get_voice_radar(top_chars):
         legend=dict(font=dict(size=11, color=Theme.TEXT_SECONDARY))
     )
     return fig
+@st.cache_resource
+def get_efficiency_frontier(df):
+    """Generates the Narrative Conflict vs Cognitive Effort scatter plot."""
+    # Ensure columns exist
+    y_col = 'attentional_signal' if 'attentional_signal' in df.columns else 'Composite_Attention'
+    x_col = 'referential_load' if 'referential_load' in df.columns else 'Load_Effort'
+    
+    if x_col not in df.columns or y_col not in df.columns:
+        # Fallback if names differ
+        x_col = df.columns[0]
+        y_col = df.columns[1]
+
+    fig = px.scatter(
+        df, x=x_col, y=y_col, 
+        hover_data=[df.index], 
+        labels={x_col: 'Cognitive Effort (Complexity)', y_col: 'Narrative Conflict (Tension)'},
+        title="Scene Efficiency Frontier"
+    )
+    
+    # Add quadrants
+    fig.add_hline(y=0.5, line_dash="dash", line_color="rgba(255,255,255,0.1)")
+    fig.add_vline(x=0.5, line_dash="dash", line_color="rgba(255,255,255,0.1)")
+    
+    fig.update_traces(marker=dict(size=10, color=Theme.ACCENT_PRIMARY, opacity=0.7, line=dict(width=1, color='white')))
+    
+    fig.update_layout(
+        height=400, margin=dict(l=40, r=20, t=40, b=40),
+        xaxis=dict(title="Cognitive Effort →", range=[0, 1], tickformat='.0%'),
+        yaxis=dict(title="Narrative Conflict →", range=[0, 1], tickformat='.0%'),
+    )
+    
+    # Annotate quadrants
+    fig.add_annotation(x=0.85, y=0.85, text="🔥 High Payoff", showarrow=False, font=dict(color=Theme.SEMANTIC_GOOD, size=10))
+    fig.add_annotation(x=0.15, y=0.15, text="💤 Filler", showarrow=False, font=dict(color=Theme.TEXT_MUTED, size=10))
+    fig.add_annotation(x=0.85, y=0.15, text="🧠 Dense / Heavy", showarrow=False, font=dict(color=Theme.SEMANTIC_WARNING, size=10))
+    fig.add_annotation(x=0.15, y=0.85, text="⚡ Efficient Action", showarrow=False, font=dict(color=Theme.ACCENT_TEAL, size=10))
+
+    return fig

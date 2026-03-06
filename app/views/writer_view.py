@@ -207,13 +207,15 @@ def render_writer_view(report, script_input, genre="Drama"):
     midpoint = dashboard.get('midpoint_status', 'N/A')
     comps = dashboard.get('commercial_comps', [])
 
-    p1, p2, p3 = st.columns(3)
+    p1, p2, p3, p4 = st.columns(4)
     p1.metric("Production Risk", f"{risk_score}/100",
               help="Higher = more expensive scenes relative to narrative payoff.")
     p2.metric("Budget Tier", budget_impact,
               help="Estimated production scale: Indie → Blockbuster.")
     p3.metric("Midpoint", midpoint,
               help="Is the script's midpoint structurally 'Healthy' or 'Sagging'?")
+    p4.metric("Market Readiness", f"{dashboard.get('market_readiness', 50)}/100",
+              help="Combined commercial viability score based on pacing and payoff.")
 
     # 6b. Marketplace Comps
     if comps:
@@ -296,7 +298,15 @@ def render_writer_view(report, script_input, genre="Drama"):
 
     with col_b:
         with st.expander("🧪 Research & Data Export", expanded=False):
-            # Research Telemetry
+            uikit.render_lab_pipeline_header()
+            
+            st.markdown("##### Narrative Efficiency Frontier")
+            df_res = pd.DataFrame(trace)
+            fig_eff = charts.get_efficiency_frontier(df_res)
+            st.plotly_chart(fig_eff, use_container_width=True, config={'displayModeBar': False}, key="res_eff_chart")
+
+            st.divider()
+            st.markdown("##### Research Telemetry")
             telemetry = [s.get('research_telemetry', {}) for s in trace]
             if telemetry:
                 avg_conf = sum(t.get('analytical_confidence', 0) for t in telemetry) / len(telemetry)

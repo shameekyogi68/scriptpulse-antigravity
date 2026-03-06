@@ -346,7 +346,8 @@ class WriterAgent:
             'act1_energy': round(act1_energy, 2),
             'total_scenes': len(trace),
             'production_risk_score': self._calculate_production_risks(trace),
-            'budget_impact': self._calculate_budget_impact(trace)
+            'budget_impact': self._calculate_budget_impact(trace),
+            'market_readiness': self._calculate_market_readiness(trace)
         }
 
     # =========================================================================
@@ -1442,6 +1443,15 @@ class WriterAgent:
         if score > 80: return "Blockbuster / High"
         if score > 40: return "Medium / Standard"
         return "Lean / Indie"
+
+    def _calculate_market_readiness(self, trace):
+        """A weighted score (0-100) representing the script's commercial viability."""
+        if not trace: return 50
+        payoff = sum(s.get('attentional_signal', 0) for s in trace) / len(trace)
+        pti = self._calculate_page_turner_index(trace) / 100
+        # High payoff + High page-turner = Market readiness
+        score = (payoff * 40) + (pti * 60)
+        return min(100, round(score))
 
     def _diagnose_representation_risks(self, fairness_audit):
         """Surfaces critical representation risks from the Ethics Agent."""
