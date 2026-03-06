@@ -120,9 +120,10 @@ render_section_header("⚙️", "Configure Analysis",
     "Select the genre so the engine knows what benchmarks to apply.")
 
 col1, col2 = st.columns(2)
-genre = col1.selectbox("Genre", ["Drama", "Action", "Thriller", "Horror", "Comedy", "Sci-Fi", "Romance", "Avant-Garde"])
-lens = col2.selectbox("Perspective", ["Studio Executive", "Story Editor", "Script Coordinator"],
-                      help="Choose the 'lens' through which the AI delivers its feedback.")
+genre = col1.selectbox("Genre", ["Drama", "Action", "Thriller", "Horror", "Comedy", "Sci-Fi", "Romance", "Fantasy", "Avant-Garde"],
+                      help="The engine adjusts its benchmarks to match the expectations of your genre.")
+lens = col2.selectbox("Perspective", ["Story Editor", "Studio Executive", "Script Coordinator"],
+                      help="🕵️ Story Editor = Plot & Logic | 🏢 Studio Executive = Market & Budget | ✍️ Script Coordinator = Craft & Flow")
 
 if script_input:
     st.markdown("<br/>", unsafe_allow_html=True)
@@ -142,8 +143,12 @@ if script_input:
             st.session_state['current_genre'] = genre
             st.session_state['current_lens'] = lens
             st.session_state.pop('ai_summary_cache', None)
+            # Clear all lens-specific caches so fresh analysis is generated
+            for k in list(st.session_state.keys()):
+                if k.startswith('ai_summary_') or k.startswith('ai_pulse_'):
+                    del st.session_state[k]
 
-            # Auto-generate AI pulse insight
+            # Auto-generate AI pulse insight for the selected lens
             try:
                 from scriptpulse.reporters.llm_translator import generate_section_insight
                 st.session_state['ai_pulse_insight'] = generate_section_insight(report, 'pulse', lens=lens)
