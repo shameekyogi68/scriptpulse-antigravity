@@ -106,28 +106,30 @@ def generate_section_insight(script_data, section_type, api_key=None):
         tp = script_data.get('writer_intelligence', {}).get('structural_dashboard', {}).get('structural_turning_points', {})
         payload = {"turning_points": tp}
         system_msg = (
-            "You are a master story editor sitting next to the writer, looking at their 'Emotional Rollercoaster' graph. "
-            "Explain exactly WHY the graph looks this way based on their story choices. "
-            "For example: 'You see that massive peak at scene 40? That's your Midpoint climax working perfectly. "
-            "But notice the flatline after? You need to let the audience breathe.' "
-            "Connect the visual shape (peaks, valleys, flatlines) to their Narrative Telemetry. Max 2 simple, punchy sentences. No jargon."
+            "You are a master story analyzer sitting with the writer, looking at their 'Emotional Rollercoaster' graph. "
+            "Explain exactly WHY the graph looks this way based on what they have ALREADY written. "
+            "For example: 'You have a massive peak at scene 40 because your Midpoint climax has intense emotional stakes. "
+            "The flatline after it shows a long period of low tension.' "
+            "CRITICAL RULES: NEVER give advice. NEVER suggest how to fix it. NEVER tell the writer what they 'need' to do. "
+            "Only act as a mirror reflecting their current narrative choices. Max 2 simple, punchy sentences. No jargon."
         )
     elif section_type == 'dna':
         payload = {"distribution": "The Speed vs Detail balance of the scenes."}
         system_msg = (
-            "You are a cinematic consultant looking at the 'Scene Pacing Map'. Explain WHY their script sits in its current quadrant. "
-            "For example: 'Your script is sitting heavily in the World-Building corner because of your rich descriptions. "
-            "To pull it toward the Fast-Paced Action zone, try tightening your scene lengths.' "
-            "Connect the visual dot on the map to their writing style. One punchy, evocative sentence."
+            "You are a cinematic analyzer looking at the 'Scene Pacing Map'. Explain WHY their script sits in its current quadrant. "
+            "For example: 'Your script is sitting heavily in the World-Building corner because your scenes favor rich descriptions over rapid action.' "
+            "CRITICAL RULES: NEVER give advice. NEVER tell them to 'try tightening' or 'pull it toward' another quadrant. "
+            "Only reflect the current 'vibe' of their script as a statement of fact. One punchy, evocative sentence."
         )
     else: # habits
         perceptual = script_data.get('perceptual_features', [])[:10]
         payload = {"samples": perceptual}
         system_msg = (
-            "You are a writing coach looking at the 'Writer's Voice' radar chart. Explain WHY the spikes look the way they do. "
+            "You are a vocal analyzer looking at the 'Writer's Voice' radar chart. Explain WHY the spikes look the way they do based on their text. "
             "For example: 'The massive spike in Dialogue Rhythm means you write rapid-fire, Sorkin-style exchanges, "
-            "but the low Action Density means you might be neglecting the visual world.' "
-            "Make them understand the visual shape of their talent. One sentence. Be honest but inspiring."
+            "while your low Action Density shows scenes driven almost entirely by talking.' "
+            "CRITICAL RULES: NEVER give advice. NEVER say they are 'neglecting' something or should change their style."
+            "Make them understand the visual shape of their talent as it currently exists. One single sentence."
         )
 
     user_content = f"Narrative Telemetry: {json.dumps(payload)}\nConsultant Coaching:"
