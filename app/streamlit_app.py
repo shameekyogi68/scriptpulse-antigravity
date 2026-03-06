@@ -168,7 +168,8 @@ current_genre = st.session_state.get('current_genre', 'Drama')
 
 if report and current_input:
     st.markdown("---")
-    render_writer_view(report, current_input, current_genre)
+    # Render unified dashboard: Writer insights first, followed by Producer telemetry
+    render_writer_view(report, current_input, current_genre, lens=st.session_state.get('current_lens', 'Story Editor'))
 
 # =============================================================================
 # STEP 4: EXPORT
