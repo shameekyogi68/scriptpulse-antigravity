@@ -126,8 +126,7 @@ if script_input:
             # Auto-generate Section Insights using the selected lens persona
             from scriptpulse.reporters.llm_translator import generate_section_insight
             st.session_state['ai_pulse_insight'] = generate_section_insight(report, 'pulse', lens=lens)
-            st.session_state['ai_dna_insight'] = generate_section_insight(report, 'dna', lens=lens)
-            st.session_state['ai_habits_insight'] = generate_section_insight(report, 'habits', lens=lens)
+            
             
             bar.progress(100, text="Complete!")
             time.sleep(0.5)

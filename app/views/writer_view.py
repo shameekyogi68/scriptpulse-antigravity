@@ -85,22 +85,22 @@ def render_writer_view(report, script_input, genre="Drama"):
     if pulse_insight: uikit.render_ai_consultant_box(pulse_insight)
 
     # -------------------------------------------------------------------------
-    # SECTION 3: YOUR UNIQUE VOICE (Radar Chart)
+    # SECTION 3: TRUE COGNITIVE FEEDBACK
     st.markdown("<br>", unsafe_allow_html=True)
-    uikit.render_section_header(icon="🛠️", title="Character Voice Fingerprints", 
-        explainer="Are your characters distinct? This radar shows how your main characters 'sound' differently based on their rhythm and dialogue style.")
+    uikit.render_section_header(icon="🧠", title="Audience Cognitive Feedback", 
+        explainer="Direct, text-grounded reactions from a simulated First Reader. Warnings about fatigue, confusion, or empty scenes.")
     
-    voice_data = report.get('voice_fingerprints', {})
-    if voice_data:
-        top_chars = sorted([(k, v) for k, v in voice_data.items() if isinstance(v, dict)], 
-                           key=lambda x: x[1].get('line_count', 0), reverse=True)[:3]
-        fig_r = charts.get_voice_radar(top_chars)
-        st.plotly_chart(fig_r, use_container_width=True, config={'displayModeBar': False}, key="writer_voice_radar_chart")
+    diagnoses = report.get('writer_intelligence', {}).get('narrative_diagnosis', [])
+    if diagnoses:
+        for diag in diagnoses:
+            if diag.get('type') == 'Warning':
+                st.warning(f"**{diag.get('issue')}**: {diag.get('advice')}")
+            elif diag.get('type') == 'Critical':
+                st.error(f"**{diag.get('issue')}**: {diag.get('advice')}")
+            else:
+                st.info(f"**{diag.get('issue')}**: {diag.get('advice')}")
     else:
-        st.info("Not enough dialogue detected to map distinct character voices.")
-        
-    habits_insight = st.session_state.get('ai_habits_insight')
-    if habits_insight: uikit.render_ai_consultant_box(habits_insight)
+        st.success("The audience remained completely engaged. No cognitive stress detected.")
 
     # =========================================================================
     # PHASE 2: THE PRODUCER's DESK (Focus: Mechanics & Viability)
@@ -109,40 +109,25 @@ def render_writer_view(report, script_input, genre="Drama"):
     st.markdown("### 🏢 The Producer's Desk")
     
     # -------------------------------------------------------------------------
-    # SECTION 4: SCENE PACING MAP (DNA)
-    uikit.render_section_header(icon="🧬", title="Scene Pacing Map (Speed vs. Detail)", 
-        explainer="The structural 'vibe' of the movie. Action/Thrillers cluster top-left (fast); Dramas cluster bottom-right (detailed).")
+    # SECTION 4: DOMINANT STAKES
+    uikit.render_section_header(icon="⚖️", title="Dominant Story Stakes", 
+        explainer="What are the characters actually fighting for? A true measure of plot weight based on scene-by-scene semantics.")
     
-    df_q = pd.DataFrame([{
-        'T_Index': i+1,
-        'Pacing_Speed': s.get('attentional_signal', 0.5),
-        'Story_Detail': report.get('semantic_flux', [0.5]*len(trace))[i]
-    } for i, s in enumerate(trace)])
-    
-    c_dna1, c_dna2 = st.columns([3, 2])
-    with c_dna1:
-        fig_q = charts.get_phase_space_chart(df_q)
-        st.plotly_chart(fig_q, use_container_width=True, config={'displayModeBar': False}, key="prod_dna_chart")
-
-    with c_dna2:
-        stakes_data = dashboard.get('stakes_distribution', {})
-        if stakes_data:
-            st.markdown("<h5 style='text-align: center; margin-top: 10px;'>Dominant Stakes</h5>", unsafe_allow_html=True)
-            st.markdown("<div style='text-align: center; color: #888; font-size: 13px;'>Are they fighting for physical survival, emotional peace, or status?</div>", unsafe_allow_html=True)
-            stakes = {k: v for k, v in stakes_data.items() if v > 0 and k != 'None'}
-            if stakes:
-                labels = list(stakes.keys())
-                values = list(stakes.values())
-                fig_stakes = charts.get_stakes_chart(labels, values, {
-                    'Physical': Theme.SEMANTIC_CRITICAL, 'Emotional': Theme.SEMANTIC_WARNING,
-                    'Social': Theme.SEMANTIC_GOOD, 'Moral': Theme.ACCENT_PRIMARY, 'Existential': Theme.ACCENT_PURPLE
-                })
-                st.plotly_chart(fig_stakes, use_container_width=True, config={'displayModeBar': False}, key="prod_stakes_chart")
-            else:
-                st.info("No dominant stakes detected.")
-
-    dna_insight = st.session_state.get('ai_dna_insight')
-    if dna_insight: uikit.render_ai_consultant_box(dna_insight)
+    stakes_data = dashboard.get('stakes_distribution', {})
+    if stakes_data:
+        stakes = {k: v for k, v in stakes_data.items() if v > 0 and k != 'None'}
+        if stakes:
+            labels = list(stakes.keys())
+            values = list(stakes.values())
+            fig_stakes = charts.get_stakes_chart(labels, values, {
+                'Physical': Theme.SEMANTIC_CRITICAL, 'Emotional': Theme.SEMANTIC_WARNING,
+                'Social': Theme.SEMANTIC_GOOD, 'Moral': Theme.ACCENT_PRIMARY, 'Existential': Theme.ACCENT_PURPLE
+            })
+            st.plotly_chart(fig_stakes, use_container_width=True, config={'displayModeBar': False}, key="prod_stakes_chart")
+        else:
+            st.info("No dominant stakes detected.")
+    else:
+        st.info("No dominant stakes detected.")
 
     # -------------------------------------------------------------------------
     # SECTION 5: THE AUDIENCE REACTION MEMO
