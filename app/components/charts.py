@@ -119,7 +119,7 @@ def get_lab_trace_chart(df):
 def get_phase_space_chart(df_q):
     """Generates the energy/entropy scatter plot — writer friendly."""
     fig = px.scatter(
-        df_q, x='Entropy_Complexity', y='Energy_Signal', 
+        df_q, x='Story_Detail', y='Pacing_Speed', 
         hover_data=['T_Index'], color='Quadrant',
         color_discrete_map={
             '🔥 Climax / Major Setpiece': Theme.SEMANTIC_CRITICAL, 
@@ -127,7 +127,7 @@ def get_phase_space_chart(df_q):
             '😌 Breather / Quiet Moment': Theme.SEMANTIC_GOOD, 
             '🕵️ World-Building / Detail': Theme.ACCENT_PRIMARY
         },
-        labels={'T_Index': 'Scene', 'Energy_Signal': 'Action / Speed', 'Entropy_Complexity': 'Information / Detail'}
+        labels={'T_Index': 'Scene', 'Pacing_Speed': 'Action / Speed', 'Story_Detail': 'Information / Detail'}
     )
     
     fig.add_hline(y=0.5, line_dash="dash", line_color="rgba(255,255,255,0.2)")

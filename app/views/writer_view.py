@@ -115,8 +115,8 @@ def render_writer_view(report, script_input, genre="Drama"):
     
     df_q = pd.DataFrame([{
         'T_Index': i+1,
-        'Energy_Signal': s.get('attentional_signal', 0.5),
-        'Entropy_Complexity': report.get('semantic_flux', [0.5]*len(trace))[i]
+        'Pacing_Speed': s.get('attentional_signal', 0.5),
+        'Story_Detail': report.get('semantic_flux', [0.5]*len(trace))[i]
     } for i, s in enumerate(trace)])
     
     c_dna1, c_dna2 = st.columns([3, 2])

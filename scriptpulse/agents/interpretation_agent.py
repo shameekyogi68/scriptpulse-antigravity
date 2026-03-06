@@ -1,43 +1,41 @@
 """
-Interpretation Agent - Simplified & MCA-Defensible Version
-Translates raw mathematical signals into human-readable feedback.
-Focuses on: Act Detection, Story Beats, and Strategic Advice.
+Interpretation Agent - Text-Grounded Cognitive Version
+Translates mathematical signals into true human "First Reader" experiences.
+Focuses on: Confusion, Boredom, Visceral Reaction, and Textual Proof.
 """
 
 import statistics
+import random
 
 class InterpretationAgent:
-    """Translation Layer - From Data to Story Insight"""
+    """Cognitive Translation Layer - From Data to Human Experience"""
 
     def __init__(self):
-        # Creative Beat Labels for UI
+        # Human Experience Labels for UI
         self.LABELS = {
-            'High': "High Intensity / Conflict",
-            'Medium': "Balanced Narrative Flow",
-            'Low': "Quiet / Transitional Moment"
+            'High': "Gripping / Intense",
+            'Medium': "Engaging / Steady",
+            'Low': "Slow / Breather"
         }
 
-    def run(self, temporal_trace):
-        """Main entry point for interpretation"""
+    def run(self, temporal_trace, features=None, scenes=None):
+        """Main entry point for cognitive interpretation"""
         if not temporal_trace: return {}
         
-        # 1. Structure Analysis
-        structure = self.map_to_structure(temporal_trace)
+        # 1. Structure Analysis (Text-Grounded)
+        structure = self.map_to_structure(temporal_trace, features)
         
-        # 2. Pattern Diagnosis
-        diagnosis = self.diagnose_patterns(temporal_trace, None) # Fallback if no features
-        
-        # 3. Strategic Advice
-        suggestions = self.generate_suggestions(temporal_trace)
+        # 2. Cognitive Heuristics Diagnosis
+        diagnosis = self.diagnose_patterns(temporal_trace, features, scenes)
         
         return {
             'structure': structure,
             'diagnosis': diagnosis,
-            'suggestions': suggestions
+            'suggestions': [] # Deprecated: We don't give advice to writers anymore.
         }
 
-    def map_to_structure(self, temporal_trace):
-        """Identifies Act boundaries using the 1/4 - 1/2 - 1/4 heuristic."""
+    def map_to_structure(self, temporal_trace, features=None):
+        """Identifies True Narrative Shifts based on intense emotional flux, not just math percentages."""
         total = len(temporal_trace)
         if total < 5: return {'acts': [], 'beats': []}
         
@@ -52,21 +50,34 @@ class InterpretationAgent:
             {'name': 'Act 3: Resolution', 'range': [a2_end + 1, total - 1]}
         ]
         
-        # Find local peaks for Beats
-        signals = [s['attentional_signal'] for s in temporal_trace]
+        beats = []
         
-        try:
-            ii_idx = signals.index(max(signals[:a1_end+1]))
-        except ValueError: ii_idx = 0
-            
-        try:
-            mid_idx = a1_end + signals[a1_end:a2_end].index(max(signals[a1_end:a2_end]))
-        except ValueError: mid_idx = int(total/2)
-            
-        try:
-            climax_idx = a2_end + signals[a2_end:].index(max(signals[a2_end:]))
-        except ValueError: climax_idx = total - 1
-            
+        # Find True Inciting Incident: The earliest spike in pure emotional tension
+        ii_idx = 0
+        for i, t in enumerate(temporal_trace[:a1_end+1]):
+            if t['attentional_signal'] > 0.6:
+                ii_idx = i
+                break
+        
+        # Find True Midpoint: The absolute peak of tension AND entropy (A major complication)
+        mid_idx = a1_end
+        highest_combo = 0
+        if features and len(features) == len(temporal_trace):
+            for i in range(a1_end, a2_end):
+                combo = temporal_trace[i]['attentional_signal'] + (features[i].get('entropy_score', 0) / 10)
+                if combo > highest_combo:
+                    highest_combo = combo
+                    mid_idx = i
+        else:
+            mid_idx = int(total/2) # Fallback
+
+        climax_idx = total - 1
+        highest_tension = 0
+        for i in range(a2_end, total):
+            if temporal_trace[i]['attentional_signal'] > highest_tension:
+                highest_tension = temporal_trace[i]['attentional_signal']
+                climax_idx = i
+        
         beats = [
             {'name': 'Inciting Incident', 'scene_index': ii_idx},
             {'name': 'Midpoint', 'scene_index': mid_idx},
@@ -75,84 +86,100 @@ class InterpretationAgent:
         
         return {'acts': acts, 'beats': beats}
 
-    def diagnose_patterns(self, temporal_trace, features=None):
-        """Identifies diagnostic flags, including semantic emotional climaxes."""
+    def _get_snippet(self, scene_dict):
+        """Extracts a short text snippet from a scene to prove the AI read it."""
+        try:
+            lines = scene_dict.get('lines', [])
+            dialogue = [l['text'] for l in lines if l.get('type') == 'dialogue' and len(l['text']) > 10]
+            action = [l['text'] for l in lines if l.get('type') == 'action' and len(l['text']) > 10]
+            
+            if dialogue: 
+                snip = dialogue[len(dialogue)//2]
+                return f'"{snip[:60]}..."'
+            if action:
+                snip = action[len(action)//2]
+                return f'"{snip[:60]}..."'
+            return ""
+        except:
+            return ""
+
+    def diagnose_patterns(self, temporal_trace, features=None, scenes=None):
+        """Identifies Cognitive Experiences: Boredom, Confusion, Visceral Reaction."""
         diagnosis = []
         signals = [s['attentional_signal'] for s in temporal_trace]
-        if not signals: return diagnosis
-        
-        # 1. Start check
-        if signals[0] < 0.3:
-            diagnosis.append({'type': 'Warning', 'issue': 'Slow Opening', 'advice': 'Consider a stronger hook in Scene 1.'})
+        if not signals or not features or not scenes or len(features) != len(temporal_trace) or len(scenes) != len(temporal_trace): 
+            return diagnosis
             
-        # 2. Middle check
-        mid_slice = signals[int(len(signals)*0.4):int(len(signals)*0.6)]
-        if mid_slice:
-            mid_avg = statistics.mean(mid_slice)
-            if mid_avg < 0.4:
-                diagnosis.append({'type': 'Critical', 'issue': 'Sagging Middle', 'advice': 'Raise the stakes at the midpoint to keep the reader engaged.'})
+        # 1. Cognitive Confusion (High entity churn + Low sentiment)
+        for i in range(len(temporal_trace)):
+            feat = features[i]
+            att_sig = temporal_trace[i]['attentional_signal']
+            churn = feat.get('referential_load', {}).get('entity_churn', 0)
             
-        # 3. Fatigue check
-        high_runs = 0
-        for s in signals:
-            if s > 0.7: high_runs += 1
-            else: high_runs = 0
-            if high_runs >= 4:
-                diagnosis.append({'type': 'Warning', 'issue': 'Reader Fatigue', 'advice': 'Too many high-intensity scenes in a row. Needs a breather.'})
+            if churn >= 3.0 and att_sig < 0.5:
+                snippet = self._get_snippet(scenes[i])
+                diagnosis.append({
+                    'type': 'Warning', 
+                    'issue': f'Reader Confusion (Scene {i+1})', 
+                    'advice': f'Too many details introduced at once without enough clear tension. The reader feels lost. e.g. {snippet}'
+                })
+                break # Just find one to avoid spam
+
+        # 2. Visceral Thrill (High Action and High Tension)
+        for i in range(len(temporal_trace)):
+            feat = features[i]
+            att_sig = temporal_trace[i]['attentional_signal']
+            action = feat.get('visual_abstraction', {}).get('action_lines', 0)
+            
+            if action > 6 and att_sig > 0.8:
+                snippet = self._get_snippet(scenes[i])
+                diagnosis.append({
+                    'type': 'Critical', # Highlight it
+                    'issue': f'Visceral Thrill (Scene {i+1})', 
+                    'advice': f'High physical action combined with massive tension creates a breathless read here. e.g. {snippet}'
+                })
                 break
                 
-        # 4. Semantic Emotional Climax Detection (The 10/10 Writer Feature)
-        if features and len(features) == len(temporal_trace):
-            for i, (trace, feat) in enumerate(zip(temporal_trace, features)):
-                att_sig = trace['attentional_signal']
-                sentiment = feat.get('affective_load', {}).get('compound', 0)
-                entropy = feat.get('entropy_score', 0)
+        # 3. Reader Fatigue Check
+        high_runs = 0
+        for i, s in enumerate(signals):
+            if s > 0.65: high_runs += 1
+            else: high_runs = 0
+            
+            if high_runs >= 3:
+                snippet = self._get_snippet(scenes[i])
+                diagnosis.append({
+                    'type': 'Warning', 
+                    'issue': 'Reader Fatigue', 
+                    'advice': f'3 straight scenes of high-tension is exhausting. The impact of lines like {snippet} is lost because the brain needs a breather.'
+                })
+                break
                 
-                # Rule: If mathematical tempo is LOW (like a breather) 
-                # BUT Emotional valence is extreme AND entropy is high -> It's a Subtextual Plot Climax.
-                if att_sig < 0.4 and (sentiment > 0.6 or sentiment < -0.6) and entropy > 4.0:
-                    diagnosis.append({
-                        'type': 'Insight', 
-                        'issue': f'Emotional Focal Point (Scene {i+1})', 
-                        'advice': f'Pacing is slow mathematically, but VADER detects extreme emotional subtext (Polarity: {sentiment}). This is functioning as a crucial theme/character focal point, NOT just a breather.'
-                    })
-                    break # Just find the biggest one to avoid spamming the UI
-                
+        # 4. Empty Calories (Boredom)
+        for i in range(len(temporal_trace)):
+            feat = features[i]
+            att_sig = temporal_trace[i]['attentional_signal']
+            entropy = feat.get('entropy_score', 0)
+            
+            # High word count (entropy) but low pulse
+            if entropy > 3.0 and att_sig < 0.4:
+                snippet = self._get_snippet(scenes[i])
+                diagnosis.append({
+                    'type': 'Insight', 
+                    'issue': f'Empty Calories (Scene {i+1})', 
+                    'advice': f'The scene is dense with information but the narrative pulse is flat. The mind wanders reading lines like {snippet}'
+                })
+                break
+
         return diagnosis
 
     def generate_suggestions(self, temporal_trace):
-        """Generic repair strategies based on script profile."""
-        if not temporal_trace: return []
-        
-        avg_s = statistics.mean([s['attentional_signal'] for s in temporal_trace])
-        
-        if avg_s > 0.6:
-            return {
-                'structural_repair_strategies': [
-                    {'issue': 'High Cognitive Load', 'advice': 'Simplify complex subplots.'},
-                    {'issue': 'Pacing', 'advice': 'Add quiet character moments between action beats.'}
-                ]
-            }
-        elif avg_s < 0.3:
-            return {
-                'structural_repair_strategies': [
-                    {'issue': 'Low Tension', 'advice': 'Increase the turn velocity of your dialogue.'},
-                    {'issue': 'Pacing', 'advice': 'Introduce a major complication earlier.'}
-                ]
-            }
-        else:
-            return {
-                'structural_repair_strategies': [
-                    {'issue': 'Maintenance', 'advice': 'Maintain the current structural balance.'}
-                ]
-            }
+        return []
 
     def generate_scene_notes(self, input_data):
-        """Placeholder for scene-specific notes component."""
         return {}
 
     def apply_semantic_labels(self, temporal_trace, valence_trace=None):
-        """Used by charts to label points on the graph."""
         labels = []
         for pt in temporal_trace:
             s = pt['attentional_signal']
