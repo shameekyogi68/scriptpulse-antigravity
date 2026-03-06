@@ -9,6 +9,12 @@ try:
 except ImportError:
     GROQ_AVAILABLE = False
 
+try:
+    import google.generativeai as genai
+    GEMINI_AVAILABLE = True
+except ImportError:
+    GEMINI_AVAILABLE = False
+
 _log = logging.getLogger(__name__)
 
 def get_token(key, fallback=None):
@@ -18,112 +24,146 @@ def get_token(key, fallback=None):
     except: pass
     return os.environ.get(key, fallback)
 
+def _get_api_config():
+    """Returns a unified dict of available keys."""
+    return {
+        "groq": get_token("GROQ_API_KEY"),
+        "gemini": get_token("GOOGLE_API_KEY") or get_token("GEMINI_API_KEY"),
+        "hf": get_token("HF_TOKEN") or get_token("HUGGINGFACE_API_KEY")
+    }
+
 def generate_ai_summary(script_data, api_key=None):
     """
     Translates ScriptPulse data into professional coverage.
-    Prioritizes Groq (Extreme Speed + High Free Limits) 
-    Falls back to Hugging Face (Kimi-K2-Instruct).
+    Rotates through providers to ensure high uptime and quality.
     """
-    groq_key = api_key or get_token("GROQ_API_KEY")
-    hf_key = get_token("HF_TOKEN") or get_token("HUGGINGFACE_API_KEY")
+    keys = _get_api_config()
+    if api_key: keys["groq"] = api_key # Manual override usually for groq
     
-    if not groq_key and not hf_key:
-        return None, "Missing API Keys. Please provide GROQ_API_KEY or HF_TOKEN in secrets."
+    if not any(keys.values()):
+        return None, "All AI providers are offline. Please check your API Keys (GROQ, GEMINI, or HF)."
         
-    try:
-        data_payload = {
-            "pacing_issues": script_data.get("writer_intelligence", {}).get("narrative_diagnosis", []),
-            "priorities": script_data.get("writer_intelligence", {}).get("rewrite_priorities", []),
-            "structural_dashboard": script_data.get("writer_intelligence", {}).get("structural_dashboard", {})
-        }
-        
-        system_prompt = (
-            "You are an expert Hollywood script consultant. Summarize the script diagnostics into a professional memo. "
-            "Suggest 3 concrete fixes. Be professional and high-level."
-        )
-        user_content = f"Data: {json.dumps(data_payload)}"
+    data_payload = {
+        "pacing_issues": script_data.get("writer_intelligence", {}).get("narrative_diagnosis", []),
+        "priorities": script_data.get("writer_intelligence", {}).get("rewrite_priorities", []),
+        "structural_dashboard": script_data.get("writer_intelligence", {}).get("structural_dashboard", {})
+    }
+    
+    system_prompt = (
+        "You are an expert Hollywood script consultant. Look past the numbers and focus on the story's soul. "
+        "Summarize the script's health in a professional memo. Suggest 3 concrete creative fixes that would "
+        "make this script more commercial and emotionally resonant. Be professional, honest, and high-level."
+    )
+    user_content = f"Data Analysis Packet: {json.dumps(data_payload)}"
 
-        # 2. Try GROQ first
-        last_error = "None"
-        if groq_key:
-            if GROQ_AVAILABLE:
-                try:
-                    client = Groq(api_key=groq_key)
-                    completion = client.chat.completions.create(
-                        model="llama-3.3-70b-versatile",
-                        messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_content}],
-                        temperature=0.6,
-                        max_tokens=1000
-                    )
-                    return completion.choices[0].message.content, None
-                except Exception as ge:
-                    last_error = f"Groq Error: {str(ge)}"
-            else:
-                last_error = "Groq Library not found"
+    # 1. Try GEMINI (Best for long-form reasoning and "Story Soul")
+    if keys["gemini"] and GEMINI_AVAILABLE:
+        try:
+            genai.configure(api_key=keys["gemini"])
+            model = genai.GenerativeModel('gemini-1.5-flash')
+            response = model.generate_content(f"SYSTEM: {system_prompt}\n\nUSER: {user_content}")
+            return response.text, None
+        except Exception as ge: pass
 
-        # 3. Fallback to Hugging Face
-        if hf_key:
-            try:
-                client = OpenAI(base_url="https://router.huggingface.co/v1", api_key=hf_key)
-                completion = client.chat.completions.create(
-                    model="moonshotai/Kimi-K2-Instruct-0905",
-                    messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_content}],
-                    max_tokens=1000
-                )
-                return completion.choices[0].message.content, None
-            except Exception as he:
-                last_error = f"HF Fallback Error: {str(he)}"
+    # 2. Try GROQ (Blazing Fast)
+    if keys["groq"] and GROQ_AVAILABLE:
+        try:
+            client = Groq(api_key=keys["groq"])
+            completion = client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_content}],
+                temperature=0.6,
+                max_tokens=1000
+            )
+            return completion.choices[0].message.content, None
+        except Exception: pass
+
+    # 3. Fallback to Hugging Face
+    if keys["hf"]:
+        try:
+            client = OpenAI(base_url="https://router.huggingface.co/v1", api_key=keys["hf"])
+            completion = client.chat.completions.create(
+                model="moonshotai/Kimi-K2-Instruct-0905",
+                messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_content}],
+                max_tokens=1000
+            )
+            return completion.choices[0].message.content, None
+        except Exception: pass
             
-        return None, f"All AI providers failed. Last reason: {last_error}"
-            
-    except Exception as e:
-        return None, str(e)
+    return None, "Ran out of AI API calls. Please try again in 60 seconds."
 
 def generate_section_insight(script_data, section_type, api_key=None):
     """
-    Generates a concise, high-impact AI insight for a specific dashboard section.
-    Types: 'pulse', 'dna', 'habits'
+    Generates a high-impact AI insight that bridges the gap between 'math' and 'story'.
     """
-    groq_key = api_key or get_token("GROQ_API_KEY")
-    hf_key = get_token("HF_TOKEN") or get_token("HUGGINGFACE_API_KEY")
+    keys = _get_api_config()
+    if api_key: keys["groq"] = api_key
     
-    if not groq_key and not hf_key:
-        return "Connect your API key to see AI insights here."
+    if not any(keys.values()):
+        return "Connect an API key (Groq, Gemini, or HF) to unlock AI story coaching."
 
     if section_type == 'pulse':
         tp = script_data.get('writer_intelligence', {}).get('structural_dashboard', {}).get('structural_turning_points', {})
-        payload = {"structural_points": tp}
-        system_msg = "You are a story editor. Analyze the 'Story Pulse' graph data. Specifically mention the turning points (Inciting Incident, Midpoint, etc.) and if the rising action looks healthy. Keep it under 2 sentences. No numbers, just story wisdom."
+        payload = {"turning_points": tp}
+        system_msg = (
+            "You are a master story editor. Analyze the 'Emotional Rollercoaster' graph data provided. "
+            "Translate these data points into narrative wisdom. For example, if a turning point is missing, "
+            "explain why that kills the audience's momentum. Bridge the gap between the graph and the script's heartbeat. "
+            "One or two powerful sentences ONLY. No dry numbers."
+        )
     elif section_type == 'dna':
-        payload = {"data": "Explain the Style DNA chart balance."}
-        system_msg = "You are a story editor. Explain the 'Style DNA' balance. If most scenes are Action/Climax, tell them it's high-octane. If mostly Mystery/Breather, tell them it's a slow burn. One simple, punchy sentence."
+        payload = {"distribution": "The Speed vs Detail balance of the scenes."}
+        system_msg = (
+            "You are a cinematic consultant. Explain what the 'Scene Pacing Map' means for the movie's vibe. "
+            "If it's mostly 'Fast-Paced Action', tell them if it risks burning out the audience. If it's 'World-Building', "
+            "tell them if the pacing is sagging. One punchy, evocative sentence about the 'movie feel'."
+        )
     else: # habits
         perceptual = script_data.get('perceptual_features', [])[:10]
         payload = {"samples": perceptual}
-        system_msg = "You are a writing coach. Summarize the writer's 'voice' based on their sentence style and dialogue rhythm. Be encouraging but honest. One sentence maximum."
+        system_msg = (
+            "You are a legendary writing coach. Look at the writer's sentence rhythm and dialogue velocity. "
+            "Tell them the 'soul' of their voice. Are they a Hemingway (punchy) or a Sorkin (musical dialogue)? "
+            "One sentence that makes the writer feel seen. Be honest but inspiring."
+        )
 
-    user_content = f"Data snippet: {json.dumps(payload)}\nConsultant Insight:"
+    user_content = f"Narrative Telemetry: {json.dumps(payload)}\nConsultant Coaching:"
 
-    try:
-        if groq_key and GROQ_AVAILABLE:
-            client = Groq(api_key=groq_key)
+    # Attempt Rotation
+    # Order: Gemini (Creative) -> Groq (Speed) -> HF (Stable)
+    
+    # 1. Gemini
+    if keys["gemini"] and GEMINI_AVAILABLE:
+        try:
+            genai.configure(api_key=keys["gemini"])
+            model = genai.GenerativeModel('gemini-1.5-flash')
+            response = model.generate_content(f"SYSTEM: {system_msg}\n\nUSER: {user_content}")
+            return response.text
+        except Exception: pass
+
+    # 2. Groq
+    if keys["groq"] and GROQ_AVAILABLE:
+        try:
+            client = Groq(api_key=keys["groq"])
             completion = client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
+                model="llama-3.1-8b-instant", # Use smaller/faster model for section blurbs
                 messages=[{"role": "system", "content": system_msg}, {"role": "user", "content": user_content}],
-                max_tokens=150,
-                temperature=0.7
+                max_tokens=100,
+                temperature=0.8
             )
             return completion.choices[0].message.content
-        
-        if hf_key:
-            client = OpenAI(base_url="https://router.huggingface.co/v1", api_key=hf_key)
+        except Exception: pass
+
+    # 3. Hugging Face
+    if keys["hf"]:
+        try:
+            client = OpenAI(base_url="https://router.huggingface.co/v1", api_key=keys["hf"])
             completion = client.chat.completions.create(
                 model="moonshotai/Kimi-K2-Instruct-0905",
-                messages=[{"role": "system", "content": system_msg}, {"role": "user", "content": user_content}],
-                max_tokens=150
+                messages=[{"role": "system", "system_msg": system_msg}, {"role": "user", "content": user_content}],
+                max_tokens=100
             )
             return completion.choices[0].message.content
-            
-        return "Insight generated (Connecting to AI...)"
-    except Exception as e:
-        return "AI is thinking... refresh to view insight."
+        except Exception: pass
+
+    return "AI is gathering its thoughts... (Provider Busy)"
