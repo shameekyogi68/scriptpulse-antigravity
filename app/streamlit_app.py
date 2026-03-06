@@ -71,13 +71,13 @@ st.session_state['ui_mode'] = sidebar_state['ui_mode']
 # =============================================================================
 # HERO SECTION
 # =============================================================================
-render_hero_section("ScriptPulse", "See exactly how your screenplay feels to someone reading it for the very first time.")
+render_hero_section("ScriptPulse", "The AI Story Editor. See exactly how your screenplay feels to an audience before you ever hit send.")
 
 # =============================================================================
 # STEP 1: LOAD DRAFT
 # =============================================================================
-render_section_header("📄", "Load Your Draft", 
-                      "Upload your screenplay file or paste text directly. ScriptPulse reads your script and analyzes its structure.")
+render_section_header("🎬", "Enter the World", 
+                      "Upload your screenplay or paste a scene. We will map the emotional journey of your story.")
 
 tab_up, tab_paste = st.tabs(["📁 Upload File", "📝 Paste Text"])
 
@@ -105,7 +105,7 @@ with tab_paste:
 # =============================================================================
 # STEP 2: CONFIGURE & RUN
 # =============================================================================
-render_section_header("⚙️", "Before We Analyze", "Tell us about your script so we can tailor the feedback.")
+render_section_header("⚙️", "Set the Stage", "Tell us what kind of story you're telling so we know what rules to measure it against.")
 col1, col2 = st.columns(2)
 genre = col1.selectbox("What genre is your script?", ["Drama", "Action", "Thriller", "Horror", "Comedy", "Sci-Fi", "Romance", "Avant-Garde"])
 lens = col2.selectbox("Analyze as if you are a...", ["viewer", "reader", "narrator"])
