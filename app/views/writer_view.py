@@ -72,6 +72,11 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
         
         if isinstance(summary, dict) and summary.get('summary'):
             uikit.render_ai_consultant_box(summary['summary'])
+        
+        # Also show the lens summary if it exists in cache
+        cache_key = f'ai_summary_{lens.lower().replace(" ", "_")}'
+        if st.session_state.get(cache_key):
+             st.info(f"💡 **Latest {lens} Insight:** {st.session_state[cache_key][:200]}...")
 
     def render_story_pulse():
         st.markdown("<br>", unsafe_allow_html=True)
@@ -101,8 +106,18 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
                                      annotation_text=label, annotation_position="top")
 
         st.plotly_chart(fig_display, use_container_width=True, config={'displayModeBar': False}, key=f"pulse_{lens}")
-        pulse_insight = st.session_state.get('ai_pulse_insight')
-        if pulse_insight: uikit.render_ai_consultant_box(pulse_insight)
+        
+        pulse_cache_key = f'ai_pulse_{lens.lower().replace(" ", "_")}'
+        
+        if st.session_state.get(pulse_cache_key):
+             uikit.render_ai_consultant_box(st.session_state[pulse_cache_key])
+        else:
+             if st.button(f"🧠 Ask {lens} for Pacing Critique", key=f"pulse_btn_{lens}", use_container_width=True):
+                 with st.spinner("Analyzing..."):
+                     from scriptpulse.reporters.llm_translator import generate_section_insight
+                     insight = generate_section_insight(report, 'pulse', lens=lens)
+                     st.session_state[pulse_cache_key] = insight
+                     st.rerun()
 
     def render_diagnostics():
         st.markdown("<br>", unsafe_allow_html=True)
@@ -172,6 +187,9 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
         
         has_api = any([st.secrets.get(k) or os.environ.get(k) for k in ["GROQ_API_KEY", "HF_TOKEN", "GOOGLE_API_KEY", "GEMINI_API_KEY"]])
         
+        # Use a lens-specific cache key to ensure differentiation
+        cache_key = f'ai_summary_{lens.lower().replace(" ", "_")}'
+        
         if st.button(f"🪄 Generate {lens} Memo", type="primary", use_container_width=True):
             if not has_api: st.warning("AI is offline. Please check API keys.")
             else:
@@ -179,12 +197,12 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
                     from scriptpulse.reporters.llm_translator import generate_ai_summary
                     summary, err = generate_ai_summary(report, lens=lens)
                     if summary: 
-                        st.session_state['ai_summary_cache'] = summary
+                        st.session_state[cache_key] = summary
                         st.rerun()
                     else: st.error(err)
 
-        if st.session_state.get('ai_summary_cache'):
-            uikit.render_signal_box(f"{lens} Coverage", "", st.session_state['ai_summary_cache'], Theme.SEMANTIC_INFO)
+        if st.session_state.get(cache_key):
+            uikit.render_signal_box(f"{lens} Coverage", "", st.session_state[cache_key], Theme.SEMANTIC_INFO)
 
     def render_mentor():
         if provocations:

@@ -51,20 +51,19 @@ def generate_ai_summary(script_data, lens='viewer', api_key=None):
     
     # Customize the persona based on the lens
     persona_map = {
-        "Studio Executive": "a sharp-eyed Development Executive at a major studio. Focus on commercial viability, budget risks, market positioning, and target audience.",
-        "Story Editor": "a master Story Editor for a premium streaming service. Focus on internal logic, character transformation, emotional beats, and structural clarity.",
-        "Script Coordinator": "a technical Script Analyst and Pacing Consultant. Focus on prose economy, visual texture, scene-to-scene momentum, and stylistic consistency."
+        "Studio Executive": "a sharp-eyed Development Executive at a major studio. Focus on commercial viability, audience demographic expansion, budget risks, and market positioning.",
+        "Story Editor": "a master Story Editor for a premium streaming service. Focus on internal character logic, causality, emotional stakes, and structural beats.",
+        "Script Coordinator": "a technical Script Analyst and Pacing Consultant. Focus on dialogue economy, visual description energy, scene-to-scene transitions, and stylistic consistency."
     }
     persona_desc = persona_map.get(lens, "a professional Script Consultant.")
 
     system_prompt = (
         f"You are {persona_desc} "
-        "Provide a comprehensive, actionable narrative analysis using the provided structural and emotional data. "
+        "Provide a comprehensive, actionable narrative analysis based on the structural and emotional data provided. "
         "CRITICAL RULES: \n"
-        "1. Strictly maintain this specific professional persona throughout the analysis.\n"
-        "2. Focus on the core priorities of your assigned role (e.g., Executive = Market, Editor = Emotion).\n"
-        "3. Use industry-standard terminology appropriate for your specific role.\n"
-        "4. ALWAYS provide concrete, actionable advice and suggest specific narrative fixes to elevate the script for production."
+        "1. Strictly maintain this specific professional persona. Use role-appropriate vocabulary (e.g., Executive uses 'ROI', 'Comp', 'Demographic'; Editor uses 'Beat', 'Arc', 'Causality'; Coordinator uses 'White Space', 'Rhythm', 'Flow').\n"
+        "2. Prioritize your specific areas of expertise in the report.\n"
+        "3. ALWAYS provide 3 concrete 'Fix Suggestions' at the end of the report to elevate the script for production."
     )
     user_content = f"Experience Data: {json.dumps(data_payload)}"
 
@@ -114,26 +113,34 @@ def generate_section_insight(script_data, section_type, lens='viewer', api_key=N
     if not any(keys.values()):
         return "Connect an API key (Groq, Gemini, or HF) to hear audience reactions."
 
+    # Persona definitions for sections
+    persona_map = {
+        "Studio Executive": "a Development Executive focused on commercial pacing and audience retention.",
+        "Story Editor": "a Story Editor focused on structural beats and emotional momentum.",
+        "Script Coordinator": "a Script Coordinator focused on the physical read and visual energy."
+    }
+    p_desc = persona_map.get(lens, "a professional Script Consultant.")
+
     if section_type == 'pulse':
         tp = script_data.get('writer_intelligence', {}).get('structural_dashboard', {}).get('structural_turning_points', {})
         payload = {"peaks": tp}
         system_msg = (
-            f"You are a professional Script Consultant evaluating structural pacing. Look at the graph data. "
-            "Explain the narrative function of this sequence and how the pacing drives or hinders the story. "
-            "Provide actionable advice to improve tension or structural beats. Max 2-3 precise sentences."
+            f"You are {p_desc} Analyze the story's structural pacing graph. "
+            "Explain how this sequence affects the audience's attention from your professional perspective. "
+            "Suggest one high-impact pacing fix. One precise sentence."
         )
     elif section_type == 'dna':
         payload = {"distribution": "Speed vs Detail balance"}
         system_msg = (
-            f"You are a professional Script Consultant. Evaluate the balance of narrative pacing and world-building depth ('Speed vs Detail'). "
-            "Provide actionable advice on optimizing descriptive economy and story rhythm. One clear, professional sentence."
+            f"You are {p_desc} Evaluate the balance of narrative action vs world-building. "
+            "Provide advice on how to optimize this balance for the current story goals. One clear sentence."
         )
     else: # habits
         perceptual = script_data.get('perceptual_features', [])[:10]
         payload = {"samples": perceptual}
         system_msg = (
-            f"You are a professional Script Consultant analyzing dialogue. Evaluate the effectiveness, rhythm, and subtext of the characters' dialogue formatting ('Voice' data). "
-            "Provide one clear sentence of actionable advice on sharpening character voices and dialogue brevity."
+            f"You are {p_desc} Evaluate the rhythm and subtext of the characters' dialogue. "
+            "Provide advice on sharpening the voice for your specific role. One professional sentence."
         )
 
     user_content = f"Raw Experience Math: {json.dumps(payload)}\nAudience Reaction:"
