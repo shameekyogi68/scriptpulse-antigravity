@@ -50,13 +50,13 @@ def generate_ai_summary(script_data, lens='viewer', api_key=None):
     }
     
     system_prompt = (
-        f"You are a test {lens} experiencing this script for the first time. "
-        "Summarize how the script made you FEEL using the provided emotional data. "
+        f"You are a professional Script Consultant and Story Analyst evaluating this script. "
+        "Provide a comprehensive, actionable narrative analysis using the provided structural and emotional data. "
         "CRITICAL RULES: \n"
-        "1. NEVER act like an editor, consultant, or AI. You are a human audience member expressing your visceral reaction.\n"
-        "2. BAN these words: 'Structure, Midpoint, Climax, Pacing, Narrative, Tension Map, Act 2, Pacing'.\n"
-        "3. FORCE these words (or similar): 'Felt, gripping, exhausted, thrilled, confused, excited, dragged, flew by, breath'.\n"
-        "4. NEVER give advice or suggest fixes. Just give your brutal, honest emotional reaction to the journey."
+        "1. Act as a seasoned industry professional (e.g., development executive, story editor).\n"
+        "2. Focus on core narrative elements: Structure, Character Arcs, Stakes, Theme, and Pacing.\n"
+        "3. Use industry-standard terminology (e.g., 'Inciting Incident', 'Midpoint', 'Climax', 'Act Breaks', 'Action Lines').\n"
+        "4. ALWAYS provide concrete, actionable advice and suggest specific narrative fixes to elevate the script for production."
     )
     user_content = f"Experience Data: {json.dumps(data_payload)}"
 
@@ -110,29 +110,22 @@ def generate_section_insight(script_data, section_type, lens='viewer', api_key=N
         tp = script_data.get('writer_intelligence', {}).get('structural_dashboard', {}).get('structural_turning_points', {})
         payload = {"peaks": tp}
         system_msg = (
-            f"You are a test {lens}. Look at the graph data. "
-            "Explain exactly how that specific part of the story made you FEEL. "
-            "For example: 'I found myself violently leaning forward around scene 40 because the stakes got so intense, "
-            "but then I was able to catch my breath for a long stretch.' "
-            "CRITICAL RULES: NEVER give advice. BAN structural jargon like 'Midpoint', 'Act', or 'Pacing'. "
-            "Only give a human, visceral reaction to the experience. Max 2 simple, punchy sentences."
+            f"You are a professional Script Consultant evaluating structural pacing. Look at the graph data. "
+            "Explain the narrative function of this sequence and how the pacing drives or hinders the story. "
+            "Provide actionable advice to improve tension or structural beats. Max 2-3 precise sentences."
         )
     elif section_type == 'dna':
         payload = {"distribution": "Speed vs Detail balance"}
         system_msg = (
-            f"You are a test {lens}. Look at the 'Speed vs Detail' vibe data. Explain the VIBE of the story you just experienced. "
-            "For example: 'The world felt so incredibly rich and detailed that I was lost in the descriptions, even if it meant slower action.' "
-            "CRITICAL RULES: NEVER give advice. BAN structural jargon. "
-            "Give a human, visceral reaction about the speed and depth of the world. One punchy sentence."
+            f"You are a professional Script Consultant. Evaluate the balance of narrative pacing and world-building depth ('Speed vs Detail'). "
+            "Provide actionable advice on optimizing descriptive economy and story rhythm. One clear, professional sentence."
         )
     else: # habits
         perceptual = script_data.get('perceptual_features', [])[:10]
         payload = {"samples": perceptual}
         system_msg = (
-            f"You are a test {lens} listening to the characters. Look at the 'Voice' data. Explain how the dialogue sounded to your ears. "
-            "For example: 'The conversations hit me like a machine gun, flying back and forth so fast I could barely breathe.' "
-            "CRITICAL RULES: NEVER give advice. BAN structural jargon. "
-            "Give a human, visceral reaction to how the characters speak. One single sentence."
+            f"You are a professional Script Consultant analyzing dialogue. Evaluate the effectiveness, rhythm, and subtext of the characters' dialogue formatting ('Voice' data). "
+            "Provide one clear sentence of actionable advice on sharpening character voices and dialogue brevity."
         )
 
     user_content = f"Raw Experience Math: {json.dumps(payload)}\nAudience Reaction:"

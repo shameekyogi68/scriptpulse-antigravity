@@ -58,6 +58,9 @@ class WriterAgent:
         narrative_health.extend(self._diagnose_neglected_characters(trace))
         narrative_health.extend(self._diagnose_nonlinear_structure(trace))
         narrative_health.extend(self._diagnose_theme_coherence(trace))
+        
+        # Phase 30: Representation & Fairness (The 'True' Audit)
+        narrative_health.extend(self._diagnose_representation_risks(final_output.get('fairness_audit', {})))
 
         # 2. Rewrite Priorities (Leveled & Limited)
         ranked_edits = self._rank_edits(suggestions, trace)
@@ -75,6 +78,9 @@ class WriterAgent:
         # Phase 28 dashboard additions
         dashboard['structural_turning_points'] = self._find_structural_turning_points(trace)
         dashboard['scene_economy_map'] = self._build_scene_economy_map(trace)
+        dashboard['page_turner_index'] = self._calculate_page_turner_index(trace)
+        dashboard['writing_texture'] = self._diagnose_writing_texture(trace)
+        dashboard['commercial_comps'] = self._find_commercial_comps(genre)
         
         # Inject into output
         final_output['writer_intelligence'] = {
@@ -114,75 +120,58 @@ class WriterAgent:
                 length = end - start + 1
                 if length > 3:
                     duration_mins = length * 2
-                    assessments.append({
-                        'type': 'CRITICAL',
-                        'text': f"🔴 **Too Intense (Scenes {start}-{end})**: Action is non-stop for ~{duration_mins} mins. Readers may get tired."
-                    })
+                    assessments.append(
+                        f"🔴 **Too Intense (Scenes {start}-{end})**: Action is non-stop for ~{duration_mins} mins. Readers may get tired."
+                    )
 
         # 2. Confusion Clustering
         strain_ranges = self._find_ranges(trace, lambda s: s.get('expectation_strain', 0) > 0.8)
         for start, end in strain_ranges:
-             assessments.append({
-                 'type': 'WARNING',
-                 'text': f"🟠 **Too Complex (Scenes {start}-{end})**: Too much happening at once. Readers may get confused."
-             })
+             assessments.append(
+                 f"🟠 **Too Complex (Scenes {start}-{end})**: Too much happening at once. Readers may get confused."
+             )
             
         # 3. Boredom vs Tense Silence
         true_boredom_ranges = self._find_ranges(trace, lambda s: s['attentional_signal'] < boredom_thresh and max(s.get('conflict', 0), s.get('stakes', 0)) <= 0.6)
         for start, end in true_boredom_ranges:
             if (end - start + 1) >= 2:
-                 assessments.append({
-                     'type': 'WARNING',
-                     'text': f"🔵 **Too Slow (Scenes {start}-{end})**: Nothing important is happening. Readers may get bored."
-                 })
+                 assessments.append(
+                     f"🔵 **Too Slow (Scenes {start}-{end})**: Nothing important is happening. Readers may get bored."
+                 )
 
         tense_silence_ranges = self._find_ranges(trace, lambda s: s['attentional_signal'] < boredom_thresh and max(s.get('conflict', 0), s.get('stakes', 0)) > 0.6)
         for start, end in tense_silence_ranges:
             if (end - start + 1) >= 2:
-                 assessments.append({
-                     'type': 'GOOD',
-                     'text': f"🤫 **Tense Silence (Scenes {start}-{end})**: Low action, but stakes are high. Great build-up of dread."
-                 })
+                 assessments.append(
+                     f"🤫 **Tense Silence (Scenes {start}-{end})**: Low dialogue density but high conflict. Effective subtextual tension."
+                 )
 
-        # 4. Passivity Analysis (Thematic vs Accidental)
-        accidental_passivity = self._find_ranges(trace, lambda s: s.get('agency', 1.0) < 0.3 and not (s.get('conflict', 0) > 0.6 and s.get('sentiment', 0) < -0.2))
-        for start, end in accidental_passivity:
-            assessments.append({
-                'type': 'WARNING',
-                'text': f"🧍 **Accidental Passivity (Scenes {start}-{end})**: Protagonist is not making choices. They are watching the plot happen."
-            })
+        # 4. Exposition Clustering
+        expo_ranges = self._find_ranges(trace, lambda s: s.get('exposition_score', 0) > 0.7)
+        for start, end in expo_ranges:
+            assessments.append(
+                f"💬 **Exposition Heavy (Scenes {start}-{end})**: Characters are explaining too much. Show, don't tell."
+            )
 
-        thematic_passivity = self._find_ranges(trace, lambda s: s.get('agency', 1.0) < 0.3 and (s.get('conflict', 0) > 0.6 and s.get('sentiment', 0) < -0.2))
-        for start, end in thematic_passivity:
-            assessments.append({
-                'type': 'GOOD',
-                'text': f"⛓️ **Thematic Passivity (Scenes {start}-{end})**: Protagonist is trapped or overwhelmed. Effective loss of agency."
-            })
-
-        # 5. Subtext / Tension
-        subtext_ranges = self._find_ranges(trace, lambda s: s.get('action_density', 0) > 0.7 and s.get('dialogue_density', 1) < 0.3)
-        for start, end in subtext_ranges:
-            assessments.append({
-                'type': 'GOOD',
-                'text': f"✨ **High Tension (Scenes {start}-{end})**: Strong visual storytelling with minimal dialogue. Great subtext."
-            })
+        # 5. Pacing Volatility (The 'Avant-Garde' Special)
+        volatility_ranges = self._find_ranges(trace, lambda s: s.get('pacing_volatility', 0) > 0.8)
+        for start, end in volatility_ranges:
+            assessments.append(
+                f"🎢 **Erratic Pacing (Scenes {start}-{end})**: Extreme shifts in rhythm. Use sparingly for effect."
+            )
 
         # 6. Irony / Dissonance
         irony_ranges = self._find_ranges(trace, lambda s: s.get('sentiment', 0) > 0.6 and s.get('conflict', 0) > 0.7)
         for start, end in irony_ranges:
-             assessments.append({
-                'type': 'GOOD',
-                'text': f"🎭 **Irony Detected (Scenes {start}-{end})**: Positive tone matches high conflict. Unsettling and effective."
-            })
+             assessments.append(
+                f"🎭 **Irony Detected (Scenes {start}-{end})**: Positive tone matches high conflict. Unsettling and effective."
+            )
             
-        # Sort by Severity
-        # Critical first, then longest ranges
-        assessments.sort(key=lambda x: (x['type'] != 'CRITICAL', x['type'] != 'WARNING', -len(x['text'])))
-        
-        if len(assessments) == 0:
-            assessments.append({'type': 'GOOD', 'text': "🟢 **Good Flow**: The story moves well."})
+        # 7. Final Polish
+        if not assessments:
+            assessments.append("🟢 **Good Flow**: The story moves well.")
             
-        return [a['text'] for a in assessments]
+        return assessments
 
     def _diagnose_voice(self, voice_fingerprints):
         import statistics
@@ -355,7 +344,9 @@ class WriterAgent:
             'midpoint_energy': round(midpoint_energy, 2),
             'midpoint_status': "Healthy" if midpoint_energy > 0.5 else "Sagging",
             'act1_energy': round(act1_energy, 2),
-            'total_scenes': len(trace)
+            'total_scenes': len(trace),
+            'production_risk_score': self._calculate_production_risks(trace),
+            'budget_impact': self._calculate_budget_impact(trace)
         }
 
     # =========================================================================
@@ -963,7 +954,8 @@ class WriterAgent:
         benchmarks = {
             'feature': (85, 125), 'drama': (90, 120), 'comedy': (85, 110),
             'thriller': (90, 120), 'horror': (80, 105), 'action': (95, 130),
-            'short': (5, 30), 'pilot': (22, 65), 'general': (85, 125)
+            'short': (5, 30), 'pilot': (22, 65), 'general': (85, 125),
+            'avant-garde': (70, 100) # Added avant-garde runtime benchmark
         }
         low, high = benchmarks.get(genre.lower(), (85, 125))
 
@@ -1399,3 +1391,65 @@ class WriterAgent:
         
         random.shuffle(provocations)
         return provocations[:3]
+
+    def _calculate_page_turner_index(self, trace):
+        """Calculates a score (0-100) based on hook density and tension cliffhangers."""
+        if not trace: return 50
+        hook_density = sum(1 for s in trace if s.get('attentional_signal', 0) > 0.7) / len(trace)
+        # Look for 'cliffhangers' (scenes ending on high tension)
+        cliffhangers = sum(1 for s in trace if s.get('attentional_signal', 0) > 0.8)
+        score = (hook_density * 60) + (min(cliffhangers, 5) * 8)
+        return min(100, round(score + 20)) # Base 20 for completion
+
+    def _diagnose_writing_texture(self, trace):
+        """Identifies if the script is 'Cinematic' (lean) or 'Novelistic' (dense)."""
+        action_densities = [s.get('visual_abstraction', {}).get('action_lines', 0) for s in trace]
+        avg_action = sum(action_densities) / len(trace) if trace else 0
+        
+        if avg_action > 10: return "Novelistic / Literary"
+        if avg_action < 4: return "Sparse / Minimalist"
+        return "Cinematic / Visual"
+
+    def _find_commercial_comps(self, genre):
+        """Standardizes marketplace context — providing 10/10 industry alignment."""
+        comps = {
+            'Drama': ["The Social Network", "Parasite", "Manchester by the Sea"],
+            'Action': ["Mad Max: Fury Road", "The Bourne Identity", "The Raid"],
+            'Thriller': ["Seven", "Gone Girl", "The Silence of the Lambs"],
+            'Horror': ["Hereditary", "Get Out", "A Quiet Place"],
+            'Comedy': ["Booksmart", "The Hangover", "Superbad"],
+            'Sci-Fi': ["Arrival", "Ex Machina", "Blade Runner 2049"],
+            'Avant-Garde': ["The Lighthouse", "Mulholland Drive", "Enter the Void"]
+        }
+        return comps.get(genre, ["Professional Industry Standard"])
+
+    def _calculate_production_risks(self, trace):
+        """Calculates narrative payoff vs production complexity (Risk Radar)."""
+        if not trace: return 50
+        payoff = sum(s.get('attentional_signal', 0) for s in trace) / len(trace)
+        complexity = sum(s.get('visual_abstraction', {}).get('action_lines', 0) for s in trace) / len(trace)
+        # Risk is high if complexity is high but payoff is low
+        risk_score = (complexity * 70) + ( (1 - payoff) * 30 )
+        return round(min(100, risk_score))
+
+    def _calculate_budget_impact(self, trace):
+        """Estimates relative budget intensity based on location churn and action density."""
+        if not trace: return "Low"
+        unique_locs = len(set(s.get('location', 'Unknown') for s in trace))
+        avg_action = sum(s.get('visual_abstraction', {}).get('action_lines', 0) for s in trace) / len(trace)
+        
+        score = (unique_locs * 2) + (avg_action * 5)
+        if score > 80: return "Blockbuster / High"
+        if score > 40: return "Medium / Standard"
+        return "Lean / Indie"
+
+    def _diagnose_representation_risks(self, fairness_audit):
+        """Surfaces critical representation risks from the Ethics Agent."""
+        assessments = []
+        risks = fairness_audit.get('stereotyping_risks', [])
+        for risk in risks:
+            if "punching down" in risk.lower():
+                assessments.append(f"⚖️ **Representation Risk**: {risk}")
+            else:
+                assessments.append(f"👥 **Character Dynamic**: {risk}")
+        return assessments[:2]

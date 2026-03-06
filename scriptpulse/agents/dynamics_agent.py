@@ -27,20 +27,27 @@ class DynamicsAgent:
         prev_signal = 0.5  # Neutral starting point
         
         for i, feat in enumerate(features):
-            # 1. Calculate Instantaneous Effort (E)
-            # Normalize inputs to prevent graph saturation
+            # 1. Calculate Narrative Momentum (Formerly Effort)
+            # Use sentiment/affective extremes and action as primary drivers of tension
             norm_velocity = min(1.0, feat.get('dialogue_dynamics', {}).get('turn_velocity', 0) / 10.0)
-            norm_sent_var = min(1.0, feat.get('linguistic_load', {}).get('sentence_length_variance', 0) / 50.0)
-            norm_chars = min(1.0, feat.get('referential_load', {}).get('active_character_count', 0) / 6.0)
-            norm_entropy = min(1.0, feat.get('entropy_score', 0) / 12.0)
             norm_action = min(1.0, feat.get('visual_abstraction', {}).get('action_lines', 0) / 15.0)
-            norm_churn = min(1.0, feat.get('referential_load', {}).get('entity_churn', 0) / 4.0)
-
-            cog_load = (norm_sent_var * 0.3 + norm_chars * 0.4 + norm_entropy * 0.3)
-            emo_load = (norm_velocity * 0.5 + norm_action * 0.4 + norm_churn * 0.1)
             
-            # Combine to Effort [0.1 - 0.9] range naturally
-            raw_effort = (cog_load * 0.5 + emo_load * 0.5)
+            # Affective Extremes usually indicate high stakes or drama
+            affective = feat.get('affective_load', {})
+            comp_sentiment = abs(affective.get('compound', 0)) if isinstance(affective, dict) else 0
+            
+            # Decrease weight of raw string length variables
+            norm_chars = min(1.0, feat.get('referential_load', {}).get('active_character_count', 0) / 6.0)
+            norm_entropy = min(1.0, feat.get('entropy_score', 0) / 15.0)
+
+            # Narrative Drive: Action and Dialogue back-and-forth create momentum
+            narrative_drive = (norm_velocity * 0.4 + norm_action * 0.4 + comp_sentiment * 0.2)
+            
+            # Scene Density: Too many characters or too many words drag pacing down
+            scene_density = (norm_chars * 0.5 + norm_entropy * 0.5)
+            
+            # Combine to Effort (Tension) range
+            raw_effort = (narrative_drive * 0.7 + scene_density * 0.3)
             effort = 0.15 + (raw_effort * 0.7)
             
             # 2. Update Attentional Signal (S)
@@ -63,17 +70,24 @@ class DynamicsAgent:
             action_count = feat.get('visual_abstraction', {}).get('action_lines', 0)
             dial_count = feat.get('dialogue_dynamics', {}).get('dialogue_line_count', 0)
             
+            # Real metrics based on actual inputs
+            actual_conflict = (norm_velocity * 0.6) + (max(0, -affective.get('compound', 0)) * 0.4)
+            
+            stakes_breakdown = feat.get('stakes_taxonomy', {}).get('breakdown', {})
+            dominant_stakes_value = max(stakes_breakdown.values()) if stakes_breakdown else norm_action
+            actual_stakes = (norm_action * 0.5) + (dominant_stakes_value * 0.5)
+            
             out_sig = {
                 'scene_index': feat['scene_index'],
                 'instantaneous_effort': round(effort, 3),
                 'attentional_signal': round(signal, 3),
                 'recovery_credit': round(recovery, 3),
                 'fatigue_state': round(max(0.0, signal - 0.7), 3),
-                'conflict': round(min(1.0, effort * 1.2), 3),
-                'stakes': round(effort * 0.8, 3),
+                'conflict': round(min(1.0, actual_conflict), 3),
+                'stakes': round(min(1.0, actual_stakes), 3),
                 'agency': round(feat.get('referential_load', {}).get('active_character_count', 0) * 0.15, 3),
                 'action_density': round(action_count / max(1, action_count + dial_count), 2),
-                'sentiment': 0.0, # Placeholder
+                'sentiment': round(affective.get('compound', 0), 3),
                 'narrative_position': round(i / max(1, len(features)), 3)
             }
             

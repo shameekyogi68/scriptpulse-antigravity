@@ -107,7 +107,7 @@ with tab_paste:
 render_section_header("⚙️", "Set the Stage", "Tell us what kind of story you're telling so we know what rules to measure it against.")
 col1, col2 = st.columns(2)
 genre = col1.selectbox("What genre is your script?", ["Drama", "Action", "Thriller", "Horror", "Comedy", "Sci-Fi", "Romance", "Avant-Garde"])
-lens = col2.selectbox("Analyze as if you are a...", ["viewer", "reader", "narrator"])
+lens = col2.selectbox("Analyze as if you are a...", ["Studio Executive", "Story Editor", "Script Coordinator"])
 
 if script_input:
     st.markdown("<br/>", unsafe_allow_html=True)

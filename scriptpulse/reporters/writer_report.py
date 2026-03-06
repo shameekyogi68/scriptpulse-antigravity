@@ -25,6 +25,7 @@ GENRE_BENCHMARKS = {
     'action':   {'conflict': (0.60, 0.90), 'energy': (0.60, 0.90), 'entropy': (0.40, 0.75), 'payoff_density': (0.45, 0.85)},
     'romance':  {'conflict': (0.20, 0.55), 'energy': (0.30, 0.65), 'entropy': (0.20, 0.50), 'payoff_density': (0.20, 0.55)},
     'sci-fi':   {'conflict': (0.40, 0.80), 'energy': (0.45, 0.80), 'entropy': (0.45, 0.80), 'payoff_density': (0.35, 0.75)},
+    'avant-garde': {'conflict': (0.10, 0.90), 'energy': (0.10, 0.90), 'entropy': (0.60, 0.95), 'payoff_density': (0.10, 0.90)},
     'feature':  {'conflict': (0.35, 0.75), 'energy': (0.40, 0.75), 'entropy': (0.30, 0.65), 'payoff_density': (0.30, 0.70)},
     'general':  {'conflict': (0.30, 0.75), 'energy': (0.35, 0.75), 'entropy': (0.30, 0.70), 'payoff_density': (0.25, 0.70)},
 }

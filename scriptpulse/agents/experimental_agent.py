@@ -193,45 +193,44 @@ class InsightAgent:
 # =============================================================================
 
 class PolyglotValidatorAgent:
-    """Cross-Cultural Validator Agent.
-    Detects narrative structure based on scene segmentation and pacing.
+    """Pacing Distribution Profiler.
+    (Reframed from 'Polyglot Validator' to ensure scientific accuracy; 
+    avoids mapping simple line counts to complex cultural structural paradigms).
     """
     
     def __init__(self):
-        self.supported_structures = ['3-Act', 'Kishotenketsu', 'Episodic', 'Unknown']
+        self.supported_structures = ['Balanced', 'Frontloaded', 'Backloaded', 'Mid-heavy']
         
     def detect_structure(self, scene_list):
         if not scene_list or len(scene_list) < 4:
-            return "Unknown"
+            return "Unknown Pacing"
             
         scene_lengths = [max(1, s.get('end_line', 0) - s.get('start_line', 0)) for s in scene_list]
         total_length = sum(scene_lengths)
         
-        # Split into quartiles to analyze pacing
         q_size = len(scene_lengths) // 4
         q1 = sum(scene_lengths[:q_size]) / total_length
         q2 = sum(scene_lengths[q_size:q_size*2]) / total_length
         q3 = sum(scene_lengths[q_size*2:q_size*3]) / total_length
         q4 = sum(scene_lengths[q_size*3:]) / total_length
         
-        # Heuristic rules for structural rhythms
-        if q3 > q1 and q3 > q2 and q3 > q4:
-            # Climax in third quarter is classic 3-Act
-            return "3-Act (Western Standard)"
-        elif q3 > q2 and q4 > q1 and abs(q1 - q2) < 0.1:
-            # Kishotenketsu: Intro, Development, Twist (high activity), Conclusion (wrap up longer than intro)
-            return "Kishotenketsu (East Asian)"
-        elif max([q1, q2, q3, q4]) - min([q1, q2, q3, q4]) < 0.15:
-            # Even distribution of pacing
-            return "Episodic (Flat)"
+        # Honest pacing metrics based on length distributions
+        if max([q1, q2, q3, q4]) - min([q1, q2, q3, q4]) < 0.10:
+            return "Balanced Pacing (Even distribution)"
+        elif q3 > q1 + 0.1 and q3 > q4 + 0.1:
+            return "Mid-Heavy (Focus on development/complications)"
+        elif q1 > q3 and q1 > q4:
+            return "Frontloaded (Heavy setup/worldbuilding)"
+        elif q4 > q1 and q4 > q2:
+            return "Backloaded (Extended climax/resolution)"
             
-        return "Unknown"
+        return "Variable Pacing"
     
     def run(self, input_data):
         structure = self.detect_structure(input_data.get('scenes', []))
         return {
             'detected_structure': structure,
-            'cultural_bias_check': 'PASSED' if '3-Act' in structure else 'NOTE: Non-Standard Paradigm Detected'
+            'cultural_bias_check': 'DEPRECATED - Replaced with empirical pacing profiling to maintain research validity.'
         }
 
 

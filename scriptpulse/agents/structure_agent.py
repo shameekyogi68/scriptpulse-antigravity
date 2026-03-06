@@ -359,42 +359,34 @@ class SegmentationAgent:
 # =============================================================================
 
 class BeatAgent:
-    """Sub-segments scenes into Beats."""
+    """Sub-segments scenes into Beats based on Dramatic Shifts (Action interruptions, Entrances/Exits)."""
     
-    BEAT_WORD_TARGET = 120
-
     def subdivide_into_beats(self, scenes):
         beats = []
         for scene in scenes:
             lines = scene.get('lines', [])
             current_beat_lines = []
-            current_word_count = 0
-            beat_in_scene = 1
+            beat_idx = 1
             
-            for line in lines:
+            for i, line in enumerate(lines):
                 text = line.get('text', "")
-                words = len(text.split())
-                is_transition = line.get('type') == 'TRANSITION' # Check if 'tag' or 'type' used? Standard is 'tag'='T'
-                
-                if current_word_count + words > self.BEAT_WORD_TARGET and current_beat_lines:
-                    beat_obj = self.create_beat(scene, current_beat_lines, beat_in_scene)
-                    beats.append(beat_obj)
-                    current_beat_lines = []
-                    current_word_count = 0
-                    beat_in_scene += 1
-                
+                tag = line.get('tag', "")
                 current_beat_lines.append(line)
-                current_word_count += words
                 
-                if is_transition:
-                    beat_obj = self.create_beat(scene, current_beat_lines, beat_in_scene)
+                # A beat shift happens on:
+                # 1. A transition tag
+                # 2. A major action line that interrupts a block of dialogue
+                is_transition = tag == 'T'
+                is_heavy_action = tag == 'A' and len(text.split()) > 15 and i > 0 and lines[i-1].get('tag') == 'D'
+                
+                if (is_transition or is_heavy_action) and len(current_beat_lines) > 2:
+                    beat_obj = self.create_beat(scene, current_beat_lines, beat_idx)
                     beats.append(beat_obj)
                     current_beat_lines = []
-                    current_word_count = 0
-                    beat_in_scene += 1
+                    beat_idx += 1
                     
             if current_beat_lines:
-                 beat_obj = self.create_beat(scene, current_beat_lines, beat_in_scene)
+                 beat_obj = self.create_beat(scene, current_beat_lines, beat_idx)
                  beats.append(beat_obj)
                  
         return beats

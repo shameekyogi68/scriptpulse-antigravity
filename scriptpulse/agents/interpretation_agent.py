@@ -87,11 +87,11 @@ class InterpretationAgent:
         return {'acts': acts, 'beats': beats}
 
     def _get_snippet(self, scene_dict):
-        """Extracts a short text snippet from a scene to prove the AI read it."""
+        """Extracts a short text snippet from a scene using correct tags ('D', 'A')."""
         try:
             lines = scene_dict.get('lines', [])
-            dialogue = [l['text'] for l in lines if l.get('type') == 'dialogue' and len(l['text']) > 10]
-            action = [l['text'] for l in lines if l.get('type') == 'action' and len(l['text']) > 10]
+            dialogue = [l['text'] for l in lines if l.get('tag') == 'D' and len(l['text']) > 10]
+            action = [l['text'] for l in lines if l.get('tag') == 'A' and len(l['text']) > 10]
             
             if dialogue: 
                 snip = dialogue[len(dialogue)//2]
@@ -110,7 +110,7 @@ class InterpretationAgent:
         if not signals or not features or not scenes or len(features) != len(temporal_trace) or len(scenes) != len(temporal_trace): 
             return diagnosis
             
-        # 1. Cognitive Confusion (High entity churn + Low sentiment)
+        # 1. Overcrowded Narrative (High entity churn + Low Tension)
         for i in range(len(temporal_trace)):
             feat = features[i]
             att_sig = temporal_trace[i]['attentional_signal']
@@ -118,14 +118,12 @@ class InterpretationAgent:
             
             if churn >= 3.0 and att_sig < 0.5:
                 snippet = self._get_snippet(scenes[i])
-                diagnosis.append({
-                    'type': 'Warning', 
-                    'issue': f'Reader Confusion (Scene {i+1})', 
-                    'advice': f'Too many details introduced at once without enough clear tension. The reader feels lost. e.g. {snippet}'
-                })
+                diagnosis.append(
+                    f"🟠 **Overcrowded Scene (Scene {i+1})**: Too many new elements or characters are introduced without a strong driving dramatic question. (e.g., {snippet})"
+                )
                 break # Just find one to avoid spam
 
-        # 2. Visceral Thrill (High Action and High Tension)
+        # 2. High-Octane Sequence (High Action and High Tension)
         for i in range(len(temporal_trace)):
             feat = features[i]
             att_sig = temporal_trace[i]['attentional_signal']
@@ -133,48 +131,43 @@ class InterpretationAgent:
             
             if action > 6 and att_sig > 0.8:
                 snippet = self._get_snippet(scenes[i])
-                diagnosis.append({
-                    'type': 'Critical', # Highlight it
-                    'issue': f'Visceral Thrill (Scene {i+1})', 
-                    'advice': f'High physical action combined with massive tension creates a breathless read here. e.g. {snippet}'
-                })
+                diagnosis.append(
+                    f"✨ **Action Peak (Scene {i+1})**: Strong integration of physical action and narrative tension. Major anchor for pacing. (e.g., {snippet})"
+                )
                 break
                 
-        # 3. Reader Fatigue Check
+        # 3. Pacing Drag / Structural Sag
         high_runs = 0
         for i, s in enumerate(signals):
-            if s > 0.65: high_runs += 1
-            else: high_runs = 0
+            if s < 0.35: 
+                high_runs += 1
+            else: 
+                high_runs = 0
             
             if high_runs >= 3:
                 snippet = self._get_snippet(scenes[i])
-                diagnosis.append({
-                    'type': 'Warning', 
-                    'issue': 'Reader Fatigue', 
-                    'advice': f'3 straight scenes of high-tension is exhausting. The impact of lines like {snippet} is lost because the brain needs a breather.'
-                })
+                diagnosis.append(
+                    f"🟠 **Structural Sag (Scene {i+1})**: Three consecutive scenes of low tension. Lack of narrative momentum. (e.g., {snippet})"
+                )
                 break
                 
-        # 4. Empty Calories (Boredom)
+        # 4. Exposition Dump / Narrative Density
         for i in range(len(temporal_trace)):
             feat = features[i]
             att_sig = temporal_trace[i]['attentional_signal']
             entropy = feat.get('entropy_score', 0)
             
-            # High word count (entropy) but low pulse
             if entropy > 3.0 and att_sig < 0.4:
                 snippet = self._get_snippet(scenes[i])
-                diagnosis.append({
-                    'type': 'Insight', 
-                    'issue': f'Empty Calories (Scene {i+1})', 
-                    'advice': f'The scene is dense with information but the narrative pulse is flat. The mind wanders reading lines like {snippet}'
-                })
+                diagnosis.append(
+                    f"💡 **Exposition Heavy (Scene {i+1})**: The scene is text-dense but low on dramatic conflict. (e.g., {snippet})"
+                )
                 break
 
         return diagnosis
 
     def generate_suggestions(self, temporal_trace):
-        return []
+        return {}
 
     def generate_scene_notes(self, input_data):
         return {}
