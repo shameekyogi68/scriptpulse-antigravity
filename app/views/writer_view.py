@@ -6,8 +6,8 @@ from app.components import uikit, charts
 
 def render_writer_view(report, script_input, genre="Drama"):
     """
-    Renders the Premium Writer Dashboard.
-    Designed to function as a high-end digital story consultant.
+    Renders the Premium ScriptPulse Dashboard.
+    Divided logically: Top 50% for the Writer, Bottom 50% for the Studio/Producer.
     """
     
     trace = report.get('temporal_trace', [])
@@ -24,13 +24,13 @@ def render_writer_view(report, script_input, genre="Drama"):
         return mid_label
 
     # =========================================================================
-    # SECTION 1: THE VITAL SIGNS
+    # PHASE 1: THE WRITER's ROOM (Focus: Creative Pulse & Rhythm)
     # =========================================================================
-    uikit.render_section_header(
-        icon="📊", 
-        title="Your Script at a Glance", 
-        explainer=f"A quick summary of your {genre} script's basic health."
-    )
+    
+    # -------------------------------------------------------------------------
+    # SECTION 1: THE VITAL SIGNS
+    st.markdown("### 🎬 The Writer's Room")
+    uikit.render_section_header(icon="📊", title="Vital Signs", explainer=f"A quick summary of your {genre} script's basic health.")
     
     total_scenes = len(trace)
     avg_tension = sum(p.get('attentional_signal', 0) for p in trace) / total_scenes if total_scenes > 0 else 0
@@ -46,20 +46,15 @@ def render_writer_view(report, script_input, genre="Drama"):
     c3.metric("Est. Runtime", f"{runtime_mins} min" if runtime_mins else "N/A")
     c4.metric("Midpoint Status", midpoint_status)
 
-    # =========================================================================
+    # -------------------------------------------------------------------------
     # SECTION 2: THE STORY PULSE
-    # =========================================================================
-    uikit.render_section_header(
-        icon="📈", 
-        title="The Emotional Rollercoaster (Tension Map)", 
-        explainer="This chart shows how tense the reader feels from scene to scene. Great scripts look like a mountain range — high peaks of tension followed by valleys of calm so the audience can breathe."
-    )
+    uikit.render_section_header(icon="📈", title="The Emotional Rollercoaster (Tension Map)", 
+        explainer="This chart tracks the reader's heartbeat. Great scripts look like a mountain range — peaks of tension followed by valleys of calm.")
     
-    # Inject Smart Hover Advice
     for i, p in enumerate(trace):
         intensity = p.get('attentional_signal', 0.5)
-        if intensity > 0.8: advice = "<i>Peak intensity. Don't linger here too long.</i>"
-        elif intensity < 0.3: advice = "<i>Breather scene. Good place for character focus.</i>"
+        if intensity > 0.8: advice = "<i>Peak intensity.</i>"
+        elif intensity < 0.3: advice = "<i>Breather scene.</i>"
         else: advice = "<i>Steady progression.</i>"
         p['Hover_Text'] = advice
 
@@ -72,7 +67,7 @@ def render_writer_view(report, script_input, genre="Drama"):
         'inciting_incident': (Theme.SEMANTIC_WARNING, 'Inciting Incident'),
         'act1_break': (Theme.SEMANTIC_CRITICAL, 'Act 1 Break'),
         'midpoint': (Theme.ACCENT_PRIMARY, 'Midpoint'),
-        'act2_break': (Theme.SEMANTIC_INFO, 'Act 2 Break / Darkest Moment')
+        'act2_break': (Theme.SEMANTIC_INFO, 'Act 2 Break')
     }
     
     for tp_key, (color, label) in tp_config.items():
@@ -86,191 +81,84 @@ def render_writer_view(report, script_input, genre="Drama"):
             
     st.plotly_chart(fig_display, use_container_width=True, config={'displayModeBar': False}, key="writer_pulse_chart")
     
-    # Display AI Pulse Insight
     pulse_insight = st.session_state.get('ai_pulse_insight')
-    if pulse_insight:
-        uikit.render_ai_consultant_box(pulse_insight)
+    if pulse_insight: uikit.render_ai_consultant_box(pulse_insight)
+
+    # -------------------------------------------------------------------------
+    # SECTION 3: YOUR UNIQUE VOICE (Radar Chart)
+    st.markdown("<br>", unsafe_allow_html=True)
+    uikit.render_section_header(icon="🛠️", title="Character Voice Fingerprints", 
+        explainer="Are your characters distinct? This radar shows how your main characters 'sound' differently based on their rhythm and dialogue style.")
     
+    voice_data = report.get('voice_fingerprints', {})
+    if voice_data:
+        top_chars = sorted([(k, v) for k, v in voice_data.items() if isinstance(v, dict)], 
+                           key=lambda x: x[1].get('line_count', 0), reverse=True)[:3]
+        fig_r = charts.get_voice_radar(top_chars)
+        st.plotly_chart(fig_r, use_container_width=True, config={'displayModeBar': False}, key="writer_voice_radar_chart")
+    else:
+        st.info("Not enough dialogue detected to map distinct character voices.")
+        
+    habits_insight = st.session_state.get('ai_habits_insight')
+    if habits_insight: uikit.render_ai_consultant_box(habits_insight)
+
     # =========================================================================
-    # SECTION 3: THE STYLE QUADRANT
+    # PHASE 2: THE PRODUCER's DESK (Focus: Mechanics & Viability)
     # =========================================================================
-    uikit.render_section_header(
-        icon="🧬", 
-        title="Scene Pacing Map (Speed vs. Detail)", 
-        explainer="We plot every scene to show if it's fast and action-packed, or slow and dialogue-heavy."
-    )
+    st.markdown("<br><hr>", unsafe_allow_html=True)
+    st.markdown("### 🏢 The Producer's Desk")
+    
+    # -------------------------------------------------------------------------
+    # SECTION 4: SCENE PACING MAP (DNA)
+    uikit.render_section_header(icon="🧬", title="Scene Pacing Map (Speed vs. Detail)", 
+        explainer="The structural 'vibe' of the movie. Action/Thrillers cluster top-left (fast); Dramas cluster bottom-right (detailed).")
     
     df_q = pd.DataFrame([{
         'T_Index': i+1,
         'Energy_Signal': s.get('attentional_signal', 0.5),
-        'Entropy_Complexity': report.get('semantic_flux', [0.5]*len(trace))[i],
-        'Quadrant': '🔥 Climax / Major Setpiece' if s.get('attentional_signal', 0.5) > 0.5 and report.get('semantic_flux', [0.5]*len(trace))[i] > 0.5 else
-                    '🏃 Fast-Paced Action' if s.get('attentional_signal', 0.5) > 0.5 and report.get('semantic_flux', [0.5]*len(trace))[i] <= 0.5 else
-                    '😌 Breather / Quiet Moment' if s.get('attentional_signal', 0.5) <= 0.5 and report.get('semantic_flux', [0.5]*len(trace))[i] <= 0.5 else '🕵️ World-Building / Detail'
+        'Entropy_Complexity': report.get('semantic_flux', [0.5]*len(trace))[i]
     } for i, s in enumerate(trace)])
     
     c_dna1, c_dna2 = st.columns([3, 2])
-    
     with c_dna1:
         fig_q = charts.get_phase_space_chart(df_q)
-        st.plotly_chart(fig_q, use_container_width=True, config={'displayModeBar': False}, key="writer_dna_chart")
-        st.markdown("<div style='text-align: center; color: #888; font-size: 13px;'><i>Action/Thrillers usually sit in the top-left (fast). Dramas sit in the bottom-right (detailed).</i></div>", unsafe_allow_html=True)
+        st.plotly_chart(fig_q, use_container_width=True, config={'displayModeBar': False}, key="prod_dna_chart")
 
     with c_dna2:
         stakes_data = dashboard.get('stakes_distribution', {})
         if stakes_data:
-            st.markdown("<h5 style='text-align: center; margin-top: 10px;'>What's at Stake?</h5>", unsafe_allow_html=True)
-            st.markdown("<div style='text-align: center; color: #888; font-size: 12px; margin-bottom: 5px;'>Are your characters fighting for survival, status, or their soul?</div>", unsafe_allow_html=True)
+            st.markdown("<h5 style='text-align: center; margin-top: 10px;'>Dominant Stakes</h5>", unsafe_allow_html=True)
+            st.markdown("<div style='text-align: center; color: #888; font-size: 13px;'>Are they fighting for physical survival, emotional peace, or status?</div>", unsafe_allow_html=True)
             stakes = {k: v for k, v in stakes_data.items() if v > 0 and k != 'None'}
             if stakes:
                 labels = list(stakes.keys())
                 values = list(stakes.values())
                 fig_stakes = charts.get_stakes_chart(labels, values, {
-                    'Physical': Theme.SEMANTIC_CRITICAL,
-                    'Emotional': Theme.SEMANTIC_WARNING,
-                    'Social': Theme.SEMANTIC_GOOD,
-                    'Moral': Theme.ACCENT_PRIMARY,
-                    'Existential': Theme.ACCENT_PURPLE
+                    'Physical': Theme.SEMANTIC_CRITICAL, 'Emotional': Theme.SEMANTIC_WARNING,
+                    'Social': Theme.SEMANTIC_GOOD, 'Moral': Theme.ACCENT_PRIMARY, 'Existential': Theme.ACCENT_PURPLE
                 })
-                st.plotly_chart(fig_stakes, use_container_width=True, config={'displayModeBar': False}, key="writer_stakes_chart")
+                st.plotly_chart(fig_stakes, use_container_width=True, config={'displayModeBar': False}, key="prod_stakes_chart")
             else:
                 st.info("No dominant stakes detected.")
-    
-    # Display AI DNA Insight
+
     dna_insight = st.session_state.get('ai_dna_insight')
-    if dna_insight:
-        uikit.render_ai_consultant_box(dna_insight)
+    if dna_insight: uikit.render_ai_consultant_box(dna_insight)
+
+    # -------------------------------------------------------------------------
+    # SECTION 5: STUDIO COVERAGE MEMO
     st.markdown("<br>", unsafe_allow_html=True)
+    uikit.render_section_header(icon="📝", title="Studio Coverage Memo", explainer="A single-page, brutally honest summary of the script's architectural health.")
     
-    # =========================================================================
-    # SECTION 4: THE EDITOR'S DESK (ACTION PLAN)
-    # =========================================================================
-    uikit.render_section_header(
-        icon="🖋️", 
-        title="Your Rewrite Action Plan", 
-        explainer="A prioritized to-do list for your next draft."
-    )
-    
-    diagnosis = writer_intel.get('narrative_diagnosis', [])
-    priorities = writer_intel.get('rewrite_priorities', [])
-    
-    d_col, p_col = st.columns([1, 1])
-    
-    with d_col:
-        st.markdown(f"##### Story Diagnostic (What's Working & What's Broken)")
-        st.markdown("<div style='height: 10px'></div>", unsafe_allow_html=True)
-        if diagnosis:
-            for diag in diagnosis:
-                if isinstance(diag, dict):
-                    dtype = diag.get('type', 'Info')
-                    issue = diag.get('issue', '')
-                    advice = diag.get('advice', '')
-                    icon = "🔴" if dtype == 'Critical' else ("🟠" if dtype == 'Warning' else "🟢")
-                    uikit.render_insight_card(f"{icon} **{issue}**: {advice}")
-                else:
-                    uikit.render_insight_card(diag)
-        else:
-            uikit.render_insight_card("✅ Clean Bill of Health: No major structural issues detected!")
-            
-    with p_col:
-        st.markdown(f"##### Where to Focus Your Rewrite")
-        st.markdown("<div style='height: 10px'></div>", unsafe_allow_html=True)
-        if priorities:
-            for i, prio in enumerate(priorities[:3], 1):
-                action = prio.get('action', str(prio))
-                badge = uikit.get_leverage_badge(prio.get('leverage', 'Low'))
-                uikit.render_signal_box(f"Fix #{i}", badge, action, border_color=Theme.ACCENT_PRIMARY)
-        else:
-            uikit.render_signal_box("You're Good!", "", "No urgent rewrite priorities identified. Keep writing!", border_color=Theme.SEMANTIC_GOOD)
-            
-        provocations = writer_intel.get('creative_provocations', [])
-        if provocations:
-            st.markdown("<br>##### 💡 Questions to Spark Your Rewrite", unsafe_allow_html=True)
-            for p in provocations[:2]:
-                uikit.render_insight_card(f"💭 {p}")
-                
-        econ_map = dashboard.get('scene_economy_map', {})
-        cut_candidates = econ_map.get('cut_candidates', [])
-        if cut_candidates:
-            st.markdown("<br>##### ✂️ Scenes to Trim", unsafe_allow_html=True)
-            scenes_str = ", ".join(map(str, cut_candidates))
-            uikit.render_insight_card(f"**Trim Candidates:** Consider tightening **Scenes {scenes_str}**. They have a lot of words but don't move the story forward quickly.")
-
-    # =========================================================================
-    # SECTION 5: CRAFT HABITS
-    # =========================================================================
-    uikit.render_section_header(
-        icon="🛠️", 
-        title="Your Unique Writer's Voice", 
-        explainer="How your specific choice of words feels to the reader."
-    )
-    
-    tabs = st.tabs(["🧠 Readability", "💥 Action Density", "💬 Dialogue Rhythm", "👥 Speaking Cast", "🎭 Dominant Tone", "🤫 Subtext"])
-    
-    features = report.get('perceptual_features', [])
-    if features:
-        avg_ling = sum(f.get('linguistic_load', {}).get('sentence_length_variance', 0) for f in features) / len(features)
-        avg_action = sum(f.get('visual_abstraction', {}).get('action_lines', 0) for f in features) / len(features)
-        avg_velocity = sum(f.get('dialogue_dynamics', {}).get('turn_velocity', 0) for f in features) / len(features)
-        avg_churn = sum(f.get('referential_load', {}).get('entity_churn', 0) for f in features) / len(features)
-        avg_affective_compound = sum(f.get('affective_load', {}).get('compound', 0) for f in features) / len(features)
-
-        with tabs[0]:
-            label = get_label(avg_ling, 20, 50, "Punchy & Direct", "Varied Flow", "Layered & Rich")
-            st.markdown(f"**Style:** {label}")
-            st.caption("Do your sentences read fast and punchy like a thriller, or are they poetic and descriptive like a novel?")
-            
-        with tabs[1]:
-            label = get_label(avg_action, 5, 12, "Sparse", "Visual", "Novelistic")
-            st.markdown(f"**Action Density:** {label}")
-            st.caption("How much physical action you describe. 'Novelistic' means you describe the world in detail; 'Sparse' means scenes are mostly driven by dialogue.")
-
-        with tabs[2]:
-            label = get_label(avg_velocity, 0.4, 0.7, "Monologues", "Natural", "Rapid-Fire Exhanges")
-            st.markdown(f"**Dialogue Rhythm:** {label}")
-            st.caption("How fast characters trade lines. Rapid-Fire dialogue raises the reader's heart rate. Monologues slow the pace to focus on emotion or theme.")
-
-        with tabs[3]:
-            label = get_label(avg_churn, 2, 5, "Tight Cast", "Medium", "Large Ensemble")
-            st.markdown(f"**Speaking Cast:** {label}")
-            st.caption("How many characters speak in each scene. A 'Tight Cast' keeps the focus intimate; a 'Large Ensemble' can feel epic but risks confusing the reader.")
-            
-        with tabs[4]:
-            affective_label = "Positive / Hopeful" if avg_affective_compound > 0.1 else ("Dark / Suspenseful" if avg_affective_compound < -0.1 else "Neutral")
-            st.markdown(f"**Dominant Tone:** {affective_label}")
-            st.caption("The overall emotional feel of your words. A 'Dark' tone naturally builds stress and suspense for the audience.")
-            
-        with tabs[5]:
-            subtext = report.get('subtext_audit', [])
-            if subtext:
-                st.markdown(f"**Literal Dialogue Detected**")
-                st.caption("Some scenes might have characters stating exactly how they feel, leaving no room for subtext.")
-                for s in subtext[:3]:
-                    st.code(f"Scene {s.get('scene_index', '?')}: {s.get('issue', 'Dialogue feels literal.')}")
-            else:
-                st.markdown(f"**Subtext:** Strong ✅")
-                st.caption("Your dialogue has good layers of subtext. Characters are showing, not just telling.")
-
-    # Display AI Habits Insight
-    habits_insight = st.session_state.get('ai_habits_insight')
-    if habits_insight:
-        uikit.render_ai_consultant_box(habits_insight)
-
-    # =========================================================================
-    # SECTION 6: STUDIO MEMO (AI EDITOR)
-    # =========================================================================
-    uikit.render_section_header("📝", "Studio Notes", "One page of professional coverage summarizing the script.")
-    
-    # Check if we have either provider available
     import os
     has_groq = st.secrets.get("GROQ_API_KEY") or os.environ.get("GROQ_API_KEY")
-    has_hf = st.secrets.get("HF_TOKEN") or os.environ.get("HF_TOKEN") or os.environ.get("HUGGINGFACE_API_KEY")
+    has_gemin = st.secrets.get("GOOGLE_API_KEY") or st.secrets.get("GEMINI_API_KEY") or os.environ.get("GEMINI_API_KEY")
+    has_hf = st.secrets.get("HF_TOKEN") or os.environ.get("HF_TOKEN")
 
-    if st.button("🪄 Generate Studio Notes", type="primary", use_container_width=True):
-        if not (has_groq or has_hf):
-            st.error("⚠️ AI Consultant is offline (Missing API Keys). Please set GROQ_API_KEY or HF_TOKEN in your secrets.")
+    if st.button("🪄 Generate Studio Coverage", type="primary", use_container_width=True):
+        if not (has_groq or has_hf or has_gemin):
+            st.error("⚠️ AI Consultant is offline (Missing API Keys).")
         else:
-            with st.spinner("🤖 Reviewing..."):
+            with st.spinner("🤖 Writing Studio Memo... (This takes 10-20 seconds)"):
                 from scriptpulse.reporters.llm_translator import generate_ai_summary
                 summary, err = generate_ai_summary(report)
                 if summary: 
@@ -282,7 +170,9 @@ def render_writer_view(report, script_input, genre="Drama"):
     if st.session_state.get('ai_summary_cache'):
         uikit.render_signal_box("Coverage", "", st.session_state['ai_summary_cache'], border_color=Theme.SEMANTIC_INFO)
     
-    st.markdown("---")
-    with st.expander("📖 View Script Text", expanded=False):
+    # =========================================================================
+    # PHASE 3: ARCHIVE & EXPORT
+    # =========================================================================
+    st.markdown("<br><hr>", unsafe_allow_html=True)
+    with st.expander("📖 View Original Script Text", expanded=False):
         st.text_area("Script", value=script_input, height=500, disabled=True, label_visibility="collapsed")
-

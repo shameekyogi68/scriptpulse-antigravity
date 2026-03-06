@@ -30,7 +30,6 @@ from app.components.theme import init_plotly_template
 from app.components.sidebar import render_sidebar
 from app.components.uikit import render_hero_section, render_section_header
 from app.views.writer_view import render_writer_view
-from app.views.lab_view import render_lab_view
 
 # Import Core Pipeline
 try:
@@ -146,14 +145,8 @@ current_genre = st.session_state.get('current_genre', 'Drama')
 
 if report and current_input:
     st.markdown("---")
-    # Render unified dashboard: Writer insights first, followed by Lab telemetry
+    # Render unified dashboard: Writer insights first, followed by Producer telemetry
     render_writer_view(report, current_input, current_genre)
-    
-    st.markdown("---")
-    
-    # Render the Advanced Telemetry (formerly Lab View) hidden inside an expander
-    with st.expander("🛠️ Advanced Analytics (For Producers & Editors)", expanded=False):
-        render_lab_view(report, current_input, genre, lens, sidebar_state['ablation_config'], True)
 
 # =============================================================================
 # STEP 4: EXPORT
