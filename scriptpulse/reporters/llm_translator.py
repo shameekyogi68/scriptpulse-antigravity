@@ -49,13 +49,21 @@ def generate_ai_summary(script_data, lens='viewer', api_key=None):
         "structural_dashboard": script_data.get("writer_intelligence", {}).get("structural_dashboard", {})
     }
     
+    # Customize the persona based on the lens
+    persona_map = {
+        "Studio Executive": "a sharp-eyed Development Executive at a major studio. Focus on commercial viability, budget risks, market positioning, and target audience.",
+        "Story Editor": "a master Story Editor for a premium streaming service. Focus on internal logic, character transformation, emotional beats, and structural clarity.",
+        "Script Coordinator": "a technical Script Analyst and Pacing Consultant. Focus on prose economy, visual texture, scene-to-scene momentum, and stylistic consistency."
+    }
+    persona_desc = persona_map.get(lens, "a professional Script Consultant.")
+
     system_prompt = (
-        f"You are a professional Script Consultant and Story Analyst evaluating this script. "
+        f"You are {persona_desc} "
         "Provide a comprehensive, actionable narrative analysis using the provided structural and emotional data. "
         "CRITICAL RULES: \n"
-        "1. Act as a seasoned industry professional (e.g., development executive, story editor).\n"
-        "2. Focus on core narrative elements: Structure, Character Arcs, Stakes, Theme, and Pacing.\n"
-        "3. Use industry-standard terminology (e.g., 'Inciting Incident', 'Midpoint', 'Climax', 'Act Breaks', 'Action Lines').\n"
+        "1. Strictly maintain this specific professional persona throughout the analysis.\n"
+        "2. Focus on the core priorities of your assigned role (e.g., Executive = Market, Editor = Emotion).\n"
+        "3. Use industry-standard terminology appropriate for your specific role.\n"
         "4. ALWAYS provide concrete, actionable advice and suggest specific narrative fixes to elevate the script for production."
     )
     user_content = f"Experience Data: {json.dumps(data_payload)}"
