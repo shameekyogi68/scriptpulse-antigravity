@@ -71,7 +71,7 @@ st.session_state['ui_mode'] = sidebar_state['ui_mode']
 # =============================================================================
 # HERO SECTION
 # =============================================================================
-render_hero_section("ScriptPulse", "The AI Story Editor. See exactly how your screenplay feels to an audience before you ever hit send.")
+render_hero_section("", "The AI Story Editor. See exactly how your screenplay feels to an audience before you ever hit send.")
 
 # =============================================================================
 # STEP 1: LOAD DRAFT

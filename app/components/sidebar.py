@@ -6,8 +6,10 @@ def render_sidebar(ui_mode, is_cloud, stu):
     from app.components import uikit
     with st.sidebar:
         # Brand
-        st.image("ScriptPulse_Icon.png", use_container_width=True)
-        uikit.render_sidebar_header("ScriptPulse", "YOUR SCREENPLAY ASSISTANT")
+        _, col_logo, _ = st.columns([1, 1.2, 1])
+        with col_logo:
+            st.image("ScriptPulse_Icon.png", use_container_width=True)
+        uikit.render_sidebar_header("", "YOUR SCREENPLAY ASSISTANT")
         
         st.markdown("---")
         

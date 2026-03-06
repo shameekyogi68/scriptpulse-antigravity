@@ -3,9 +3,10 @@ from app.components.theme import Theme
 
 def render_hero_section(title: str, subtitle: str):
     """Renders the main hero section of the application."""
+    title_html = f"<h1>{title}</h1>" if title else ""
     st.markdown(f"""
     <div class="hero-container">
-        <h1>{title}</h1>
+        {title_html}
         <p class="hero-subtitle">{subtitle}</p>
     </div>
     """, unsafe_allow_html=True)
