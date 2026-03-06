@@ -129,41 +129,47 @@ def generate_section_insight(script_data, section_type, api_key=None):
 
     user_content = f"Narrative Telemetry: {json.dumps(payload)}\nConsultant Coaching:"
 
-    # Attempt Rotation
-    # Order: Gemini (Creative) -> Groq (Speed) -> HF (Stable)
+    user_content = f"Narrative Telemetry: {json.dumps(payload)}\nConsultant Coaching:"
+
+    # PURPOSE-BASED DISTRIBUTION (To avoid free-tier rate limits)
+    # Gemini: 'pulse' (Story/Emotion) | Groq: 'dna' and 'habits' (Structure/Pattern)
     
-    # 1. Gemini
-    if keys["gemini"] and GEMINI_AVAILABLE:
-        try:
-            genai.configure(api_key=keys["gemini"])
-            model = genai.GenerativeModel('gemini-1.5-flash')
-            response = model.generate_content(f"SYSTEM: {system_msg}\n\nUSER: {user_content}")
-            return response.text
-        except Exception: pass
+    order = []
+    if section_type == 'pulse':
+        order = ['gemini', 'groq', 'hf']
+    else:
+        order = ['groq', 'gemini', 'hf']
 
-    # 2. Groq
-    if keys["groq"] and GROQ_AVAILABLE:
-        try:
-            client = Groq(api_key=keys["groq"])
-            completion = client.chat.completions.create(
-                model="llama-3.1-8b-instant", # Use smaller/faster model for section blurbs
-                messages=[{"role": "system", "content": system_msg}, {"role": "user", "content": user_content}],
-                max_tokens=100,
-                temperature=0.8
-            )
-            return completion.choices[0].message.content
-        except Exception: pass
+    for provider in order:
+        if provider == 'gemini' and keys["gemini"] and GEMINI_AVAILABLE:
+            try:
+                genai.configure(api_key=keys["gemini"])
+                model = genai.GenerativeModel('gemini-1.5-flash')
+                response = model.generate_content(f"SYSTEM: {system_msg}\n\nUSER: {user_content}")
+                return response.text
+            except Exception: continue
+            
+        if provider == 'groq' and keys["groq"] and GROQ_AVAILABLE:
+            try:
+                client = Groq(api_key=keys["groq"])
+                completion = client.chat.completions.create(
+                    model="llama-3.1-8b-instant",
+                    messages=[{"role": "system", "content": system_msg}, {"role": "user", "content": user_content}],
+                    max_tokens=100,
+                    temperature=0.8
+                )
+                return completion.choices[0].message.content
+            except Exception: continue
 
-    # 3. Hugging Face
-    if keys["hf"]:
-        try:
-            client = OpenAI(base_url="https://router.huggingface.co/v1", api_key=keys["hf"])
-            completion = client.chat.completions.create(
-                model="moonshotai/Kimi-K2-Instruct-0905",
-                messages=[{"role": "system", "system_msg": system_msg}, {"role": "user", "content": user_content}],
-                max_tokens=100
-            )
-            return completion.choices[0].message.content
-        except Exception: pass
+        if provider == 'hf' and keys["hf"]:
+            try:
+                client = OpenAI(base_url="https://router.huggingface.co/v1", api_key=keys["hf"])
+                completion = client.chat.completions.create(
+                    model="moonshotai/Kimi-K2-Instruct-0905",
+                    messages=[{"role": "system", "content": system_msg}, {"role": "user", "content": user_content}],
+                    max_tokens=100
+                )
+                return completion.choices[0].message.content
+            except Exception: continue
 
     return "AI is gathering its thoughts... (Provider Busy)"
