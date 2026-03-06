@@ -14,7 +14,7 @@ load_dotenv()
 
 # MUST BE THE FIRST STREAMLIT COMMAND
 st.set_page_config(
-    page_title="ScriptPulse — Screenplay Intelligence",
+    page_title="Story Intelligence — The AI Story Editor",
     page_icon="ScriptPulse_Icon.png",
     layout="wide"
 )

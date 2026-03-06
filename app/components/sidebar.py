@@ -6,16 +6,16 @@ def render_sidebar(ui_mode, is_cloud, stu):
     from app.components import uikit
     with st.sidebar:
         # Brand
-        _, col_logo, _ = st.columns([1, 1.2, 1])
+        _, col_logo, _ = st.columns([1.5, 1, 1.5])
         with col_logo:
             st.image("ScriptPulse_Icon.png", use_container_width=True)
-        uikit.render_sidebar_header("", "YOUR SCREENPLAY ASSISTANT")
+        uikit.render_sidebar_header("", "STORY INTELLIGENCE ENGINE")
         
         st.markdown("---")
         
         # Interface Mode
         st.markdown("### 🎭 How It Works")
-        st.info("ScriptPulse reads your script like a first-time reader and gives you clear, actionable feedback on pacing, dialogue, and structure.")
+        st.info("This engine reads your script like a first-time reader and gives you clear, actionable feedback on pacing, dialogue, and structure.")
 
         st.markdown("---")
         
