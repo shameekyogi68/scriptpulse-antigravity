@@ -109,9 +109,31 @@ def render_writer_view(report, script_input, genre="Drama"):
                     '😌 Breather' if s.get('attentional_signal', 0.5) <= 0.5 and report.get('semantic_flux', [0.5]*len(trace))[i] <= 0.5 else '🔮 Mystery'
     } for i, s in enumerate(trace)])
     
-    fig_q = charts.get_phase_space_chart(df_q)
-    st.plotly_chart(fig_q, use_container_width=True, config={'displayModeBar': False}, key="writer_dna_chart")
-    st.markdown("<div style='text-align: center; color: #888; font-size: 13px;'><i>Action/Thrillers sit in the top-left. Dramas sit in the bottom-right.</i></div>", unsafe_allow_html=True)
+    c_dna1, c_dna2 = st.columns([3, 2])
+    
+    with c_dna1:
+        fig_q = charts.get_phase_space_chart(df_q)
+        st.plotly_chart(fig_q, use_container_width=True, config={'displayModeBar': False}, key="writer_dna_chart")
+        st.markdown("<div style='text-align: center; color: #888; font-size: 13px;'><i>Action/Thrillers sit in the top-left. Dramas sit in the bottom-right.</i></div>", unsafe_allow_html=True)
+
+    with c_dna2:
+        stakes_data = dashboard.get('stakes_distribution', {})
+        if stakes_data:
+            st.markdown("<h5 style='text-align: center; margin-top: 10px;'>Thematic Weight</h5>", unsafe_allow_html=True)
+            stakes = {k: v for k, v in stakes_data.items() if v > 0 and k != 'None'}
+            if stakes:
+                labels = list(stakes.keys())
+                values = list(stakes.values())
+                fig_stakes = charts.get_stakes_chart(labels, values, {
+                    'Physical': Theme.SEMANTIC_CRITICAL,
+                    'Emotional': Theme.SEMANTIC_WARNING,
+                    'Social': Theme.SEMANTIC_GOOD,
+                    'Moral': Theme.ACCENT_PRIMARY,
+                    'Existential': Theme.ACCENT_PURPLE
+                })
+                st.plotly_chart(fig_stakes, use_container_width=True, config={'displayModeBar': False}, key="writer_stakes_chart")
+            else:
+                st.info("No dominant stakes detected.")
     
     # Display AI DNA Insight
     dna_insight = st.session_state.get('ai_dna_insight')
@@ -159,6 +181,19 @@ def render_writer_view(report, script_input, genre="Drama"):
                 uikit.render_signal_box(f"Fix #{i}", badge, action, border_color=Theme.ACCENT_PRIMARY)
         else:
             uikit.render_signal_box("You're Good!", "", "No urgent rewrite priorities identified. Keep writing!", border_color=Theme.SEMANTIC_GOOD)
+            
+        provocations = writer_intel.get('creative_provocations', [])
+        if provocations:
+            st.markdown("<br>##### 💡 Creative Provocations", unsafe_allow_html=True)
+            for p in provocations[:2]:
+                uikit.render_insight_card(f"💭 {p}")
+                
+        econ_map = dashboard.get('scene_economy_map', {})
+        cut_candidates = econ_map.get('cut_candidates', [])
+        if cut_candidates:
+            st.markdown("<br>##### ✂️ Scene Economy", unsafe_allow_html=True)
+            scenes_str = ", ".join(map(str, cut_candidates))
+            uikit.render_insight_card(f"**Trim Candidates:** Consider tightening **Scenes {scenes_str}**. High word count, low narrative movement.")
 
     # =========================================================================
     # SECTION 5: CRAFT HABITS
@@ -169,7 +204,7 @@ def render_writer_view(report, script_input, genre="Drama"):
         explainer="A deep dive into how your specific word choices affect the reader's experience."
     )
     
-    tabs = st.tabs(["🧠 Sentence Style", "💥 Action Density", "💬 Dialogue Rhythm", "👥 Ensemble Size", "❤️ Emotional Subtext"])
+    tabs = st.tabs(["🧠 Sentence Style", "💥 Action Density", "💬 Dialogue Rhythm", "👥 Ensemble Size", "🎭 Tone", "🤫 Subtext"])
     
     features = report.get('perceptual_features', [])
     if features:
@@ -203,6 +238,17 @@ def render_writer_view(report, script_input, genre="Drama"):
             affective_label = "Positive / Hopeful" if avg_affective_compound > 0.1 else ("Dark / Suspenseful" if avg_affective_compound < -0.1 else "Neutral")
             st.markdown(f"**Dominant Tone:** {affective_label}")
             st.caption("The mathematical sentiment of your word choices. A **Dark** tone inherently creates unconscious stress for the reader.")
+            
+        with tabs[5]:
+            subtext = report.get('subtext_audit', [])
+            if subtext:
+                st.markdown(f"**Literal Dialogue Detected**")
+                st.caption("Some dialogue may be too 'on-the-nose' where characters state their exact feelings.")
+                for s in subtext[:3]:
+                    st.code(f"Scene {s.get('scene_index', '?')}: {s.get('issue', 'Dialogue feels literal.')}")
+            else:
+                st.markdown(f"**Subtext:** Strong ✅")
+                st.caption("Your dialogue has good layers of subtext. Characters are showing, not just telling.")
 
     # Display AI Habits Insight
     habits_insight = st.session_state.get('ai_habits_insight')
