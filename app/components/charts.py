@@ -23,7 +23,7 @@ def get_engagement_chart(df_trace):
                   annotation_font=dict(size=10, color="rgba(217, 41, 135, 0.5)"))
     
     # Dynamic Hover text if available
-    hover_template = '<b>Scene %{x}</b><br>Intensity: %{y:.0%}<br>%{customdata[0]}<extra></extra>' if 'Hover_Text' in df_trace.columns else '<b>Scene %{x}</b><br>Intensity: %{y:.0%}<extra></extra>'
+    hover_template = '<b>Scene %{x}</b><br>Tension Level: %{y:.0%}<br>%{customdata[0]}<extra></extra>' if 'Hover_Text' in df_trace.columns else '<b>Scene %{x}</b><br>Tension Level: %{y:.0%}<extra></extra>'
     custom_data = [df_trace['Hover_Text']] if 'Hover_Text' in df_trace.columns else None
     
     # Main engagement line
@@ -32,7 +32,7 @@ def get_engagement_chart(df_trace):
         y=df_trace['attentional_signal'],
         fill='tozeroy',
         mode='lines',
-        name='Reader Engagement',
+        name='Tension Level',
         line=dict(color='rgba(106, 72, 187, 0.9)', width=2.5, shape='spline'),
         fillcolor='rgba(106, 72, 187, 0.12)',
         customdata=custom_data[0] if custom_data else None,
@@ -41,7 +41,7 @@ def get_engagement_chart(df_trace):
     
     fig.update_layout(
         xaxis=dict(title="Scene Number →", range=[0, len(df_trace)-1]),
-        yaxis=dict(title="How Intense Does It Feel? →", range=[0, 1], tickformat='.0%'),
+        yaxis=dict(title="Tension & Conflict →", range=[0, 1], tickformat='.0%'),
         height=380,
         showlegend=False,
         hovermode='x unified'
@@ -127,7 +127,7 @@ def get_phase_space_chart(df_q):
             '😌 Breather': Theme.SEMANTIC_GOOD, 
             '🔮 Mystery': Theme.ACCENT_PRIMARY
         },
-        labels={'T_Index': 'Scene', 'Energy_Signal': 'How Intense?', 'Entropy_Complexity': 'How Complex?'}
+        labels={'T_Index': 'Scene', 'Energy_Signal': 'Action / Speed', 'Entropy_Complexity': 'Information / Detail'}
     )
     
     fig.add_hline(y=0.5, line_dash="dash", line_color="rgba(255,255,255,0.2)")
@@ -136,8 +136,8 @@ def get_phase_space_chart(df_q):
     
     fig.update_layout(
         height=350, margin=dict(l=40, r=20, t=20, b=40),
-        xaxis=dict(tickfont=dict(size=10), title="How Complex / Dense Is the Language? →"),
-        yaxis=dict(tickfont=dict(size=10), title="How Intense / Fast Is the Scene? →"),
+        xaxis=dict(tickfont=dict(size=10), title="Story Detail (Dialogue, Clues, World-Building) →"),
+        yaxis=dict(tickfont=dict(size=10), title="Pacing Speed (Action, Conflict) →"),
         showlegend=False
     )
     return fig

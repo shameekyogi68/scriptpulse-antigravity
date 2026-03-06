@@ -28,8 +28,8 @@ def render_writer_view(report, script_input, genre="Drama"):
     # =========================================================================
     uikit.render_section_header(
         icon="📊", 
-        title="The Vital Signs", 
-        explainer=f"Your {genre} script at a glance. We measure pacing and structure against industry benchmarks."
+        title="Your Script at a Glance", 
+        explainer=f"A quick summary of your {genre} script's basic health."
     )
     
     total_scenes = len(trace)
@@ -51,8 +51,8 @@ def render_writer_view(report, script_input, genre="Drama"):
     # =========================================================================
     uikit.render_section_header(
         icon="📈", 
-        title="The Story Pulse", 
-        explainer="This is the heartbeat of your script. Great scripts look like a mountain range — peaks of intensity followed by valleys of recovery."
+        title="The Emotional Rollercoaster (Tension Map)", 
+        explainer="This chart shows how tense the reader feels from scene to scene. Great scripts look like a mountain range — high peaks of tension followed by valleys of calm so the audience can breathe."
     )
     
     # Inject Smart Hover Advice
@@ -96,8 +96,8 @@ def render_writer_view(report, script_input, genre="Drama"):
     # =========================================================================
     uikit.render_section_header(
         icon="🧬", 
-        title="Your Style DNA", 
-        explainer="Every scene is plotted based on how fast it moves (Intensity) and how much detail you put into it (Complexity)."
+        title="Scene Pacing Map (Speed vs. Detail)", 
+        explainer="We plot every scene to show if it's fast and action-packed, or slow and dialogue-heavy."
     )
     
     df_q = pd.DataFrame([{
@@ -119,7 +119,8 @@ def render_writer_view(report, script_input, genre="Drama"):
     with c_dna2:
         stakes_data = dashboard.get('stakes_distribution', {})
         if stakes_data:
-            st.markdown("<h5 style='text-align: center; margin-top: 10px;'>Thematic Weight</h5>", unsafe_allow_html=True)
+            st.markdown("<h5 style='text-align: center; margin-top: 10px;'>What's at Stake?</h5>", unsafe_allow_html=True)
+            st.markdown("<div style='text-align: center; color: #888; font-size: 12px; margin-bottom: 5px;'>Are your characters fighting for survival, status, or their soul?</div>", unsafe_allow_html=True)
             stakes = {k: v for k, v in stakes_data.items() if v > 0 and k != 'None'}
             if stakes:
                 labels = list(stakes.keys())
@@ -146,8 +147,8 @@ def render_writer_view(report, script_input, genre="Drama"):
     # =========================================================================
     uikit.render_section_header(
         icon="🖋️", 
-        title="The Editor's Desk", 
-        explainer="Your prioritized rewriting check-list based on structural diagnostics."
+        title="Your Rewrite Action Plan", 
+        explainer="A prioritized to-do list for your next draft."
     )
     
     diagnosis = writer_intel.get('narrative_diagnosis', [])
@@ -156,7 +157,7 @@ def render_writer_view(report, script_input, genre="Drama"):
     d_col, p_col = st.columns([1, 1])
     
     with d_col:
-        st.markdown(f"##### Structural Diagnostics")
+        st.markdown(f"##### Story Diagnostic (What's Working & What's Broken)")
         st.markdown("<div style='height: 10px'></div>", unsafe_allow_html=True)
         if diagnosis:
             for diag in diagnosis:
@@ -172,7 +173,7 @@ def render_writer_view(report, script_input, genre="Drama"):
             uikit.render_insight_card("✅ Clean Bill of Health: No major structural issues detected!")
             
     with p_col:
-        st.markdown(f"##### Top Rewrite Priorities")
+        st.markdown(f"##### Where to Focus Your Rewrite")
         st.markdown("<div style='height: 10px'></div>", unsafe_allow_html=True)
         if priorities:
             for i, prio in enumerate(priorities[:3], 1):
@@ -200,11 +201,11 @@ def render_writer_view(report, script_input, genre="Drama"):
     # =========================================================================
     uikit.render_section_header(
         icon="🛠️", 
-        title="Your Writing Habits", 
-        explainer="A deep dive into how your specific word choices affect the reader's experience."
+        title="Your Unique Writer's Voice", 
+        explainer="How your specific choice of words feels to the reader."
     )
     
-    tabs = st.tabs(["🧠 Sentence Style", "💥 Action Density", "💬 Dialogue Rhythm", "👥 Ensemble Size", "🎭 Tone", "🤫 Subtext"])
+    tabs = st.tabs(["🧠 Readability", "💥 Action Density", "💬 Dialogue Rhythm", "👥 Speaking Cast", "🎭 Dominant Tone", "🤫 Subtext"])
     
     features = report.get('perceptual_features', [])
     if features:
@@ -217,7 +218,7 @@ def render_writer_view(report, script_input, genre="Drama"):
         with tabs[0]:
             label = get_label(avg_ling, 20, 50, "Punchy & Direct", "Varied Flow", "Layered & Rich")
             st.markdown(f"**Style:** {label} (Avg Score: {avg_ling:.1f})")
-            st.caption("How long and complex your sentences are. **Punchy** reads fast (good for thrillers). **Layered** requires longer focus (good for drama/lit).")
+            st.caption("Do your action lines read fast like a thriller, or are they poetic and layered like a novel?")
             
         with tabs[1]:
             label = get_label(avg_action, 5, 12, "Sparse", "Visual", "Novelistic")
