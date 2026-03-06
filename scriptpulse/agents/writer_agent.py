@@ -1214,7 +1214,7 @@ class WriterAgent:
                 eg = hits[0]
                 assessments.append(
                     f"🚫 **Unfilmable Action (Scene {idx})**: Action lines describe internal states a camera cannot capture. "
-                    f"e.g. *\"{eg}\"* — Show this through behaviour, not narration."
+                    f"e.g. \"{eg}\" — Show this through behaviour, not narration."
                 )
 
         # Name crowding
