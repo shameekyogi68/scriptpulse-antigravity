@@ -9,7 +9,6 @@ def render_sidebar(ui_mode, is_cloud, stu):
         _, col_logo, _ = st.columns([1.5, 1, 1.5])
         with col_logo:
             st.image("ScriptPulse_Icon.png", use_container_width=True)
-        uikit.render_sidebar_header("", "STORY INTELLIGENCE ENGINE")
         
         st.markdown("---")
         
