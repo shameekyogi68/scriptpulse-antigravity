@@ -104,9 +104,9 @@ def render_writer_view(report, script_input, genre="Drama"):
         'T_Index': i+1,
         'Energy_Signal': s.get('attentional_signal', 0.5),
         'Entropy_Complexity': report.get('semantic_flux', [0.5]*len(trace))[i],
-        'Quadrant': '🔥 Climax' if s.get('attentional_signal', 0.5) > 0.5 and report.get('semantic_flux', [0.5]*len(trace))[i] > 0.5 else
-                    '⚡ Action' if s.get('attentional_signal', 0.5) > 0.5 and report.get('semantic_flux', [0.5]*len(trace))[i] <= 0.5 else
-                    '😌 Breather' if s.get('attentional_signal', 0.5) <= 0.5 and report.get('semantic_flux', [0.5]*len(trace))[i] <= 0.5 else '🔮 Mystery'
+        'Quadrant': '🔥 Climax / Major Setpiece' if s.get('attentional_signal', 0.5) > 0.5 and report.get('semantic_flux', [0.5]*len(trace))[i] > 0.5 else
+                    '🏃 Fast-Paced Action' if s.get('attentional_signal', 0.5) > 0.5 and report.get('semantic_flux', [0.5]*len(trace))[i] <= 0.5 else
+                    '😌 Breather / Quiet Moment' if s.get('attentional_signal', 0.5) <= 0.5 and report.get('semantic_flux', [0.5]*len(trace))[i] <= 0.5 else '🕵️ World-Building / Detail'
     } for i, s in enumerate(trace)])
     
     c_dna1, c_dna2 = st.columns([3, 2])

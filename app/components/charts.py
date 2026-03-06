@@ -9,17 +9,17 @@ def get_engagement_chart(df_trace):
     fig = go.Figure()
     
     # Color-coded background zones so the writer instantly knows what the graph means
-    # Green zone: Calm / Recovery (0% - 35%)
+    # Green zone: Calm / Story Building (0% - 35%)
     fig.add_hrect(y0=0, y1=0.35, fillcolor="rgba(0, 210, 160, 0.06)", line_width=0,
-                  annotation_text="😌 Calm / Recovery", annotation_position="top left",
+                  annotation_text="😌 Calm / Story Building", annotation_position="top left",
                   annotation_font=dict(size=10, color="rgba(0, 210, 160, 0.5)"))
-    # Yellow zone: Engaging / Balanced (35% - 65%)
+    # Yellow zone: Rising Action (35% - 65%)
     fig.add_hrect(y0=0.35, y1=0.65, fillcolor="rgba(245, 121, 70, 0.06)", line_width=0,
-                  annotation_text="⚡ Engaging", annotation_position="top left",
+                  annotation_text="⚡ Rising Action", annotation_position="top left",
                   annotation_font=dict(size=10, color="rgba(245, 121, 70, 0.5)"))
-    # Red zone: High Intensity / Risk of Fatigue (65% - 100%)
+    # Red zone: Climax / High Stress (65% - 100%)
     fig.add_hrect(y0=0.65, y1=1.0, fillcolor="rgba(217, 41, 135, 0.06)", line_width=0,
-                  annotation_text="🔥 Intense (Risk of Fatigue)", annotation_position="top left",
+                  annotation_text="🔥 High Tension / Climax", annotation_position="top left",
                   annotation_font=dict(size=10, color="rgba(217, 41, 135, 0.5)"))
     
     # Dynamic Hover text if available
@@ -122,10 +122,10 @@ def get_phase_space_chart(df_q):
         df_q, x='Entropy_Complexity', y='Energy_Signal', 
         hover_data=['T_Index'], color='Quadrant',
         color_discrete_map={
-            '🔥 Climax': Theme.SEMANTIC_CRITICAL, 
-            '⚡ Action': Theme.SEMANTIC_WARNING, 
-            '😌 Breather': Theme.SEMANTIC_GOOD, 
-            '🔮 Mystery': Theme.ACCENT_PRIMARY
+            '🔥 Climax / Major Setpiece': Theme.SEMANTIC_CRITICAL, 
+            '🏃 Fast-Paced Action': Theme.SEMANTIC_WARNING, 
+            '😌 Breather / Quiet Moment': Theme.SEMANTIC_GOOD, 
+            '🕵️ World-Building / Detail': Theme.ACCENT_PRIMARY
         },
         labels={'T_Index': 'Scene', 'Energy_Signal': 'Action / Speed', 'Entropy_Complexity': 'Information / Detail'}
     )
@@ -187,7 +187,7 @@ def get_voice_radar(top_chars):
     for i, (char, data) in enumerate(top_chars):
         fig.add_trace(go.Scatterpolar(
             r=[data.get('complexity', 0), data.get('positivity', 0), data.get('line_count', 0)/top_chars[0][1].get('line_count', 1)],
-            theta=['How Complex They Speak', 'How Positive They Sound', 'How Much They Talk'], 
+            theta=['Vocabulary Level', 'Positivity / Mood', 'Amount of Dialogue'], 
             fill='toself', name=char, line_color=colors[i % len(colors)]
         ))
     fig.update_layout(
