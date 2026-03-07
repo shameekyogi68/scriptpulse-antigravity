@@ -194,7 +194,7 @@ if report and current_input:
             use_container_width=True)
     with c2:
         st.download_button("🎬 Studio Coverage",
-            studio_report.generate_report(report, script_title=title),
+            studio_report.generate_report(report, script_title=title, lens=lens),
             f"ScriptPulse_Studio_{genre}.html", "text/html",
             use_container_width=True)
     with c3:

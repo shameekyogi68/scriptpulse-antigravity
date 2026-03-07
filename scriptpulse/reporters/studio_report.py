@@ -9,7 +9,7 @@ that can be printed to PDF.
 import base64
 import statistics
 
-def generate_report(report_data, script_title="Untitled Script", user_notes=""):
+def generate_report(report_data, script_title="Untitled Script", user_notes="", lens="Story Editor"):
     """
     Generate a standalone HTML string for the report.
     """
@@ -18,11 +18,44 @@ def generate_report(report_data, script_title="Untitled Script", user_notes=""):
     trace = report_data.get('temporal_trace', [])
     avg_effort = statistics.mean([t['attentional_signal'] for t in trace]) if trace else 0
     
-    suggestions = report_data.get('suggestions', {}).get('structural_repair_strategies', [])
+    writer_intel = report_data.get('writer_intelligence', {})
+    diagnoses = writer_intel.get('narrative_diagnosis', [])
+    priorities = writer_intel.get('rewrite_priorities', [])
+
+    # --- Persona Filtering Logic (Sync with writer_view.py) ---
+    EXEC_ICONS = ['🔵', '🔴', '⚖️', '🚫', '👥', '📉', '⚠️']
+    EDITOR_ICONS = ['🧵', '⬜', '👻', '✅', '🔵', '🔴', '⭐', '✨', '🟡']
+    COORD_ICONS = ['✂️', '🔴', '🟠', '🚫', '💎', '⛓️', '🎭', '👥', '🎙️', '🟢']
     
-    # Recommendation Logic (Mock Logic based on Engagement)
-    # If Avg Effort is between 0.4 and 0.7 -> CONSIDER
-    # If Avg Effort < 0.3 (Boring) or > 0.8 (Exhausting) -> PASS
+    filtered_diags = []
+    for text in diagnoses:
+        is_exec = any(icon in text for icon in EXEC_ICONS)
+        is_editor = any(icon in text for icon in EDITOR_ICONS)
+        is_coord = any(icon in text for icon in COORD_ICONS)
+        if "Same Voice" in text: is_exec, is_editor, is_coord = False, True, True
+        elif "Too Slow" in text: is_exec, is_editor, is_coord = True, True, False
+        if (lens == "Studio Executive" and is_exec) or \
+           (lens == "Story Editor" and is_editor) or \
+           (lens == "Script Coordinator" and is_coord):
+            filtered_diags.append(text)
+    
+    if not filtered_diags and diagnoses:
+        filtered_diags = [d for d in diagnoses if any(i in d for i in ['✅', '✨', '🟢'])] or diagnoses[:1]
+
+    filtered_pris = []
+    exec_pri_kws = ["boredom", "cut", "engagement", "budget", "unfilmable", "name", "slow"]
+    coord_pri_kws = ["dialogue", "show", "unfilmable", "fluff", "prose", "voice", "economy"]
+    for p in priorities:
+        txt = f"{p.get('action', '')} {p.get('root_cause', '')}".lower()
+        if (lens == "Studio Executive" and any(k in txt for k in exec_pri_kws)) or \
+           (lens == "Script Coordinator" and any(k in txt for k in coord_pri_kws)) or \
+           (lens == "Story Editor"):
+            filtered_pris.append(p)
+    
+    if not filtered_pris and priorities:
+        filtered_pris = priorities[:3]
+
+    # Recommendation Logic
     rec = "CONSIDER"
     if avg_effort < 0.35: rec = "PASS (Low Engagement)"
     elif avg_effort > 0.75: rec = "PASS (High Strain)"
@@ -34,12 +67,12 @@ def generate_report(report_data, script_title="Untitled Script", user_notes=""):
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Script Intelligence Coverage: {script_title}</title>
+        <title>Script Intelligence Coverage ({lens}): {script_title}</title>
         <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
         <style>
             :root {{
                 --primary: #0f172a;
-                --accent: #3b82f6;
+                --accent: {('#3b82f6' if lens == "Story Editor" else '#6366f1' if lens == "Studio Executive" else '#10b981')};
                 --success: #10b981;
                 --warning: #f59e0b;
                 --danger: #ef4444;
@@ -194,10 +227,10 @@ def generate_report(report_data, script_title="Untitled Script", user_notes=""):
     
     <div class="container">
         <div class="header">
-            <h1>Intelligence Coverage Report</h1>
+            <h1>Intelligence Coverage ({lens})</h1>
             <h2>{script_title}</h2>
             <div class="meta">
-                ENGINE: ScriptPulse v14.0 Gold Master | DATE: {report_data.get('meta', {}).get('timestamp', 'PROCESSED')}
+                ENGINE: ScriptPulse v15.0 Gold | PERSPECTIVE: {lens}
             </div>
         </div>
         
@@ -207,7 +240,6 @@ def generate_report(report_data, script_title="Untitled Script", user_notes=""):
                 <div class="verdict-value">{rec}</div>
             </div>
             <div class="confidence-pill">
-                <div class="indicator"></div>
                 Confidence: {int(report_data.get('meta', {}).get('confidence_score', {}).get('score', 0)*100)}%
             </div>
         </div>
@@ -223,14 +255,14 @@ def generate_report(report_data, script_title="Untitled Script", user_notes=""):
             </div>
             <div class="stat-card">
                 <h4>Est. Runtime</h4>
-                <p>{report_data.get('writer_intelligence', {}).get('structural_dashboard', {}).get('runtime_estimate', {}).get('estimated_minutes', len(trace)*2)}m</p>
+                <p>{writer_intel.get('structural_dashboard', {}).get('runtime_estimate', {}).get('estimated_minutes', len(trace)*2)}m</p>
             </div>
         </div>
         
         <div class="section">
             <h3>Diagnostic Summary</h3>
             <ul>
-                {''.join([f"<li>{item}</li>" for item in report_data.get('writer_intelligence', {}).get('narrative_diagnosis', ['Analysis clear. No high-risk anomalies.'])])}
+                {''.join([f"<li>{item}</li>" for item in filtered_diags]) if filtered_diags else '<li>Analysis clear. No high-risk anomalies.</li>'}
             </ul>
         </div>
         
@@ -244,7 +276,7 @@ def generate_report(report_data, script_title="Untitled Script", user_notes=""):
                     </tr>
                 </thead>
                 <tbody>
-                    {''.join([f"<tr><td>{edit['action']}</td><td><span class='tag tag-high'>{edit['leverage']}</span></td></tr>" for edit in report_data.get('writer_intelligence', {}).get('rewrite_priorities', [])[:5]])}
+                    {''.join([f"<tr><td>{edit['action']}</td><td><span class='tag tag-high'>{edit['leverage']}</span></td></tr>" for edit in filtered_pris[:5]]) if filtered_pris else '<tr><td colspan="2">No high-priority revisions required.</td></tr>'}
                 </tbody>
             </table>
         </div>
