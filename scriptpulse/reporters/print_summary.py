@@ -1,47 +1,78 @@
 """
 ScriptPulse Print Summary Generator
 Creates a concise 1-page summary for writers to print and pin.
+Uses writer_intelligence data for accurate, persona-aware output.
 """
+
+import re
+
+def _strip_md(text):
+    """Convert markdown bold/italic to HTML for clean rendering."""
+    text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)
+    text = re.sub(r'\*(.*?)\*', r'<i>\1</i>', text)
+    return text
+
 
 def generate_print_summary(report_data, script_title="Untitled Script"):
     """
     Generate a clean, printable 1-page HTML summary.
+    Pulls data from writer_intelligence (the real pipeline output).
     """
     
-    # Extract key metrics
+    # Extract key metrics from the CORRECT keys
     trace = report_data.get('temporal_trace', [])
     avg_tension = sum(p['attentional_signal'] for p in trace) / len(trace) if trace else 0
     
-    valence_scores = report_data.get('valence_scores', [])
-    avg_valence = sum(valence_scores) / len(valence_scores) if valence_scores else 0
+    wi = report_data.get('writer_intelligence', {})
+    dashboard = wi.get('structural_dashboard', {})
+    diagnosis = wi.get('narrative_diagnosis', [])
+    priorities = wi.get('rewrite_priorities', [])
     
-    runtime = report_data.get('runtime_estimate', {}).get('avg_minutes', 0)
+    # ScriptPulse Score
+    sp_score = dashboard.get('scriptpulse_score', 50)
+    if sp_score >= 70: score_label = "Strong Draft"
+    elif sp_score >= 45: score_label = "Needs Work"
+    else: score_label = "Major Revision"
     
-    # Get top problems
-    scene_feedback = report_data.get('scene_feedback', {})
-    all_warnings = []
-    for scene_idx, notes in scene_feedback.items():
-        warning_notes = [n for n in notes if n['severity'] == 'warning']
-        for note in warning_notes[:2]:  # Top 2 per scene
-            all_warnings.append({
-                'scene': scene_idx + 1,
-                'issue': note['issue'],
-                'fix': note['suggestion']
-            })
+    # Pacing
+    pacing = "Balanced"
+    if avg_tension < 0.35: pacing = "Slow Burn"
+    elif avg_tension > 0.65: pacing = "High Octane"
     
-    top_problems = all_warnings[:5]  # Top 5 overall
+    # Runtime
+    runtime_data = dashboard.get('runtime_estimate', {})
+    runtime = runtime_data.get('estimated_minutes', len(trace) * 2) if isinstance(runtime_data, dict) else len(trace) * 2
     
-    # Get strengths (scenes with high tension + positive valence)
-    strengths = []
-    for i, point in enumerate(trace):
-        if point.get('attentional_signal', 0) > 0.7 and i < len(valence_scores) and valence_scores[i] > 0.1:
-            strengths.append(f"Scene {i+1}: High energy, positive tone")
+    # Top problems (from diagnostics — red/orange items)
+    problems_html = ""
+    problem_items = [d for d in diagnosis if any(icon in d for icon in ['🔴', '🚫', '🟠', '✂️', '🧵', '👻', '🔵'])]
+    if problem_items:
+        for p in problem_items[:5]:
+            problems_html += f'<div class="card problem">{_strip_md(p)}</div>'
+    else:
+        problems_html = '<p style="font-size:13px;">No critical errors identified. Your script is clean.</p>'
+    
+    # Strengths (from diagnostics — green items)
+    strengths_html = ""
+    strength_items = [d for d in diagnosis if any(icon in d for icon in ['✅', '✨', '🟢', '💎', '⭐'])]
+    if strength_items:
+        for s in strength_items[:5]:
+            strengths_html += f'<div class="card strength">{_strip_md(s)}</div>'
+    else:
+        strengths_html = '<p style="font-size:13px;">Focus on increasing high-engagement beats.</p>'
+    
+    # Priority Fixes
+    fixes_html = ""
+    if priorities:
+        for i, p in enumerate(priorities[:3]):
+            fixes_html += f'<div class="card problem"><b>FIX {i+1}: {p.get("leverage", "Medium")} IMPACT</b>{_strip_md(p.get("action", ""))}</div>'
     
     html = f"""
     <!DOCTYPE html>
     <html lang="en">
     <head>
         <meta charset="UTF-8">
+        <title>ScriptPulse Summary — {script_title}</title>
         <style>
             :root {{
                 --bg: #ffffff;
@@ -73,7 +104,7 @@ def generate_print_summary(report_data, script_title="Untitled Script"):
             
             .stats-bar {{
                 display: grid;
-                grid-template-columns: repeat(3, 1fr);
+                grid-template-columns: repeat(4, 1fr);
                 gap: 20px;
                 margin-bottom: 40px;
             }}
@@ -113,39 +144,44 @@ def generate_print_summary(report_data, script_title="Untitled Script"):
                 <h1>{script_title}</h1>
                 <div style="font-size: 14px; color: var(--muted); margin-top: 5px;">ScriptPulse Core Intelligence Summary</div>
             </div>
-            <div class="date">v14.0 | Phase 32 Output</div>
+            <div class="date">v15.0 Gold | ScriptPulse Score: {sp_score}/100 ({score_label})</div>
         </div>
 
         <div class="stats-bar">
             <div class="stat">
-                <div class="stat-label">Intensity Profile</div>
-                <div class="stat-value">{int(avg_tension * 100)}%</div>
+                <div class="stat-label">ScriptPulse Score</div>
+                <div class="stat-value">{sp_score}/100</div>
             </div>
             <div class="stat">
-                <div class="stat-label">Emotional Tone</div>
-                <div class="stat-value">{"LUMINOUS" if avg_valence > 0.15 else "SHADOW" if avg_valence < -0.15 else "NEUTRAL"}</div>
+                <div class="stat-label">Pacing Profile</div>
+                <div class="stat-value">{pacing}</div>
             </div>
             <div class="stat">
-                <div class="stat-label">Est. Screen Time</div>
+                <div class="stat-label">Scenes</div>
+                <div class="stat-value">{len(trace)}</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Est. Runtime</div>
                 <div class="stat-value">{runtime} MIN</div>
             </div>
         </div>
         
         <div class="grid">
             <div>
-                <h2>Critical Revisions</h2>
-                {''.join([f'<div class="card problem"><b>SCENE {p["scene"]} REVISION</b>{p["issue"]} <br> <i style="opacity: 0.7;">Solution: {p["fix"]}</i></div>' for p in top_problems]) if top_problems else '<p style="font-size:13px;">No critical errors identified.</p>'}
+                <h2>Issues to Address</h2>
+                {problems_html}
+                {fixes_html}
             </div>
             
             <div>
-                <h2>Narrative Anchors</h2>
-                {''.join([f'<div class="card strength"><b>STRENGTH</b>{s}</div>' for s in strengths[:5]]) if strengths else '<p style="font-size:13px;">Focus on increasing high-engagement beats.</p>'}
+                <h2>Narrative Strengths</h2>
+                {strengths_html}
             </div>
         </div>
         
         <div class="footer">
-            <div>&copy; 2026 ScriptPulse Biometric Systems. For internal writer use only.</div>
-            <div>STRIKE TEAM VALIDATED</div>
+            <div>&copy; 2026 ScriptPulse AI Story Intelligence. For internal writer use only.</div>
+            <div>PRODUCTION READY</div>
         </div>
     </body>
     </html>

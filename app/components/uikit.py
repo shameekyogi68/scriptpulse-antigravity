@@ -1,3 +1,4 @@
+import re
 import streamlit as st
 from app.components.theme import Theme
 
@@ -27,7 +28,7 @@ def render_insight_card(text: str):
     elif any(x in text for x in ['✨', '🟢', '✅', '💎', '⭐', '🤫', '⛓️', '🎭', '⚡']):
         css_class = 'insight-good'
     
-    import re
+
     text_html = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)
     text_html = re.sub(r'\*(.*?)\*', r'<i>\1</i>', text_html)
     
@@ -44,7 +45,7 @@ def render_tooltip_card(content: str):
 
 def render_signal_box(title: str, badge_html: str, action: str, border_color: str = None):
     """Renders a premium signal box for priorities or AI summaries."""
-    import re
+
     action_html = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', action)
     action_html = re.sub(r'\*(.*?)\*', r'<i>\1</i>', action_html)
 
@@ -144,7 +145,7 @@ def get_status_icon_html(is_ok: bool) -> str:
 
 def render_ai_consultant_box(insight_text: str, persona: str = "Script Consultant"):
     """Renders a premium, distinctive box for AI-powered consultant insights."""
-    import re
+
     text_html = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', insight_text)
     text_html = re.sub(r'\*(.*?)\*', r'<i>\1</i>', text_html)
 
