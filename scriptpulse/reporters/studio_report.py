@@ -60,6 +60,12 @@ def generate_report(report_data, script_title="Untitled Script", user_notes="", 
     if avg_effort < 0.35: rec = "PASS (Low Engagement)"
     elif avg_effort > 0.75: rec = "PASS (High Strain)"
     
+    # --- Additional Data Extraction ---
+    loc_profile = report_data.get('writer_intelligence', {}).get('structural_dashboard', {}).get('location_profile', {})
+    char_arcs = report_data.get('writer_intelligence', {}).get('structural_dashboard', {}).get('character_arcs', {})
+    cast_size = len(char_arcs) if char_arcs else len(report_data.get('voice_fingerprints', {}))
+    economy_map = report_data.get('writer_intelligence', {}).get('structural_dashboard', {}).get('scene_economy_map', {}).get('map', [])
+
     # 2. Build HTML
     html = f"""
     <!DOCTYPE html>
@@ -142,21 +148,21 @@ def generate_report(report_data, script_title="Untitled Script", user_notes="", 
             
             .stats-grid {{ 
                 display: grid; 
-                grid-template-columns: repeat(3, 1fr); 
+                grid-template-columns: repeat({('5' if lens == "Studio Executive" else '3')}, 1fr); 
                 gap: 20px; 
                 margin-bottom: 40px; 
             }}
             
             .stat-card {{ 
                 background: var(--card-bg);
-                padding: 24px;
+                padding: 20px 15px;
                 border-radius: 12px;
                 text-align: center;
                 box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
             }}
             
-            .stat-card h4 {{ margin: 0 0 10px 0; font-size: 12px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.1em; }}
-            .stat-card p {{ margin: 0; font-size: 28px; font-weight: 700; color: var(--primary); }}
+            .stat-card h4 {{ margin: 0 0 10px 0; font-size: 11px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.1em; }}
+            .stat-card p {{ margin: 0; font-size: 22px; font-weight: 700; color: var(--primary); }}
             
             .section {{
                 background: var(--card-bg);
@@ -214,6 +220,17 @@ def generate_report(report_data, script_title="Untitled Script", user_notes="", 
                 align-items: center;
                 gap: 6px;
             }}
+            
+            .economy-item {{
+                background: #f8fafc;
+                padding: 12px;
+                border-radius: 6px;
+                margin-bottom: 8px;
+                font-size: 13px;
+                border-left: 4px solid #e2e8f0;
+            }}
+            .economy-bloated {{ border-left-color: var(--danger); background: #fff1f2; }}
+            .economy-tight {{ border-left-color: var(--success); background: #f0fdf4; }}
 
             .indicator {{
                 width: 8px;
@@ -257,6 +274,16 @@ def generate_report(report_data, script_title="Untitled Script", user_notes="", 
                 <h4>Est. Runtime</h4>
                 <p>{writer_intel.get('structural_dashboard', {}).get('runtime_estimate', {}).get('estimated_minutes', len(trace)*2)}m</p>
             </div>
+            {f'''
+            <div class="stat-card">
+                <h4>📍 Locations</h4>
+                <p>{loc_profile.get('unique_locations', '—')}</p>
+            </div>
+            <div class="stat-card">
+                <h4>🎭 Cast Size</h4>
+                <p>{cast_size if cast_size else '—'}</p>
+            </div>
+            ''' if lens == "Studio Executive" else ""}
         </div>
         
         <div class="section">
@@ -266,6 +293,23 @@ def generate_report(report_data, script_title="Untitled Script", user_notes="", 
             </ul>
         </div>
         
+        {f'''
+        <div class="section">
+            <h3>Scene Economy Audit</h3>
+            <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 15px;">Targeting scenes for page efficiency and production speed:</p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <h4 style="font-size: 12px; text-transform: uppercase; margin-bottom: 10px;">✂️ Trim Candidates</h4>
+                    {''.join([f'<div class="economy-item economy-bloated">Scene {s["scene"]}: {s["label"]} ({s["score"]}%)</div>' for s in economy_map if s.get('score', 0) < 35][:4]) or '<p style="font-size: 12px; color: var(--text-muted);">None detected.</p>'}
+                </div>
+                <div>
+                    <h4 style="font-size: 12px; text-transform: uppercase; margin-bottom: 10px;">💎 Lean Scenes</h4>
+                    {''.join([f'<div class="economy-item economy-tight">Scene {s["scene"]}: {s["label"]} ({s["score"]}%)</div>' for s in economy_map if s.get('score', 0) > 75][:4]) or '<p style="font-size: 12px; color: var(--text-muted);">No high-efficiency scenes.</p>'}
+                </div>
+            </div>
+        </div>
+        ''' if lens == "Script Coordinator" and economy_map else ""}
+
         <div class="section">
             <h3>Rewrite Priorities</h3>
             <table class="priority-table">
