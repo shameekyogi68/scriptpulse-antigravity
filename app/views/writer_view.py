@@ -245,16 +245,69 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
         uikit.render_section_header("🧠", "Structural Diagnostics", config['diag_desc'])
 
         diagnoses = writer_intel.get('narrative_diagnosis', [])
-        if diagnoses:
-            for diag in diagnoses:
-                uikit.render_insight_card(diag if isinstance(diag, str) else diag.get('text', str(diag)))
+        
+        # --- Persona Deep Filtering for Diagnostics ---
+        EXEC_ICONS = ['🔵', '🔴', '⚖️', '🚫', '👥', '📉', '⚠️']
+        EDITOR_ICONS = ['🧵', '⬜', '👻', '✅', '🔵', '🔴', '⭐', '✨', '🟡']
+        COORD_ICONS = ['✂️', '🔴', '🟠', '🚫', '💎', '⛓️', '🎭', '👥', '🎙️', '🟢']
+        
+        filtered_diagnoses = []
+        for diag in diagnoses:
+            text = diag if isinstance(diag, str) else diag.get('text', str(diag))
+            
+            is_exec = any(icon in text for icon in EXEC_ICONS)
+            is_editor = any(icon in text for icon in EDITOR_ICONS)
+            is_coord = any(icon in text for icon in COORD_ICONS)
+            
+            # Explicit keyword overrides to ensure perfect bucketing
+            if "Same Voice" in text:
+                is_exec, is_editor, is_coord = False, True, True
+            elif "Too Slow" in text or "Engagement Drop" in text:
+                is_exec, is_editor, is_coord = True, True, False
+            elif "Unfilmable" in text:
+                is_exec, is_editor, is_coord = True, False, True
+                
+            if lens == "Studio Executive" and is_exec:
+                filtered_diagnoses.append(text)
+            elif lens == "Story Editor" and is_editor:
+                filtered_diagnoses.append(text)
+            elif lens == "Script Coordinator" and is_coord:
+                filtered_diagnoses.append(text)
+
+        # Ensure at least something shows if the script is generally good
+        if not filtered_diagnoses and diagnoses:
+            positives = [d for d in diagnoses if any(i in d for i in ['✅', '✨', '🟢'])]
+            filtered_diagnoses = positives if positives else diagnoses[:1]
+
+        if filtered_diagnoses:
+            for diag in filtered_diagnoses:
+                uikit.render_insight_card(diag)
         else:
             st.success("✅ No structural anomalies detected. Your script is clean.")
 
         if priorities:
             st.markdown("<br>", unsafe_allow_html=True)
             uikit.render_section_header("⚡", "Priority Fixes", config['fix_desc'])
-            for i, p in enumerate(priorities[:3]):
+            
+            # --- Persona Deep Filtering for Priorities ---
+            pri_limit = 3 if lens == "Story Editor" else 2
+            exec_pri_kws = ["boredom", "cut", "engagement", "budget", "unfilmable", "name", "slow"]
+            coord_pri_kws = ["dialogue", "show", "unfilmable", "fluff", "prose", "voice", "economy"]
+            
+            filtered_pri = []
+            for p in priorities:
+                txt = f"{p.get('action', '')} {p.get('root_cause', '')}".lower()
+                if lens == "Studio Executive" and any(k in txt for k in exec_pri_kws):
+                    filtered_pri.append(p)
+                elif lens == "Script Coordinator" and any(k in txt for k in coord_pri_kws):
+                    filtered_pri.append(p)
+                elif lens == "Story Editor":
+                    filtered_pri.append(p)
+                    
+            if not filtered_pri and priorities:
+                filtered_pri = priorities[:pri_limit]
+            
+            for i, p in enumerate(filtered_pri[:pri_limit]):
                 uikit.render_signal_box(
                     f"Priority {i+1}",
                     uikit.get_leverage_badge(p.get('leverage', 'Medium')),
