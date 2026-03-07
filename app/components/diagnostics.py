@@ -15,7 +15,7 @@ def render_diagnostics():
             value=st.session_state['heuristics_only'],
             key="mem_safe_toggle",
             help=(
-                "Disables MiniLM SBERT (~80 MB), GPT-2 (~500 MB), and DistilBART (~300 MB). "
+                "Disables Jina SBERT (~66 MB) and DeBERTa Zero-Shot (~140 MB). "
                 "spaCy (en_core_web_sm) remains active — it is always local and lightweight. "
                 "Structural accuracy is fully preserved; only embedding-based subfields are approximated."
             )
@@ -33,7 +33,7 @@ def render_diagnostics():
 
         # ── Manual memory release ──────────────────────────────────
         if st.button("Free Model Memory", key="free_mem_btn",
-                     help="Releases SBERT/GPT-2 references and triggers GC. Use when RAM is low."):
+                     help="Releases SBERT/DeBERTa references and triggers GC. Use when RAM is low."):
             try:
                 from scriptpulse.utils.model_manager import manager as _mm
                 from scriptpulse.pipeline import runner as _runner

@@ -61,8 +61,7 @@ def render_sidebar(ui_mode, is_cloud, stu):
             'ui_mode': "Unified",
             'force_cloud': True,
             'ablation_config': {
-                'use_sbert': False,
-                'use_gpt2': False,
+                'use_sbert': True,
                 'use_multimodal': False
             },
             'shadow_mode': shadow_mode,

@@ -98,7 +98,7 @@ class ResonanceAgent:
     
     def __init__(self):
         self.themes = list(self.THEME_DESCRIPTIONS.keys())
-        self.sbert_model = manager.get_sentence_transformer('sentence-transformers/all-MiniLM-L6-v2')
+        self.sbert_model = manager.get_sentence_transformer('jinaai/jina-embeddings-v2-small-en')
         self.theme_embeddings = None
         self.is_ml = self.sbert_model is not None
         
@@ -340,7 +340,7 @@ class StakesDetector:
         if not scene_text: return {'stakes': 'Low', 'time_pressure': False}
         
         ablation_config = ablation_config or {}
-        if not ablation_config.get('use_sbert', True) and not ablation_config.get('use_gpt2', True):
+        if not ablation_config.get('use_sbert', True):
             self.is_ml = False
             
         if self.is_ml:

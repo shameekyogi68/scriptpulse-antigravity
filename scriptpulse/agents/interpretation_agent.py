@@ -18,7 +18,7 @@ class InterpretationAgent:
             'Low': "Slow / Breather"
         }
 
-    def run(self, temporal_trace, features=None, scenes=None):
+    def run(self, temporal_trace, features=None, scenes=None, genre='drama'):
         """Main entry point for cognitive interpretation"""
         if not temporal_trace: return {}
         
@@ -26,7 +26,7 @@ class InterpretationAgent:
         structure = self.map_to_structure(temporal_trace, features)
         
         # 2. Cognitive Heuristics Diagnosis
-        diagnosis = self.diagnose_patterns(temporal_trace, features, scenes)
+        diagnosis = self.diagnose_patterns(temporal_trace, features, scenes, genre=genre)
         
         return {
             'structure': structure,
@@ -103,12 +103,16 @@ class InterpretationAgent:
         except:
             return ""
 
-    def diagnose_patterns(self, temporal_trace, features=None, scenes=None):
+    def diagnose_patterns(self, temporal_trace, features=None, scenes=None, genre='drama'):
         """Identifies Cognitive Experiences: Boredom, Confusion, Visceral Reaction."""
         diagnosis = []
         signals = [s['attentional_signal'] for s in temporal_trace]
         if not signals or not features or not scenes or len(features) != len(temporal_trace) or len(scenes) != len(temporal_trace): 
             return diagnosis
+            
+        # Pacing Threshold Adjustment by Genre
+        sag_limit = 0.35 if genre.lower() == 'drama' else 0.45 # Action/Thriller drift earlier
+        sag_scenes = 3 if genre.lower() == 'drama' else 2 
             
         # 1. Overcrowded Narrative (High entity churn + Low Tension)
         for i in range(len(temporal_trace)):
@@ -139,15 +143,15 @@ class InterpretationAgent:
         # 3. Pacing Drag / Structural Sag
         high_runs = 0
         for i, s in enumerate(signals):
-            if s < 0.35: 
+            if s < sag_limit: 
                 high_runs += 1
             else: 
                 high_runs = 0
             
-            if high_runs >= 3:
+            if high_runs >= sag_scenes:
                 snippet = self._get_snippet(scenes[i])
                 diagnosis.append(
-                    f"🟠 **Structural Sag (Scene {i+1})**: Three consecutive scenes of low tension. Lack of narrative momentum. (e.g., {snippet})"
+                    f"🟠 **Structural Sag (Scene {i+1})**: Consecutive scenes of low tension for a {genre}. (e.g., {snippet})"
                 )
                 break
                 

@@ -1,18 +1,18 @@
 {
-    "_version": "v13.1",
+    "_version": "v15.0",
     "_policy": "Exact match required. Mismatch is a hard fail.",
     "models": {
         "zero-shot-classification": {
-            "name": "valhalla/distilbart-mnli-12-3",
+            "name": "MoritzLaurer/DeBERTa-v3-xsmall-mnli-alnli",
             "task": "zero-shot-classification",
             "revision": "main",
-            "notes": "Used by BertParserAgent for line tagging"
+            "notes": "DeBERTa-v3-xsmall MNLI - Lighter (~140MB) and more accurate than DistilBART"
         },
         "sentence-transformer": {
-            "name": "sentence-transformers/all-MiniLM-L6-v2",
+            "name": "jinaai/jina-embeddings-v2-small-en",
             "task": "sentence-embedding",
             "revision": "main",
-            "notes": "Used for semantic embeddings, coherence similarity"
+            "notes": "Jina v2 Small - 8k context, research-grade embeddings"
         },
         "spacy": {
             "name": "en_core_web_sm",

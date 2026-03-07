@@ -4,11 +4,10 @@ Centralizes model loading, caching, and hardware acceleration.
 
 Active model stack:
   - spaCy en_core_web_sm  (~12 MB)  — always local, no download
-  - MiniLM SBERT           (~80 MB)  — remote first-run, cached in ~/.scriptpulse/models
-  - DistilBART MNLI        (~300 MB) — remote first-run, cached in ~/.scriptpulse/models
-  - GPT-2 base             (~500 MB) — optional, falls back to lexical entropy if off
+  - Jina v2 Small          (~66 MB)  — remote first-run, cached in ~/.scriptpulse/models (8k context)
+  - DeBERTa-v3-xsmall      (~140 MB) — remote first-run, cached in ~/.scriptpulse/models (Zero-Shot)
 
-NO BERT Large in this stack by design (would add 1.3 GB for <3% accuracy gain).
+NO BERT Large or GPT-2 in this stack by design (saves ~1.8 GB).
 """
 
 import os
@@ -22,7 +21,7 @@ logger = logging.getLogger('scriptpulse.mlops')
 # =============================================================================
 # PERFORMANCE: Environment-driven heuristics-only mode.
 # Set SCRIPTPULSE_HEURISTICS_ONLY=1 to skip ALL transformer models entirely.
-# This drops MiniLM SBERT (~80 MB), DistilBART (~300 MB), and GPT-2 (~500 MB).
+# This drops Jina SBERT (~66 MB) and DeBERTa Zero-Shot (~140 MB).
 # spaCy en_core_web_sm is always local and lightweight — it stays ON regardless.
 # All agents fall through to their existing fast heuristic fallbacks.
 # Analytical output structure is identical; embedding subfields are approximated.
@@ -142,9 +141,9 @@ class ModelManager:
             logger.error("Failed to load pipeline %s: %s", model_name, e)
             return None
 
-    def get_sentence_transformer(self, model_name="sentence-transformers/all-MiniLM-L6-v2"):
+    def get_sentence_transformer(self, model_name="jinaai/jina-embeddings-v2-small-en"):
         """
-        Get a SentenceTransformer model (MiniLM).
+        Get a SentenceTransformer model (Jina v2 Small).
         Loaded from HuggingFace Hub on first use, then cached locally.
         """
         if _HEURISTICS_ONLY:
@@ -156,7 +155,7 @@ class ModelManager:
             
         try:
             if model_name not in self._loaded_models:
-                logger.info("Loading SBERT: %s...", model_name)
+                logger.info("Loading SBERT (Jina v2-Small): %s...", model_name)
                 self._loaded_models[model_name] = SentenceTransformer(model_name, cache_folder=self.cache_dir)
             return self._loaded_models[model_name]
         except Exception as e:
@@ -165,15 +164,15 @@ class ModelManager:
 
     def get_zero_shot(self):
         """
-        Get a Zero-Shot Classifier (DistilBART).
-        Uses DistilBART-MNLI (~300MB) instead of BERT-Large (~1.3GB) to save resources.
+        Get a Zero-Shot Classifier (DeBERTa-v3).
+        Uses DeBERTa-v3-xsmall (~140MB) for superior research accuracy vs size ratio.
         """
         if _HEURISTICS_ONLY:
             return None
         
         # Consistent with required_model_versions.json
         spec = self._required_versions.get('zero-shot-classification', {})
-        model_name = spec.get('name', "valhalla/distilbart-mnli-12-3")
+        model_name = spec.get('name', "MoritzLaurer/DeBERTa-v3-xsmall-mnli-alnli")
         
         return self.get_pipeline("zero-shot-classification", model_name)
 
@@ -203,7 +202,7 @@ class ModelManager:
         """
         Explicitly release all loaded model references and suggest GC.
         Call this after analysis completes on memory-constrained machines
-        to return SBERT/GPT-2 heap to the OS before the next UI render.
+        to return SBERT/DeBERTa heap to the OS before the next UI render.
         """
         import gc
         self._loaded_models.clear()

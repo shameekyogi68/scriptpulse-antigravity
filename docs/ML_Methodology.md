@@ -7,21 +7,21 @@ ScriptPulse vNext.4 employs Machine Learning (ML) strictly as a descriptive inst
 ## 1. Information-Theoretic Surprisal (Cognitive Load)
 Our primary measure of linguistic processing strain goes beyond simple sentence length (Flesch-Kincaid). We model the cognitive effort required to process text using Information-Theoretic Surprisal.
 
-- **Model:** Next-token perplexity via GPT-2 (or equivalent auto-regressive transformer).
-- **Mechanism:** The model calculates the negative log-likelihood of the scene's text sequence. Higher perplexity indicates less predictable text, which correlates strongly with higher cognitive load during a first read.
+- **Model:** Jina-v2 Small (8k context) / Lexical Entropy.
+- **Mechanism:** The system prioritizes long-range semantic dependencies using an 8192-token window. This captures narrative shifts that standard 512-token BERT models truncate.
 - **Graceful Degradation:** If the model is unavailable or encounters OOM errors, the system falls back to a deterministic Lexical Entropy baseline (Shannon Entropy over word frequencies).
 
 ## 2. Zero-Shot Thematic Resonance
 Themes are culturally determined and cannot be objectively extracted from text. However, we can measure the *similarity* of a scene's content to predefined thematic anchors.
 
-- **Model:** Sentence-BERT (`sentence-transformers/all-MiniLM-L6-v2`).
-- **Mechanism:** We embed both the scene text (up to a token limit) and descriptions of core themes (e.g., "Sacrifice: giving up something precious"). We calculate the cosine similarity between the scene vector and theme vectors. Score thresholds (>0.35) determine if a theme is "resonating."
+- **Model:** Jina Embeddings v2 (`jinaai/jina-embeddings-v2-small-en`).
+- **Mechanism:** We embed both the scene text (up to an 8k token limit) and descriptions of core themes (e.g., "Sacrifice: giving up something precious"). We calculate the cosine similarity between the scene vector and theme vectors. Score thresholds (>0.35) determine if a theme is "resonating."
 - **Fallback:** If SBERT fails, the system uses keyword-based heuristics as a transparent proxy.
 
 ## 3. Zero-Shot Emotional Dimension Mapping
 ScriptPulse maps emotional arcs without pretending to "feel" them. We categorize emotional valence against Plutchik's Wheel of Emotions.
 
-- **Model:** Zero-Shot Classification (`valhalla/distilbart-mnli-12-3` or similar NLI-based formulation).
+- **Model:** Zero-Shot Classification (`MoritzLaurer/DeBERTa-v3-xsmall-mnli-alnli`).
 - **Mechanism:** We formulate the scene text as the premise and the emotion labels (Joy, Fear, Anger, etc.) as the hypotheses. The returned probabilities represent the structural distribution of emotional markers, *not* an assessment of emotional impact.
 - **Compound States:** Plutchik compound emotions (e.g., Joy + Trust = Love) are conditionally extracted based on overlapping probabilities.
 - **Fallback:** Lexical heuristic sets (keyword hits) if inference fails.

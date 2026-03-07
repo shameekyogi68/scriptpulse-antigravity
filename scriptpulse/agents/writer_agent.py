@@ -269,7 +269,10 @@ class WriterAgent:
         """
         import re
         # Extract raw text suggestions
-        raw_list = suggestions.get('structural_repair_strategies', [])
+        if isinstance(suggestions, list):
+            raw_list = suggestions
+        else:
+            raw_list = suggestions.get('structural_repair_strategies', [])
         prioritized = []
         
         for item in raw_list:

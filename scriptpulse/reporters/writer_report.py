@@ -91,7 +91,7 @@ def generate_writer_report(pipeline_output, title="Untitled Script", genre=None)
     lines.append(f"**PROJECT:** `{title.upper()}`  ")
     lines.append(f"**GENRE PROFILE:** `{genre.upper()}`  ")
     lines.append(f"**ANALYSIS DATE:** {analysis_date}  ")
-    lines.append(f"**ENGINE VERSION:** `v14.0 Gold Master`  ")
+    lines.append(f"**ENGINE VERSION:** `v15.0 Gold`  ")
     lines.append("\n" + "---" * 10 + "\n")
 
     # -------------------------------------------------------------------------
@@ -301,6 +301,6 @@ def generate_writer_report(pipeline_output, title="Untitled Script", genre=None)
     # FOOTER
     # -------------------------------------------------------------------------
     lines.append("\n" + "---" * 10 + "\n")
-    lines.append("*Created with ScriptPulse v14.0 · Private Intellectual Property · Confidential*")
+    lines.append("*Created with ScriptPulse v15.0 · Private Intellectual Property · Confidential*")
 
     return "\n".join(lines)

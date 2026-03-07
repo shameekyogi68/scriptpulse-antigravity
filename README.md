@@ -1,59 +1,66 @@
-# ScriptPulse: The Cognitive Screenplay Instrument
-
-**Version:** vNext.11 (Moonshot Prototype)
-**Status:** Research-Grade / Experimental
-**Author:** "Senior Researcher" (Antigravity)
+# ScriptPulse: The AI Story Intelligence Instrument
+**Version:** v15.0 Gold (Transformer-Augmented)
+**Status:** Research-Grade / Production-Ready
+**Engine:** Hybrid Cognitive Simulation + Transformer NLP
 
 ---
 
 ## 🎯 Overview
-ScriptPulse is a computational framework for analyzing screenplay narratives. Unlike traditional tools that measure structure (formatting), ScriptPulse measures **Cognitive Load** and **Emotional Resonance**.
+ScriptPulse is a high-fidelity computational framework for analyzing screenplay narratives. Unlike traditional tools that focus on formatting, ScriptPulse simulates **Reader Cognitive Load** and **Emotional Resonance**.
 
-It uses a multi-agent architecture to simulate how a human brain processes a story, scene by scene.
-
----
-
-## 🚀 Capabilities by Version
-
-### 1. vNext.9: The Validated Instrument (Stable)
-*   **Core Feature:** "Attentional Pulse" (Temporal Dynamics Formula).
-*   **Validation:** $r=0.646$ correlation with human gaze data (N=100).
-*   **Usage:** Standard analysis.
-*   **Command:** `python3 -m scriptpulse.runner script.txt`
-
-### 2. vNext.10: The Universal Model (Experimental)
-*   **New Features:**
-    *   **Polyglot Validator:** Detects non-Western narrative structures (Kishōtenketsu, etc.).
-    *   **Multimodal Fusion:** Ingests visual density signals.
-*   **Command:** `python3 -m scriptpulse.runner script.txt --experimental`
-
-### 3. vNext.11: The Cognitive Frontier (Moonshot)
-*   **New Features:**
-    *   **Silicon Stanislavski:** Active Inference agent simulating internal emotional states (Safety, Trust, Agency).
-    *   **Resonance Engine:** Detects thematic depth vs structural effort.
-    *   **Insight Cascades:** Finds "Aha!" moments via entropy drops.
-*   **Command:** `python3 -m scriptpulse.runner script.txt --moonshot`
+By combining a **Multi-Agent Architecture** with modern Transformers (Jina-v2 & DeBERTa-v3), the system tracks how an audience's attention peaks, valleys, and fatigues over the course of a 100-page read.
 
 ---
 
-## 📊 Cognitive Dashboard (UI)
-The project includes a full-featured research dashboard.
+## 🚀 Key Capabilities (v15 Gold)
 
-1.  **Install Dependencies:** `pip install -r requirements.txt`
-2.  **Run Dashboard:** `streamlit run streamlit_app.py`
-3.  **Unlock Moonshot Mode:** The UI automatically detects if you upload a JSON analysis generated with the `--moonshot` flag (feature incoming) or simulates it for testing.
+### 1. Attentional Dynamics simulation
+The core engine utilizes a linear dynamical system to model interest ($A_t$) based on:
+*   **Linguistic Load**: Syntactic complexity and idea density.
+*   **Narrative Momentum**: Turn velocity and action density.
+*   **Recovery Potential**: Genre-specific breathers and pacing resets.
+
+### 2. Transformer-Augmented Perception
+*   **8k Context Horizon**: Powered by `Jina-v2-small`, the system "perceives" entire scenes at once without truncation.
+*   **Zero-Shot Emotional Mapping**: `DeBERTa-v3` categorizes conflict, stakes, and sentiment with clinical precision.
+
+### 3. Persona-Responsive Intelligence
+The UI adapts automatically to three industry personas:
+*   🕵️ **Story Editor**: Structural integrity and logic gaps.
+*   🏢 **Studio Executive**: Commercial viability and production risk.
+*   ✍️ **Script Coordinator**: Prose economy and craft precision.
+
+---
+
+## 📊 Getting Started
+
+### Installation
+```bash
+pip install -r requirements.txt
+```
+
+### Run the Dashboard
+```bash
+streamlit run app/streamlit_app.py
+```
+
+### Research Verification
+To verify the engine's mathematical integrity and genre-priors:
+```bash
+python3 final_validation.py
+```
 
 ---
 
 ## 📂 Repository Structure
-*   `scriptpulse/` - Core logic and agents.
-*   `scriptpulse/agents/` - The 28 specialized agents (Temporal, Semantic, Resonance, etc.).
-*   `experiments/` - Validation scripts (Gaze Lab, Error Propagation).
-*   `tests/` - Regression suite and scenarios.
-*   `AUDIT.md` - Engineering audit and reproducibility proof.
+*   `scriptpulse/` - Core simulation logic and agents.
+*   `app/` - The Streamlit-based Story Intelligence UI.
+*   `docs/` - Technical methodology and ML specifications.
+*   `PAPER_METHODS.md` - Academic methods and mathematical model grounding.
+*   `AUDIT.md` - Reproducibility checklist and system parameters.
 
 ---
 
 ## 🛡️ License
-Proprietary Research Instrument.
-Do not distribute without "Senior Researcher" approval.
+Proprietary Research Instrument. Confidentiality and Intellectual Property protections apply.
+© 2026 ScriptPulse Biometric Systems. 

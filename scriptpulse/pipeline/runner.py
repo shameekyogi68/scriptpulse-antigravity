@@ -56,9 +56,11 @@ def run_pipeline(script_content, genre='drama', story_framework='3_act', **kwarg
     ethics = EthicsAgent()
     
     # Analysis outputs
-    structure_map = interpreter.map_to_structure(temporal_trace, perceptual_features)
-    diagnosis = interpreter.diagnose_patterns(temporal_trace, perceptual_features, segmented_scenes)
-    suggestions = interpreter.generate_suggestions(temporal_trace)
+    # Update InterpretationAgent to accept genre for dynamic thresholds
+    ai_interpretation = interpreter.run(temporal_trace, perceptual_features, segmented_scenes, genre=genre)
+    structure_map = ai_interpretation['structure']
+    diagnosis = ai_interpretation['diagnosis']
+    suggestions = ai_interpretation.get('suggestions', [])
     semantic_beats = interpreter.apply_semantic_labels(temporal_trace)
     
     # --- STAGE 5: Ethics & Fairness (The 'True' Audit) ---

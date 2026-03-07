@@ -14,13 +14,22 @@ class DynamicsAgent:
     """Core Mathematical Simulation Engine - High Fidelity, Low Complexity"""
     
     def __init__(self):
-        # Base Sensitivity Parameters (Configurable)
-        self.LAMBDA = 0.85 # Decay rate (Higher = sustains interest longer)
-        self.BETA = 0.3    # Recovery rate (Higher = recovers faster)
-        self.R_MAX = 0.6   # Max recovery per scene
-        
-    def run_simulation(self, input_data, genre='drama', **kwargs):
+        # Priors as per PAPER_METHODS.md v1.3
+        self.GENRE_PRIORS = {
+            'drama':    {'lambda': 0.90, 'beta': 0.25},
+            'thriller': {'lambda': 0.75, 'beta': 0.40},
+            'action':   {'lambda': 0.78, 'beta': 0.50},
+            'comedy':   {'lambda': 0.80, 'beta': 0.60},
+            'horror':   {'lambda': 0.70, 'beta': 0.15},
+            'sci-fi':   {'lambda': 0.82, 'beta': 0.35},
+        }
+
+    def run_simulation(self, input_data, genre=None, **kwargs):
         features = input_data.get('features', [])
+        # Fix: Extract genre from input_data if not provided as positional arg
+        g_key = (genre or input_data.get('genre', 'drama')).lower()
+        priors = self.GENRE_PRIORS.get(g_key, self.GENRE_PRIORS['drama'])
+        
         if not features: return []
         
         signals = []
@@ -51,18 +60,20 @@ class DynamicsAgent:
             effort = 0.15 + (raw_effort * 0.7)
             
             # 2. Update Attentional Signal (S)
-            # Use responsive moving average to ensure peaks and valleys are highly visible
-            alpha = 0.5 # Responsiveness
-            signal = (effort * alpha) + (prev_signal * (1 - alpha))
+            # Implement formula: A_t = A_t-1 * lambda + Effort_t - Recovery_t
+            decay = priors['lambda']
+            beta = priors['beta']
+            
+            # Calculate Recovery Credit (R_t)
+            # R_t = (1 - Effort) * Beta
+            recovery = (1.0 - effort) * beta
+            
+            # Update state
+            signal = (prev_signal * decay) + effort - recovery
             
             # Inject micro-spikes for high action or high conflict to force visual peaks
             if norm_action > 0.6 or norm_velocity > 0.8:
-                signal += 0.15
-                
-            # Recovery credit
-            recovery = max(0, 0.5 - effort)
-            if recovery > 0.2:
-                signal -= 0.1
+                signal += 0.1
                 
             signal = min(0.98, max(0.05, signal)) # Keep in safe visible range
             
