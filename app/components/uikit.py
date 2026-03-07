@@ -27,7 +27,12 @@ def render_insight_card(text: str):
     elif any(x in text for x in ['✨', '🟢', '✅', '💎', '⭐', '🤫', '⛓️', '🎭', '⚡']):
         css_class = 'insight-good'
     
-    st.markdown(f"<div class='{css_class}'>{text}</div>", unsafe_allow_html=True)
+    import re
+    text_html = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)
+    text_html = re.sub(r'\*(.*?)\*', r'<i>\1</i>', text_html)
+    
+    st.markdown(f"<div class='{css_class}'>{text_html}</div>", unsafe_allow_html=True)
+
 
 def render_tooltip_card(content: str):
     """Renders a subtle tooltip/explainer card."""
@@ -39,6 +44,10 @@ def render_tooltip_card(content: str):
 
 def render_signal_box(title: str, badge_html: str, action: str, border_color: str = None):
     """Renders a premium signal box for priorities or AI summaries."""
+    import re
+    action_html = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', action)
+    action_html = re.sub(r'\*(.*?)\*', r'<i>\1</i>', action_html)
+
     style = f' style="border-left: 3px solid {border_color};"' if border_color else ""
     # Use a single-line joined string to avoid Markdown parser breaking the HTML tags
     html = (
@@ -47,7 +56,7 @@ def render_signal_box(title: str, badge_html: str, action: str, border_color: st
         f'<span style="font-weight: 600; color: {Theme.TEXT_PRIMARY};">{title}</span>'
         f'{badge_html}'
         f'</div>'
-        f'<div style="color: {Theme.TEXT_SECONDARY}; line-height: 1.6;">{action}</div>'
+        f'<div style="color: {Theme.TEXT_SECONDARY}; line-height: 1.6;">{action_html}</div>'
         f'</div>'
     )
     st.markdown(html, unsafe_allow_html=True)
@@ -135,6 +144,10 @@ def get_status_icon_html(is_ok: bool) -> str:
 
 def render_ai_consultant_box(insight_text: str, persona: str = "Script Consultant"):
     """Renders a premium, distinctive box for AI-powered consultant insights."""
+    import re
+    text_html = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', insight_text)
+    text_html = re.sub(r'\*(.*?)\*', r'<i>\1</i>', text_html)
+
     html = (
         f'<div style="background: rgba(106, 72, 187, 0.05); border-radius: 12px; padding: 16px; '
         f'border-left: 4px solid {Theme.ACCENT_PRIMARY}; margin-top: 15px; border-top: 1px solid rgba(106, 72, 187, 0.1);'
@@ -145,7 +158,7 @@ def render_ai_consultant_box(insight_text: str, persona: str = "Script Consultan
         f'{persona} Insight</span>'
         f'</div>'
         f'<div style="color: {Theme.TEXT_PRIMARY}; font-size: 0.95rem; line-height: 1.5; font-style: italic;">'
-        f'"{insight_text}"</div>'
+        f'{text_html}</div>'
         f'</div>'
     )
     st.markdown(html, unsafe_allow_html=True)
