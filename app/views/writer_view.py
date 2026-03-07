@@ -111,13 +111,17 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
         rt_label = f"{runtime_data.get('estimated_minutes', 0)} min" if isinstance(runtime_data, dict) else "N/A"
 
         # --- Persona-Specific Metric Cards ---
+        loc_profile = dashboard.get('location_profile', {})
+        cast_size = len(char_arcs) if char_arcs else len(report.get('voice_fingerprints', {}))
+
         if lens == "Studio Executive":
-            c1, c2, c3, c4, c5 = st.columns(5)
+            c1, c2, c3, c4, c5, c6 = st.columns(6)
             c1.metric("Market Readiness", f"{readiness}/100", help="Commercial viability score.")
             c2.metric("Budget Tier", dashboard.get('budget_impact', 'Indie'), help="Estimated production scale.")
             c3.metric("Prod. Risk", f"{dashboard.get('production_risk_score', 50)}/100", help="Complexity vs payoff.")
-            c4.metric("Pacing", pacing)
-            c5.metric("Runtime", rt_label)
+            c4.metric("📍 Locations", loc_profile.get('unique_locations', '—'), help="More locations = higher production cost.")
+            c5.metric("🎭 Cast Size", cast_size if cast_size else '—', help="Total speaking roles identified.")
+            c6.metric("Runtime", rt_label)
 
         elif lens == "Script Coordinator":
             c1, c2, c3, c4, c5 = st.columns(5)
@@ -355,6 +359,43 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
         )
 
     # =====================================================================
+    # SECTION: SCENE ECONOMY (Script Coordinator only)
+    # =====================================================================
+    def render_scene_economy():
+        economy_map = dashboard.get('scene_economy_map', {}).get('map', [])
+        if not economy_map:
+            return
+        st.markdown("<br>", unsafe_allow_html=True)
+        uikit.render_section_header("📐", "Scene Economy",
+            "How efficiently each scene uses its page space. Trim bloated scenes for a tighter read.")
+
+        # Categorize scenes
+        bloated = [s for s in economy_map if s.get('score', 0) < 30 and s.get('label') != 'Unknown']
+        tight = [s for s in economy_map if s.get('score', 0) >= 70]
+
+        ec1, ec2 = st.columns(2)
+        with ec1:
+            if bloated:
+                st.markdown(f"##### ✂️ Trim Candidates ({len(bloated)})")
+                for s in bloated[:5]:
+                    st.markdown(f"<div style='background: rgba(239,68,68,0.08); padding: 8px 12px; border-radius: 8px; "
+                                f"margin-bottom: 6px; border-left: 3px solid {Theme.SEMANTIC_CRITICAL}; font-size: 0.85rem;'>"
+                                f"Scene {s['scene']} · <b>{s.get('label', '?')}</b> · Economy: {s.get('score', 0)}%"
+                                f"</div>", unsafe_allow_html=True)
+            else:
+                st.success("✅ No bloated scenes detected.")
+        with ec2:
+            if tight:
+                st.markdown(f"##### 💎 Lean Scenes ({len(tight)})")
+                for s in tight[:5]:
+                    st.markdown(f"<div style='background: rgba(16,185,129,0.08); padding: 8px 12px; border-radius: 8px; "
+                                f"margin-bottom: 6px; border-left: 3px solid {Theme.SEMANTIC_GOOD}; font-size: 0.85rem;'>"
+                                f"Scene {s['scene']} · <b>{s.get('label', '?')}</b> · Economy: {s.get('score', 0)}%"
+                                f"</div>", unsafe_allow_html=True)
+            else:
+                st.caption("No scenes scored above 70% economy.")
+
+    # =====================================================================
     # SECTION: PRODUCER INTELLIGENCE
     # =====================================================================
     def render_producer_intel():
@@ -362,15 +403,35 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
         uikit.render_section_header("🏢", "Producer Intelligence",
                                     "Commercial viability, budget estimation & marketplace positioning.")
 
-        c1, c2, c3, c4 = st.columns(4)
+        loc_profile = dashboard.get('location_profile', {})
+        cast_size = len(char_arcs) if char_arcs else len(report.get('voice_fingerprints', {}))
+
+        c1, c2, c3, c4, c5, c6 = st.columns(6)
         c1.metric("Production Risk", f"{dashboard.get('production_risk_score', 50)}/100",
                   help="Complexity vs narrative payoff.")
         c2.metric("Market Readiness", f"{dashboard.get('market_readiness', 50)}/100",
                   help="Combined commercial viability.")
         c3.metric("Budget Tier", dashboard.get('budget_impact', 'Standard'),
                   help="Indie → Studio → Blockbuster.")
-        c4.metric("Midpoint", dashboard.get('midpoint_status', 'N/A'),
+        c4.metric("📍 Locations", loc_profile.get('unique_locations', '—'),
+                  help="Unique shooting locations. More = higher budget.")
+        c5.metric("🎭 Cast", cast_size if cast_size else '—',
+                  help="Total speaking roles identified.")
+        c6.metric("Midpoint", dashboard.get('midpoint_status', 'N/A'),
                   help="Structural midpoint health.")
+
+        # Location Insight
+        if loc_profile.get('unique_locations', 0) > 0:
+            top_loc = loc_profile.get('top_location', 'Unknown')
+            top_ratio = loc_profile.get('top_location_ratio', 0)
+            loc_count = loc_profile.get('unique_locations', 0)
+            if loc_count > 15:
+                loc_note = f"⚠️ {loc_count} locations is high — consider consolidating to reduce production costs."
+            elif loc_count < 5:
+                loc_note = f"✅ {loc_count} locations — lean, production-friendly footprint."
+            else:
+                loc_note = f"📍 {loc_count} locations. Primary set: **{top_loc}** ({top_ratio:.0%} of scenes)."
+            st.caption(loc_note)
 
         # Comparable Films
         comps = dashboard.get('commercial_comps', [])
@@ -502,12 +563,13 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
         render_diagnostics()
 
     elif lens == "Script Coordinator":
-        # Coordinator Flow: Score → Tension Map → Diagnostics → Scene Turns → AI Memo
+        # Coordinator Flow: Score → Tension Map → Diagnostics → Scene Turns → Scene Economy → AI Memo
         # NO Producer Intel, NO Mentor, NO Characters
         render_score_card()
         render_story_pulse()
         render_diagnostics()
         render_scene_turns()
+        render_scene_economy()
         st.markdown("---")
         render_coverage_memo()
 
