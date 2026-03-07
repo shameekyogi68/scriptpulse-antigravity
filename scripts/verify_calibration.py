@@ -4,7 +4,11 @@ import os
 import random
 import statistics
 
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+# Ensure project root is in path
+TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = os.path.dirname(TOOLS_DIR)
+if ROOT_DIR not in sys.path:
+    sys.path.append(ROOT_DIR)
 
 from scriptpulse.agents.dynamics_agent import DynamicsAgent
 

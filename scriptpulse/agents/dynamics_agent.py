@@ -28,7 +28,11 @@ class DynamicsAgent:
         features = input_data.get('features', [])
         # Fix: Extract genre from input_data if not provided as positional arg
         g_key = (genre or input_data.get('genre', 'drama')).lower()
-        priors = self.GENRE_PRIORS.get(g_key, self.GENRE_PRIORS['drama'])
+        priors = self.GENRE_PRIORS.get(g_key, self.GENRE_PRIORS['drama']).copy()
+        
+        # Override with kwargs for hyperparameter tuning / research ablation
+        if 'lambda' in kwargs: priors['lambda'] = kwargs['lambda']
+        if 'beta' in kwargs: priors['beta'] = kwargs['beta']
         
         if not features: return []
         

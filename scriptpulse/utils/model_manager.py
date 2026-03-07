@@ -41,7 +41,7 @@ except ImportError:
     spacy = None
 
 REQUIRED_VERSIONS_PATH = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), '..', '..', 'required_model_versions.json'
+    os.path.dirname(os.path.abspath(__file__)), '..', '..', 'config', 'required_model_versions.json'
 )
 
 class ModelManager:

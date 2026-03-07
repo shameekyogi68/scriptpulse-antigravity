@@ -41,23 +41,38 @@ pip install -r requirements.txt
 
 ### Run the Dashboard
 ```bash
-streamlit run app/streamlit_app.py
+streamlit run streamlit_app.py
 ```
 
 ### Research Verification
-To verify the engine's mathematical integrity and genre-priors:
+To run our high-precision validation suite:
 ```bash
-python3 final_validation.py
+python3 scripts/final_validation.py
 ```
 
 ---
 
-## 📂 Repository Structure
-*   `scriptpulse/` - Core simulation logic and agents.
-*   `app/` - The Streamlit-based Story Intelligence UI.
-*   `docs/` - Technical methodology and ML specifications.
-*   `PAPER_METHODS.md` - Academic methods and mathematical model grounding.
-*   `AUDIT.md` - Reproducibility checklist and system parameters.
+## 📂 Repository Structure (v15.0 Gold)
+*   `scriptpulse/` - **Core Engine.** Multi-agent narrative simulation logic.
+*   `app/` - **View Layer.** Streamlit dashboard components and assets.
+*   `scripts/` - **Workbench.** Automation, optimization, and research showcases.
+*   `docs/` - **Knowledge Base.** 
+    *   `docs/theory/`: Theoretical grounding and formal specifications.
+    *   `docs/validation/`: Certification reports and performance metrics.
+    *   `docs/guides/`: Onboarding and professional user manuals.
+    *   `docs/business/`: Roadmaps and deployment logs.
+*   `config/` - **Environment.** Model version pins and genre dynamic priors.
+*   `data/` - **Analytics.** Ground truth datasets and script samples.
+*   `tests/` - **Quality Assurance.** Regression and unit test suites.
+
+---
+
+## 🛡️ Key Documentation
+*   `docs/theory/PAPER_METHODS.md`: Mathematical model and research derivation.
+*   `docs/guides/WRITER_GUIDE.md`: Professional interpretation guide.
+*   `docs/validation/Validation_Report_v15.md`: Gold Master certification.
+
+
 
 ---
 

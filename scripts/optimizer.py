@@ -7,10 +7,13 @@ import numpy as np
 from scipy.stats import pearsonr
 import logging
 
-# Ensure scriptpulse is in path
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+# Ensure project root is in path
+TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = os.path.dirname(TOOLS_DIR)
+if ROOT_DIR not in sys.path:
+    sys.path.append(ROOT_DIR)
 
-from scriptpulse import runner
+from scriptpulse.pipeline import runner
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 

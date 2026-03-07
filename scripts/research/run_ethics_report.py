@@ -1,11 +1,13 @@
 
 import json
 import logging
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Ensure project root is in path
+RESEARCH_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = os.path.dirname(os.path.dirname(RESEARCH_DIR))
+if ROOT_DIR not in sys.path:
+    sys.path.append(ROOT_DIR)
 
-from scriptpulse.runner import run_pipeline
+from scriptpulse.pipeline.runner import run_pipeline
 
 # Configure logging
 logging.basicConfig(level=logging.ERROR)

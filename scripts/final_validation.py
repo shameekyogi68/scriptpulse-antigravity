@@ -8,7 +8,8 @@ import os
 import unittest
 
 # Ensure project root is in path
-ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = os.path.dirname(TOOLS_DIR)
 if ROOT_DIR not in sys.path:
     sys.path.append(ROOT_DIR)
 
