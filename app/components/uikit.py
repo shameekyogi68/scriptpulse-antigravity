@@ -15,7 +15,7 @@ def render_hero_section(title: str, subtitle: str):
     )
     
     html_content = f"""
-    <div style="text-align: center; padding: 2.5rem 0; width: 100%; background: transparent !important;">
+    <div style="text-align: center; padding: 0.5rem 0 1.5rem 0; width: 100%; background: transparent !important;">
         {brand_html}
         <div style="color: #A3A0B3 !important; font-size: 1.15rem; font-weight: 300; max-width: 800px; margin: 0 auto;">{subtitle}</div>
     </div>
