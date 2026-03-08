@@ -70,12 +70,33 @@ class WriterAgent:
         dashboard['writing_texture'] = self._diagnose_writing_texture(trace)
         dashboard['act_structure'] = self._build_act_structure(trace)
         dashboard['commercial_comps'] = self._find_commercial_comps(genre, dashboard.get('stakes_profile', {}).get('dominant', 'Social'))
-        
         # Cast count refinement (Task 3): Only count deterministic 5+ line characters
+        # Merge character fragments (e.g. MICHAEL vs MICHAEL CORLEONE) for accurate thresholding
         v_fingerprints = final_output.get('voice_fingerprints', {})
-        dashboard['cast_count_deterministic'] = len([c for c, v in v_fingerprints.items() if v.get('line_count', 0) >= 5])
+        merged_casts = {}
+        # Sort names by number of words (longest name first) to find parent personae
+        sorted_names = sorted(v_fingerprints.keys(), key=lambda x: len(x.split()), reverse=True)
+        for name in sorted_names:
+            line_count = v_fingerprints[name].get('line_count', 0)
+            if not name: continue
+            
+            found_parent = False
+            for existing in merged_casts:
+                # Smarter Merge: Look for shared full words (HAGEN vs TOM HAGEN), 
+                # but avoid merging DAN into DANIEL.
+                name_parts = set(name.split())
+                existing_parts = set(existing.split())
+                if name_parts.intersection(existing_parts):
+                    merged_casts[existing] += line_count
+                    found_parent = True
+                    break
+            
+            if not found_parent:
+                merged_casts[name] = line_count
+                
+        dashboard['cast_count_deterministic'] = len([c for c, count in merged_casts.items() if count >= 5])
 
-        # Market Readiness (Task 5): Anchored to Stable / Physical metrics only
+        # Market Readiness (Task 5)
         dashboard['market_readiness'] = self._calculate_market_readiness(dashboard)
 
         # Composite ScriptPulse Score (0-100) using the truly sorted diagnostics
@@ -1484,21 +1505,34 @@ class WriterAgent:
         return "Cinematic / Visual"
 
     def _find_commercial_comps(self, genre, dominant_stakes='Social'):
-        """Static lookup table mapping genre + dominant stakes to film suggestions (Task 7)."""
+        """Updated flexible mapping for all genres and stakes types. (Task 7)."""
         lookup = {
-            ('Crime Drama', 'Social'): ["The Godfather", "The Departed", "The Irishman"],
-            ('Crime Drama', 'Moral'): ["Chinatown", "No Country for Old Men", "There Will Be Blood"],
+            ('Crime', 'Social'): ["The Godfather", "The Departed", "The Irishman"],
+            ('Crime', 'Moral'): ["Chinatown", "No Country for Old Men", "There Will Be Blood"],
             ('Drama', 'Emotional'): ["Marriage Story", "Ordinary People", "Lady Bird"],
+            ('Drama', 'Social'): ["The Social Network", "Parasite", "The Crown"],
             ('Action', 'Physical'): ["Mad Max: Fury Road", "Die Hard", "John Wick"],
+            ('Action', 'Emotional'): ["Logan", "The Dark Knight", "Gladiator"],
             ('Horror', 'Existential'): ["Hereditary", "The Shining", "Midsommar"],
+            ('Horror', 'Physical'): ["Halloween", "A Quiet Place", "The Conjuring"],
             ('Sci-Fi', 'Existential'): ["2001: A Space Odyssey", "Arrival", "Blade Runner 2049"],
-            ('Thriller', 'Social'): ["Gone Girl", "Seven", "Prisoners"]
+            ('Sci-Fi', 'Moral'): ["Gattaca", "Children of Men", "Ex Machina"],
+            ('Thriller', 'Social'): ["Gone Girl", "Seven", "Prisoners"],
+            ('Comedy', 'Social'): ["The Big Short", "Knives Out", "The Favorite"],
+            ('Comedy', 'Emotional'): ["Little Miss Sunshine", "The Holdovers", "Planes, Trains and Automobiles"],
+            ('Romance', 'Emotional'): ["Before Sunrise", "Normal People", "The Notebook"]
         }
         
-        key = (genre, dominant_stakes)
-        # Default to a generic but professional list if no match
-        comps = lookup.get(key, lookup.get((genre, 'Physical'), ["The Social Network", "Parasite", "Pulp Fiction"]))
-        return comps
+        g = genre.replace('-', ' ').split()[0].title() # Handle 'Sci-Fi' -> 'Sci' -> 'Sci' or 'Crime'
+        if 'Sci' in g: g = 'Sci-Fi'
+        key = (g, dominant_stakes)
+        
+        # Smart fallback chain
+        if key in lookup: return lookup[key]
+        if (g, 'Physical') in lookup: return lookup[(g, 'Physical')]
+        if (g, 'Emotional') in lookup: return lookup[(g, 'Emotional')]
+        
+        return ["The Social Network", "Parasite", "Pulp Fiction"] # Ultimate classic fallbacks
 
     def _calculate_production_risks(self, trace):
         """
@@ -1621,9 +1655,10 @@ class WriterAgent:
         elif act2_pct > 65: balance = "Extended Act 2 Middle"
         
         # Violence Floor (Task 4): If Act 1 has 3+ violent events, it cannot be 'Slow Burn'
-        # We reflect this in a new 'pacing_benchmark' key
-        pacing = "Standard"
+        pacing = "Balanced"
         if violence[0] >= 3: pacing = "High Octane"
+        # Propulsive: High conflict/moves quickly - generalized for all drama (Task 4)
+        elif violence[0] >= 1 and (act1_pct < 28 or act2_pct < 45): pacing = "Propulsive" 
         elif sum(violence) == 0 and act1_pct > 30: pacing = "Slow Burn"
         
         return {

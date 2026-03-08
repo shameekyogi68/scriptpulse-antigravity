@@ -130,16 +130,18 @@ def run_pipeline(script_content, genre='drama', story_framework='3_act', **kwarg
         s_half = " ".join([l['text'] for l in scene_lines[mid:]]).lower()
         
         pos = ['yes', 'love', 'safe', 'good', 'happy', 'success', 'win']
-        neg = ['no', 'hate', 'die', 'danger', 'bad', 'fail', 'loss', 'quit']
+        neg = ['no', 'hate', 'die', 'danger', 'bad', 'fail', 'loss', 'quit', 'dead', 'body', 'kill']
+        violence_vibe = ['shot', 'ambush', 'massacre', 'gunfire', 'murder', 'blood']
         
-        s1 = sum(1 for w in pos if w in f_half) - sum(1 for w in neg if w in f_half)
-        s2 = sum(1 for w in pos if w in s_half) - sum(1 for w in neg if w in s_half)
+        s1 = sum(1 for w in pos if w in f_half) - sum(1 for w in neg if w in f_half) - (sum(1 for w in violence_vibe if w in f_half) * 2)
+        s2 = sum(1 for w in pos if w in s_half) - sum(1 for w in neg if w in s_half) - (sum(1 for w in violence_vibe if w in s_half) * 2)
         
         label = "Flat"
         if s1 < 0 and s2 > 0: label = "Negative to Positive"
         elif s1 > 0 and s2 < 0: label = "Positive to Negative"
-        elif s1 > 0 and s2 > 0: label = "Positive Progression"
+        elif s1 > 6 or s2 > 6: label = "High Energy" # New label for very active scenes
         elif s1 < 0 and s2 < 0: label = "Negative Progression"
+        elif s1 > 0 and s2 > 0: label = "Positive Progression"
         
         s['scene_turn'] = {'turn_label': label, 'sentiment_delta': s2 - s1}
 

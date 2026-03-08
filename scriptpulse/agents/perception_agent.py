@@ -212,19 +212,29 @@ class EncodingAgent:
         return round(entropy, 3)
 
     def _extract_affective_load(self, lines):
+        # 1. Prepare text for analysis (Action 'A' and Dialogue 'D')
         text = " ".join([l['text'] for l in lines if l['tag'] in ['D', 'A']])
+        all_text = " ".join([l['text'] for l in lines]).lower()
         if not text.strip():
             return {'pos': 0.0, 'neg': 0.0, 'neu': 1.0, 'compound': 0.0}
 
-        # 1. High-Priority Narrative Override: Violence & Death
-        # Force negative sentiment if explicit death/ambush events are detected with characters present
-        violence_triggers = ['shot', 'killed', 'ambush', 'trap', 'gunfire', 'body', 'murder', 'blood', 'execution']
-        char_names = [l['text'].upper() for l in lines if l['tag'] == 'C']
+        # 2. High-Priority Narrative Override: Violence & Death (Task 1)
+        # We must detect deaths even in action-heavy scenes without 'C' tags (explicit character names over dialogue).
+        violence_triggers = [
+            'shot', 'killed', 'ambush', 'trap', 'gunfire', 'body', 'murder', 'blood', 'execution', 
+            'assassinate', 'bullet', 'massacre', 'stabbed', 'slaughter', 'wound', 'dying'
+        ]
         
-        has_violence = any(w in text.lower() for w in violence_triggers)
-        if has_violence and char_names:
-            # Force high-tension negative sentiment for narrative spikes
-            return {'pos': 0.05, 'neg': 0.85, 'neu': 0.1, 'compound': -0.92}
+        # Check for character presence via tags OR capitalized names in Action lines
+        has_character = any(l['tag'] == 'C' for l in lines)
+        if not has_character:
+            # Look for [A-Z]{3,} name signals in Action text to identify character agency in dialogue-free scenes
+            has_character = any(re.search(r'\b[A-Z]{3,}\b', l['text']) for l in lines if l['tag'] == 'A')
+
+        has_violence = any(w in all_text for w in violence_triggers)
+        if has_violence and has_character:
+            # Force high-stakes Negative Sentiment for these cinematic story-beats
+            return {'pos': 0.01, 'neg': 0.95, 'neu': 0.04, 'compound': -0.98}
 
         if self.classifier:
             try:
