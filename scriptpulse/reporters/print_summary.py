@@ -142,14 +142,14 @@ def generate_print_summary(report_data, script_title="Untitled Script"):
         <div class="header">
             <div>
                 <h1>{script_title}</h1>
-                <div style="font-size: 14px; color: var(--muted); margin-top: 5px;">ScriptPulse Core Intelligence Summary</div>
+                <div style="font-size: 14px; color: var(--muted); margin-top: 5px;">Script<span style="color: #0052FF;">Pulse</span> Core Intelligence Summary</div>
             </div>
-            <div class="date">v15.0 Gold | ScriptPulse Score: {sp_score}/100 ({score_label})</div>
+            <div class="date">v15.0 Gold | Script<span style="color: #0052FF;">Pulse</span> Score: {sp_score}/100 ({score_label})</div>
         </div>
 
         <div class="stats-bar">
             <div class="stat">
-                <div class="stat-label">ScriptPulse Score</div>
+                <div class="stat-label">Script<span style="color: #0052FF;">Pulse</span> Score</div>
                 <div class="stat-value">{sp_score}/100</div>
             </div>
             <div class="stat">

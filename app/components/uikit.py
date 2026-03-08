@@ -2,17 +2,20 @@ import re
 import streamlit as st
 from app.components.theme import Theme
 
-def render_hero_section(title: str, subtitle: str):
-    """Renders the main hero section with absolute brand colors (White/Blue)."""
-    # Use a solid horizontal layout for the title to maximize visual impact
-    brand_html = (
-        '<div style="text-align: center; margin: 0 auto 10px auto; width: 100%;">'
-        '<span style="font-family: \'Outfit\', Helvetica, Arial, sans-serif; font-weight: 700; font-size: 3.8rem; '
-        'color: #FFFFFF !important; display: inline; background: transparent !important; margin: 0; padding: 0;">Script</span>'
-        '<span style="font-family: \'Outfit\', Helvetica, Arial, sans-serif; font-weight: 700; font-size: 3.8rem; '
-        'color: #0052FF !important; display: inline; background: transparent !important; margin: 0; padding: 0;">Pulse</span>'
-        '</div>'
+def get_brand_html(size: str = "3.8rem", align: str = "center", margin_bottom: str = "0px") -> str:
+    """Returns the standardized, globally consistent ScriptPulse brand HTML."""
+    return (
+        f'<div style="text-align: {align}; margin-bottom: {margin_bottom};">'
+        f'<span style="font-family: \'Outfit\', Helvetica, Arial, sans-serif; font-weight: 700; font-size: {size}; '
+        f'color: #FFFFFF !important; display: inline;">Script</span>'
+        f'<span style="font-family: \'Outfit\', Helvetica, Arial, sans-serif; font-weight: 700; font-size: {size}; '
+        f'color: #0052FF !important; display: inline;">Pulse</span>'
+        f'</div>'
     )
+
+def render_hero_section(title: str, subtitle: str):
+    """Renders the main hero section using the standardized brand logo."""
+    brand_html = get_brand_html(size="3.8rem", align="center", margin_bottom="10px")
     
     html_content = f"""
     <div style="text-align: center; padding: 0rem 0 1.5rem 0; width: 100%; background: transparent !important;">
@@ -142,5 +145,4 @@ def render_ai_consultant_box(insight_text: str, persona: str = "Script Consultan
         f'"{text_html}"</div>'
         f'</div>'
     )
-    st.markdown(html, unsafe_allow_html=True)
     st.markdown(html, unsafe_allow_html=True)

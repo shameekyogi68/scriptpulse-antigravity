@@ -42,7 +42,7 @@ def render_sidebar(ui_mode, is_cloud, stu):
         st.markdown("---")
 
         # Engine Info
-        st.caption("⚡ **Engine**: ScriptPulse v15.0 Gold")
+        st.markdown("<div style='font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 10px;'>⚡ <b>Engine</b>: Script<span style='color: #0052FF; font-weight: 700;'>Pulse</span> v15.0 Gold</div>", unsafe_allow_html=True)
         st.caption("🧠 **Mode**: Hybrid ML + Cognitive Sim")
         st.caption("🔒 **Privacy**: Your scripts are never stored.")
 

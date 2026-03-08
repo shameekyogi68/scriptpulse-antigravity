@@ -92,7 +92,7 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
                 <div style="font-size: 2.8rem; font-weight: 800; color: {score_color}; text-shadow: 0 0 15px rgba({rgb},0.4);
                             font-family: 'Outfit', sans-serif; line-height: 1;">{sp_score}</div>
                 <div style="font-size: 0.65rem; color: #FFFFFF; text-transform: uppercase;
-                            letter-spacing: 0.15em; margin-top: 6px; font-weight: 600;">ScriptPulse Score</div>
+                            letter-spacing: 0.15em; margin-top: 6px; font-weight: 600;">Script<span style="color: #0052FF;">Pulse</span> Score</div>
                 <div style="font-size: 0.8rem; color: {score_color}; font-weight: 700; margin-top: 4px; letter-spacing: 0.03em;">{score_label}</div>
             </div>
             <div>

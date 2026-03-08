@@ -247,7 +247,7 @@ def generate_report(report_data, script_title="Untitled Script", user_notes="", 
             <h1>Intelligence Coverage ({lens})</h1>
             <h2>{script_title}</h2>
             <div class="meta">
-                ENGINE: ScriptPulse v15.0 Gold | PERSPECTIVE: {lens}
+                ENGINE: Script<span style="color: #0052FF; font-weight: bold;">Pulse</span> v15.0 Gold | PERSPECTIVE: {lens}
             </div>
         </div>
         
