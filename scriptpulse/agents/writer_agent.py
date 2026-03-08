@@ -910,7 +910,7 @@ class WriterAgent:
                 f"📈 **Protagonist Ascension ({protagonist})**: Agency spikes from "
                 f"{a1:.2f} → {a3:.2f}. A powerful transformation from reactive to total command."
             )
-        elif abs(delta) < 0.02:
+        elif abs(delta) < 0.015:
             assessments.append(
                 f"⬜ **Protagonist Flat Arc ({protagonist})**: Agency stays flat "
                 f"({a1:.2f} → {a3:.2f}) across the script."
@@ -1443,6 +1443,7 @@ class WriterAgent:
             'Sci-Fi': ["Arrival", "Ex Machina", "Blade Runner 2049"],
             'Avant-Garde': ["The Lighthouse", "Mulholland Drive", "Enter the Void"],
             'Fantasy': ["Pan's Labyrinth", "Lord of the Rings", "The Princess Bride"],
+            'Crime Drama': ["The Godfather", "The Departed", "Goodfellas"],
             'Documentary': ["Flee", "Waltz with Bashir", "Apollo 11"]
         }
         return comps.get(genre, ["Professional Industry Standard"])

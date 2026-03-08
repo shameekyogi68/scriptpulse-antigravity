@@ -331,8 +331,8 @@ class EncodingAgent:
         
         # Normalize Agency by participation density so quiet but decisive leaders aren't penalized
         for c in arcs:
-            # Agency cap
-            arcs[c]['agency'] = round(min(1.0, arcs[c]['agency'] / max(1, arcs[c]['line_count'] * 0.3)), 3)
+            # Agency cap - Dampened divisor to allow growth without hitting 100% too easily
+            arcs[c]['agency'] = round(min(1.0, arcs[c]['agency'] / (1.0 + arcs[c]['line_count'] * 0.15)), 3)
             arcs[c]['sentiment'] = round(max(-1.0, min(1.0, arcs[c]['sentiment'] / max(1, arcs[c]['line_count']))), 3)
         
         # 3. Masterclass Diagnostics (Smart Heuristics using structural context)

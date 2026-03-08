@@ -40,10 +40,9 @@ class DynamicsAgent:
         prev_signal = 0.5  # Neutral starting point
         
         for i, feat in enumerate(features):
-            # 1. Calculate Narrative Momentum (Formerly Effort)
-            # Use sentiment/affective extremes and action as primary drivers of tension
-            norm_velocity = min(1.0, feat.get('dialogue_dynamics', {}).get('turn_velocity', 0) / 10.0)
-            norm_action = min(1.0, feat.get('visual_abstraction', {}).get('action_lines', 0) / 15.0)
+            # Use pre-normalized ratios from perception agent
+            norm_velocity = feat.get('dialogue_dynamics', {}).get('turn_velocity', 0)
+            norm_action = feat.get('visual_abstraction', {}).get('visual_intensity', 0)
             
             # Affective Extremes usually indicate high stakes or drama
             affective = feat.get('affective_load', {})
