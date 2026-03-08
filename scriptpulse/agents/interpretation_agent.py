@@ -124,7 +124,7 @@ class InterpretationAgent:
             if churn >= 3.0 and att_sig < 0.5:
                 snippet = self._get_snippet(scenes[i])
                 diagnosis.append(
-                    f"🟠 **Overcrowded Scene (Scene {i+1})**: Too many new characters or elements. (e.g., {snippet})"
+                    f"🟠 **Information Churn (Scene {i+1})**: High rate of introduction for new elements or characters. (e.g., {snippet})"
                 )
                 break
 
@@ -152,7 +152,7 @@ class InterpretationAgent:
             if high_runs >= sag_scenes:
                 snippet = self._get_snippet(scenes[i])
                 diagnosis.append(
-                    f"🟠 **Structural Sag (Scene {i+1})**: Consecutive scenes of low tension. (e.g., {snippet})"
+                    f"🟠 **Attentional Valley (Scene {i+1})**: Cumulative period of lower dramatic signals. (e.g., {snippet})"
                 )
                 break
                 
@@ -165,7 +165,7 @@ class InterpretationAgent:
             if entropy > 3.0 and att_sig < 0.4:
                 snippet = self._get_snippet(scenes[i])
                 diagnosis.append(
-                    f"💡 **Exposition Heavy (Scene {i+1})**: Text-dense but low on dramatic conflict. (e.g., {snippet})"
+                    f"💡 **Informational Peak (Scene {i+1})**: High text density with lower immediate dramatic conflict. (e.g., {snippet})"
                 )
                 break
 

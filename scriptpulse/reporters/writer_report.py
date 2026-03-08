@@ -211,28 +211,12 @@ def generate_writer_report(pipeline_output, title="Untitled Script", genre=None)
         lines.append("*Status: Clear. No structural anomalies detected.*")
 
     # -------------------------------------------------------------------------
-    # REWRITE PRIORITIES
-    # -------------------------------------------------------------------------
-    lines.append("\n## 🚀 Top Rewrite Priorities")
-    lines.append("*Prioritized sequence for the next draft:*\n")
-    if priorities:
-        for i, item in enumerate(priorities, 1):
-            if isinstance(item, dict):
-                action = item.get('action', 'Unknown Strategy')
-                leverage = item.get('leverage', 'Medium')
-                lines.append(f"{i}. **{action}** ` [{leverage} Leverage] `")
-            else:
-                lines.append(f"{i}. **{item}**")
-    else:
-        lines.append("*Project optimized. No major revisions suggested.*")
-        
-    # -------------------------------------------------------------------------
     # CREATIVE PROVOCATIONS
     # -------------------------------------------------------------------------
     provocations = wi.get('creative_provocations', [])
     if provocations:
         lines.append("\n## 💡 Creative Provocations")
-        lines.append("*Mentor-grade questions to push your craft further:*\n")
+        lines.append("*Inquiry-based perspectives on the current draft:*\n")
         for p in provocations:
             lines.append(f"> **{p}**")
 
@@ -257,14 +241,14 @@ def generate_writer_report(pipeline_output, title="Untitled Script", genre=None)
     # -------------------------------------------------------------------------
     # SCENE ECONOMY MAP
     # -------------------------------------------------------------------------
-    lines.append("\n## ✂️ Scene Economy & Cuts")
+    lines.append("\n## ✂️ Scene Efficiency")
     econ_map = dashboard.get('scene_economy_map', {})
     cut_candidates = econ_map.get('cut_candidates', [])
     low_count = econ_map.get('low_economy_count', 0)
     high_scenes = econ_map.get('high_economy_scenes', [])
 
     if cut_candidates:
-        lines.append(f"> [!IMPORTANT]\n> Found **{low_count} Efficiency Gaps**. Consider trimming or merging: Scenes {', '.join(str(s) for s in cut_candidates)}")
+        lines.append(f"> [!IMPORTANT]\n> Found **{low_count} Efficiency Gaps**. Narrative flow shows signs of potential deceleration in: Scenes {', '.join(str(s) for s in cut_candidates)}")
     
     if high_scenes:
         lines.append(f"🌟 **Load-Bearing Scenes:** {', '.join(str(s) for s in high_scenes[:5])}")

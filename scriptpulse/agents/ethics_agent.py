@@ -197,9 +197,9 @@ class EthicsAgent:
             
             # Risk 1: The "Inept" Minor Character (Low Agency + Negative Sentiment)
             if role == 'Minor' and agency < 0.2 and avg_val < -0.1:
-                 report['stereotyping_risks'].append(
-                     f"Minor Character '{char}' is portrayed with Low Agency ({agency:.2f}) and Negative Tone. Check for punching down."
-                 )
+                report['stereotyping_risks'].append(
+                    f"Minor Character '{char}' is portrayed with Low Agency ({agency:.2f}) and Negative Tone. This pattern often correlates with unbalanced character positioning."
+                )
             
             # Risk 2: Villain Coding (check if Major Support is excessively negative)
             if role in ['Major Support', 'Protagonist'] and avg_val < neg_thresh:
@@ -207,7 +207,7 @@ class EthicsAgent:
                      report['stereotyping_risks'].append(f"Protagonist '{char}' has consistently negative sentiment ({avg_val:.2f}). Is this an Anti-Hero?")
                 else:
                      report['stereotyping_risks'].append(
-                         f"Major Character '{char}' has high negative sentiment ({avg_val:.2f}). Likely Antagonist, but ensure motivation is clear."
+                         f"Major Character '{char}' has high negative sentiment ({avg_val:.2f}). This often signals an Antagonist role, but can result in 'Villain Coding' if internal motivation is not established."
                      )
 
             report['representation_stats'][char] = {

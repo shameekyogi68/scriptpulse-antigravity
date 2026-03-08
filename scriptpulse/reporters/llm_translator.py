@@ -128,14 +128,14 @@ def generate_section_insight(script_data, section_type, lens='viewer', api_key=N
         system_msg = (
             f"You are {p_desc} Analyze the story's structural pacing graph. "
             "Explain how this sequence affects the audience's attention from your professional perspective. "
-            "Suggest one high-impact pacing fix. One precise sentence. "
+            "Identify the most significant pacing trend observed. One precise sentence. "
             "If referring to the engine, format it as: Script<span style='color: #0052FF; font-weight: bold;'>Pulse</span>"
         )
     elif section_type == 'dna':
         payload = {"distribution": "Speed vs Detail balance"}
         system_msg = (
             f"You are {p_desc} Evaluate the balance of narrative action vs world-building. "
-            "Provide advice on how to optimize this balance for the current story goals. One clear sentence. "
+            "Evaluate the impact of this balance on reader immersion for the current story goals. One clear sentence. "
             "If referring to the engine, format it as: Script<span style='color: #0052FF; font-weight: bold;'>Pulse</span>"
         )
     else: # habits
@@ -143,7 +143,7 @@ def generate_section_insight(script_data, section_type, lens='viewer', api_key=N
         payload = {"samples": perceptual}
         system_msg = (
             f"You are {p_desc} Evaluate the rhythm and subtext of the characters' dialogue. "
-            "Provide advice on sharpening the voice for your specific role. One professional sentence. "
+            "Identify what the current dialogue texture reveals about the character dynamics. One professional sentence. "
             "If referring to the engine, format it as: Script<span style='color: #0052FF; font-weight: bold;'>Pulse</span>"
         )
 

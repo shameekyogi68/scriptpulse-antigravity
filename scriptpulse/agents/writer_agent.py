@@ -21,62 +21,43 @@ class WriterAgent:
         narrative_health = final_output.get('narrative_diagnosis', [])
         narrative_health.extend(self._diagnose_health(trace, genre))
         
-        # Phase 22: Voice, Motif, and Tell/Show extra diagnostics
+        # Phase 22-30 diagnostics
         narrative_health.extend(self._diagnose_voice(final_output.get('voice_fingerprints', {})))
         narrative_health.extend(self._diagnose_motifs(trace))
         narrative_health.extend(self._diagnose_tell_vs_show(trace))
-        
-        # Phase 23: Masterclass diagnostics
         narrative_health.extend(self._diagnose_on_the_nose(trace))
         narrative_health.extend(self._diagnose_shoe_leather(trace))
         narrative_health.extend(self._diagnose_semantic_motifs(trace))
-        
-        # Phase 24: Narrative Intelligence
         narrative_health.extend(self._diagnose_stakes_diversity(trace))
         narrative_health.extend(self._diagnose_stichomythia(trace))
         narrative_health.extend(self._diagnose_payoff_density(trace))
-        
-        # Phase 25: Scene-Level Micro-Drama
         narrative_health.extend(self._diagnose_opening_hook(trace))
         narrative_health.extend(self._diagnose_generic_dialogue(trace))
         narrative_health.extend(self._diagnose_flat_scene_turns(trace))
-        
-        # Phase 26: Macro-Consistency & Craft
         narrative_health.extend(self._diagnose_passive_voice(trace))
         narrative_health.extend(self._diagnose_tonal_whiplash(trace))
         narrative_health.extend(self._diagnose_redundant_scenes(trace))
         narrative_health.extend(self._diagnose_dangling_threads(trace))
-        
-        # Phase 27: Producer's View
         narrative_health.extend(self._diagnose_protagonist_arc(trace))
         narrative_health.extend(self._diagnose_interruption_dynamics(trace))
-        
-        # Phase 28: Synthesis & Structure
         narrative_health.extend(self._diagnose_monologues(trace))
-        
-        # Phase 29: Reader Experience & Thematic Depth
         narrative_health.extend(self._diagnose_reader_frustration(trace))
         narrative_health.extend(self._diagnose_neglected_characters(trace))
         narrative_health.extend(self._diagnose_nonlinear_structure(trace))
         narrative_health.extend(self._diagnose_theme_coherence(trace))
-        
-        # Phase 30: Representation & Fairness (The 'True' Audit)
         narrative_health.extend(self._diagnose_representation_risks(final_output.get('fairness_audit', {})))
 
-        # 2. Rewrite Priorities (Leveled & Limited)
-        ranked_edits = self._rank_edits(suggestions, trace)
-        
-        # 3. Structural Dashboard with Arc Vectors + Scene Map
+        # 2. Structural Dashboard with Arc Vectors + Scene Map
         dashboard = self._build_dashboard(trace, genre)
         dashboard['character_arcs'] = self._build_character_arcs(trace)
         dashboard['scene_purpose_map'] = self._build_scene_purpose_map(trace)
         dashboard['stakes_profile'] = self._build_stakes_profile(trace)
         dashboard['scene_turn_map'] = self._build_scene_turn_map(trace)
         dashboard['dialogue_action_ratio'] = self._build_global_dialogue_ratio(trace, genre)
-        # Phase 27 dashboard additions
+        
+        # Phase 27-28 additions
         dashboard['runtime_estimate'] = self._build_runtime_estimate(trace, genre)
         dashboard['location_profile'] = self._build_location_profile(trace)
-        # Phase 28 dashboard additions
         dashboard['structural_turning_points'] = self._find_structural_turning_points(trace)
         dashboard['scene_economy_map'] = self._build_scene_economy_map(trace)
         dashboard['page_turner_index'] = self._calculate_page_turner_index(trace)
@@ -87,10 +68,9 @@ class WriterAgent:
         # Composite ScriptPulse Score (0-100)
         dashboard['scriptpulse_score'] = self._calculate_scriptpulse_score(dashboard, narrative_health)
         
-        # Inject into output
+        # Inject into output (Removing prescriptive 'rewrite_priorities')
         final_output['writer_intelligence'] = {
-            'narrative_diagnosis': narrative_health[:12],
-            'rewrite_priorities': ranked_edits[:5],
+            'narrative_diagnosis': narrative_health[:15],
             'structural_dashboard': dashboard,
             'narrative_summary': self._build_narrative_summary(trace, genre),
             'creative_provocations': self._generate_creative_provocations(narrative_health, genre),
@@ -126,14 +106,14 @@ class WriterAgent:
                 if length > 3:
                     duration_mins = length * 2
                     assessments.append(
-                        f"🔴 **Too Intense (Scenes {start}-{end})**: Action is non-stop for ~{duration_mins} mins. Readers may get tired."
+                        f"🔴 **Sustained Intensity (Scenes {start}-{end})**: Consistently high attentional demand for ~{duration_mins} mins. May lead to audience fatigue."
                     )
 
         # 2. Confusion Clustering
         strain_ranges = self._find_ranges(trace, lambda s: s.get('expectation_strain', 0) > 0.8)
         for start, end in strain_ranges:
              assessments.append(
-                 f"🟠 **Too Complex (Scenes {start}-{end})**: Too much happening at once. Readers may get confused."
+                 f"🟠 **Information Density (Scenes {start}-{end})**: High volume of new narrative elements. May increase cognitive load for the reader."
              )
             
         # 3. Boredom vs Tense Silence
@@ -141,7 +121,7 @@ class WriterAgent:
         for start, end in true_boredom_ranges:
             if (end - start + 1) >= 2:
                  assessments.append(
-                     f"🔵 **Too Slow (Scenes {start}-{end})**: Nothing important is happening. Readers may get bored."
+                     f"🔵 **Engagement Drop (Scenes {start}-{end})**: Attentional signals are low, potentially reflecting a slower story rhythm."
                  )
 
         tense_silence_ranges = self._find_ranges(trace, lambda s: s['attentional_signal'] < boredom_thresh and max(s.get('conflict', 0), s.get('stakes', 0)) > 0.6)
@@ -155,7 +135,7 @@ class WriterAgent:
         expo_ranges = self._find_ranges(trace, lambda s: s.get('exposition_score', 0) > 0.7)
         for start, end in expo_ranges:
             assessments.append(
-                f"💬 **Exposition Heavy (Scenes {start}-{end})**: Characters are explaining too much. Show, don't tell."
+                f"💬 **Exposition Heavy (Scenes {start}-{end})**: Characters are explaining details explicitly rather than through action."
             )
 
         # 5. Pacing Volatility (The 'Avant-Garde' Special)
@@ -673,8 +653,7 @@ class WriterAgent:
         for start, end in flat_ranges:
             if (end - start + 1) >= 2:
                 assessments.append(
-                    f"⬜ **Flat Scene Turns (Scenes {start}–{end})**: These scenes end in the same "
-                    f"emotional position they began. Add a reversal, revelation, or decision to turn each scene."
+                    f"⬜ **Flat Scene Turns (Scenes {start}–{end})**: Emotional trajectory remains stagnant. These scenes end in the same relative position they began."
                 )
         return assessments[:1]
 
@@ -708,9 +687,9 @@ class WriterAgent:
         diff = global_ratio - benchmark
 
         if diff > 0.15:
-            note = f"Script is {round(diff * 100)}% more dialogue-heavy than expected for {genre}. Consider adding visual storytelling."
+            note = f"Script is {round(diff * 100)}% more dialogue-heavy than genre expectations for {genre}."
         elif diff < -0.15:
-            note = f"Script is {round(abs(diff) * 100)}% more action-heavy than expected for {genre}. Consider giving characters more voice."
+            note = f"Script is {round(abs(diff) * 100)}% more action-heavy than genre expectations for {genre}."
         else:
             note = f"Dialogue/Action balance is within the expected range for {genre}."
 
@@ -743,7 +722,7 @@ class WriterAgent:
             eg_str = f' (e.g. "{eg[0][:55]}...")' if eg else ''
             assessments.append(
                 f"✍️ **Passive Action Lines (Scene {idx})**: {count} passive construction(s) detected{eg_str}. "
-                f"Rewrite as active: 'John opens the door' not 'The door is opened by John.'"
+                f"Active voice typically increases cinematic energy."
             )
         return assessments[:1]
 
@@ -1499,13 +1478,13 @@ class WriterAgent:
         # Ideal: 25/50/25. Tolerance: ±10%
         balance = "Balanced"
         if act1_pct > 35:
-            balance = "Act 1 Heavy (slow setup)"
+            balance = "Extended Act 1 Setup"
         elif act3_pct > 35:
-            balance = "Act 3 Heavy (rushed setup)"
+            balance = "Extended Act 3 Resolution"
         elif act2_pct > 65:
-            balance = "Sagging Middle"
+            balance = "Extended Act 2 Middle"
         elif act2_pct < 35:
-            balance = "Thin Middle"
+            balance = "Compressed Act 2 Middle"
         
         return {
             'act1': act1_count, 'act2': act2_count, 'act3': act3_count,
