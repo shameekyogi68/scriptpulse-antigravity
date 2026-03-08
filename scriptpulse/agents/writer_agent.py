@@ -122,11 +122,12 @@ class WriterAgent:
              )
             
         # 3. Boredom vs Tense Silence
-        true_boredom_ranges = self._find_ranges(trace, lambda s: s['attentional_signal'] < boredom_thresh and max(s.get('conflict', 0), s.get('stakes', 0)) <= 0.6)
+        # Tightened for slow-burn masters: only flag if valley is too long (5+ scenes)
+        true_boredom_ranges = self._find_ranges(trace, lambda s: s['attentional_signal'] < boredom_thresh and max(s.get('conflict', 0), s.get('stakes', 0)) <= 0.5)
         for start, end in true_boredom_ranges:
-            if (end - start + 1) >= 2:
+            if (end - start + 1) >= 5: # Reward 2-4 scene valleys as 'effective recovery'
                  assessments.append(
-                     f"🔵 **Engagement Drop (Scenes {start}-{end})**: Attentional signals are low, potentially reflecting a slower story rhythm."
+                     f"🔵 **Engagement Drop (Scenes {start}-{end})**: Attentional signals are low for an extended duration. Consider tightening the pacing or adding a 'hook' to keep the audience locked in."
                  )
 
         tense_silence_ranges = self._find_ranges(trace, lambda s: s['attentional_signal'] < boredom_thresh and max(s.get('conflict', 0), s.get('stakes', 0)) > 0.6)
@@ -1465,13 +1466,27 @@ class WriterAgent:
         return provocations[:3]
 
     def _calculate_page_turner_index(self, trace):
-        """Calculates a score (0-100) based on hook density and tension cliffhangers."""
+        """
+        Calculates PTI (0-100) based on Dramatic Contrast and Resonance.
+        A 'Page-Turner' isn't just constant shouting; it's the rhythm of tension and relief.
+        """
         if not trace: return 50
-        hook_density = sum(1 for s in trace if s.get('attentional_signal', 0) > 0.7) / len(trace)
-        # Look for 'cliffhangers' (scenes ending on high tension)
-        cliffhangers = sum(1 for s in trace if s.get('attentional_signal', 0) > 0.8)
-        score = (hook_density * 60) + (min(cliffhangers, 5) * 8)
-        return min(100, round(score + 20)) # Base 20 for completion
+        
+        # 1. Emotional Contrast: The standard deviation of the signal
+        # High contrast means the writer is using the 'Valley' effect correctly
+        signals = [s.get('attentional_signal', 0) for s in trace]
+        contrast = statistics.stdev(signals) if len(signals) > 1 else 0
+        contrast_score = min(1.0, contrast / 0.35) * 40 # 40 points for good contrast
+        
+        # 2. Hook Density: Use the new Cognitive Resonance metric (Impact vs just Volume)
+        resonance = sum(s.get('cognitive_resonance', 0) for s in trace) / len(trace)
+        resonance_score = resonance * 40 # 40 points for meaningful impact
+        
+        # 3. Cliffhangers: Scenes ending on high-intensity signals
+        cliff_count = sum(1 for s in trace if s.get('attentional_signal', 0) > 0.85)
+        cliffhangers = (min(cliff_count, 4) * 5) # 20 points for peaks
+        
+        return min(100, round(contrast_score + resonance_score + cliffhangers))
 
     def _diagnose_writing_texture(self, trace):
         """Identifies if the script is 'Cinematic' (lean) or 'Novelistic' (dense)."""
@@ -1499,13 +1514,23 @@ class WriterAgent:
         return comps.get(genre, ["Professional Industry Standard"])
 
     def _calculate_production_risks(self, trace):
-        """Calculates narrative payoff vs production complexity (Risk Radar)."""
+        """
+        Calculates Risk Radar (Complexity vs Impact).
+        Payoff is now determined by PEAK Intensity (Memorial moments) rather than average flow.
+        """
         if not trace: return 50
-        payoff = sum(s.get('attentional_signal', 0) for s in trace) / len(trace)
+        
+        # Payoff is the top 20% of engagement moments — do the highs justify the costs?
+        sorted_signals = sorted([s.get('attentional_signal', 0) for s in trace], reverse=True)
+        top_n = max(1, len(sorted_signals) // 5)
+        peak_payoff = sum(sorted_signals[:top_n]) / top_n
+        
+        # Complexity is raw action density
         complexity = sum(s.get('visual_abstraction', {}).get('action_lines', 0) for s in trace) / len(trace)
-        # Risk is high if complexity is high but payoff is low
-        risk_score = (complexity * 70) + ( (1 - payoff) * 30 )
-        return round(min(100, risk_score))
+        
+        # Risk is high if we have expensive complexity but the 'Peaks' are underwhelming
+        risk_score = (complexity * 65) + ((1.0 - peak_payoff) * 35)
+        return round(min(100, max(0, risk_score)))
 
     def _calculate_budget_impact(self, trace, report=None):
         """Estimates relative budget intensity based on location churn, cast size, and action density."""
@@ -1592,13 +1617,18 @@ class WriterAgent:
 
     def _calculate_scriptpulse_score(self, dashboard, diagnostics):
         """
-        Composite ScriptPulse Score (0-100).
-        Weighs: Page-Turner (30%), Market Readiness (20%), Low Risk (20%),
-                Pacing Balance (15%), Stakes Diversity (15%).
+        Weighs: Page-Turner (25%), Market Readiness (20%), Low Risk (15%),
+                Pacing Balance (15%), Dialogue Harmony (15%), Stakes Diversity (10%).
         """
         pti = dashboard.get('page_turner_index', 50)
         mr = dashboard.get('market_readiness', 50)
         risk = dashboard.get('production_risk_score', 50)
+        
+        # Dialogue Harmony (15%): Reward hitting genre benchmarks
+        dr = dashboard.get('dialogue_ratio', {})
+        d_ratio = dr.get('global_dialogue_ratio', 0.55)
+        d_bench = dr.get('genre_benchmark', 0.55)
+        d_harmony = max(0, 100 - abs(d_ratio - d_bench) * 200) # Loss of 2 pts per 1% dev
         
         # Pacing balance: penalize extreme values
         act_struct = dashboard.get('act_structure', {})
@@ -1617,11 +1647,12 @@ class WriterAgent:
         health_penalty = min(30, (critical_count * 8) + (warning_count * 3))
         
         raw = (
-            (pti * 0.30) +
+            (pti * 0.25) +
             (mr * 0.20) +
-            ((100 - risk) * 0.20) +
+            ((100 - risk) * 0.15) +
             (pacing_score * 0.15) +
-            (stakes_score * 0.15)
+            (d_harmony * 0.15) +
+            (stakes_score * 0.10)
         )
         
         final = max(0, min(100, round(raw - health_penalty)))
