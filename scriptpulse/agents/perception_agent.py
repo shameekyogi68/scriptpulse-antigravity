@@ -17,8 +17,10 @@ from ..utils.model_manager import manager
 def normalize_character_name(name):
     """Utility for consistent character matching with body-part blacklist."""
     if not name: return "UNKNOWN"
+    # Stem names: Remove (O.S.), (V.O.), (CONT'D) etc. before cleaning
+    stemmed = re.sub(r'\(.*?\)', '', name).upper()
     # Upper, strip punctuation but keep internal spaces/hashes
-    clean = re.sub(r'[^A-Z0-9\s#]', '', name.upper()).strip()
+    clean = re.sub(r'[^A-Z0-9\s#]', '', stemmed).strip()
     
     # Body Part & Structural Blacklist
     # We only filter the 'garbage' items that are definitely action fragments misparsed.

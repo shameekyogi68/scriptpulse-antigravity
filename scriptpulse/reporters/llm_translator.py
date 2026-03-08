@@ -52,7 +52,7 @@ def generate_ai_summary(script_data, lens='viewer', api_key=None):
     # Customize the persona based on the lens
     persona_map = {
         "Studio Executive": "a sharp-eyed Development Executive at a major studio. Focus on commercial viability, audience demographic expansion, budget risks, and market positioning.",
-        "Story Editor": "a master Story Editor for a premium streaming service. Focus on internal character logic, causality, emotional stakes, and structural beats.",
+        "Story Editor": "a master Story Editor for major film and television productions. Focus on internal character logic, causality, emotional stakes, and structural beats.",
         "Script Coordinator": "a technical Script Analyst and Pacing Consultant. Focus on dialogue economy, visual description energy, scene-to-scene transitions, and stylistic consistency."
     }
     persona_desc = persona_map.get(lens, "a professional Script Consultant.")
@@ -64,7 +64,8 @@ def generate_ai_summary(script_data, lens='viewer', api_key=None):
         "1. Strictly maintain this specific professional persona. Use role-appropriate vocabulary (e.g., Executive uses 'ROI', 'Comp', 'Demographic'; Editor uses 'Beat', 'Arc', 'Causality'; Coordinator uses 'White Space', 'Rhythm', 'Flow').\n"
         "2. Prioritize your specific areas of expertise in the report.\n"
         "3. ALWAYS provide 3 concrete 'Fix Suggestions' at the end of the report to elevate the script for production.\n"
-        "4. If you mention 'ScriptPulse', ALWAYS format it EXACTLY like this: Script<span style='color: #0052FF; font-weight: bold;'>Pulse</span>"
+        "4. If you mention 'ScriptPulse', ALWAYS format it EXACTLY like this: Script<span style='color: #0052FF; font-weight: bold;'>Pulse</span>\n"
+        "5. Avoid archaic or overly rigid length rules. Prestige features often exceed 120 minutes; only flag length if it meaningfully drags the pacing or structural integrity."
     )
     user_content = f"Experience Data: {json.dumps(data_payload)}"
 

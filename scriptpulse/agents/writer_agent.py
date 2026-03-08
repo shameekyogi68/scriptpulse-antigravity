@@ -440,7 +440,8 @@ class WriterAgent:
                     'scene': s['scene_index'],
                     'sentiment': data.get('sentiment', 0.0),
                     'agency': data.get('agency', 0.0),
-                    'lines': data.get('line_count', 0)
+                    'lines': data.get('line_count', 0),
+                    'resolved': s.get('narrative_closure', False) # Track if the scene resolved them
                 })
 
         arc_summary = {}
@@ -458,7 +459,12 @@ class WriterAgent:
             agency_delta = round(end['agency'] - start['agency'], 3)
 
             # Arc classification
-            if abs(sentiment_delta) < 0.1 and abs(agency_delta) < 0.1:
+            # Priority 1: Narrative Resolution (Death/Exit)
+            # If the character's thread was resolved, don't call it 'Flat'
+            if timeline[-1].get('resolved', False) or timeline[-2].get('resolved', False) if len(timeline) > 1 else False:
+                arc_label = "Resolved (Narrative Exit) 💀"
+                arc_note = "Character's narrative thread reached a definitive conclusion or exit."
+            elif abs(sentiment_delta) < 0.1 and abs(agency_delta) < 0.1:
                 arc_label = "Flat Arc ⚠️"
                 arc_note = "No measurable emotional or agency change. Is this intentional?"
             elif sentiment_delta < -0.3 and agency_delta > 0.2:
@@ -973,10 +979,17 @@ class WriterAgent:
         total_minutes = round(total_seconds / 60, 1)
 
         benchmarks = {
-            'feature': (85, 125), 'drama': (90, 120), 'comedy': (85, 110),
-            'thriller': (90, 120), 'horror': (80, 105), 'action': (95, 130),
-            'short': (5, 30), 'pilot': (22, 65), 'general': (85, 125),
-            'avant-garde': (70, 100) # Added avant-garde runtime benchmark
+            'feature': (85, 130), 
+            'drama': (90, 150),       # Expanded for prestige drama
+            'crime drama': (100, 180), # Epic crime dramas like The Godfather
+            'comedy': (85, 110),
+            'thriller': (90, 130), 
+            'horror': (80, 105), 
+            'action': (95, 140),
+            'short': (5, 30), 
+            'pilot': (22, 65), 
+            'general': (85, 130),
+            'avant-garde': (70, 100) 
         }
         low, high = benchmarks.get(genre.lower(), (85, 125))
 
