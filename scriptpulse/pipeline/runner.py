@@ -36,6 +36,9 @@ def run_pipeline(script_content, genre='drama', story_framework='3_act', **kwarg
     parsed_lines = parsed_output['lines']
     segmented_scenes = segmenter.run(parsed_lines)
     
+    if not segmented_scenes:
+        raise ValueError("ScriptPulse could not detect any scenes. Ensure your script uses standard industry formatting (e.g., INT., EXT., or SCENE headings).")
+    
     # Hydrate scenes with their lines
     for scene in segmented_scenes:
         scene['lines'] = parsed_lines[scene['start_line']:scene['end_line']+1]

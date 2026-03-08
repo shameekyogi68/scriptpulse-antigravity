@@ -10,10 +10,14 @@ def sync_safety_state():
         st.session_state['safe_mode_active'] = False
 
 def check_upload_size(uploaded_file):
-    """Guards against excessively large files."""
-    if uploaded_file and uploaded_file.size > 20 * 1024 * 1024:
-        st.error("File too large. Please upload a script under 20MB.")
-        return False
+    """Guards against excessively large files and empty files."""
+    if uploaded_file:
+        if uploaded_file.size == 0:
+            st.error("Uploaded file is empty. Please check the file and try again.")
+            return False
+        if uploaded_file.size > 20 * 1024 * 1024:
+            st.error("File too large. Please upload a script under 20MB.")
+            return False
     return True
 
 def render_operator_panel(prev_run=None):

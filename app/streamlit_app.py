@@ -97,18 +97,30 @@ with tab_up:
         with st.spinner("Reading script..."):
             ext = uploaded_file.name.split('.')[-1].lower()
             if ext == 'pdf':
-                from io import BytesIO
-                import PyPDF2
-                script_input = "\n".join([
-                    p.extract_text() for p in PyPDF2.PdfReader(BytesIO(uploaded_file.read())).pages
-                ])
+                try:
+                    from io import BytesIO
+                    import PyPDF2
+                    script_input = "\n".join([
+                        p.extract_text() or "" for p in PyPDF2.PdfReader(BytesIO(uploaded_file.read())).pages
+                    ])
+                except Exception as e:
+                    st.error("Could not read PDF. The file may be corrupted or protected. Please try a TXT or FDX file.")
+                    script_input = None
             elif ext == 'fdx':
-                from scriptpulse.agents import importers
-                script_input = importers.run(uploaded_file.getvalue().decode("utf-8"))
-                if isinstance(script_input, list):
-                    script_input = "\n".join([l['text'] for l in script_input])
+                try:
+                    from scriptpulse.agents import importers
+                    script_input = importers.run(uploaded_file.getvalue().decode("utf-8"))
+                    if isinstance(script_input, list):
+                        script_input = "\n".join([l['text'] for l in script_input])
+                except Exception as e:
+                    st.error("Could not parse FDX formatting. Please ensure it's a valid Final Draft XML file.")
+                    script_input = None
             else:
-                script_input = uploaded_file.read().decode('utf-8')
+                try:
+                    script_input = uploaded_file.read().decode('utf-8')
+                except Exception:
+                    st.error("Could not decode text. Please ensure the file is saved in standard UTF-8 format.")
+                    script_input = None
 
 with tab_paste:
     pasted = st.text_area("Paste text here", height=200,
