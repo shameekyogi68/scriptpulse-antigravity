@@ -66,6 +66,7 @@ class EncodingAgent:
                 'affective_load': affective,
                 'ambient_signals': self._extract_ambient(linguistic, dialogue, visual),
                 'micro_structure': self._extract_micro(scene_lines),
+                'runtime_contribution': self._extract_runtime_contribution(scene_lines),
                 # Supporting metrics for UI consistency
                 'character_scene_vectors': metadata['arcs'],
                 'stakes_taxonomy': metadata['stakes'],
@@ -101,9 +102,30 @@ class EncodingAgent:
             'sentence_length_variance': round(var, 2),
             'sentence_count': len(sentences),
             'word_count': len(words),
-            'idea_density': round(uniq / max(1, len(words)), 2),
+            'idea_density': round(uniq/len(words), 3) if sum(lengths) > 0 else 0,
             'clarity_score': 0.8 # Placeholder
         }
+
+    def _extract_runtime_contribution(self, lines):
+        """
+        Calculates estimated runtime for the scene in seconds.
+        Standard heuristic: 
+        Dialogue: ~3 seconds per line + pacing modifier
+        Action: ~5 seconds per line + pacing modifier
+        """
+        action_count = len([l for l in lines if l['tag'] == 'A'])
+        dialogue_count = len([l for l in lines if l['tag'] == 'D'])
+        
+        # Action is dense visually, Dialogue is spoken in real-time
+        action_seconds = (action_count * 5.5)
+        dialogue_seconds = (dialogue_count * 3.5)
+        
+        total_seconds = action_seconds + dialogue_seconds
+        
+        # Add buffer for scene transitions mapping roughly to 1 page = 1 min
+        total_seconds += 5.0 
+        
+        return {'estimated_seconds': round(total_seconds)}
 
     def _extract_dialogue(self, lines):
         d_lines = [l for l in lines if l['tag'] == 'D']
