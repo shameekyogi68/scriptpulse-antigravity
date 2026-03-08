@@ -184,12 +184,20 @@ def apply_custom_styles():
         }
         
         .hero-container h1 {
-            background: var(--gradient-hero);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            font-size: 2.8rem !important;
-            margin-bottom: 0.3rem;
+            font-size: 3.2rem !important;
+            margin-bottom: 0.1rem;
+            letter-spacing: -0.04em !important;
+        }
+
+        .brand-script {
+            color: white !important;
+            -webkit-text-fill-color: white !important;
+        }
+
+        .brand-pulse {
+            color: #55e0ff !important;
+            -webkit-text-fill-color: #55e0ff !important;
+            text-shadow: 0 0 20px rgba(85, 224, 255, 0.3);
         }
         
         .hero-subtitle {
