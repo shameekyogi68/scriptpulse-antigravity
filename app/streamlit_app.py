@@ -12,17 +12,20 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# MUST BE THE FIRST STREAMLIT COMMAND
-st.set_page_config(
-    page_title="ScriptPulse — AI Story Intelligence",
-    page_icon="app/assets/ScriptPulse_Icon.png",
-    layout="wide"
-)
-
 # Ensure project root is in path
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if ROOT_DIR not in sys.path:
     sys.path.append(ROOT_DIR)
+
+# Path to persistent brand assets
+ICON_PATH = os.path.join(ROOT_DIR, "app", "assets", "ScriptPulse_Icon.png")
+
+# MUST BE THE FIRST STREAMLIT COMMAND
+st.set_page_config(
+    page_title="ScriptPulse — AI Story Intelligence",
+    page_icon=ICON_PATH if os.path.exists(ICON_PATH) else "app/assets/ScriptPulse_Icon.png",
+    layout="wide"
+)
 
 # Import Modular Components
 from app.components.styles import apply_custom_styles

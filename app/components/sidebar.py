@@ -6,9 +6,11 @@ def render_sidebar(ui_mode, is_cloud, stu):
     
     with st.sidebar:
         # Brand Logo
+        import os
+        ICON_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets", "ScriptPulse_Icon.png")
         _, col_logo, _ = st.columns([0.8, 1.4, 0.8])
         with col_logo:
-            st.image("app/assets/ScriptPulse_Icon.png", use_container_width=True)
+            st.image(ICON_PATH if os.path.exists(ICON_PATH) else "app/assets/ScriptPulse_Icon.png", use_container_width=True)
         
         uikit.render_sidebar_header("ScriptPulse", "AI Story Intelligence")
 
