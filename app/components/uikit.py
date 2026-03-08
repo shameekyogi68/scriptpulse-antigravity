@@ -3,16 +3,24 @@ import streamlit as st
 from app.components.theme import Theme
 
 def render_hero_section(title: str, subtitle: str):
-    """Renders the main hero section of the application with hard-coded brand colors."""
-    # Force the branding if title is ScriptPulse (raw or HTML)
-    if "Script" in title and "Pulse" in title:
-        title = (
-            '<span style="color: #FFFFFF !important; -webkit-text-fill-color: #FFFFFF !important; background: none !important;">Script</span>'
-            '<span style="color: #55E0FF !important; -webkit-text-fill-color: #55E0FF !important; background: none !important; text-shadow: 0 0 15px rgba(85, 224, 255, 0.4);">Pulse</span>'
-        )
+    """Renders the main hero section with absolute brand colors (White/Cyan)."""
+    # Use a DIV with forced inline styles to bypass all Streamlit H1/Heading themes
+    brand_html = (
+        '<div style="text-align: center; font-family: \'Outfit\', sans-serif; font-weight: 700; '
+        'font-size: 3.8rem; letter-spacing: -0.05em; line-height: 1; margin: 0 auto 0.5rem auto;">'
+        '<span style="color: white !important; -webkit-text-fill-color: white !important; background: none !important;">Script</span>'
+        '<span style="color: #4ed8ff !important; -webkit-text-fill-color: #4ed8ff !important; background: none !important; '
+        'text-shadow: 0 0 25px rgba(78, 216, 255, 0.3);">Pulse</span>'
+        '</div>'
+    )
     
-    title_html = f'<h1 style="background: none !important; -webkit-text-fill-color: initial !important; background-clip: initial !important; color: white !important; font-size: 3.2rem !important;">{title}</h1>' if title else ""
-    html_content = f"""<div class="hero-container" style="text-align: center; padding: 2rem 1rem 1rem;">{title_html}<p class="hero-subtitle">{subtitle}</p></div>"""
+    html_content = f"""
+    <div class="hero-container" style="text-align: center; padding: 2.5rem 0 1.5rem 0;">
+        {brand_html}
+        <div style="color: rgba(244, 246, 251, 0.7); font-size: 1.15rem; font-weight: 300; '
+        'max-width: 800px; margin: 0 auto; letter-spacing: 0.02em;">{subtitle}</div>
+    </div>
+    """
     st.markdown(html_content, unsafe_allow_html=True)
 
 def render_section_header(icon: str, title: str, explainer: str):
