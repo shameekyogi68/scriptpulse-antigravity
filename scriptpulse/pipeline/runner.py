@@ -26,6 +26,8 @@ def run_pipeline(script_content, genre='drama', story_framework='3_act', **kwarg
     _t_start = time.time()
     
     # --- STAGE 0: Normalize & Prepare ---
+    if not script_content or len(script_content.strip()) < 50:
+        raise ValueError("Script<span style='color: #0052FF; font-weight: bold;'>Pulse</span> requires more text to analyze. Please upload a full script or a longer scene.")
     script_content = normalizer.normalize_script(script_content)
     
     # --- STAGE 1: Structure (Parsing) ---
