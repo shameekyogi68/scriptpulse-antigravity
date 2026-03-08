@@ -12,8 +12,8 @@ def render_sidebar(ui_mode, is_cloud, stu):
         with col_logo:
             st.image(ICON_PATH if os.path.exists(ICON_PATH) else "app/assets/ScriptPulse_Icon.png", use_container_width=True)
         
-        uikit.render_sidebar_header("ScriptPulse", "AI Story Intelligence")
-
+        # Text Header Removed as per user request
+        st.markdown("")
         st.markdown("---")
 
         # How It Works
