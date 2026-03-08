@@ -9,8 +9,8 @@ def render_hero_section(title: str, subtitle: str):
         '<div style="text-align: center; font-family: \'Outfit\', sans-serif; font-weight: 700; '
         'font-size: 3.8rem; letter-spacing: -0.05em; line-height: 1; margin: 0 auto 0.5rem auto;">'
         '<span style="color: white !important; -webkit-text-fill-color: white !important; background: none !important;">Script</span>'
-        '<span style="color: #4ed8ff !important; -webkit-text-fill-color: #4ed8ff !important; background: none !important; '
-        'text-shadow: 0 0 25px rgba(78, 216, 255, 0.3);">Pulse</span>'
+        '<span style="color: #0099ff !important; -webkit-text-fill-color: #0099ff !important; background: none !important; '
+        'text-shadow: 0 0 25px rgba(0, 153, 255, 0.3);">Pulse</span>'
         '</div>'
     )
     
