@@ -1,5 +1,6 @@
 import random
 import re
+import statistics
 
 class WriterAgent:
     """
@@ -1173,7 +1174,8 @@ class WriterAgent:
         s1 = avg(trace[:third], 'sentiment')
         s2 = avg(trace[third:third*2], 'sentiment')
         s3 = avg(trace[third*2:], 'sentiment')
-        attention = avg(trace, 'attention')
+        # Use attentional_signal consistently with dynamics_agent
+        attention_sig = avg(trace, 'attentional_signal')
         mid_conflict = avg(trace[third:third*2], 'conflict')
 
         # Opening assessment
@@ -1188,13 +1190,14 @@ class WriterAgent:
         else:
             opening_sentence = "The script's opening is slow to establish conflict — first-page urgency is missing."
 
-        # Act 2 characterization
-        if mid_conflict > 0.6:
+        # Act 2 characterization - Adjusted for high-fidelity tension model
+        # 0.4 is the new 'Engaged' threshold for Drama
+        if mid_conflict > 0.55:
             mid_sentence = "Act 2 is dense with conflict and escalation, keeping the pressure high."
-        elif mid_conflict > 0.3:
-            mid_sentence = "Act 2 maintains moderate tension but may benefit from additional escalation beats."
+        elif mid_conflict > 0.35:
+            mid_sentence = "Act 2 maintains the story's momentum with steady conflict and character-driven escalation."
         else:
-            mid_sentence = "Act 2 has low conflict intensity — the middle of the script risks losing the reader's engagement."
+            mid_sentence = "Act 2 has low conflict intensity — the middle of the script risks losing the reader's engagement during slower sections."
 
         # Ending assessment
         final_sentiment = s3
@@ -1206,12 +1209,12 @@ class WriterAgent:
             ending_sentence = "The script's ending is tonally ambiguous — verify this serves the story's theme."
 
         # Overall attention
-        if attention > 0.65:
-            attention_sentence = "Overall cognitive demand is high throughout, which may fatigue readers — consider strategic recovery scenes."
-        elif attention > 0.4:
-            attention_sentence = "Cognitive load is well-balanced, giving readers space to breathe while maintaining engagement."
+        if attention_sig > 0.65:
+            attention_sentence = "Overall cognitive demand is consistently high, creating a relentless reading experience."
+        elif attention_sig > 0.35:
+            attention_sentence = "Engagement is well-balanced, utilizing the 'Valley effect' to give the reader space to breathe while maintaining rhythmic tension."
         else:
-            attention_sentence = "The script is low in cognitive demand — it may feel too predictable or linear in places."
+            attention_sentence = "The script's core engagement signals are lower than average — the narrative may feel too linear or sparse in its current draft."
 
         summary = f"{opening_sentence} {mid_sentence} {ending_sentence} {attention_sentence}"
 
@@ -1220,7 +1223,7 @@ class WriterAgent:
             'act1_sentiment': round(s1, 3),
             'act2_sentiment': round(s2, 3),
             'act3_sentiment': round(s3, 3),
-            'overall_attention': round(attention, 3)
+            'overall_attention': round(attention_sig, 3)
         }
 
     # =========================================================================
