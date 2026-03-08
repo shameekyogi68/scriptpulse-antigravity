@@ -49,7 +49,7 @@ class WriterAgent:
         
         # Determine unique items and sort EVERYTHING for absolute score determinism
         # This ensures the penalty calculation always sees the exact same input order.
-        all_diagnostics = sorted(list(set(narrative_health + unique_diagnostics + self._diagnose_representation_risks(final_output.get('fairness_audit', {})))))
+        all_diagnostics = sorted(list(set(narrative_health + new_diagnostics + self._diagnose_representation_risks(final_output.get('fairness_audit', {})))))
         
         # 2. Structural Dashboard with Arc Vectors + Scene Map
         dashboard = self._build_dashboard(trace, genre, final_output)
