@@ -109,20 +109,23 @@ class EncodingAgent:
     def _extract_runtime_contribution(self, lines):
         """
         Calculates estimated runtime for the scene in seconds.
-        Standard heuristic: 
-        Dialogue: ~3 seconds per line + pacing modifier
-        Action: ~5 seconds per line + pacing modifier
+        Uses industry standard Word-to-Minute heuristics instead of crude block counts.
+        ~150 words of dialogue = 1 minute on screen
+        ~120 words of action/description = 1 minute on screen
         """
-        action_count = len([l for l in lines if l['tag'] == 'A'])
-        dialogue_count = len([l for l in lines if l['tag'] == 'D'])
+        action_words = sum([len(l['text'].split()) for l in lines if l['tag'] == 'A'])
+        dialogue_words = sum([len(l['text'].split()) for l in lines if l['tag'] == 'D'])
         
-        # Action is dense visually, Dialogue is spoken in real-time
-        action_seconds = (action_count * 5.5)
-        dialogue_seconds = (dialogue_count * 3.5)
+        # Calculate seconds (60 seconds per minute)
+        # Action is dense visually (0.5 sec per word)
+        action_seconds = action_words * 0.5
+        
+        # Dialogue is spoken quickly (0.4 sec per word)
+        dialogue_seconds = dialogue_words * 0.4
         
         total_seconds = action_seconds + dialogue_seconds
         
-        # Add buffer for scene transitions mapping roughly to 1 page = 1 min
+        # Add small buffer for scene transitions & unwritten beats
         total_seconds += 5.0 
         
         return {'estimated_seconds': round(total_seconds)}
