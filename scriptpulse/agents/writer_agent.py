@@ -68,9 +68,16 @@ class WriterAgent:
         dashboard['scene_economy_map'] = self._build_scene_economy_map(trace)
         dashboard['page_turner_index'] = self._calculate_page_turner_index(trace)
         dashboard['writing_texture'] = self._diagnose_writing_texture(trace)
-        dashboard['commercial_comps'] = self._find_commercial_comps(genre)
         dashboard['act_structure'] = self._build_act_structure(trace)
+        dashboard['commercial_comps'] = self._find_commercial_comps(genre, dashboard.get('stakes_profile', {}).get('dominant', 'Social'))
         
+        # Cast count refinement (Task 3): Only count deterministic 5+ line characters
+        v_fingerprints = final_output.get('voice_fingerprints', {})
+        dashboard['cast_count_deterministic'] = len([c for c, v in v_fingerprints.items() if v.get('line_count', 0) >= 5])
+
+        # Market Readiness (Task 5): Anchored to Stable / Physical metrics only
+        dashboard['market_readiness'] = self._calculate_market_readiness(dashboard)
+
         # Composite ScriptPulse Score (0-100) using the truly sorted diagnostics
         dashboard['scriptpulse_score'] = self._calculate_scriptpulse_score(dashboard, all_diagnostics)
         
@@ -78,7 +85,7 @@ class WriterAgent:
         final_output['writer_intelligence'] = {
             'narrative_diagnosis': all_diagnostics[:15],
             'structural_dashboard': dashboard,
-            'narrative_summary': self._build_narrative_summary(trace, genre),
+            'narrative_summary': self._build_narrative_summary(trace, genre, all_diagnostics),
             'creative_provocations': self._generate_creative_provocations(all_diagnostics, genre),
             'genre_context': genre
         }
@@ -341,8 +348,7 @@ class WriterAgent:
             'act1_energy': round(act1_energy, 2),
             'total_scenes': len(trace),
             'production_risk_score': self._calculate_production_risks(trace),
-            'budget_impact': self._calculate_budget_impact(trace, report),
-            'market_readiness': self._calculate_market_readiness(trace)
+            'budget_impact': self._calculate_budget_impact(trace, report)
         }
 
     # =========================================================================
@@ -1157,80 +1163,51 @@ class WriterAgent:
             'cut_candidates': low_economy_scenes[:5]
         }
 
-    def _build_narrative_summary(self, trace, genre):
+    def _build_narrative_summary(self, trace, genre, diagnostics):
         """
-        Synthesize all signals into a plain-English narrative of the reader's emotional journey.
-        This is the 'creative collaborator' voice — what a script editor would say to the writer.
+        Synthesize all signals into a dynamic narrative of the reader's emotional journey.
+        Builds 8–10 conditional sentence templates that activate based on script-specific spikes.
         """
-        if not trace:
-            return "Unable to generate narrative summary — no scenes found."
-
-        n = len(trace)
-        third = max(1, n // 3)
-
-        # Act-level sentiment
-        def avg(scenes, key, sub=None):
-            vals = []
-            for s in scenes:
-                v = s.get(key, 0.0)
-                if sub: v = s.get(key, {}).get(sub, 0.0)
-                if isinstance(v, (int, float)): vals.append(v)
-            return sum(vals) / len(vals) if vals else 0.0
-
-        s1 = avg(trace[:third], 'sentiment')
-        s2 = avg(trace[third:third*2], 'sentiment')
-        s3 = avg(trace[third*2:], 'sentiment')
-        # Use attentional_signal consistently with dynamics_agent
-        attention_sig = avg(trace, 'attentional_signal')
-        mid_conflict = avg(trace[third:third*2], 'conflict')
-
-        # Opening assessment
-        opening = trace[0]
-        hook = opening.get('opening_hook', {})
-        hook_label = hook.get('hook_label', 'Unknown') if hook else 'Unknown'
-
-        if hook_label == 'Strong Hook':
-            opening_sentence = "The script opens with immediate urgency — the reader is grabbed from the first line."
-        elif hook_label == 'Moderate Hook':
-            opening_sentence = "The script takes a few lines to establish tension — the opening could hit harder."
+        if not trace: return "Unable to generate summary."
+        diag_str = " ".join(diagnostics) if diagnostics else ""
+        
+        # 1. Opening Intelligence
+        hook = trace[0].get('opening_hook', {})
+        if hook.get('hook_label') == 'Strong Hook':
+            opening = "Your opening establishes immediate dominance — the audience is engaged from the first beat."
+        elif "slow" in diag_str.lower():
+            opening = "The script opens with a measured, intentional focus on atmosphere before the primary conflict ignites."
         else:
-            opening_sentence = "The script's opening is slow to establish conflict — first-page urgency is missing."
+            opening = "The opening takes its time to establish character stakes, which fits the genre rhythm."
 
-        # Act 2 characterization - Adjusted for high-fidelity tension model
-        # 0.4 is the new 'Engaged' threshold for Drama
-        if mid_conflict > 0.55:
-            mid_sentence = "Act 2 is dense with conflict and escalation, keeping the pressure high."
-        elif mid_conflict > 0.35:
-            mid_sentence = "Act 2 maintains the story's momentum with steady conflict and character-driven escalation."
+        # 2. Dynamic Spike Intelligence (Look for highest tension scene)
+        max_t = max([s.get('attentional_signal', 0) for s in trace])
+        peak_idx = next(i for i, s in enumerate(trace) if s.get('attentional_signal', 0) == max_t)
+        spike_text = f"The narrative reaches an intense cognitive peak around Scene {peak_idx+1}, a moment of critical audience payoff."
+
+        # 3. Dynamic Flag Intelligence
+        specifics = []
+        if "Same Voice Syndrome" in diag_str:
+            specifics.append("The dialogue shows high phonetic overlap, suggesting your characters share similar speech rhythms.")
+        if "Passive Protagonist" in diag_str:
+            specifics.append("The protagonist currently faces high narrative resistance, making their journey reactive in the second act.")
+        if "On-The-Nose" in diag_str:
+            specifics.append("There are moments where characters state their interior subtext directly, potentially diluting the dramatic irony.")
+        if "Tonal Whiplash" in diag_str:
+            specifics.append("The script undergoes rapid emotional shifts that challenge the reader's cognitive framing.")
+        
+        # 4. Closing / Payoff
+        s3 = sum([s.get('sentiment', 0) for s in trace[-(len(trace)//3):]]) / (len(trace)//3 or 1)
+        if s3 < -0.3:
+            closing = "The journey concludes with a definitive tragic descent, delivering a soul-crushing emotional payoff."
+        elif s3 > 0.3:
+            closing = "The story resolves with a hard-earned sense of triumph and narrative closure."
         else:
-            mid_sentence = "Act 2 has low conflict intensity — the middle of the script risks losing the reader's engagement during slower sections."
+            closing = "The resolution maintains an ambiguous emotional tone, consistent with complex prestige dramas."
 
-        # Ending assessment
-        final_sentiment = s3
-        if final_sentiment > 0.2:
-            ending_sentence = "The script resolves on a relatively positive emotional note."
-        elif final_sentiment < -0.2:
-            ending_sentence = "The script ends on a dark or tragic note — ensure this is the intended emotional payoff."
-        else:
-            ending_sentence = "The script's ending is tonally ambiguous — verify this serves the story's theme."
-
-        # Overall attention
-        if attention_sig > 0.65:
-            attention_sentence = "Overall cognitive demand is consistently high, creating a relentless reading experience."
-        elif attention_sig > 0.35:
-            attention_sentence = "Engagement is well-balanced, utilizing the 'Valley effect' to give the reader space to breathe while maintaining rhythmic tension."
-        else:
-            attention_sentence = "The script's core engagement signals are lower than average — the narrative may feel too linear or sparse in its current draft."
-
-        summary = f"{opening_sentence} {mid_sentence} {ending_sentence} {attention_sentence}"
-
-        return {
-            'summary': summary,
-            'act1_sentiment': round(s1, 3),
-            'act2_sentiment': round(s2, 3),
-            'act3_sentiment': round(s3, 3),
-            'overall_attention': round(attention_sig, 3)
-        }
+        # Aggregate summary
+        summary = f"{opening} {spike_text} " + " ".join(specifics[:2]) + f" {closing}"
+        return {'summary': summary.strip()}
 
     # =========================================================================
     # PHASE 29: READER EXPERIENCE & THEMATIC DEPTH METHODS
@@ -1434,45 +1411,42 @@ class WriterAgent:
     def _generate_creative_provocations(self, diagnosis, genre):
         """Generates mentor-like questions to push the writer's craft further."""
         provocations = []
-        diag_str = " ".join(diagnosis)
+        diag_str = " ".join(diagnosis) if diagnosis else ""
         
-        # 1. Script-Specific Evidence-Based Questions
-        # Same Voice Syndrome: Extract names
-        voice_match = re.search(r'Same Voice Syndrome: (.*?) share', diag_str)
-        if voice_match:
-            names = voice_match.group(1).split(', ')
-            if len(names) >= 2:
-                provocations.append(f"Your leads **{names[0]}** and **{names[1]}** share similar dialogue rhythms. What one verbal habit could you give {names[0]} that {names[1]} would *never* use?")
-            else:
-                provocations.append(f"If you removed character names from the script, would a reader still know exactly who is speaking based only on their syntax and vocabulary?")
-        
-        # Passive Protagonist
-        passive_match = re.search(r'Passive Protagonist: (.*?) is', diag_str)
-        if passive_match:
-            name = passive_match.group(1)
-            provocations.append(f"**{name}** is currently being pushed by the plot. What is the one thing they want so badly they would burn their own life down to get it? Can they make a choice based on that *now*?")
-        elif "passive" in diag_str.lower():
-            provocations.append("Your protagonist is currently being pushed by the plot. What is the one thing they want so badly they would burn their own life down to get it? Can they make a choice based on that *now*?")
-
-        # Engagement / Pacing
-        if "too slow" in diag_str.lower() or "boring" in diag_str.lower():
-            provocations.append("In your slowest scenes, what is the 'Invisible Conflict'? If no one is shouting, who is winning the quiet battle for power?")
-            
-        if "too intense" in diag_str.lower() or "fatigue" in diag_str.lower():
-            provocations.append("You have a high-octane run of scenes. Where is the 'Quiet Moment of Grace' that makes the next explosion feel earned?")
-
-        # 2. Genre-specific masterclass tips
-        genre_tips = {
-            'horror': "Horror lives in the anticipation. Are your 'quiet' scenes as scary as your 'loud' ones?",
-            'drama': "In a Great Drama, everyone is 'right' from their own perspective. Does your antagonist have a logical, moral reason for their actions?",
-            'thriller': "A Thriller is a race against time. What is the ticking clock in your second act that prevents the protagonist from stopping to think?",
-            'comedy': "Comedy is often about the 'Inappropriate Response'. Who is the most serious person in your funniest scene?",
-            'action': "Action is character. Every punch or chase should reveal a character's desperation or ingenuity, not just their physical skill."
+        # Mapping Flags to Masterclass Questions (Task 6)
+        mapping = {
+            'Same Voice Syndrome': "Your leads share similar dialogue rhythms. What is one specific verbal habit you could give your protagonist that their rival would *never* use?",
+            'Flat Arc': "This character remains emotionally static. If they don't change, is the *world* changing around them to highlight their refusal to adapt?",
+            'On-The-Nose': "In your most intense scene, a character states exactly what they feel. What could they say instead that hides their true intent but reveals their desperation?",
+            'Attentional Valley': "Engagement dips over multiple scenes here. Who is winning the 'Invisible Power Struggle' while no one is shouting?",
+            'Passive Protagonist': "The story is pushing the hero. What decision can they make right now that would burn their bridges and force the plot to follow them?",
+            'Similar Names': "The reader may confuse your leads. Can you give one a specific physical vocal quirk or a recurring linguistic motif to differentiate them?",
+            'Tonal Whiplash': "The script undergoes an extreme shifts. Is this a deliberate subversion of audience expectations, or is it breaking the story's reality?",
+            'Redundant Scenes': "These scenes serve the same purpose. Which one has more 'Cinematic Economy'? Combine them into a single high-impact sequence.",
+            'Tell vs Show': "You're describing internal thoughts in action lines. How can you translate that feeling into a purely visual piece of behavior?"
         }
         
-        provocations.append(genre_tips.get(genre.lower(), "Every scene should start as late as possible and end as early as possible. What can you cut from the next five pages without losing the story?"))
+        for flag, question in mapping.items():
+            if flag in diag_str:
+                provocations.append(question)
+                
+        # Fillers if no flags
+        if not provocations:
+            provocations = [
+                "What is the one thing your protagonist wants so badly they would burn their life down to get it?",
+                "In your quietest scene, what is the 'Invisible Conflict' that keeps the audience leaning in?"
+            ]
+            
+        return list(set(provocations))[:3]
+
+
+
         
-        return provocations[:3]
+
+
+
+
+
 
     def _calculate_page_turner_index(self, trace):
         """
@@ -1509,21 +1483,22 @@ class WriterAgent:
         if avg_action < 4: return "Sparse / Minimalist"
         return "Cinematic / Visual"
 
-    def _find_commercial_comps(self, genre):
-        """Standardizes marketplace context — providing 10/10 industry alignment."""
-        comps = {
-            'Drama': ["The Social Network", "Parasite", "Manchester by the Sea"],
-            'Action': ["Mad Max: Fury Road", "The Bourne Identity", "The Raid"],
-            'Thriller': ["Seven", "Gone Girl", "The Silence of the Lambs"],
-            'Horror': ["Hereditary", "Get Out", "A Quiet Place"],
-            'Comedy': ["Booksmart", "The Hangover", "Superbad"],
-            'Sci-Fi': ["Arrival", "Ex Machina", "Blade Runner 2049"],
-            'Avant-Garde': ["The Lighthouse", "Mulholland Drive", "Enter the Void"],
-            'Fantasy': ["Pan's Labyrinth", "Lord of the Rings", "The Princess Bride"],
-            'Crime Drama': ["The Godfather", "The Departed", "Goodfellas"],
-            'Documentary': ["Flee", "Waltz with Bashir", "Apollo 11"]
+    def _find_commercial_comps(self, genre, dominant_stakes='Social'):
+        """Static lookup table mapping genre + dominant stakes to film suggestions (Task 7)."""
+        lookup = {
+            ('Crime Drama', 'Social'): ["The Godfather", "The Departed", "The Irishman"],
+            ('Crime Drama', 'Moral'): ["Chinatown", "No Country for Old Men", "There Will Be Blood"],
+            ('Drama', 'Emotional'): ["Marriage Story", "Ordinary People", "Lady Bird"],
+            ('Action', 'Physical'): ["Mad Max: Fury Road", "Die Hard", "John Wick"],
+            ('Horror', 'Existential'): ["Hereditary", "The Shining", "Midsommar"],
+            ('Sci-Fi', 'Existential'): ["2001: A Space Odyssey", "Arrival", "Blade Runner 2049"],
+            ('Thriller', 'Social'): ["Gone Girl", "Seven", "Prisoners"]
         }
-        return comps.get(genre, ["Professional Industry Standard"])
+        
+        key = (genre, dominant_stakes)
+        # Default to a generic but professional list if no match
+        comps = lookup.get(key, lookup.get((genre, 'Physical'), ["The Social Network", "Parasite", "Pulp Fiction"]))
+        return comps
 
     def _calculate_production_risks(self, trace):
         """
@@ -1568,26 +1543,33 @@ class WriterAgent:
         if score > 35: return "Medium / Standard"
         return "Lean / Indie"
 
-    def _calculate_market_readiness(self, trace):
-        """A weighted score (0-100) representing the script's commercial viability."""
-        if not trace: return 50
+    def _calculate_market_readiness(self, d):
+        """
+        Market Readiness (Task 5): Anchored to Stable metrics only.
+        Metrics: Stakes Diversity, Cast Consistency, Location Churn, Act Balance, Dialogue Ratio.
+        """
+        # 1. Stakes Diversity (20%)
+        stakes = d.get('stakes_profile', {})
+        unique_stakes = len([v for k, v in stakes.items() if (isinstance(v, (int, float)) and v > 0)])
+        stakes_score = min(1.0, unique_stakes / 4.0) * 20
         
-        # Payoff: Use the top 25% of moments (Peak Payoff) rather than average
-        signals = sorted([s.get('attentional_signal', 0) for s in trace], reverse=True)
-        top_n = max(1, len(signals) // 4)
-        peak_payoff = sum(signals[:top_n]) / top_n
+        # 2. Production Polish (20%): Manageable Cast/Location count for genre
+        cast_count = d.get('cast_count_deterministic', 10)
+        loc_count = len(d.get('location_profile', []))
+        prod_score = (max(0, 100 - abs(cast_count - 15)) * 0.1) + (max(0, 100 - abs(loc_count - 25)) * 0.1)
         
-        pti = self._calculate_page_turner_index(trace) / 100
+        # 3. Structural Stability (30%): Act Balance
+        balance = d.get('act_structure', {}).get('balance', 'Unknown')
+        structure_score = 30 if balance == 'Balanced' else 15
         
-        # Thematic Freshness: High entropy/vocabulary density suggests a unique 'voice' or world
-        entropy = sum(s.get('entropy_score', 0) for s in trace) / len(trace)
-        freshness = min(1.0, entropy / 4.0)
+        # 4. Dialogue Rhythm (30%)
+        dr = d.get('dialogue_action_ratio', {})
+        d_ratio = dr.get('global_dialogue_ratio', 0.55)
+        d_bench = dr.get('genre_benchmark', 0.55)
+        d_score = max(0, 30 - abs(d_ratio - d_bench) * 100)
         
-        # Weighted formula: PTI (50%), Peak Payoff (35%), Freshness (15%)
-        score = (pti * 50) + (peak_payoff * 35) + (freshness * 15)
-        # Base floor of 25 for any completed script
-        final = 25 + (score * 0.75) 
-        
+        # Base floor of 20
+        final = 20 + stakes_score + prod_score + structure_score + d_score
         return min(100, round(final))
 
     def _diagnose_representation_risks(self, fairness_audit):
@@ -1606,15 +1588,25 @@ class WriterAgent:
     # =========================================================================
 
     def _build_act_structure(self, trace):
-        """Calculates act-by-act scene distribution following standard screenplay structure."""
+        """Calculates act-by-act distribution and Violence Weighting (Task 4)."""
         n = len(trace)
         if n == 0:
-            return {'act1': 0, 'act2': 0, 'act3': 0, 'act1_pct': 0, 'act2_pct': 0, 'act3_pct': 0, 'balance': 'Unknown'}
+            return {'act1': 0, 'act2': 0, 'act3': 0, 'act1_pct': 0, 'act2_pct': 0, 'act3_pct': 0, 'balance': 'Unknown', 'violence_count': [0,0,0]}
         
-        # Standard screenplay structure: Act 1 = 25%, Act 2 = 50%, Act 3 = 25%
+        # Boundaries
         act1_end = max(1, n // 4)
         act3_start = max(act1_end + 1, n - (n // 4))
         
+        # Violence Counting: shootings, deaths, confrontations
+        v_triggers = ['shot', 'killed', 'blood', 'gun', 'attack', 'dead', 'murder', 'fight', 'trap', 'ambush']
+        violence = [0, 0, 0]
+        
+        for i, s in enumerate(trace):
+            is_violent = s.get('sentiment', 0) < -0.8 and any(w in str(s).lower() for w in v_triggers)
+            if i < act1_end: violence[0] += 1 if is_violent else 0
+            elif i < act3_start: violence[1] += 1 if is_violent else 0
+            else: violence[2] += 1 if is_violent else 0
+
         act1_count = act1_end
         act2_count = act3_start - act1_end
         act3_count = n - act3_start
@@ -1623,21 +1615,23 @@ class WriterAgent:
         act2_pct = round(act2_count / n * 100)
         act3_pct = round(act3_count / n * 100)
         
-        # Ideal: 25/50/25. Tolerance: ±10%
         balance = "Balanced"
-        if act1_pct > 35:
-            balance = "Extended Act 1 Setup"
-        elif act3_pct > 35:
-            balance = "Extended Act 3 Resolution"
-        elif act2_pct > 65:
-            balance = "Extended Act 2 Middle"
-        elif act2_pct < 35:
-            balance = "Compressed Act 2 Middle"
+        if act1_pct > 35: balance = "Extended Act 1 Setup"
+        elif act3_pct > 35: balance = "Extended Act 3 Resolution"
+        elif act2_pct > 65: balance = "Extended Act 2 Middle"
+        
+        # Violence Floor (Task 4): If Act 1 has 3+ violent events, it cannot be 'Slow Burn'
+        # We reflect this in a new 'pacing_benchmark' key
+        pacing = "Standard"
+        if violence[0] >= 3: pacing = "High Octane"
+        elif sum(violence) == 0 and act1_pct > 30: pacing = "Slow Burn"
         
         return {
             'act1': act1_count, 'act2': act2_count, 'act3': act3_count,
             'act1_pct': act1_pct, 'act2_pct': act2_pct, 'act3_pct': act3_pct,
-            'balance': balance
+            'balance': balance,
+            'violence_count': violence,
+            'pacing_benchmark': pacing
         }
 
     def _calculate_scriptpulse_score(self, dashboard, diagnostics):

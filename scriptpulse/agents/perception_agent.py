@@ -215,7 +215,17 @@ class EncodingAgent:
         text = " ".join([l['text'] for l in lines if l['tag'] in ['D', 'A']])
         if not text.strip():
             return {'pos': 0.0, 'neg': 0.0, 'neu': 1.0, 'compound': 0.0}
-            
+
+        # 1. High-Priority Narrative Override: Violence & Death
+        # Force negative sentiment if explicit death/ambush events are detected with characters present
+        violence_triggers = ['shot', 'killed', 'ambush', 'trap', 'gunfire', 'body', 'murder', 'blood', 'execution']
+        char_names = [l['text'].upper() for l in lines if l['tag'] == 'C']
+        
+        has_violence = any(w in text.lower() for w in violence_triggers)
+        if has_violence and char_names:
+            # Force high-tension negative sentiment for narrative spikes
+            return {'pos': 0.05, 'neg': 0.85, 'neu': 0.1, 'compound': -0.92}
+
         if self.classifier:
             try:
                 # Use Zero-Shot for Dramatic Context Sentiment (Not Twitter sentiment)

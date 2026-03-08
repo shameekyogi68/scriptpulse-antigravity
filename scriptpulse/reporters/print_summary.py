@@ -34,10 +34,9 @@ def generate_print_summary(report_data, script_title="Untitled Script"):
     elif sp_score >= 45: score_label = "Needs Work"
     else: score_label = "Major Revision"
     
-    # Pacing
-    pacing = "Balanced"
-    if avg_tension < 0.35: pacing = "Slow Burn"
-    elif avg_tension > 0.65: pacing = "High Octane"
+    # Pacing and Cast (Task 3 & 4)
+    pacing = dashboard.get('act_structure', {}).get('pacing_benchmark', 'Balanced')
+    cast_count = dashboard.get('cast_count_deterministic', 0)
     
     # Runtime
     runtime_data = dashboard.get('runtime_estimate', {})
@@ -157,8 +156,8 @@ def generate_print_summary(report_data, script_title="Untitled Script"):
                 <div class="stat-value">{pacing}</div>
             </div>
             <div class="stat">
-                <div class="stat-label">Scenes</div>
-                <div class="stat-value">{len(trace)}</div>
+                <div class="stat-label">Cast (5+ Lines)</div>
+                <div class="stat-value">{cast_count}</div>
             </div>
             <div class="stat">
                 <div class="stat-label">Est. Runtime</div>
