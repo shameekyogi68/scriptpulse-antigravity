@@ -25,13 +25,6 @@ def render_sidebar(ui_mode, is_cloud, stu):
             "4. **Export** professional reports"
         )
 
-        st.markdown("---")
-
-        # Color Guide removed - keep it clean and intuitive
-        # uikit.render_quick_guide()
-
-        st.markdown("---")
-
         # System Accuracy & Trust
         st.markdown("#### System Accuracy")
         st.progress(0.98, text="📝 **Parsing Precision**: 98%")
