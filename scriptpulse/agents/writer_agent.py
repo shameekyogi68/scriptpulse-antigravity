@@ -828,6 +828,7 @@ class WriterAgent:
 
         # Find pairs that shared scenes in Act 1 but have zero co-occurrence after that
         rest_individual_chars = set()
+        rest_pairs = set()
         for s in rest:
             chars = list(get_characters(s))
             rest_individual_chars.update(chars)
