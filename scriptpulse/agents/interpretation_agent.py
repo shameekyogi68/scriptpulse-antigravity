@@ -106,15 +106,16 @@ class InterpretationAgent:
     def diagnose_patterns(self, temporal_trace, features=None, scenes=None, genre='drama'):
         """Identifies Cognitive Experiences: Boredom, Confusion, Visceral Reaction."""
         diagnosis = []
-        signals = [s['attentional_signal'] for s in temporal_trace]
-        if not signals or not features or not scenes or len(features) != len(temporal_trace) or len(scenes) != len(temporal_trace): 
+        if not temporal_trace or not features or not scenes or len(features) != len(temporal_trace) or len(scenes) != len(temporal_trace): 
             return diagnosis
             
+        signals = [s['attentional_signal'] for s in temporal_trace]
+        
         # Pacing Threshold Adjustment by Genre
-        sag_limit = 0.35 if genre.lower() == 'drama' else 0.45 # Action/Thriller drift earlier
+        sag_limit = 0.35 if genre.lower() == 'drama' else 0.45 
         sag_scenes = 3 if genre.lower() == 'drama' else 2 
             
-        # 1. Overcrowded Narrative (High entity churn + Low Tension)
+        # 1. Overcrowded Narrative
         for i in range(len(temporal_trace)):
             feat = features[i]
             att_sig = temporal_trace[i]['attentional_signal']
@@ -123,11 +124,11 @@ class InterpretationAgent:
             if churn >= 3.0 and att_sig < 0.5:
                 snippet = self._get_snippet(scenes[i])
                 diagnosis.append(
-                    f"🟠 **Overcrowded Scene (Scene {i+1})**: Too many new elements or characters are introduced without a strong driving dramatic question. (e.g., {snippet})"
+                    f"🟠 **Overcrowded Scene (Scene {i+1})**: Too many new characters or elements. (e.g., {snippet})"
                 )
-                break # Just find one to avoid spam
+                break
 
-        # 2. High-Octane Sequence (High Action and High Tension)
+        # 2. Action Peak
         for i in range(len(temporal_trace)):
             feat = features[i]
             att_sig = temporal_trace[i]['attentional_signal']
@@ -136,11 +137,11 @@ class InterpretationAgent:
             if action > 6 and att_sig > 0.8:
                 snippet = self._get_snippet(scenes[i])
                 diagnosis.append(
-                    f"✨ **Action Peak (Scene {i+1})**: Strong integration of physical action and narrative tension. Major anchor for pacing. (e.g., {snippet})"
+                    f"✨ **Action Peak (Scene {i+1})**: Strong integration of physical action and tension. (e.g., {snippet})"
                 )
                 break
                 
-        # 3. Pacing Drag / Structural Sag
+        # 3. Structural Sag
         high_runs = 0
         for i, s in enumerate(signals):
             if s < sag_limit: 
@@ -151,11 +152,11 @@ class InterpretationAgent:
             if high_runs >= sag_scenes:
                 snippet = self._get_snippet(scenes[i])
                 diagnosis.append(
-                    f"🟠 **Structural Sag (Scene {i+1})**: Consecutive scenes of low tension for a {genre}. (e.g., {snippet})"
+                    f"🟠 **Structural Sag (Scene {i+1})**: Consecutive scenes of low tension. (e.g., {snippet})"
                 )
                 break
                 
-        # 4. Exposition Dump / Narrative Density
+        # 4. Exposition Heavy
         for i in range(len(temporal_trace)):
             feat = features[i]
             att_sig = temporal_trace[i]['attentional_signal']
@@ -164,7 +165,43 @@ class InterpretationAgent:
             if entropy > 3.0 and att_sig < 0.4:
                 snippet = self._get_snippet(scenes[i])
                 diagnosis.append(
-                    f"💡 **Exposition Heavy (Scene {i+1})**: The scene is text-dense but low on dramatic conflict. (e.g., {snippet})"
+                    f"💡 **Exposition Heavy (Scene {i+1})**: Text-dense but low on dramatic conflict. (e.g., {snippet})"
+                )
+                break
+
+        # 5. Talking Heads (High Dialogue, Low Action, Mid Tension)
+        for i in range(len(temporal_trace)):
+            feat = features[i]
+            att_sig = temporal_trace[i]['attentional_signal']
+            dial = feat.get('dialogue_dynamics', {}).get('dialogue_line_count', 0)
+            action = feat.get('visual_abstraction', {}).get('action_lines', 0)
+            
+            if dial > 12 and action < 2 and 0.4 < att_sig < 0.6:
+                snippet = self._get_snippet(scenes[i])
+                diagnosis.append(
+                    f"🗣️ **Talking Heads (Scene {i+1})**: Characters are talking extensively with minimal physical action. (e.g., {snippet})"
+                )
+                break
+
+        # 6. Tonal Whiplash
+        for i in range(1, len(temporal_trace)):
+            curr_sig = temporal_trace[i]['attentional_signal']
+            prev_sig = temporal_trace[i-1]['attentional_signal']
+            
+            if abs(curr_sig - prev_sig) > 0.6:
+                snippet = self._get_snippet(scenes[i])
+                diagnosis.append(
+                    f"🎢 **Tonal Whiplash (Scene {i+1})**: Extreme shift in tension from the previous scene. (e.g., {snippet})"
+                )
+                break
+
+        # 7. Similar Name Confusion
+        for i in range(len(features)):
+            frustration = features[i].get('reader_frustration', {})
+            similar_pairs = frustration.get('similar_name_pairs', [])
+            if similar_pairs:
+                diagnosis.append(
+                    f"🧠 **Audience Confusion (Scene {i+1})**: Characters with similar names ({', '.join(similar_pairs)}) may confuse the reader."
                 )
                 break
 

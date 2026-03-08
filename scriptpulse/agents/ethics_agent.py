@@ -50,17 +50,26 @@ class EthicsAgent:
         centrality_map = {n: degrees[n]/max_degree for n in nodes}
         
         # 3. Analyze Structural Agency (Dialogue Volume & Action Prominence)
-        char_metrics = collections.defaultdict(lambda: {"action_subjects": 0, "dialogue_lines": 0, "total_words_spoken": 0})
+        char_metrics = collections.defaultdict(lambda: {"action_subjects": 0, "dialogue_lines": 0, "total_words_spoken": 0, "turn_initiations": 0, "commands": 0})
         
         for scene in scenes:
             current_char = None
+            scene_started = False
             for line in scene['lines']:
                 if line['tag'] == 'C':
-                    current_char = line['text'].split('(')[0].strip()
-                    if current_char:
-                        char_metrics[current_char]["dialogue_lines"] += 1
+                    name = line['text'].split('(')[0].strip()
+                    if name:
+                        char_metrics[name]["dialogue_lines"] += 1
+                        if not scene_started:
+                            char_metrics[name]["turn_initiations"] += 1
+                            scene_started = True
+                        current_char = name
                 elif line['tag'] == 'D' and current_char:
-                    char_metrics[current_char]["total_words_spoken"] += len(line['text'].split())
+                    text = line['text']
+                    char_metrics[current_char]["total_words_spoken"] += len(text.split())
+                    # Simple Command Heuristic
+                    if len(text.split()) < 6 and ('!' in text or text.isupper()):
+                        char_metrics[current_char]["commands"] += 1
                 elif line['tag'] == 'A':
                     text = line['text']
                     for char in nodes:
@@ -71,22 +80,27 @@ class EthicsAgent:
         # Calculate maxes for normalization
         max_words = max((m["total_words_spoken"] for m in char_metrics.values()), default=1)
         max_actions = max((m["action_subjects"] for m in char_metrics.values()), default=1)
+        max_initiations = max((m["turn_initiations"] for m in char_metrics.values()), default=1)
+        max_commands = max((m["commands"] for m in char_metrics.values()), default=1)
         
         report = []
         for char in nodes:
             stats = char_metrics[char]
             norm_words = stats["total_words_spoken"] / max(1, max_words)
             norm_actions = stats["action_subjects"] / max(1, max_actions)
+            norm_initiations = stats["turn_initiations"] / max(1, max_initiations)
+            norm_commands = stats["commands"] / max(1, max_commands)
             norm_cent = centrality_map.get(char, 0.0)
             
-            # True narrative agency: connected to others (centrality), driving dialogue (words), and taking physical action (actions)
-            agency_score = (norm_cent * 0.4) + (norm_words * 0.4) + (norm_actions * 0.2)
+            # Refined narrative agency calculation
+            agency_score = (norm_cent * 0.3) + (norm_words * 0.3) + (norm_actions * 0.2) + (norm_initiations * 0.1) + (norm_commands * 0.1)
             
             report.append({
                 'character': char,
                 'agency_score': round(agency_score, 3),
                 'centrality': round(norm_cent, 3),
-                'active_verb_ratio': round(norm_actions, 2), # Repurposed metric field for compatibility
+                'initiative': round(norm_initiations, 2),
+                'command_presence': round(norm_commands, 2),
                 'classification': "High Agency" if agency_score > 0.4 else "Passive"
             })
             

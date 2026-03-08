@@ -17,8 +17,9 @@ class WriterAgent:
         
         if not trace: return final_output
         
-        # 1. Narrative Diagnosis (Clustered & Ranked)
-        narrative_health = self._diagnose_health(trace, genre)
+        # 1. Narrative Diagnosis (Start with existing cognitive insights from InterpretationAgent)
+        narrative_health = final_output.get('narrative_diagnosis', [])
+        narrative_health.extend(self._diagnose_health(trace, genre))
         
         # Phase 22: Voice, Motif, and Tell/Show extra diagnostics
         narrative_health.extend(self._diagnose_voice(final_output.get('voice_fingerprints', {})))
@@ -668,7 +669,7 @@ class WriterAgent:
     def _diagnose_flat_scene_turns(self, trace):
         """Flag consecutive scenes where the scene turn is flat — no dramatic movement."""
         assessments = []
-        flat_ranges = self._find_ranges(trace, lambda s: s.get('scene_turn', {}).get('turn_label') == 'Flat Turn')
+        flat_ranges = self._find_ranges(trace, lambda s: s.get('scene_turn', {}).get('turn_label') == 'Flat')
         for start, end in flat_ranges:
             if (end - start + 1) >= 2:
                 assessments.append(

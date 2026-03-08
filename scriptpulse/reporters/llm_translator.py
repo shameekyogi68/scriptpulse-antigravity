@@ -10,7 +10,7 @@ except ImportError:
     GROQ_AVAILABLE = False
 
 try:
-    import google.generativeai as genai
+    from google import genai
     GEMINI_AVAILABLE = True
 except ImportError:
     GEMINI_AVAILABLE = False
@@ -161,9 +161,11 @@ def generate_section_insight(script_data, section_type, lens='viewer', api_key=N
     for provider in order:
         if provider == 'gemini' and keys["gemini"] and GEMINI_AVAILABLE:
             try:
-                genai.configure(api_key=keys["gemini"])
-                model = genai.GenerativeModel('gemini-1.5-flash')
-                response = model.generate_content(f"SYSTEM: {system_msg}\n\nUSER: {user_content}")
+                client = genai.Client(api_key=keys["gemini"])
+                response = client.models.generate_content(
+                    model='gemini-1.5-flash',
+                    contents=f"SYSTEM: {system_msg}\n\nUSER: {user_content}"
+                )
                 return response.text
             except Exception: continue
             
