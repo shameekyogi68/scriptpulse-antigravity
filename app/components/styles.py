@@ -63,7 +63,7 @@ def apply_custom_styles():
         h2 { font-size: 1.5rem !important; margin-top: 1.5rem !important; }
         h3 { font-size: 1.15rem !important; }
         
-        p, li, span, label, .stMarkdown {
+        p, li, label, .stMarkdown {
             color: var(--text-primary) !important;
             line-height: 1.7 !important;
         }
