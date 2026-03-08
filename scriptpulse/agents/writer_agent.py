@@ -70,37 +70,9 @@ class WriterAgent:
         dashboard['writing_texture'] = self._diagnose_writing_texture(trace)
         dashboard['act_structure'] = self._build_act_structure(trace)
         dashboard['commercial_comps'] = self._find_commercial_comps(genre, dashboard.get('stakes_profile', {}).get('dominant', 'Social'))
-        # Merge character fragments (e.g. MICHAEL vs MICHAEL CORLEONE) for accurate thresholding
         v_fingerprints = final_output.get('voice_fingerprints', {})
-        merged_casts = {}
-        generic_roles = {'MAN', 'WOMAN', 'VOICE', 'GUARD', 'SOLDIER', 'WAITER', 'DRIVER', 'OFFICER', 'COP', 'GUEST'}
-        
-        # Sort names by number of words (longest name first) to find parent personae
-        sorted_names = sorted(v_fingerprints.keys(), key=lambda x: len(x.split()), reverse=True)
-        for name in sorted_names:
-            line_count = v_fingerprints[name].get('line_count', 0)
-            if not name: continue
-            
-            found_parent = False
-            name_parts = set(name.split())
-            
-            # If it's a generic role with a number (MAN 1), don't merge based on 'MAN'
-            is_generic = any(g in name_parts for g in generic_roles)
-            
-            for existing in merged_casts:
-                existing_parts = set(existing.split())
-                overlap = name_parts.intersection(existing_parts)
-                
-                # Merge if they share a non-generic word, or if one is a signature word
-                if overlap and not (is_generic and len(overlap) == 1):
-                    merged_casts[existing] += line_count
-                    found_parent = True
-                    break
-            
-            if not found_parent:
-                merged_casts[name] = line_count
-                
-        dashboard['cast_count_deterministic'] = len([c for c, count in merged_casts.items() if count >= 5])
+        # Purely deterministic line-count threshold for 'Cast' status (Tasks 3/Cast Count)
+        dashboard['cast_count_deterministic'] = len([c for c, v in v_fingerprints.items() if v.get('line_count', 0) >= 5])
 
         # Market Readiness (Task 5)
         dashboard['market_readiness'] = self._calculate_market_readiness(dashboard)
