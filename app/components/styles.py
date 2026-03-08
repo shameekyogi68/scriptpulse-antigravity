@@ -39,6 +39,12 @@ def apply_custom_styles():
         }
 
         /* ===== GLOBAL ===== */
+        /* Hide Streamlit's default header space */
+        header, [data-testid="stHeader"] {
+            display: none !important;
+            height: 0 !important;
+        }
+
         .stApp {
             background: var(--bg-primary) !important;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
@@ -47,6 +53,7 @@ def apply_custom_styles():
         
         .main .block-container {
             padding-top: 0rem !important;
+            margin-top: -3rem !important; /* Pull content into the header area */
             padding-bottom: 4rem !important;
             max-width: 1100px !important;
         }
