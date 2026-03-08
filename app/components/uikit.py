@@ -126,11 +126,13 @@ def get_status_icon_html(is_ok: bool) -> str:
     icon_class = "bi-check-circle-fill icon-pass" if is_ok else "bi-x-circle-fill icon-fail"
     return f"<i class='bi {icon_class}'></i>"
 
-def render_ai_consultant_box(insight_text: str, persona: str = "Script Consultant"):
+def render_ai_consultant_box(insight_text: str, persona: str = "Script Consultant", box_title: str = None):
     """Renders a premium glassmorphic box for AI-powered consultant insights."""
 
     text_html = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', insight_text)
     text_html = re.sub(r'\*(.*?)\*', r'<i>\1</i>', text_html)
+    
+    display_title = box_title if box_title else f"{persona} Intelligence"
 
     html = (
         f'<div style="background: linear-gradient(135deg, rgba(106, 72, 187, 0.1) 0%, rgba(106, 72, 187, 0.03) 100%); '
@@ -139,7 +141,7 @@ def render_ai_consultant_box(insight_text: str, persona: str = "Script Consultan
         f'<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">'
         f'<span style="font-size: 1.4rem; filter: drop-shadow(0 0 8px {Theme.ACCENT_PRIMARY});">🧠</span>'
         f'<span style="font-weight: 700; color: white; font-size: 0.9rem; letter-spacing: 0.1em; text-transform: uppercase;">'
-        f'{persona} Intelligence</span>'
+        f'{display_title}</span>'
         f'</div>'
         f'<div style="color: rgba(244, 246, 251, 0.95); font-size: 1rem; line-height: 1.7; font-style: italic; font-weight: 300;">'
         f'"{text_html}"</div>'

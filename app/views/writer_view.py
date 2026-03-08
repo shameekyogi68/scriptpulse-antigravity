@@ -243,7 +243,7 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
         # AI Pacing Critique
         pulse_cache_key = f'ai_pulse_{lens.lower().replace(" ", "_")}'
         if st.session_state.get(pulse_cache_key):
-            uikit.render_ai_consultant_box(st.session_state[pulse_cache_key], persona=lens)
+            uikit.render_ai_consultant_box(st.session_state[pulse_cache_key], persona=lens, box_title=f"{lens} Pacing Critique")
         else:
             if st.button(f"🧠 Ask {lens} for Pacing Critique", key=f"pulse_btn_{lens}", use_container_width=True):
                 with st.spinner("Analyzing..."):

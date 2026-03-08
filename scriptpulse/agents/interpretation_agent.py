@@ -184,23 +184,60 @@ class InterpretationAgent:
                 break
 
         # 6. Tonal Whiplash (Task: Stabilize detection)
-        # Requires extreme shift (> 0.5) AND a thematic anchor (Death, Discovery, or Conflict)
+        whiplash_candidates = []
         for i in range(1, len(temporal_trace)):
             curr_sig = temporal_trace[i]['attentional_signal']
             prev_sig = temporal_trace[i-1]['attentional_signal']
             feat = features[i]
             purpose = feat.get('purpose', {}).get('purpose', '')
             has_death = feat.get('narrative_closure', False)
-            
-            # Anchor triggers: Revelation, Discovery, Action, or explicit death
             is_anchor_scene = any(kw in purpose for kw in ['Revelation', 'Discovery', 'Action', 'Conflict']) or has_death
             
-            if abs(curr_sig - prev_sig) > 0.5 and is_anchor_scene:
-                snippet = self._get_snippet(scenes[i])
-                diagnosis.append(
-                    f"🎢 **Tonal Whiplash (Scene {i+1})**: Extreme shift in tension anchored by a sharp narrative turn. (e.g., {snippet})"
-                )
-                break
+            delta = abs(curr_sig - prev_sig)
+            if delta > 0.5 and is_anchor_scene:
+                whiplash_candidates.append((i, delta))
+
+        # 8. Cognitive Resonance (The 'Perfect' Scene)
+        resonance_candidates = []
+        for i in range(len(temporal_trace)):
+            res = temporal_trace[i].get('cognitive_resonance', 0)
+            if res > 0.85:
+                resonance_candidates.append((i, res))
+
+        # --- Task: Mutual Exclusion Rule (Re-implemented for stability) ---
+        final_whiplash = []
+        final_resonance = []
+        
+        # Track which scenes have already been 'claimed' by one signal
+        claimed_scenes = {}
+        
+        # Group all signals by index
+        all_signals = []
+        for idx, val in whiplash_candidates:
+            all_signals.append({'idx': idx, 'type': 'whiplash', 'val': val})
+        for idx, val in resonance_candidates:
+            all_signals.append({'idx': idx, 'type': 'resonance', 'val': val})
+            
+        # Sort by value descending so the strongest signal 'wins' the scene
+        all_signals.sort(key=lambda x: x['val'], reverse=True)
+        
+        for sig in all_signals:
+            idx = sig['idx']
+            if idx not in claimed_scenes:
+                claimed_scenes[idx] = sig['type']
+                if sig['type'] == 'whiplash':
+                    final_whiplash.append(idx)
+                else:
+                    final_resonance.append(idx)
+
+        # Now add filtered diagnostics to result
+        for idx in sorted(final_whiplash)[:1]: # Show only the primary whiplash
+            snippet = self._get_snippet(scenes[idx])
+            diagnosis.append(f"🎢 **Tonal Whiplash (Scene {idx+1})**: Extreme shift in tension anchored by a sharp narrative turn. (e.g., {snippet})")
+            
+        for idx in sorted(final_resonance)[:1]: # Show only the primary resonance
+            snippet = self._get_snippet(scenes[idx])
+            diagnosis.append(f"💎 **Cognitive Resonance (Scene {idx+1})**: High harmonization of narrative conflict and emotional impact. (e.g., {snippet})")
 
         # 7. Similar Name Confusion
         for i in range(len(features)):
@@ -209,16 +246,6 @@ class InterpretationAgent:
             if similar_pairs:
                 diagnosis.append(
                     f"🧠 **Audience Confusion (Scene {i+1})**: Characters with similar names ({', '.join(similar_pairs)}) may confuse the reader."
-                )
-                break
-
-        # 8. Cognitive Resonance (The 'Perfect' Scene)
-        for i in range(len(temporal_trace)):
-            res = temporal_trace[i].get('cognitive_resonance', 0)
-            if res > 0.85:
-                snippet = self._get_snippet(scenes[i])
-                diagnosis.append(
-                    f"💎 **Cognitive Resonance (Scene {i+1})**: High harmonization of narrative conflict and emotional impact. (e.g., {snippet})"
                 )
                 break
 

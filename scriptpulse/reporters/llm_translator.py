@@ -130,6 +130,7 @@ def generate_section_insight(script_data, section_type, lens='viewer', api_key=N
             f"You are {p_desc} Analyze the story's structural pacing graph. "
             "Explain how this sequence affects the audience's attention from your professional perspective. "
             "Identify the most significant pacing trend observed. One precise sentence. "
+            "CRITICAL: Do not use phrases like 'Based on the provided data' or 'Raw Experience Math'. Speak directly and naturally to the writer. "
             "If referring to the engine, format it as: Script<span style='color: #0052FF; font-weight: bold;'>Pulse</span>"
         )
     elif section_type == 'dna':
@@ -137,6 +138,7 @@ def generate_section_insight(script_data, section_type, lens='viewer', api_key=N
         system_msg = (
             f"You are {p_desc} Evaluate the balance of narrative action vs world-building. "
             "Evaluate the impact of this balance on reader immersion for the current story goals. One clear sentence. "
+            "CRITICAL: Do not use phrases like 'Based on the provided data' or 'Raw Experience Math'. Speak directly and naturally to the writer. "
             "If referring to the engine, format it as: Script<span style='color: #0052FF; font-weight: bold;'>Pulse</span>"
         )
     else: # habits
