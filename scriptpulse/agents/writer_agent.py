@@ -1511,34 +1511,46 @@ class WriterAgent:
         return "Cinematic / Visual"
 
     def _find_commercial_comps(self, genre, dominant_stakes='Social'):
-        """Updated flexible mapping for all genres and stakes types. (Task 7)."""
+        """Task 3: Subgenre-aware matching for feature films only."""
+        # Map Dominant Stakes to specialized 'Subgenres'
+        stakes_to_sub = {
+            'Social': 'Political/Mob/Society',
+            'Moral': 'Psychological/Moral',
+            'Emotional': 'Personal/Relational',
+            'Physical': 'Visceral/Action',
+            'Existential': 'Philosophical/Surreal'
+        }
+        subgenre = stakes_to_sub.get(dominant_stakes, 'General')
+        
         lookup = {
-            ('Crime', 'Social'): ["The Godfather", "The Departed", "The Irishman"],
-            ('Crime', 'Moral'): ["Chinatown", "No Country for Old Men", "There Will Be Blood"],
-            ('Drama', 'Emotional'): ["Marriage Story", "Ordinary People", "Lady Bird"],
-            ('Drama', 'Social'): ["The Social Network", "Parasite", "The Big Short"],
-            ('Action', 'Physical'): ["Mad Max: Fury Road", "Die Hard", "John Wick"],
-            ('Action', 'Emotional'): ["Logan", "The Dark Knight", "Gladiator"],
-            ('Horror', 'Existential'): ["Hereditary", "The Shining", "Midsommar"],
-            ('Horror', 'Physical'): ["Halloween", "A Quiet Place", "The Conjuring"],
-            ('Sci-Fi', 'Existential'): ["2001: A Space Odyssey", "Arrival", "Blade Runner 2049"],
-            ('Sci-Fi', 'Moral'): ["Gattaca", "Children of Men", "Ex Machina"],
-            ('Thriller', 'Social'): ["Gone Girl", "Seven", "Prisoners"],
-            ('Comedy', 'Social'): ["Knives Out", "Glass Onion", "The Favorite"],
-            ('Comedy', 'Emotional'): ["Little Miss Sunshine", "The Holdovers", "Planes, Trains and Automobiles"],
-            ('Romance', 'Emotional'): ["Before Sunrise", "Normal People", "The Notebook"]
+            ('Crime', 'Political/Mob/Society'): ["The Godfather", "The Departed", "The Irishman"],
+            ('Crime', 'Psychological/Moral'): ["Chinatown", "No Country for Old Men", "Heat"],
+            ('Drama', 'Personal/Relational'): ["Marriage Story", "Ordinary People", "Lady Bird"],
+            ('Drama', 'Political/Mob/Society'): ["The Social Network", "Parasite", "The Big Short"],
+            ('Action', 'Visceral/Action'): ["Mad Max: Fury Road", "Die Hard", "John Wick"],
+            ('Action', 'Personal/Relational'): ["Logan", "The Dark Knight", "Gladiator"],
+            ('Horror', 'Philosophical/Surreal'): ["Hereditary", "The Shining", "Midsommar"],
+            ('Horror', 'Visceral/Action'): ["Halloween", "A Quiet Place", "The Conjuring"],
+            ('Sci-Fi', 'Philosophical/Surreal'): ["2001: A Space Odyssey", "Arrival", "Blade Runner 2049"],
+            ('Sci-Fi', 'Psychological/Moral'): ["Gattaca", "Children of Men", "Ex Machina"],
+            ('Thriller', 'Political/Mob/Society'): ["Gone Girl", "Seven", "Prisoners"],
+            ('Comedy', 'Political/Mob/Society'): ["Knives Out", "Glass Onion", "The Favorite"],
+            ('Comedy', 'Personal/Relational'): ["Little Miss Sunshine", "The Holdovers", "Planes, Trains and Automobiles"],
+            ('Romance', 'Personal/Relational'): ["Before Sunrise", "Normal People", "The Notebook"]
         }
         
-        g = genre.replace('-', ' ').split()[0].title() # Handle 'Sci-Fi' -> 'Sci' -> 'Sci' or 'Crime'
+        g = genre.replace('-', ' ').split()[0].title() 
         if 'Sci' in g: g = 'Sci-Fi'
-        key = (g, dominant_stakes)
         
-        # Smart fallback chain
+        # Primary Match: Genre + Subgenre
+        key = (g, subgenre)
         if key in lookup: return lookup[key]
-        if (g, 'Physical') in lookup: return lookup[(g, 'Physical')]
-        if (g, 'Emotional') in lookup: return lookup[(g, 'Emotional')]
         
-        return ["The Social Network", "Parasite", "Pulp Fiction"] # Ultimate classic fallbacks
+        # Secondary Match: Just Genre + any stake
+        for k_g, k_s in lookup.keys():
+            if k_g == g: return lookup[(k_g, k_s)]
+            
+        return ["The Social Network", "Parasite", "Pulp Fiction"] # Ultimate fallbacks
 
     def _calculate_production_risks(self, trace):
         """

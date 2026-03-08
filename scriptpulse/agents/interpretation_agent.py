@@ -184,41 +184,61 @@ class InterpretationAgent:
                 break
 
         # 6. Tonal Whiplash (Task: Stabilize detection)
-        # Requires extreme shift (> 0.5) AND a thematic anchor (Death, Discovery, or Conflict)
+        whiplash_indices = []
         for i in range(1, len(temporal_trace)):
             curr_sig = temporal_trace[i]['attentional_signal']
             prev_sig = temporal_trace[i-1]['attentional_signal']
             feat = features[i]
             purpose = feat.get('purpose', {}).get('purpose', '')
             has_death = feat.get('narrative_closure', False)
-            
-            # Anchor triggers: Revelation, Discovery, Action, or explicit death
             is_anchor_scene = any(kw in purpose for kw in ['Revelation', 'Discovery', 'Action', 'Conflict']) or has_death
             
-            if abs(curr_sig - prev_sig) > 0.5 and is_anchor_scene:
-                snippet = self._get_snippet(scenes[i])
-                diagnosis.append(
-                    f"🎢 **Tonal Whiplash (Scene {i+1})**: Extreme shift in tension anchored by a sharp narrative turn. (e.g., {snippet})"
-                )
-                break
+            delta = abs(curr_sig - prev_sig)
+            if delta > 0.5 and is_anchor_scene:
+                whiplash_indices.append((i, delta))
+                # Removed break to find all occurrences
 
-        # 7. Similar Name Confusion
+        # 8. Cognitive Resonance (The 'Perfect' Scene)
+        resonance_indices = []
+        for i in range(len(temporal_trace)):
+            res = temporal_trace[i].get('cognitive_resonance', 0)
+            if res > 0.85:
+                resonance_indices.append((i, res))
+                # Removed break to find all occurrences
+
+        # Task 1: Mutual Exclusion Rule
+        # If both trigger on the same scene, keep the one with higher confidence (signal value)
+        # Create temporary lists to modify during iteration
+        temp_whiplash = list(whiplash_indices)
+        temp_resonance = list(resonance_indices)
+
+        for w_idx, w_val in whiplash_indices:
+            for r_idx, r_val in resonance_indices:
+                if w_idx == r_idx:
+                    if w_val >= r_val: # Whiplash is stronger or equal
+                        if (r_idx, r_val) in temp_resonance:
+                            temp_resonance.remove((r_idx, r_val))
+                    else: # Resonance is stronger
+                        if (w_idx, w_val) in temp_whiplash:
+                            temp_whiplash.remove((w_idx, w_val))
+                    break # Only one conflict per scene pair
+
+        # Now add filtered diagnostics to result
+        for idx, val in temp_whiplash:
+            snippet = self._get_snippet(scenes[idx])
+            diagnosis.append(f"🎢 **Tonal Whiplash (Scene {idx+1})**: Extreme shift in tension anchored by a sharp narrative turn. (e.g., {snippet})")
+            
+        for idx, val in temp_resonance:
+            snippet = self._get_snippet(scenes[idx])
+            diagnosis.append(f"💎 **Cognitive Resonance (Scene {idx+1})**: High harmonization of narrative conflict and emotional impact. (e.g., {snippet})")
+
+        # 7. Similar Name Confusion (This was originally between 6 and 8, moving it after the mutual exclusion logic)
         for i in range(len(features)):
             frustration = features[i].get('reader_frustration', {})
             similar_pairs = frustration.get('similar_name_pairs', [])
             if similar_pairs:
                 diagnosis.append(
                     f"🧠 **Audience Confusion (Scene {i+1})**: Characters with similar names ({', '.join(similar_pairs)}) may confuse the reader."
-                )
-                break
-
-        # 8. Cognitive Resonance (The 'Perfect' Scene)
-        for i in range(len(temporal_trace)):
-            res = temporal_trace[i].get('cognitive_resonance', 0)
-            if res > 0.85:
-                snippet = self._get_snippet(scenes[i])
-                diagnosis.append(
-                    f"💎 **Cognitive Resonance (Scene {i+1})**: High harmonization of narrative conflict and emotional impact. (e.g., {snippet})"
                 )
                 break
 

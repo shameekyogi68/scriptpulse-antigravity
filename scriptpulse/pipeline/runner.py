@@ -136,13 +136,14 @@ def run_pipeline(script_content, genre='drama', story_framework='3_act', **kwarg
         s1 = sum(1 for w in pos if w in f_half) - sum(1 for w in neg if w in f_half) - (sum(1 for w in violence_vibe if w in f_half) * 3)
         s2 = sum(1 for w in pos if w in s_half) - sum(1 for w in neg if w in s_half) - (sum(1 for w in violence_vibe if w in s_half) * 3)
         
-        label = "Flat"
-        if s1 < 0 and s2 > 0: label = "Negative to Positive"
-        elif s1 > 0 and s2 < 0: label = "Positive to Negative"
-        elif s1 > 6 or s2 > 6: label = "High Energy" # New label for very active scenes
-        elif s1 < 0 and s2 < 0: label = "Negative Progression"
-        elif s1 > 0 and s2 > 0: label = "Positive Progression"
-        
+        # Task 2: Sentiment Post-processing pass for Violence/Death (Rule-based)
+        viol_keywords = ['shot', 'killed', 'trap', 'ambush', 'gunfire', 'body', 'murder', 'blast', 'assassin', 'corpse']
+        scene_text = " ".join([l['text'] for l in scene_lines]).lower()
+        if any(w in scene_text for w in viol_keywords):
+            # Cap the sentiment at negative in the simulation trace
+            s['sentiment'] = min(s.get('sentiment', 0), -0.7)
+            label = "Negative Progression" if s1 < 0 else "Positive to Negative"
+
         s['scene_turn'] = {'turn_label': label, 'sentiment_delta': s2 - s1}
 
     # --- STAGE 6: Final Assembly ---
