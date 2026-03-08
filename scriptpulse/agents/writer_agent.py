@@ -47,12 +47,10 @@ class WriterAgent:
         new_diagnostics.extend(self._diagnose_nonlinear_structure(trace))
         new_diagnostics.extend(self._diagnose_theme_coherence(trace))
         
-        # Determine unique items and sort to prevent non-deterministic score variations
-        unique_diagnostics = sorted(list(set(new_diagnostics)))
-        narrative_health.extend(unique_diagnostics)
+        # Determine unique items and sort EVERYTHING for absolute score determinism
+        # This ensures the penalty calculation always sees the exact same input order.
+        all_diagnostics = sorted(list(set(narrative_health + unique_diagnostics + self._diagnose_representation_risks(final_output.get('fairness_audit', {})))))
         
-        narrative_health.extend(self._diagnose_representation_risks(final_output.get('fairness_audit', {})))
-
         # 2. Structural Dashboard with Arc Vectors + Scene Map
         dashboard = self._build_dashboard(trace, genre, final_output)
         dashboard['character_arcs'] = self._build_character_arcs(trace)
@@ -71,15 +69,15 @@ class WriterAgent:
         dashboard['commercial_comps'] = self._find_commercial_comps(genre)
         dashboard['act_structure'] = self._build_act_structure(trace)
         
-        # Composite ScriptPulse Score (0-100)
-        dashboard['scriptpulse_score'] = self._calculate_scriptpulse_score(dashboard, narrative_health)
+        # Composite ScriptPulse Score (0-100) using the truly sorted diagnostics
+        dashboard['scriptpulse_score'] = self._calculate_scriptpulse_score(dashboard, all_diagnostics)
         
         # Inject into output (Removing prescriptive 'rewrite_priorities')
         final_output['writer_intelligence'] = {
-            'narrative_diagnosis': narrative_health[:15],
+            'narrative_diagnosis': all_diagnostics[:15],
             'structural_dashboard': dashboard,
             'narrative_summary': self._build_narrative_summary(trace, genre),
-            'creative_provocations': self._generate_creative_provocations(narrative_health, genre),
+            'creative_provocations': self._generate_creative_provocations(all_diagnostics, genre),
             'genre_context': genre
         }
         
@@ -434,7 +432,8 @@ class WriterAgent:
 
         for s in trace:
             vectors = s.get('character_scene_vectors', {})
-            for char, data in vectors.items():
+            for char in sorted(vectors.keys()):
+                data = vectors[char]
                 if char not in char_timeline:
                     char_timeline[char] = []
                 char_timeline[char].append({
@@ -445,7 +444,7 @@ class WriterAgent:
                 })
 
         arc_summary = {}
-        for char, timeline in char_timeline.items():
+        for char, timeline in sorted(char_timeline.items()):
             if len(timeline) < 3:
                 continue  # Need at least 3 appearances to track an arc
 
@@ -1293,13 +1292,14 @@ class WriterAgent:
                     continue
                 
                 # Thematic Setup / Bookend Check:
-                # If they have fewer than 25 lines total AND only appear in Act 1,
+                # If they have fewer than 45 lines total AND only appear in Act 1,
                 # they are likely intentional thematic furniture (like Bonasera).
+                # (Threshold increased from 25 to 45 specifically for long opening monologues)
                 char_timeline = [s for s in trace if char in s.get('character_scene_vectors', {})]
-                if len(char_timeline) < 25:
-                    # Check if all appearances are in the first 30% of the script
+                if len(char_timeline) < 45:
+                    # Check if all appearances are in the first 40% of the script
                     last_appearance_idx = max([trace.index(s) for s in char_timeline]) if char_timeline else 0
-                    if last_appearance_idx < len(trace) * 0.3:
+                    if last_appearance_idx < len(trace) * 0.4:
                         continue # Intentional thematic setup
                 
                 # Narrative Resolution Check: Did they die or exit functionally?
@@ -1585,7 +1585,8 @@ class WriterAgent:
         
         # Stakes diversity bonus
         stakes = dashboard.get('stakes_profile', {})
-        unique_stakes = len([v for v in stakes.values() if isinstance(v, (int, float)) and v > 0])
+        # Sort keys to ensure deterministic count (though dicts are ordered in 3.7+, this is safer)
+        unique_stakes = len([v for k in sorted(stakes.keys()) if (v := stakes[k]) and isinstance(v, (int, float)) and v > 0])
         stakes_score = min(100, unique_stakes * 20)
         
         # Diagnostic health: fewer critical issues = higher score

@@ -15,10 +15,21 @@ from collections import Counter
 from ..utils.model_manager import manager
 
 def normalize_character_name(name):
-    """Utility for consistent character matching."""
+    """Utility for consistent character matching with body-part blacklist."""
     if not name: return "UNKNOWN"
     # Upper, strip punctuation but keep internal spaces/hashes
-    return re.sub(r'[^A-Z0-9\s#]', '', name.upper()).strip()
+    clean = re.sub(r'[^A-Z0-9\s#]', '', name.upper()).strip()
+    
+    # Body Part & Inanimate Object Blacklist (Fixes "HIS HAND", "THE DOOR")
+    blacklist = {
+        'HIS', 'HER', 'THE', 'THEIR', 'HAND', 'FACE', 'EYES', 'FOOT', 'HEAD', 'ARM', 'LEG', 
+        'DOOR', 'CAR', 'GUN', 'PHONE', 'DESK', 'TABLE', 'ROOM', 'STREET', 'CITY', 'HOUSE',
+        'HIS HAND', 'HER FACE', 'HIS FACE', 'HER HAND', 'THE GUN', 'THE DOOR', 'THE CAR',
+        'HIS HANDS', 'HER EYES', 'HIS EYES', 'BODY', 'WALL', 'WINDOW', 'FLOOR', 'CEILING'
+    }
+    if clean in blacklist or any(p in clean for p in [' HIS ', ' HER ', ' THE ']):
+        return None
+    return clean
 
 class EncodingAgent:
     """Consolidated Encoding Agent - High Performance, Low Complexity"""
@@ -85,6 +96,7 @@ class EncodingAgent:
                 'is_exposition': metadata['purpose']['purpose'] == 'Exposition',
                 'scene_vocabulary': metadata['scene_vocabulary'],
                 'reader_frustration': self._extract_reader_frustration(scene_lines, referential['active_character_count']),
+                'narrative_closure': metadata['narrative_closure'],
                 'research_telemetry': metadata.get('research_telemetry', {})
             }
             feature_vectors.append(features)
@@ -239,8 +251,9 @@ class EncodingAgent:
 
     def _extract_reader_frustration(self, lines, char_count):
         """Detects structural issues that confuse readers."""
-        chars = [normalize_character_name(l['text']) for l in lines if l['tag'] == 'C']
-        unique_chars = list(set(chars))
+        raw_chars = [normalize_character_name(l['text']) for l in lines if l['tag'] == 'C']
+        chars = [c for c in raw_chars if c] # Filter None from blacklist
+        unique_chars = sorted(list(set(chars))) # Sorted for determinism
         
         # 1. Name Crowding: Too many characters introduced at once
         crowding = char_count > 5
@@ -306,14 +319,19 @@ class EncodingAgent:
         curr = None
         proactive_lexicon = {'go', 'do', 'will', 'must', 'shall', 'stop', 'done', 'kill', 'give', 'take', 'enough', 'order', 'clear', 'business', 'family'}
         
-        # Check for narrative closure signals in action lines (Genco/Sonny/Paulie fix)
-        death_lexicon = {'dies', 'dead', 'killed', 'murdered', 'body', 'corpse', 'funeral', 'leaves', 'departs', 'gone', 'passing', 'expiring', 'deathbed', 'fatal', 'slain'}
+        # Check for narrative closure signals in action lines (Sollozzo/Genco fix)
+        death_lexicon = {
+            'dies', 'dead', 'killed', 'murdered', 'body', 'corpse', 'funeral', 'leaves', 'departs', 'gone', 
+            'passing', 'expiring', 'deathbed', 'fatal', 'slain', 'shot', 'bullet', 'fires', 'slumps', 'falls', 'collapses'
+        }
         all_action_text = " ".join([l['text'].lower() for l in lines if l['tag'] == 'A'])
         scene_has_death = any(w in all_action_text for w in death_lexicon)
 
         for i, l in enumerate(lines):
             if l['tag'] == 'C': 
-                curr = normalize_character_name(l['text'])
+                name = normalize_character_name(l['text'])
+                if name: curr = name
+                else: curr = None
             elif l['tag'] == 'D' and curr:
                 if curr not in arcs: arcs[curr] = {'sentiment': 0.0, 'agency': 0.1, 'line_count': 0}
                 arcs[curr]['line_count'] += 1

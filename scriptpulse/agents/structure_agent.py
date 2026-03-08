@@ -218,8 +218,12 @@ class ParsingAgent:
                 return "D"
             
         if line.isupper() and len(line) < 40 and (not line.endswith((".", "?", "!")) or (line.endswith(".") and len(line) < 12)):
-            # Character cue blacklist
-            if line_upper in ["SON", "MOM", "DAD", "FATHER", "MOTHER", "WIFE", "HUSBAND", "VOICE", "OFF-SCREEN", "O.S.", "EXT", "INT"]:
+            # Character cue blacklist (Expand to catch common action-line fragments and body parts)
+            blacklist = ["SON", "MOM", "DAD", "FATHER", "MOTHER", "WIFE", "HUSBAND", "VOICE", "OFF-SCREEN", "O.S.", "EXT", "INT", "HIS", "HER", "THE", "HAND", "FACE", "EYES", "BODY", "GUN"]
+            if any(b == line_upper or line_upper.startswith(b + " ") for b in blacklist):
+                return "A"
+            
+            if any(term in line_upper for term in ["HIS HAND", "HIS FACE", "HER HAND", "HER FACE", "THE DOOR", "THE GUN", "CLOSE ON", "CLOSE-UP"]):
                 return "A"
 
             # Look ahead for dialogue
