@@ -86,7 +86,7 @@ def generate_ai_summary(script_data, lens='viewer', api_key=None):
                 model="llama-3.3-70b-versatile",
                 messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_content}],
                 temperature=0.6,
-                max_tokens=1000
+                max_tokens=2000
             )
             return completion.choices[0].message.content, None
         except Exception: pass
@@ -98,7 +98,7 @@ def generate_ai_summary(script_data, lens='viewer', api_key=None):
             completion = client.chat.completions.create(
                 model="moonshotai/Kimi-K2-Instruct-0905",
                 messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_content}],
-                max_tokens=1000
+                max_tokens=2000
             )
             return completion.choices[0].message.content, None
         except Exception: pass
@@ -178,7 +178,7 @@ def generate_section_insight(script_data, section_type, lens='viewer', api_key=N
                 completion = client.chat.completions.create(
                     model="llama-3.1-8b-instant",
                     messages=[{"role": "system", "content": system_msg}, {"role": "user", "content": user_content}],
-                    max_tokens=100,
+                    max_tokens=300,
                     temperature=0.8
                 )
                 return completion.choices[0].message.content
@@ -190,7 +190,7 @@ def generate_section_insight(script_data, section_type, lens='viewer', api_key=N
                 completion = client.chat.completions.create(
                     model="moonshotai/Kimi-K2-Instruct-0905",
                     messages=[{"role": "system", "content": system_msg}, {"role": "user", "content": user_content}],
-                    max_tokens=100
+                    max_tokens=300
                 )
                 return completion.choices[0].message.content
             except Exception: continue
