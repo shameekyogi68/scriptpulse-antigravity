@@ -115,7 +115,7 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
 
         # --- Persona-Specific Metric Cards ---
         loc_profile = dashboard.get('location_profile', {})
-        cast_size = len(char_arcs) if char_arcs else len(report.get('voice_fingerprints', {}))
+        cast_size = len(report.get('voice_fingerprints', {}))
 
         if lens == "Studio Executive":
             c1, c2, c3, c4, c5, c6 = st.columns(6)
@@ -413,7 +413,7 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
                                     "Commercial viability, budget estimation & marketplace positioning.")
 
         loc_profile = dashboard.get('location_profile', {})
-        cast_size = len(char_arcs) if char_arcs else len(report.get('voice_fingerprints', {}))
+        cast_size = len(report.get('voice_fingerprints', {}))
 
         c1, c2, c3, c4, c5, c6 = st.columns(6)
         c1.metric("Production Risk", f"{dashboard.get('production_risk_score', 50)}/100",

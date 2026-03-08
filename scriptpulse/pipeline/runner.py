@@ -63,6 +63,35 @@ def run_pipeline(script_content, genre='drama', story_framework='3_act', **kwarg
     })
     telemetry['stages']['cognitive_simulation_ms'] = round((time.time() - _t_stage) * 1000, 2)
     
+    # --- STAGE 3b: Inject Location Data from Scene Headings ---
+    import re as _re
+    for i, t_entry in enumerate(temporal_trace):
+        if i < len(segmented_scenes):
+            heading = segmented_scenes[i].get('heading', '')
+            # Extract INT/EXT
+            interior = None
+            if heading.upper().startswith(('INT.', 'INT ', 'INT/')):
+                interior = 'INT'
+            elif heading.upper().startswith(('EXT.', 'EXT ', 'EXT/')):
+                interior = 'EXT'
+            elif heading.upper().startswith('I/E'):
+                interior = 'I/E'
+            
+            # Extract location: strip INT./EXT. prefix, then take text before time-of-day dash
+            loc = heading
+            loc = _re.sub(r'^(INT\.|EXT\.|INT/EXT\.|EXT/INT\.|I/E\.?)\s*', '', loc, flags=_re.IGNORECASE).strip()
+            # Remove time-of-day suffix (e.g. " - DAY", " - NIGHT")
+            loc = _re.sub(r'\s*[-–—]\s*(DAY|NIGHT|DAWN|DUSK|MORNING|EVENING|CONTINUOUS|LATER|SAME|MOMENTS?\s+LATER).*$', '', loc, flags=_re.IGNORECASE).strip()
+            if not loc:
+                loc = 'UNKNOWN'
+            
+            t_entry['location_data'] = {
+                'location': loc,
+                'interior': interior,
+                'raw_heading': heading
+            }
+
+    
     # --- STAGE 4: Interpretation (Narrative Analysis) ---
     _t_stage = time.time()
     interpreter = InterpretationAgent()

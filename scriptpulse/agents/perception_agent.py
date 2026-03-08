@@ -110,23 +110,21 @@ class EncodingAgent:
         """
         Calculates estimated runtime for the scene in seconds.
         Uses industry standard Word-to-Minute heuristics instead of crude block counts.
-        ~150 words of dialogue = 1 minute on screen
-        ~120 words of action/description = 1 minute on screen
         """
         action_words = sum([len(l['text'].split()) for l in lines if l['tag'] == 'A'])
         dialogue_words = sum([len(l['text'].split()) for l in lines if l['tag'] == 'D'])
         
         # Calculate seconds (60 seconds per minute)
-        # Action is dense visually (0.5 sec per word)
-        action_seconds = action_words * 0.5
+        # Assuming ~180-200 words per minute contextually
+        action_seconds = action_words * 0.3
         
-        # Dialogue is spoken quickly (0.4 sec per word)
-        dialogue_seconds = dialogue_words * 0.4
+        # Dialogue is spoken quickly
+        dialogue_seconds = dialogue_words * 0.35
         
         total_seconds = action_seconds + dialogue_seconds
         
-        # Add small buffer for scene transitions & unwritten beats
-        total_seconds += 5.0 
+        # Minor buffer for transition instead of 5s
+        total_seconds += 1.0 
         
         return {'estimated_seconds': round(total_seconds)}
 
@@ -241,9 +239,9 @@ class EncodingAgent:
         for i in range(len(unique_chars)):
             for j in range(i + 1, len(unique_chars)):
                 n1, n2 = unique_chars[i], unique_chars[j]
-                if len(n1) > 2 and len(n2) > 2:
-                    # Very basic similarity (Levenshtein would be better but keeping it low-mem)
-                    if n1[:3] == n2[:3] or n1[-3:] == n2[-3:]:
+                if len(n1) > 3 and len(n2) > 3:
+                    # Basic similarity: match first 4 chars and ensure lengths are close
+                    if n1[:4] == n2[:4] and abs(len(n1) - len(n2)) <= 2:
                         similar.append(f"{n1}/{n2}")
         
         # 3. Unfilmable 'Internal' Action: (already handled by tell_vs_show, but we can group it here too)

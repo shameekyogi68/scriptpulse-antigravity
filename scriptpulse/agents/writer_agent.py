@@ -827,20 +827,22 @@ class WriterAgent:
                     act1_pairs[pair] = act1_pairs.get(pair, 0) + 1
 
         # Find pairs that shared scenes in Act 1 but have zero co-occurrence after that
-        rest_pairs = set()
+        rest_individual_chars = set()
         for s in rest:
             chars = list(get_characters(s))
+            rest_individual_chars.update(chars)
             for i in range(len(chars)):
                 for j in range(i + 1, len(chars)):
                     rest_pairs.add(tuple(sorted([chars[i], chars[j]])))
 
         for pair, count in act1_pairs.items():
-            if count >= 2 and pair not in rest_pairs:
+            if count >= 3 and pair not in rest_pairs:
                 a, b = pair
-                assessments.append(
-                    f"🧵 **Dangling Thread ({a} & {b})**: These characters share {count} scene(s) together "
-                    f"in Act 1 but never interact again. The audience is waiting for their story to resolve."
-                )
+                if a in rest_individual_chars and b in rest_individual_chars:
+                    assessments.append(
+                        f"🧵 **Dangling Thread ({a} & {b})**: These characters share {count} scene(s) together "
+                        f"in Act 1 but never interact again. The audience is waiting for their story to resolve."
+                    )
 
         return assessments[:2]
 

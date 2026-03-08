@@ -109,7 +109,12 @@ class DynamicsAgent:
                 'agency': round(feat.get('referential_load', {}).get('active_character_count', 0) * 0.15, 3),
                 'action_density': round(action_count / max(1, action_count + dial_count), 2),
                 'sentiment': round(sentiment_val, 3),
-                'narrative_position': round(i / max(1, len(features)), 3)
+                'narrative_position': round(i / max(1, len(features)), 3),
+                # Explicit dialogue/action counts for writer_agent's global ratio calculation
+                'dialogue_action_ratio': {
+                    'dialogue_lines': dial_count,
+                    'action_lines': action_count
+                }
             }
             
             # Forward feed all relevant features to temporal trace needed for interpretation
