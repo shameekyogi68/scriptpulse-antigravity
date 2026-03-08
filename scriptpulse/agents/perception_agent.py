@@ -317,6 +317,22 @@ class EncodingAgent:
             scores = {k: v/total_raw for k, v in raw_scores.items()}
         
         # 2. Character Arcs (Per-scene vectors based on context, not just word count)
+        # Collect diagnostic representative quotes for later reference
+        rep_dialogue = ""
+        max_d_len = -1
+        rep_action = ""
+        max_a_len = -1
+        
+        for l in lines:
+            txt = l.get('text', '')
+            tag = l.get('tag', '')
+            if tag == 'D' and len(txt) > max_d_len:
+                max_d_len = len(txt)
+                rep_dialogue = txt
+            elif tag == 'A' and len(txt) > max_a_len:
+                max_a_len = len(txt)
+                rep_action = txt
+
         arcs = {}
         curr = None
         proactive_lexicon = {'go', 'do', 'will', 'must', 'shall', 'stop', 'done', 'kill', 'give', 'take', 'enough', 'order', 'clear', 'business', 'family'}
@@ -415,6 +431,8 @@ class EncodingAgent:
             'purpose': {'purpose': purpose},
             'character_scene_vectors': arcs,
             'narrative_closure': scene_has_death,  # Inform the downstream agent if characters might be 'resolved' here
+            'representative_dialogue': rep_dialogue, # Used by writer agent for pulls
+            'representative_action': rep_action,
             'scene_vocabulary': list(vocab),
             'research_telemetry': {
                 'analytical_confidence': confidence,

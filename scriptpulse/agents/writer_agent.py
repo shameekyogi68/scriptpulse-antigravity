@@ -348,21 +348,21 @@ class WriterAgent:
 
     def _diagnose_on_the_nose(self, trace):
         """
-        Flag scenes where literal, on-the-nose dialogue occurs in high-tension context.
-        Best subtext: characters say the OPPOSITE of what they feel under pressure.
+        Identify scenes where characters say exactly what they are thinking/feeling.
+        Threshold: >25% on-the-nose dialogue hits.
         """
         assessments = []
-        otn_ranges = self._find_ranges(trace, lambda s:
-            s.get('on_the_nose', {}).get('on_the_nose_ratio', 0.0) > 0.4
-            and s.get('conflict', 0) > 0.55
-        )
-        for start, end in otn_ranges:
-            assessments.append(
-                f"🔴 **On-the-Nose Dialogue (Scenes {start}-{end})**: "
-                f"Characters are stating their feelings/intentions directly in a high-tension scene. "
-                f"Great tension needs subtext — what are they NOT saying?"
-            )
-        return assessments[:1]  # Surface top hit only
+        for s in trace:
+            otn = s.get('on_the_nose', {})
+            idx = s['scene_index']
+            rep = s.get('representative_dialogue', '')
+            if otn.get('on_the_nose_ratio', 0) > 0.25:
+                quote = f" (e.g., \"{rep[:60]}...\")" if rep else ""
+                assessments.append(
+                    f"🗣️ **On-The-Nose Dialogue (Scene {idx})**: Characters are stating their internal subtext as text{quote}. "
+                    f"Subvert the lines to hide the real emotion behind a defensive or tactical goal."
+                )
+        return assessments[:2]
 
     def _diagnose_shoe_leather(self, trace):
         """
@@ -372,15 +372,12 @@ class WriterAgent:
         for s in trace:
             sl = s.get('shoe_leather', {})
             idx = s['scene_index']
+            rep = s.get('representative_dialogue', '')
             if sl.get('has_shoe_leather', False):
-                start_filler = sl.get('scene_start_filler', 0)
-                end_filler = sl.get('scene_end_filler', 0)
-                loc = []
-                if start_filler >= 2: loc.append("start")
-                if end_filler >= 2: loc.append("end")
+                quote = f" (e.g., \"{rep[:60]}...\")" if rep else ""
                 assessments.append(
                     f"✂️ **Shoe-Leather Detected (Scene {idx})**: "
-                    f"Filler dialogue at the {' & '.join(loc)} of the scene. "
+                    f"Filler dialogue at the start or end of the scene{quote}. "
                     f"Arrive late, leave early — cut the pleasantries."
                 )
         return assessments[:2]  # Top 2 worst offenders
@@ -1426,21 +1423,32 @@ class WriterAgent:
     def _generate_creative_provocations(self, diagnosis, genre):
         """Generates mentor-like questions to push the writer's craft further."""
         provocations = []
+        diag_str = " ".join(diagnosis)
         
-        # 1. Base on diagnosis content
-        diag_str = " ".join(diagnosis).lower()
+        # 1. Script-Specific Evidence-Based Questions
+        # Same Voice Syndrome: Extract names
+        voice_match = re.search(r'Same Voice Syndrome: (.*?) share', diag_str)
+        if voice_match:
+            names = voice_match.group(1).split(', ')
+            if len(names) >= 2:
+                provocations.append(f"Your leads **{names[0]}** and **{names[1]}** share similar dialogue rhythms. What one verbal habit could you give {names[0]} that {names[1]} would *never* use?")
+            else:
+                provocations.append(f"If you removed character names from the script, would a reader still know exactly who is speaking based only on their syntax and vocabulary?")
         
-        if "same voice" in diag_str:
-            provocations.append("If you removed character names from the script, would a reader still know exactly who is speaking based only on their syntax and vocabulary?")
-        
-        if "too slow" in diag_str or "boring" in diag_str:
+        # Passive Protagonist
+        passive_match = re.search(r'Passive Protagonist: (.*?) is', diag_str)
+        if passive_match:
+            name = passive_match.group(1)
+            provocations.append(f"**{name}** is currently being pushed by the plot. What is the one thing they want so badly they would burn their own life down to get it? Can they make a choice based on that *now*?")
+        elif "passive" in diag_str.lower():
+            provocations.append("Your protagonist is currently being pushed by the plot. What is the one thing they want so badly they would burn their own life down to get it? Can they make a choice based on that *now*?")
+
+        # Engagement / Pacing
+        if "too slow" in diag_str.lower() or "boring" in diag_str.lower():
             provocations.append("In your slowest scenes, what is the 'Invisible Conflict'? If no one is shouting, who is winning the quiet battle for power?")
             
-        if "too intense" in diag_str or "fatigue" in diag_str:
+        if "too intense" in diag_str.lower() or "fatigue" in diag_str.lower():
             provocations.append("You have a high-octane run of scenes. Where is the 'Quiet Moment of Grace' that makes the next explosion feel earned?")
-            
-        if "passive" in diag_str:
-            provocations.append("Your protagonist is currently being pushed by the plot. What is the one thing they want so badly they would burn their own life down to get it? Can they make a choice based on that *now*?")
 
         # 2. Genre-specific masterclass tips
         genre_tips = {

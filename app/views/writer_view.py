@@ -140,7 +140,13 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
             c2.metric("Pacing", pacing)
             c3.metric("Midpoint", dashboard.get('midpoint_status', 'N/A'), help="Structural midpoint health.")
             c4.metric("Scenes", total_scenes)
-            c5.metric("Runtime", rt_label)
+            
+            # Runtime with context
+            rt_min = runtime_data.get('estimated_minutes', 0)
+            rt_context = f"{rt_min} min"
+            # Add subtle context help for prestige/streaming
+            rt_help = f"Streaming standard: 90–120m. Feature drama avg: 110–140m. Your script: {rt_min}m."
+            c5.metric("Runtime", rt_context, help=rt_help)
 
         # --- Act Structure & Dialogue Ratio (side by side) ---
         act = dashboard.get('act_structure', {})
@@ -193,7 +199,7 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
                                         font-size: 0.7rem; font-weight: 700; color: white;">🎬 {a_pct}%</div>
                         </div>
                         <div style="font-size: 0.75rem; color: {Theme.TEXT_MUTED};">
-                            Ideal for {genre}: ~{bench}% dialogue
+                            {genre} range: {bench - 10}–{bench + 10}% dialogue · Your script: <b>{d_pct}%</b> {'✅' if (bench - 12) <= d_pct <= (bench + 12) else '⚠️'}
                         </div>
                     </div>
                     """, unsafe_allow_html=True)

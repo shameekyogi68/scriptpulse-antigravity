@@ -338,7 +338,7 @@ def generate_report(report_data, script_title="Untitled Script", user_notes="", 
         <div class="footer">
             GEN-SPEC: v{report_data.get('meta', {}).get('metric_version', '1.3')} | PROFILE: v{report_data.get('meta', {}).get('genre_profile_version', '1.0')}<br>
             SECURE HASH: {report_data.get('meta', {}).get('constants_hash', 'N/A')}<br>
-            &copy; 2026 ScriptPulse Biometric Systems. Confidential & Proprietary.
+            &copy; 2026 ScriptPulse Analytics Engine. Confidential & Proprietary.
         </div>
     </div>
     

@@ -21,20 +21,21 @@ def render_sidebar(ui_mode, is_cloud, stu):
             "4. **Export** professional reports"
         )
 
-        # System Accuracy & Trust
-        st.markdown("#### System Accuracy")
-        st.progress(0.98, text="📝 **Parsing Precision**: 98%")
-        st.progress(0.88, text="📈 **Pacing Alignment**: 88%")
-        st.progress(0.92, text="💡 **Insight Relevance**: 92%")
+        # System Intelligence & Analysis Depth
+        st.markdown("#### Analysis Depth")
+        st.caption("🧠 **Multidimensional Evaluation**")
+        st.progress(1.0, text="✨ **Narrative Dimensions**: 15+")
+        st.progress(1.0, text="📊 **Structural Theory**: 3-Act Logic")
+        st.progress(1.0, text="🔬 **Granularity**: Scene-by-Scene")
         
         st.markdown(f"""
-        <div style="background: linear-gradient(90deg, rgba(0,210,160,0.15), rgba(0,210,160,0.05)); 
-                    border: 1px solid rgba(0, 210, 160, 0.4); border-left: 3px solid #00D2A0;
+        <div style="background: linear-gradient(90deg, rgba(59,130,246,0.15), rgba(59,130,246,0.05)); 
+                    border: 1px solid rgba(59, 130, 246, 0.4); border-left: 3px solid #3b82f6;
                     border-radius: 8px; padding: 12px; margin-top: 15px; text-align: center;
-                    box-shadow: 0 4px 15px rgba(0,210,160,0.1), inset 0 0 10px rgba(0,210,160,0.05);">
+                    box-shadow: 0 4px 15px rgba(59,130,246,0.1), inset 0 0 10px rgba(59,130,246,0.05);">
             <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
-                <span style="font-size: 1.1rem;">🧪</span>
-                <span style="color: #00D2A0; font-weight: 800; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase;">Research Certified</span>
+                <span style="font-size: 1.1rem;">⚡</span>
+                <span style="color: #3b82f6; font-weight: 800; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase;">AI-Powered Analysis</span>
             </div>
         </div>
         """, unsafe_allow_html=True)
