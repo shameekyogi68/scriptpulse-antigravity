@@ -118,76 +118,29 @@ def render_lab_pipeline_header():
     </div>
     """, unsafe_allow_html=True)
 
-def render_lab_metric(label: str, value: str, delta: str = None):
-    """Renders a lab-specific metric card."""
-    delta_html = f"<div style='color: {Theme.ACCENT_TEAL}; font-size: 11px; margin-top: -5px;'>{delta}</div>" if delta else ""
-    st.markdown(f"""
-    <div style="background: {Theme.BG_SECONDARY}; border: 1px solid rgba(106, 72, 187, 0.2); 
-                padding: 15px; border-radius: 4px; border-left: 3px solid {Theme.ACCENT_PRIMARY};
-                font-family: 'JetBrains Mono', monospace;">
-        <div style="color: {Theme.TEXT_MUTED}; font-size: 10px; text-transform: uppercase; letter-spacing: 1px;">{label}</div>
-        <div style="color: {Theme.TEXT_PRIMARY}; font-size: 24px; font-weight: bold; margin: 4px 0;">{value}</div>
-        {delta_html}
-    </div>
-    """, unsafe_allow_html=True)
-
-def render_lab_subheading(index: str, title: str):
-    """Renders a monospaced lab subheading."""
-    st.markdown(f"<h3 style='margin-top: 30px; border-bottom: 1px solid rgba(106, 72, 187, 0.3); padding-bottom: 5px;'><span style='color: {Theme.ACCENT_PRIMARY};'>[{index}]</span> {title}</h3>", unsafe_allow_html=True)
-
-def render_sidebar_header(title: str, subtitle: str):
-    """Renders the top branding for the sidebar."""
-    st.markdown(f"""
-    <div style="text-align: center; padding: 0.5rem 0 1rem;">
-        <span style="font-family: Outfit, sans-serif; font-size: 1.6rem; font-weight: 700; 
-                     background: linear-gradient(135deg, {Theme.ACCENT_PRIMARY}, {Theme.SEMANTIC_INFO}); 
-                     -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-            {title}
-        </span>
-        <br/>
-        <span style="font-size: 0.75rem; color: {Theme.SEMANTIC_INFO}; letter-spacing: 0.05em;">
-            {subtitle}
-        </span>
-    </div>
-    """, unsafe_allow_html=True)
-
-def render_quick_guide():
-    """Renders the standardized quick legend/guide in the sidebar."""
-    st.markdown(f"""
-    <div style="background: rgba(106, 72, 187, 0.08); border-radius: 12px; 
-                padding: 16px; border: 1px solid rgba(106, 72, 187, 0.15);">
-        <div style="font-weight: 600; margin-bottom: 8px; font-size: 0.85rem;">📖 What Do the Colors Mean?</div>
-        <div style="font-size: 0.78rem; color: {Theme.TEXT_SECONDARY}; line-height: 1.6;">
-            <b style="color: {Theme.SEMANTIC_CRITICAL};">🔴 Red</b> — Fix this now — it could lose your reader<br/>
-            <b style="color: {Theme.SEMANTIC_WARNING};">🟠 Orange</b> — Worth a second look in your next draft<br/>
-            <b style="color: {Theme.SEMANTIC_GOOD};">🟢 Green</b> — Great job — this part works well<br/>
-            <b style="color: {Theme.ACCENT_PURPLE};">💡 Purple</b> — Creative observations for deeper subtext or style
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
 def get_status_icon_html(is_ok: bool) -> str:
     """Returns the themed HTML for a status icon (pass/fail)."""
     icon_class = "bi-check-circle-fill icon-pass" if is_ok else "bi-x-circle-fill icon-fail"
     return f"<i class='bi {icon_class}'></i>"
 
 def render_ai_consultant_box(insight_text: str, persona: str = "Script Consultant"):
-    """Renders a premium, distinctive box for AI-powered consultant insights."""
+    """Renders a premium glassmorphic box for AI-powered consultant insights."""
 
     text_html = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', insight_text)
     text_html = re.sub(r'\*(.*?)\*', r'<i>\1</i>', text_html)
 
     html = (
-        f'<div style="background: rgba(106, 72, 187, 0.05); border-radius: 12px; padding: 16px; '
-        f'border-left: 4px solid {Theme.ACCENT_PRIMARY}; margin-top: 15px; border-top: 1px solid rgba(106, 72, 187, 0.1);'
-        f'border-right: 1px solid rgba(106, 72, 187, 0.1); border-bottom: 1px solid rgba(106, 72, 187, 0.1);">'
-        f'<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">'
-        f'<span style="font-size: 1.2rem;">🧠</span>'
-        f'<span style="font-weight: 700; color: {Theme.ACCENT_PRIMARY}; font-size: 0.85rem; letter-spacing: 0.5px; text-transform: uppercase;">'
-        f'{persona} Insight</span>'
+        f'<div style="background: linear-gradient(135deg, rgba(106, 72, 187, 0.1) 0%, rgba(106, 72, 187, 0.03) 100%); '
+        f'border-radius: var(--radius-lg); padding: 20px; border: 1px solid rgba(106, 72, 187, 0.2); '
+        f'backdrop-filter: blur(12px); box-shadow: 0 4px 20px rgba(0,0,0,0.2); margin-top: 20px;">'
+        f'<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">'
+        f'<span style="font-size: 1.4rem; filter: drop-shadow(0 0 8px {Theme.ACCENT_PRIMARY});">🧠</span>'
+        f'<span style="font-weight: 700; color: white; font-size: 0.9rem; letter-spacing: 0.1em; text-transform: uppercase;">'
+        f'{persona} Intelligence</span>'
         f'</div>'
-        f'<div style="color: {Theme.TEXT_PRIMARY}; font-size: 0.95rem; line-height: 1.5; font-style: italic;">'
-        f'{text_html}</div>'
+        f'<div style="color: rgba(244, 246, 251, 0.95); font-size: 1rem; line-height: 1.7; font-style: italic; font-weight: 300;">'
+        f'"{text_html}"</div>'
         f'</div>'
     )
+    st.markdown(html, unsafe_allow_html=True)
     st.markdown(html, unsafe_allow_html=True)

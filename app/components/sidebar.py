@@ -12,10 +12,6 @@ def render_sidebar(ui_mode, is_cloud, stu):
         with col_logo:
             st.image(ICON_PATH if os.path.exists(ICON_PATH) else "app/assets/ScriptPulse_Icon.png", use_container_width=True)
         
-        # Sidebar text removed as per user request
-        st.markdown("")
-        st.markdown("---")
-
         # How It Works
         st.markdown("#### How It Works")
         st.caption(

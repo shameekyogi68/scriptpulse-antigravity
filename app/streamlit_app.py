@@ -207,9 +207,5 @@ if report and current_input:
             f"ScriptPulse_Summary_{genre}.html", "text/html",
             use_container_width=True)
 
-# =============================================================================
-# SYSTEM DIAGNOSTICS (Hidden)
-# =============================================================================
-st.markdown("---")
-from app.components.diagnostics import render_diagnostics
-render_diagnostics()
+# Application end
+

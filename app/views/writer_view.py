@@ -153,9 +153,10 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
             with ac1:
                 if act and act.get('act1_pct', 0) > 0:
                     st.markdown(f"""
-                    <div style="background: {Theme.BG_CARD}; border: 1px solid rgba(106,72,187,0.15);
-                                border-radius: 12px; padding: 16px;">
-                        <div style="font-weight: 600; margin-bottom: 10px; font-size: 0.88rem;">🎬 Act Structure</div>
+                    <div style="background: linear-gradient(135deg, rgba(32, 29, 48, 0.7) 0%, rgba(26, 23, 41, 0.95) 100%); 
+                                backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05);
+                                border-radius: var(--radius-lg); padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+                        <div style="font-weight: 700; margin-bottom: 15px; font-size: 0.95rem; color: white; letter-spacing: 0.05em; text-transform: uppercase;">🎬 Act Structure</div>
                         <div style="display: flex; gap: 3px; height: 26px; border-radius: 6px; overflow: hidden; margin-bottom: 8px;">
                             <div style="width: {max(8, act['act1_pct'])}%; background: {Theme.SEMANTIC_WARNING};
                                         display: flex; align-items: center; justify-content: center;
@@ -179,9 +180,10 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
                     a_pct = 100 - d_pct
                     bench = round(dar.get('genre_benchmark', 0.5) * 100) if isinstance(dar.get('genre_benchmark'), float) else dar.get('genre_benchmark', 50)
                     st.markdown(f"""
-                    <div style="background: {Theme.BG_CARD}; border: 1px solid rgba(106,72,187,0.15);
-                                border-radius: 12px; padding: 16px;">
-                        <div style="font-weight: 600; margin-bottom: 10px; font-size: 0.88rem;">💬 Dialogue vs Action</div>
+                    <div style="background: linear-gradient(135deg, rgba(32, 29, 48, 0.7) 0%, rgba(26, 23, 41, 0.95) 100%); 
+                                backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05);
+                                border-radius: var(--radius-lg); padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+                        <div style="font-weight: 700; margin-bottom: 15px; font-size: 0.95rem; color: white; letter-spacing: 0.05em; text-transform: uppercase;">💬 Dialogue vs Action</div>
                         <div style="display: flex; gap: 3px; height: 26px; border-radius: 6px; overflow: hidden; margin-bottom: 8px;">
                             <div style="width: {max(8, d_pct)}%; background: {Theme.SEMANTIC_INFO};
                                         display: flex; align-items: center; justify-content: center;
@@ -381,9 +383,11 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
             if bloated:
                 st.markdown(f"##### ✂️ Trim Candidates ({len(bloated)})")
                 for s in bloated[:5]:
-                    st.markdown(f"<div style='background: rgba(239,68,68,0.08); padding: 8px 12px; border-radius: 8px; "
-                                f"margin-bottom: 6px; border-left: 3px solid {Theme.SEMANTIC_CRITICAL}; font-size: 0.85rem;'>"
-                                f"Scene {s['scene']} · <b>{s.get('label', '?')}</b> · Economy: {s.get('score', 0)}%"
+                    st.markdown(f"<div style='background: linear-gradient(90deg, rgba(239,68,68,0.1) 0%, rgba(239,68,68,0.02) 100%); "
+                                f"padding: 12px 16px; border-radius: 10px; margin-bottom: 8px; "
+                                f"border-left: 3px solid {Theme.SEMANTIC_CRITICAL}; font-size: 0.9rem; "
+                                f"box-shadow: 0 4px 12px rgba(0,0,0,0.1); backdrop-filter: blur(8px);'>"
+                                f"<span style='color: white;'>Scene {s['scene']}</span> · <b style='color: {Theme.SEMANTIC_CRITICAL};'>{s.get('label', '⚠️')}</b> · Economy: <span style='font-weight: 700;'>{s.get('score', 0)}%</span>"
                                 f"</div>", unsafe_allow_html=True)
             else:
                 st.success("✅ No bloated scenes detected.")
@@ -391,9 +395,11 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
             if tight:
                 st.markdown(f"##### 💎 Lean Scenes ({len(tight)})")
                 for s in tight[:5]:
-                    st.markdown(f"<div style='background: rgba(16,185,129,0.08); padding: 8px 12px; border-radius: 8px; "
-                                f"margin-bottom: 6px; border-left: 3px solid {Theme.SEMANTIC_GOOD}; font-size: 0.85rem;'>"
-                                f"Scene {s['scene']} · <b>{s.get('label', '?')}</b> · Economy: {s.get('score', 0)}%"
+                    st.markdown(f"<div style='background: linear-gradient(90deg, rgba(16,185,129,0.1) 0%, rgba(16,185,129,0.02) 100%); "
+                                f"padding: 12px 16px; border-radius: 10px; margin-bottom: 8px; "
+                                f"border-left: 3px solid {Theme.SEMANTIC_GOOD}; font-size: 0.9rem; "
+                                f"box-shadow: 0 4px 12px rgba(0,0,0,0.1); backdrop-filter: blur(8px);'>"
+                                f"<span style='color: white;'>Scene {s['scene']}</span> · <b style='color: {Theme.SEMANTIC_GOOD};'>{s.get('label', '✨')}</b> · Economy: <span style='font-weight: 700;'>{s.get('score', 0)}%</span>"
                                 f"</div>", unsafe_allow_html=True)
             else:
                 st.caption("No scenes scored above 70% economy.")
