@@ -46,7 +46,7 @@ def apply_custom_styles():
         }
         
         .main .block-container {
-            padding-top: 1rem !important;
+            padding-top: 0rem !important;
             padding-bottom: 4rem !important;
             max-width: 1100px !important;
         }
