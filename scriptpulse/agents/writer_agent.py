@@ -427,13 +427,9 @@ class WriterAgent:
         Build per-character arc vector by comparing their sentiment/agency at start vs end.
         Returns a summary dict for the structural dashboard.
         """
-        # Accumulate per-character data scene by scene
-        char_timeline = {}  # char -> list of (scene_idx, sentiment, agency)
-
+        char_timeline = {}
         for s in trace:
-            vectors = s.get('character_scene_vectors', {})
-            for char in sorted(vectors.keys()):
-                data = vectors[char]
+            for char, data in s.get('character_scene_vectors', {}).items():
                 if char not in char_timeline:
                     char_timeline[char] = []
                 char_timeline[char].append({
@@ -445,6 +441,8 @@ class WriterAgent:
                 })
 
         arc_summary = {}
+        total_scenes = max([s.get('scene_index', 0) for s in trace]) if trace else 100
+        
         for char, timeline in sorted(char_timeline.items()):
             if len(timeline) < 3:
                 continue  # Need at least 3 appearances to track an arc
@@ -458,31 +456,42 @@ class WriterAgent:
             sentiment_delta = round(end['sentiment'] - start['sentiment'], 3)
             agency_delta = round(end['agency'] - start['agency'], 3)
 
-            # Arc classification
-            # Priority 1: Narrative Resolution (Death/Exit)
-            # If the character's thread was resolved, don't call it 'Flat'
-            if timeline[-1].get('resolved', False) or timeline[-2].get('resolved', False) if len(timeline) > 1 else False:
-                arc_label = "Resolved (Narrative Exit) 💀"
-                arc_note = "Character's narrative thread reached a definitive conclusion or exit."
-            elif abs(sentiment_delta) < 0.1 and abs(agency_delta) < 0.1:
-                arc_label = "Flat Arc ⚠️"
-                arc_note = "No measurable emotional or agency change. Is this intentional?"
-            elif sentiment_delta < -0.3 and agency_delta > 0.2:
+            # High Fidelity Resolution Logic
+            # (New logic: must be before final 10% of script to be an 'Exit')
+            is_near_end = end.get('scene', 0) > (total_scenes * 0.9)
+            has_resolved_signal = timeline[-1].get('resolved', False) or (len(timeline) > 1 and timeline[-2].get('resolved', False))
+
+            # Arc classification: Emotional & Agency Journey
+            # Calculate emotional arcs first; 'Resolution' is a structural state, not an emotional one.
+            if sentiment_delta < -0.3 and agency_delta > 0.15:
                 arc_label = "Classic Tragedy 🎭"
-                arc_note = "Character gains agency but loses emotional hope. Powerful arc."
-            elif sentiment_delta > 0.3 and agency_delta > 0.2:
+                arc_note = "Character gains agency but loses emotional hope/soul. A dominant storytelling arc."
+            elif sentiment_delta > 0.3 and agency_delta > 0.15:
                 arc_label = "Hero's Journey ⭐"
-                arc_note = "Strong positive transformation in both sentiment and agency."
-            elif agency_delta < -0.25:
+                arc_note = "Strong positive transformation in both sentiment and agency over the narrative."
+            elif agency_delta < -0.2:
                 if sentiment_delta > -0.1:
                     arc_label = "Steadfast / Supportive 🛡️"
                     arc_note = "Character loses agency but maintains emotional core. Often seen in loyal advisors."
                 else:
                     arc_label = "Descent 📉"
-                    arc_note = "Character progressively loses their ability to act. Often tragic."
+                    arc_note = "Negative movement in both power/agency and emotional outlook."
+            elif abs(sentiment_delta) < 0.1 and abs(agency_delta) < 0.1:
+                # Only call it 'Flat' if it wasn't a Narrative Exit
+                if has_resolved_signal and not is_near_end:
+                    arc_label = "Resolved (Narrative Exit) 💀"
+                    arc_note = "Character's narrative thread reached a definitive conclusion or exit."
+                else:
+                    arc_label = "Flat Arc ⚠️"
+                    arc_note = "No measurable emotional or agency change. Is this intentional?"
             else:
-                arc_label = "Complex Arc 🌀"
-                arc_note = "Non-standard but meaningful change detected."
+                # Fallback for structural resolution
+                if has_resolved_signal:
+                    arc_label = "Resolved / Conclusive 🏁" if is_near_end else "Resolved (Narrative Exit) 💀"
+                    arc_note = "Character's narrative purpose reached a structural conclusion."
+                else:
+                    arc_label = "Developing Arc 📈"
+                    arc_note = "The character shows consistent development across the story beats."
 
             arc_summary[char] = {
                 'arc_type': arc_label,
@@ -498,9 +507,6 @@ class WriterAgent:
 
         return arc_summary
 
-    # =========================================================================
-    # PHASE 24: NARRATIVE INTELLIGENCE DIAGNOSTIC METHODS
-    # =========================================================================
 
     def _diagnose_stakes_diversity(self, trace):
         """
@@ -1476,20 +1482,23 @@ class WriterAgent:
         if not trace: return 50
         
         # 1. Emotional Contrast: The standard deviation of the signal
-        # High contrast means the writer is using the 'Valley' effect correctly
+        # High contrast means the writer is using the 'Valley' effect correctly.
+        # Threshold: 0.18 is a strong delta for a normalized 0-1 signal.
         signals = [s.get('attentional_signal', 0) for s in trace]
         contrast = statistics.stdev(signals) if len(signals) > 1 else 0
-        contrast_score = min(1.0, contrast / 0.35) * 40 # 40 points for good contrast
+        contrast_score = min(1.0, contrast / 0.18) * 35 # 35 pts for contrast
         
-        # 2. Hook Density: Use the new Cognitive Resonance metric (Impact vs just Volume)
+        # 2. Hook Density: Use Cognitive Resonance (Impact vs just Volume)
+        # Average resonance of 0.35 is quite high for a script with breathers.
         resonance = sum(s.get('cognitive_resonance', 0) for s in trace) / len(trace)
-        resonance_score = resonance * 40 # 40 points for meaningful impact
+        resonance_score = min(1.0, resonance / 0.35) * 45 # 45 pts for impact
         
         # 3. Cliffhangers: Scenes ending on high-intensity signals
-        cliff_count = sum(1 for s in trace if s.get('attentional_signal', 0) > 0.85)
-        cliffhangers = (min(cliff_count, 4) * 5) # 20 points for peaks
+        cliff_count = sum(1 for s in trace if s.get('attentional_signal', 0) > 0.82)
+        cliffhangers = (min(cliff_count, 4) * 5) # 20 pts for peaks
         
-        return min(100, round(contrast_score + resonance_score + cliffhangers))
+        # Base completion bonus (20%) + Metrics
+        return min(100, round(20 + (contrast_score + resonance_score + cliffhangers) * 0.8))
 
     def _diagnose_writing_texture(self, trace):
         """Identifies if the script is 'Cinematic' (lean) or 'Novelistic' (dense)."""
@@ -1562,11 +1571,24 @@ class WriterAgent:
     def _calculate_market_readiness(self, trace):
         """A weighted score (0-100) representing the script's commercial viability."""
         if not trace: return 50
-        payoff = sum(s.get('attentional_signal', 0) for s in trace) / len(trace)
+        
+        # Payoff: Use the top 25% of moments (Peak Payoff) rather than average
+        signals = sorted([s.get('attentional_signal', 0) for s in trace], reverse=True)
+        top_n = max(1, len(signals) // 4)
+        peak_payoff = sum(signals[:top_n]) / top_n
+        
         pti = self._calculate_page_turner_index(trace) / 100
-        # High payoff + High page-turner = Market readiness
-        score = (payoff * 40) + (pti * 60)
-        return min(100, round(score))
+        
+        # Thematic Freshness: High entropy/vocabulary density suggests a unique 'voice' or world
+        entropy = sum(s.get('entropy_score', 0) for s in trace) / len(trace)
+        freshness = min(1.0, entropy / 4.0)
+        
+        # Weighted formula: PTI (50%), Peak Payoff (35%), Freshness (15%)
+        score = (pti * 50) + (peak_payoff * 35) + (freshness * 15)
+        # Base floor of 25 for any completed script
+        final = 25 + (score * 0.75) 
+        
+        return min(100, round(final))
 
     def _diagnose_representation_risks(self, fairness_audit):
         """Surfaces critical representation risks from the Ethics Agent."""

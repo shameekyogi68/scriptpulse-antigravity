@@ -17,8 +17,11 @@ from ..utils.model_manager import manager
 def normalize_character_name(name):
     """Utility for consistent character matching with body-part blacklist."""
     if not name: return "UNKNOWN"
-    # Stem names: Remove (O.S.), (V.O.), (CONT'D) etc. before cleaning
+    # Stem names: Remove (O.S.), (V.O.), (CONT'D) etc. 
     stemmed = re.sub(r'\(.*?\)', '', name).upper()
+    # Handle suffixes without parentheses (e.g. MICHAEL-O.S.)
+    stemmed = re.sub(r'[-\s](O\.?S\.?|V\.?O\.?|ALT|OFF-SCREEN|DASHES|FILTERED)$', '', stemmed)
+    
     # Upper, strip punctuation but keep internal spaces/hashes
     clean = re.sub(r'[^A-Z0-9\s#]', '', stemmed).strip()
     
@@ -337,10 +340,12 @@ class EncodingAgent:
         curr = None
         proactive_lexicon = {'go', 'do', 'will', 'must', 'shall', 'stop', 'done', 'kill', 'give', 'take', 'enough', 'order', 'clear', 'business', 'family'}
         
-        # Check for narrative closure signals in action lines (Sollozzo/Genco fix)
+        # Check for narrative closure signals in action lines (Strict death/exit detection)
+        # Removed 'leaves', 'gone', 'shot', 'fires' etc. as they cause false positives for living characters
         death_lexicon = {
-            'dies', 'dead', 'killed', 'murdered', 'body', 'corpse', 'funeral', 'leaves', 'departs', 'gone', 
-            'passing', 'expiring', 'deathbed', 'fatal', 'slain', 'shot', 'bullet', 'fires', 'slumps', 'falls', 'collapses'
+            'dies', 'dead', 'killed', 'murdered', 'body', 'corpse', 'funeral', 
+            'passing', 'expiring', 'deathbed', 'fatal', 'slain', 'slumps', 'falls', 'collapses',
+            'no longer with us', 'rest in peace'
         }
         all_action_text = " ".join([l['text'].lower() for l in lines if l['tag'] == 'A'])
         scene_has_death = any(w in all_action_text for w in death_lexicon)
