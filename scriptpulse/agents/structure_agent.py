@@ -218,11 +218,13 @@ class ParsingAgent:
                 return "D"
             
         if line.isupper() and len(line) < 40 and (not line.endswith((".", "?", "!")) or (line.endswith(".") and len(line) < 12)):
-            # Character cue blacklist (Expand to catch common action-line fragments and body parts)
-            blacklist = ["SON", "MOM", "DAD", "FATHER", "MOTHER", "WIFE", "HUSBAND", "VOICE", "OFF-SCREEN", "O.S.", "EXT", "INT", "HIS", "HER", "THE", "HAND", "FACE", "EYES", "BODY", "GUN"]
-            if any(b == line_upper or line_upper.startswith(b + " ") for b in blacklist):
+            # Character cue blacklist (Refined: Only block non-character structural/action cues)
+            # We allow generic roles (MOM, DAD) again to ensure their dialogue is captured.
+            blacklist = ["EXT", "INT", "O.S.", "V.O.", "OFF-SCREEN", "CONTINUED", "TITLE", "CREDITS"]
+            if any(b == line_upper for b in blacklist):
                 return "A"
             
+            # Action fragments misparsed as characters
             if any(term in line_upper for term in ["HIS HAND", "HIS FACE", "HER HAND", "HER FACE", "THE DOOR", "THE GUN", "CLOSE ON", "CLOSE-UP"]):
                 return "A"
 

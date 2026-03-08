@@ -20,14 +20,14 @@ def normalize_character_name(name):
     # Upper, strip punctuation but keep internal spaces/hashes
     clean = re.sub(r'[^A-Z0-9\s#]', '', name.upper()).strip()
     
-    # Body Part & Inanimate Object Blacklist (Fixes "HIS HAND", "THE DOOR")
+    # Body Part & Structural Blacklist
+    # We only filter the 'garbage' items that are definitely action fragments misparsed.
     blacklist = {
-        'HIS', 'HER', 'THE', 'THEIR', 'HAND', 'FACE', 'EYES', 'FOOT', 'HEAD', 'ARM', 'LEG', 
-        'DOOR', 'CAR', 'GUN', 'PHONE', 'DESK', 'TABLE', 'ROOM', 'STREET', 'CITY', 'HOUSE',
+        'EXT', 'INT', 'OFF-SCREEN', 'O.S.', 'V.O.', 'VOICE',
         'HIS HAND', 'HER FACE', 'HIS FACE', 'HER HAND', 'THE GUN', 'THE DOOR', 'THE CAR',
-        'HIS HANDS', 'HER EYES', 'HIS EYES', 'BODY', 'WALL', 'WINDOW', 'FLOOR', 'CEILING'
+        'HIS HANDS', 'HER EYES', 'HIS EYES', 'CLOSE ON', 'CLOSE-UP'
     }
-    if clean in blacklist or any(p in clean for p in [' HIS ', ' HER ', ' THE ']):
+    if clean in blacklist:
         return None
     return clean
 
