@@ -34,13 +34,16 @@ def render_sidebar_header(title: str, subtitle: str):
     """, unsafe_allow_html=True)
 
 def render_section_header(icon: str, title: str, explainer: str):
-    """Renders a standard section header with an icon and explainer text."""
+    """Renders a premium section header with an animated glowing divider."""
     st.markdown(f"""
-    <div class="section-header">
-        <span class="icon">{icon}</span>
-        <h2>{title}</h2>
+    <div style="margin: 2.5rem 0 1.5rem 0;">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+            <span style="font-size: 1.6rem; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));">{icon}</span>
+            <h2 style="margin: 0 !important; font-size: 1.6rem !important; background: linear-gradient(135deg, #FFFFFF 0%, #A3A0B3 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">{title}</h2>
+        </div>
+        <p style="color: rgba(163, 160, 179, 0.9); font-size: 0.95rem; margin-bottom: 15px; font-weight: 300; letter-spacing: 0.02em;">{explainer}</p>
+        <div style="height: 1px; width: 100%; background: linear-gradient(90deg, rgba(85,224,255,0.5) 0%, rgba(106,72,187,0.2) 50%, transparent 100%); margin-bottom: 1rem;"></div>
     </div>
-    <p class="section-explainer">{explainer}</p>
     """, unsafe_allow_html=True)
 
 def render_insight_card(text: str):
@@ -78,11 +81,11 @@ def render_signal_box(title: str, badge_html: str, action: str, border_color: st
     # Use a single-line joined string to avoid Markdown parser breaking the HTML tags
     html = (
         f'<div class="signal-box"{style}>'
-        f'<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">'
-        f'<span style="font-weight: 600; color: {Theme.TEXT_PRIMARY};">{title}</span>'
+        f'<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">'
+        f'<span style="font-weight: 700; color: #FFFFFF; font-size: 1.1rem; letter-spacing: 0.02em;">{title}</span>'
         f'{badge_html}'
         f'</div>'
-        f'<div style="color: {Theme.TEXT_SECONDARY}; line-height: 1.6;">{action_html}</div>'
+        f'<div style="color: rgba(244, 246, 251, 0.85); line-height: 1.7; font-weight: 300;">{action_html}</div>'
         f'</div>'
     )
     st.markdown(html, unsafe_allow_html=True)

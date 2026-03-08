@@ -165,7 +165,8 @@ if script_input:
             bar.empty()
             st.error(f"Analysis failed: {e}")
 else:
-    st.info("👆 Upload or paste your screenplay above to begin.")
+    from app.components import uikit
+    uikit.render_tooltip_card("👆 <b style='color: white;'>Upload or paste your screenplay</b> above to begin the intelligence analysis.")
 
 # =============================================================================
 # STEP 3: RENDER RESULTS

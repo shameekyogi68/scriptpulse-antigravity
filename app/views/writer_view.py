@@ -83,18 +83,21 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
         rgb = ','.join(str(int(score_color.lstrip('#')[i:i+2], 16)) for i in (0, 2, 4))
 
         st.markdown(f"""
-        <div style="display: flex; align-items: center; gap: 24px; margin-bottom: 16px;">
-            <div style="background: rgba({rgb}, 0.08); border: 2px solid {score_color};
-                        border-radius: 16px; padding: 14px 28px; text-align: center; min-width: 130px;">
-                <div style="font-size: 2.4rem; font-weight: 800; color: {score_color};
+        <div style="display: flex; align-items: center; gap: 24px; margin-bottom: 24px;">
+            <div style="background: linear-gradient(135deg, rgba({rgb}, 0.15) 0%, rgba({rgb}, 0.05) 100%); 
+                        border: 1px solid rgba({rgb}, 0.3);
+                        box-shadow: 0 4px 20px rgba({rgb}, 0.15), inset 0 2px 5px rgba(255,255,255,0.05);
+                        backdrop-filter: blur(8px);
+                        border-radius: 20px; padding: 18px 32px; text-align: center; min-width: 140px;">
+                <div style="font-size: 2.8rem; font-weight: 800; color: {score_color}; text-shadow: 0 0 15px rgba({rgb},0.4);
                             font-family: 'Outfit', sans-serif; line-height: 1;">{sp_score}</div>
-                <div style="font-size: 0.65rem; color: {Theme.TEXT_MUTED}; text-transform: uppercase;
-                            letter-spacing: 1.5px; margin-top: 4px;">ScriptPulse Score</div>
-                <div style="font-size: 0.75rem; color: {score_color}; font-weight: 600; margin-top: 2px;">{score_label}</div>
+                <div style="font-size: 0.65rem; color: #FFFFFF; text-transform: uppercase;
+                            letter-spacing: 0.15em; margin-top: 6px; font-weight: 600;">ScriptPulse Score</div>
+                <div style="font-size: 0.8rem; color: {score_color}; font-weight: 700; margin-top: 4px; letter-spacing: 0.03em;">{score_label}</div>
             </div>
             <div>
-                <h3 style="margin: 0 !important; padding: 0 !important;">{config['icon']} {config['score_title']}</h3>
-                <p style="color: {Theme.TEXT_SECONDARY}; font-size: 0.85rem; margin: 4px 0 0 0;">{config['tagline']}</p>
+                <h3 style="margin: 0 0 6px 0 !important; padding: 0 !important; font-size: 1.8rem !important;">{config['icon']} {config['score_title']}</h3>
+                <p style="color: rgba(163, 160, 179, 0.9); font-size: 1rem; margin: 0; font-weight: 300; line-height: 1.5;">{config['tagline']}</p>
             </div>
         </div>
         """, unsafe_allow_html=True)

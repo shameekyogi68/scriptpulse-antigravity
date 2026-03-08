@@ -39,9 +39,14 @@ def render_sidebar(ui_mode, is_cloud, stu):
         st.progress(0.92, text="💡 **Insight Relevance**: 92%")
         
         st.markdown(f"""
-        <div style="background: rgba(0, 210, 160, 0.1); border: 1px solid rgba(0, 210, 160, 0.3); 
-                    border-radius: 4px; padding: 10px; margin-top: 10px; text-align: center;">
-            <span style="color: #00D2A0; font-weight: 700; font-size: 0.7rem; letter-spacing: 1px;">RESEARCH GRADE CERTIFIED</span>
+        <div style="background: linear-gradient(90deg, rgba(0,210,160,0.15), rgba(0,210,160,0.05)); 
+                    border: 1px solid rgba(0, 210, 160, 0.4); border-left: 3px solid #00D2A0;
+                    border-radius: 8px; padding: 12px; margin-top: 15px; text-align: center;
+                    box-shadow: 0 4px 15px rgba(0,210,160,0.1), inset 0 0 10px rgba(0,210,160,0.05);">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <span style="font-size: 1.1rem;">🧪</span>
+                <span style="color: #00D2A0; font-weight: 800; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase;">Research Certified</span>
+            </div>
         </div>
         """, unsafe_allow_html=True)
 
