@@ -92,17 +92,23 @@ class DynamicsAgent:
             dominant_stakes_value = max(stakes_breakdown.values()) if stakes_breakdown else norm_action
             actual_stakes = (norm_action * 0.5) + (dominant_stakes_value * 0.5)
             
+            # --- ADVANCED AI METRIC: COGNITIVE RESONANCE ---
+            # Resonance occurs when high conflict meets strong emotional valence, creating lasting impact.
+            sentiment_val = affective.get('compound', 0)
+            cognitive_resonance = min(1.0, (actual_conflict * 0.4) + (effort * 0.4) + (0.3 if abs(sentiment_val) > 0.6 else 0.0))
+            
             out_sig = {
                 'scene_index': feat['scene_index'],
                 'instantaneous_effort': round(effort, 3),
                 'attentional_signal': round(signal, 3),
                 'recovery_credit': round(recovery, 3),
                 'fatigue_state': round(max(0.0, signal - 0.7), 3),
+                'cognitive_resonance': round(cognitive_resonance, 3),
                 'conflict': round(min(1.0, actual_conflict), 3),
                 'stakes': round(min(1.0, actual_stakes), 3),
                 'agency': round(feat.get('referential_load', {}).get('active_character_count', 0) * 0.15, 3),
                 'action_density': round(action_count / max(1, action_count + dial_count), 2),
-                'sentiment': round(affective.get('compound', 0), 3),
+                'sentiment': round(sentiment_val, 3),
                 'narrative_position': round(i / max(1, len(features)), 3)
             }
             

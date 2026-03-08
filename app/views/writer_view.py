@@ -256,8 +256,8 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
         diagnoses = writer_intel.get('narrative_diagnosis', [])
         
         # --- Persona Deep Filtering for Diagnostics ---
-        EXEC_ICONS = ['🔵', '🔴', '⚖️', '🚫', '👥', '📉', '⚠️', '🎢', '🟠', '✨']
-        EDITOR_ICONS = ['🧵', '⬜', '👻', '✅', '🔵', '🔴', '⭐', '✨', '🟡', '🎢', '🟠', '🗣️', '🧠', '💡']
+        EXEC_ICONS = ['🔵', '🔴', '⚖️', '🚫', '👥', '📉', '⚠️', '🎢', '🟠', '✨', '💎']
+        EDITOR_ICONS = ['🧵', '⬜', '👻', '✅', '🔵', '🔴', '⭐', '✨', '🟡', '🎢', '🟠', '🗣️', '🧠', '💡', '💎']
         COORD_ICONS = ['✂️', '🔴', '🟠', '🚫', '💎', '⛓️', '🎭', '👥', '🎙️', '🟢', '🗣️', '🧠', '💡', '✨']
         
         filtered_diagnoses = []
@@ -271,7 +271,7 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
             # Explicit keyword overrides to ensure perfect bucketing
             if "Same Voice" in text:
                 is_exec, is_editor, is_coord = False, True, True
-            elif "Too Slow" in text or "Engagement Drop" in text:
+            elif "Engagement Drop" in text:
                 is_exec, is_editor, is_coord = True, True, False
             elif "Unfilmable" in text:
                 is_exec, is_editor, is_coord = True, False, True

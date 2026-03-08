@@ -257,6 +257,32 @@ def run_audit():
         print_pass(f"Ethical Agency Math: VALID. Boss ({boss_agency}) > Minion ({minion_agency}) based on commands and action.")
     else:
         print_fail(f"Ethical Agency Math: INVALID. Character power inversion detected.")
+        
+    # C. Cognitive Resonance Math
+    perfect_feature_vector = {
+        'scene_index': 1,
+        'dialogue_dynamics': {'turn_velocity': 10},
+        'visual_abstraction': {'action_lines': 15},
+        'affective_load': {'compound': -0.8}, # High tension/negative valence
+        'referential_load': {'active_character_count': 2},
+        'entropy_score': 3.0
+    }
+    bland_feature_vector = {
+        'scene_index': 2,
+        'dialogue_dynamics': {'turn_velocity': 1},
+        'visual_abstraction': {'action_lines': 1},
+        'affective_load': {'compound': 0.1},
+        'referential_load': {'active_character_count': 1},
+        'entropy_score': 1.0
+    }
+    
+    res_high = dynamics.run_simulation({'features': [perfect_feature_vector], 'genre': 'drama'})[0]['cognitive_resonance']
+    res_low = dynamics.run_simulation({'features': [bland_feature_vector], 'genre': 'drama'})[0]['cognitive_resonance']
+    
+    if res_high > 0.8 and res_low < 0.4:
+        print_pass(f"Cognitive Resonance Math: VALID. Perfect scene ({res_high}) > Bland scene ({res_low}).")
+    else:
+        print_fail(f"Cognitive Resonance Math: INVALID. High: {res_high}, Low: {res_low}")
 
     print("\n" + "="*50)
     print("✅ AUDIT COMPLETE. ALL SYSTEMS VERIFIED SAFELY (ZERO API TOKENS SPENT).")

@@ -23,8 +23,8 @@ def generate_report(report_data, script_title="Untitled Script", user_notes="", 
     priorities = writer_intel.get('rewrite_priorities', [])
 
     # --- Persona Filtering Logic (Sync with writer_view.py) ---
-    EXEC_ICONS = ['🔵', '🔴', '⚖️', '🚫', '👥', '📉', '⚠️', '🎢', '🟠', '✨']
-    EDITOR_ICONS = ['🧵', '⬜', '👻', '✅', '🔵', '🔴', '⭐', '✨', '🟡', '🎢', '🟠', '🗣️', '🧠', '💡']
+    EXEC_ICONS = ['🔵', '🔴', '⚖️', '🚫', '👥', '📉', '⚠️', '🎢', '🟠', '✨', '💎']
+    EDITOR_ICONS = ['🧵', '⬜', '👻', '✅', '🔵', '🔴', '⭐', '✨', '🟡', '🎢', '🟠', '🗣️', '🧠', '💡', '💎']
     COORD_ICONS = ['✂️', '🔴', '🟠', '🚫', '💎', '⛓️', '🎭', '👥', '🎙️', '🟢', '🗣️', '🧠', '💡', '✨']
     
     filtered_diags = []
@@ -33,7 +33,7 @@ def generate_report(report_data, script_title="Untitled Script", user_notes="", 
         is_editor = any(icon in text for icon in EDITOR_ICONS)
         is_coord = any(icon in text for icon in COORD_ICONS)
         if "Same Voice" in text: is_exec, is_editor, is_coord = False, True, True
-        elif "Too Slow" in text: is_exec, is_editor, is_coord = True, True, False
+        elif "Engagement Drop" in text: is_exec, is_editor, is_coord = True, True, False
         if (lens == "Studio Executive" and is_exec) or \
            (lens == "Story Editor" and is_editor) or \
            (lens == "Script Coordinator" and is_coord):

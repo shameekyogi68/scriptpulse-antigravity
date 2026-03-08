@@ -205,6 +205,16 @@ class InterpretationAgent:
                 )
                 break
 
+        # 8. Cognitive Resonance (The 'Perfect' Scene)
+        for i in range(len(temporal_trace)):
+            res = temporal_trace[i].get('cognitive_resonance', 0)
+            if res > 0.85:
+                snippet = self._get_snippet(scenes[i])
+                diagnosis.append(
+                    f"💎 **Cognitive Resonance (Scene {i+1})**: High harmonization of narrative conflict and emotional impact. (e.g., {snippet})"
+                )
+                break
+
         return diagnosis
 
     def generate_suggestions(self, temporal_trace):
