@@ -63,7 +63,8 @@ def generate_ai_summary(script_data, lens='viewer', api_key=None):
         "CRITICAL RULES: \n"
         "1. Strictly maintain this specific professional persona. Use role-appropriate vocabulary (e.g., Executive uses 'ROI', 'Comp', 'Demographic'; Editor uses 'Beat', 'Arc', 'Causality'; Coordinator uses 'White Space', 'Rhythm', 'Flow').\n"
         "2. Prioritize your specific areas of expertise in the report.\n"
-        "3. ALWAYS provide 3 concrete 'Fix Suggestions' at the end of the report to elevate the script for production."
+        "3. ALWAYS provide 3 concrete 'Fix Suggestions' at the end of the report to elevate the script for production.\n"
+        "4. If you mention 'ScriptPulse', ALWAYS format it EXACTLY like this: Script<span style='color: #0052FF; font-weight: bold;'>Pulse</span>"
     )
     user_content = f"Experience Data: {json.dumps(data_payload)}"
 
@@ -127,20 +128,23 @@ def generate_section_insight(script_data, section_type, lens='viewer', api_key=N
         system_msg = (
             f"You are {p_desc} Analyze the story's structural pacing graph. "
             "Explain how this sequence affects the audience's attention from your professional perspective. "
-            "Suggest one high-impact pacing fix. One precise sentence."
+            "Suggest one high-impact pacing fix. One precise sentence. "
+            "If referring to the engine, format it as: Script<span style='color: #0052FF; font-weight: bold;'>Pulse</span>"
         )
     elif section_type == 'dna':
         payload = {"distribution": "Speed vs Detail balance"}
         system_msg = (
             f"You are {p_desc} Evaluate the balance of narrative action vs world-building. "
-            "Provide advice on how to optimize this balance for the current story goals. One clear sentence."
+            "Provide advice on how to optimize this balance for the current story goals. One clear sentence. "
+            "If referring to the engine, format it as: Script<span style='color: #0052FF; font-weight: bold;'>Pulse</span>"
         )
     else: # habits
         perceptual = script_data.get('perceptual_features', [])[:10]
         payload = {"samples": perceptual}
         system_msg = (
             f"You are {p_desc} Evaluate the rhythm and subtext of the characters' dialogue. "
-            "Provide advice on sharpening the voice for your specific role. One professional sentence."
+            "Provide advice on sharpening the voice for your specific role. One professional sentence. "
+            "If referring to the engine, format it as: Script<span style='color: #0052FF; font-weight: bold;'>Pulse</span>"
         )
 
     user_content = f"Raw Experience Math: {json.dumps(payload)}\nAudience Reaction:"

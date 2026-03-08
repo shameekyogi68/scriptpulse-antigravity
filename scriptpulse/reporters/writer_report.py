@@ -87,7 +87,7 @@ def generate_writer_report(pipeline_output, title="Untitled Script", genre=None)
     if not analysis_date:
         analysis_date = datetime.now().strftime('%B %d, %Y (%H:%M)')
         
-    lines.append(f"# 🖋️ ScriptPulse Intelligence Report")
+    lines.append(f"# 🖋️ Script<span style='color: #0052FF;'>Pulse</span> Intelligence Report")
     lines.append(f"**PROJECT:** `{title.upper()}`  ")
     lines.append(f"**GENRE PROFILE:** `{genre.upper()}`  ")
     lines.append(f"**ANALYSIS DATE:** {analysis_date}  ")
@@ -301,6 +301,6 @@ def generate_writer_report(pipeline_output, title="Untitled Script", genre=None)
     # FOOTER
     # -------------------------------------------------------------------------
     lines.append("\n" + "---" * 10 + "\n")
-    lines.append("*Created with ScriptPulse v15.0 · Private Intellectual Property · Confidential*")
+    lines.append("*Created with Script<span style='color: #0052FF;'>Pulse</span> v15.0 · Private Intellectual Property · Confidential*")
 
     return "\n".join(lines)
