@@ -10,8 +10,15 @@ Focuses on 5 Core Cognitive Pillars:
 
 import re
 import math
+import statistics
 from collections import Counter
 from ..utils.model_manager import manager
+
+def normalize_character_name(name):
+    """Utility for consistent character matching."""
+    if not name: return "UNKNOWN"
+    # Upper, strip punctuation but keep internal spaces/hashes
+    return re.sub(r'[^A-Z0-9\s#]', '', name.upper()).strip()
 
 class EncodingAgent:
     """Consolidated Encoding Agent - High Performance, Low Complexity"""
@@ -232,7 +239,7 @@ class EncodingAgent:
 
     def _extract_reader_frustration(self, lines, char_count):
         """Detects structural issues that confuse readers."""
-        chars = [l['text'].strip() for l in lines if l['tag'] == 'C']
+        chars = [normalize_character_name(l['text']) for l in lines if l['tag'] == 'C']
         unique_chars = list(set(chars))
         
         # 1. Name Crowding: Too many characters introduced at once
@@ -299,16 +306,14 @@ class EncodingAgent:
         curr = None
         proactive_lexicon = {'go', 'do', 'will', 'must', 'shall', 'stop', 'done', 'kill', 'give', 'take', 'enough', 'order', 'clear', 'business', 'family'}
         
-        # Check for narrative closure signals in action lines
-        death_lexicon = {'dies', 'dead', 'killed', 'murdered', 'body', 'corpse', 'funeral', 'leaves', 'departs', 'gone'}
+        # Check for narrative closure signals in action lines (Genco/Sonny/Paulie fix)
+        death_lexicon = {'dies', 'dead', 'killed', 'murdered', 'body', 'corpse', 'funeral', 'leaves', 'departs', 'gone', 'passing', 'expiring', 'deathbed', 'fatal', 'slain'}
         all_action_text = " ".join([l['text'].lower() for l in lines if l['tag'] == 'A'])
         scene_has_death = any(w in all_action_text for w in death_lexicon)
 
         for i, l in enumerate(lines):
             if l['tag'] == 'C': 
-                # Normalize character name: Upper, strip non-alphanumeric trailing chars like . or :
-                raw_name = l['text'].upper()
-                curr = re.sub(r'[^A-Z0-9\s#]', '', raw_name).strip()
+                curr = normalize_character_name(l['text'])
             elif l['tag'] == 'D' and curr:
                 if curr not in arcs: arcs[curr] = {'sentiment': 0.0, 'agency': 0.1, 'line_count': 0}
                 arcs[curr]['line_count'] += 1

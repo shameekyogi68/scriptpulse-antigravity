@@ -207,13 +207,17 @@ class ParsingAgent:
         if prev_tag == "D":
             # If the previous line was dialogue, and this line isn't empty (empty lines become A)
             # and it isn't a new character cue, it's a continuation of dialogue.
-            if line.isupper() and len(line) < 40 and not line.endswith((".", "?", "!")):
+            # Relaxed character rule: allow periods for short names (typography typos like HAGEN.)
+            is_char_candidate = line.isupper() and len(line) < 40
+            is_hypothetical_character = is_char_candidate and (not line.endswith((".", "?", "!")) or (line.endswith(".") and len(line) < 12))
+            
+            if is_hypothetical_character:
                 # Likely a new character or a transition/action
                 pass
             else:
                 return "D"
             
-        if line.isupper() and len(line) < 40 and not line.endswith((".", "?", "!")):
+        if line.isupper() and len(line) < 40 and (not line.endswith((".", "?", "!")) or (line.endswith(".") and len(line) < 12)):
             # Character cue blacklist
             if line_upper in ["SON", "MOM", "DAD", "FATHER", "MOTHER", "WIFE", "HUSBAND", "VOICE", "OFF-SCREEN", "O.S.", "EXT", "INT"]:
                 return "A"

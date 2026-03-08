@@ -1283,13 +1283,24 @@ class WriterAgent:
         act1_counts = char_lines(act1)
         act3_counts = char_lines(act3)
 
-        # Characters with significant Act 1 presence (>5 lines) but no Act 3 presence
+        # Characters with significant Act 1 presence (>15 lines) but no Act 3 presence
+        # Threshold increased from 5 to 15 to exclude minor thematic characters
         neglected = []
         for char, count in act1_counts.items():
-            if count > 5 and act3_counts.get(char, 0) == 0:
+            if count > 15 and act3_counts.get(char, 0) == 0:
                 # Blacklist generic roles that are often mis-parsed or one-off
                 if char in ["SON", "MOM", "DAD", "FATHER", "MOTHER", "VOICE", "GUY", "MAN", "WOMAN"]:
                     continue
+                
+                # Thematic Setup / Bookend Check:
+                # If they have fewer than 25 lines total AND only appear in Act 1,
+                # they are likely intentional thematic furniture (like Bonasera).
+                char_timeline = [s for s in trace if char in s.get('character_scene_vectors', {})]
+                if len(char_timeline) < 25:
+                    # Check if all appearances are in the first 30% of the script
+                    last_appearance_idx = max([trace.index(s) for s in char_timeline]) if char_timeline else 0
+                    if last_appearance_idx < len(trace) * 0.3:
+                        continue # Intentional thematic setup
                 
                 # Narrative Resolution Check: Did they die or exit functionally?
                 # Check for 'narrative_closure' signal in their last appearing scene or the one after
