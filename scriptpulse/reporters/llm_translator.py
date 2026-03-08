@@ -43,10 +43,23 @@ def generate_ai_summary(script_data, lens='viewer', api_key=None):
     if not any(keys.values()):
         return None, "All AI providers are offline. Please check your API Keys."
         
+    dashboard = script_data.get("writer_intelligence", {}).get("structural_dashboard", {})
+    
+    # CRITICAL: Slim down the dashboard payload to avoid Groq's 12,000 TPM free tier limit
+    # Do NOT send full scene-by-scene arrays like scene_turn_map or scene_economy_map
+    slim_dashboard = {
+        "scriptpulse_score": dashboard.get("scriptpulse_score"),
+        "page_turner_index": dashboard.get("page_turner_index"),
+        "market_readiness": dashboard.get("market_readiness"),
+        "act_structure": dashboard.get("act_structure"),
+        "budget_impact": dashboard.get("budget_impact"),
+        "commercial_comps": dashboard.get("commercial_comps")
+    }
+    
     data_payload = {
         "pacing_issues": script_data.get("writer_intelligence", {}).get("narrative_diagnosis", []),
         "priorities": script_data.get("writer_intelligence", {}).get("rewrite_priorities", []),
-        "structural_dashboard": script_data.get("writer_intelligence", {}).get("structural_dashboard", {})
+        "structural_dashboard": slim_dashboard
     }
     
     # Customize the persona based on the lens
@@ -88,7 +101,7 @@ def generate_ai_summary(script_data, lens='viewer', api_key=None):
                 model="llama-3.3-70b-versatile",
                 messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_content}],
                 temperature=0.6,
-                max_tokens=2000
+                max_tokens=1200
             )
             return completion.choices[0].message.content, None
         except Exception as e:
@@ -101,7 +114,7 @@ def generate_ai_summary(script_data, lens='viewer', api_key=None):
             completion = client.chat.completions.create(
                 model="moonshotai/Kimi-K2-Instruct-0905",
                 messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_content}],
-                max_tokens=2000
+                max_tokens=1200
             )
             return completion.choices[0].message.content, None
         except Exception as e:
