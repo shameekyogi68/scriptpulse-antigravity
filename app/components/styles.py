@@ -184,6 +184,19 @@ def apply_custom_styles():
             line-height: 1.8;
             box-shadow: -4px 0 15px rgba(255, 51, 102, 0.15);
             font-size: 1.05rem;
+            animation: pulse-rose 3s infinite ease-in-out;
+            transition: all 0.3s ease;
+        }
+        
+        .insight-critical:hover {
+            transform: translateX(4px);
+            background: linear-gradient(90deg, rgba(255, 51, 102, 0.25) 0%, rgba(255, 51, 102, 0.05) 100%);
+        }
+        
+        @keyframes pulse-rose {
+            0% { box-shadow: -4px 0 15px rgba(255, 51, 102, 0.15); }
+            50% { box-shadow: -4px 0 30px rgba(255, 51, 102, 0.3); }
+            100% { box-shadow: -4px 0 15px rgba(255, 51, 102, 0.15); }
         }
         
         .insight-warning {
@@ -199,6 +212,19 @@ def apply_custom_styles():
             line-height: 1.8;
             box-shadow: -4px 0 15px rgba(245, 121, 70, 0.15);
             font-size: 1.05rem;
+            animation: pulse-orange 4s infinite ease-in-out;
+            transition: all 0.3s ease;
+        }
+        
+        .insight-warning:hover {
+            transform: translateX(4px);
+            background: linear-gradient(90deg, rgba(245, 121, 70, 0.25) 0%, rgba(245, 121, 70, 0.05) 100%);
+        }
+
+        @keyframes pulse-orange {
+            0% { box-shadow: -4px 0 15px rgba(245, 121, 70, 0.15); }
+            50% { box-shadow: -4px 0 25px rgba(245, 121, 70, 0.25); }
+            100% { box-shadow: -4px 0 15px rgba(245, 121, 70, 0.15); }
         }
         
         .insight-good {
@@ -214,6 +240,19 @@ def apply_custom_styles():
             line-height: 1.8;
             box-shadow: -4px 0 15px rgba(0, 210, 160, 0.15);
             font-size: 1.05rem;
+            animation: pulse-teal 5s infinite ease-in-out;
+            transition: all 0.3s ease;
+        }
+        
+        .insight-good:hover {
+            transform: translateX(4px);
+            background: linear-gradient(90deg, rgba(0, 210, 160, 0.25) 0%, rgba(0, 210, 160, 0.05) 100%);
+        }
+
+        @keyframes pulse-teal {
+            0% { box-shadow: -4px 0 15px rgba(0, 210, 160, 0.15); }
+            50% { box-shadow: -4px 0 25px rgba(0, 210, 160, 0.3); }
+            100% { box-shadow: -4px 0 15px rgba(0, 210, 160, 0.15); }
         }
         
         .insight-info {
@@ -229,6 +268,19 @@ def apply_custom_styles():
             line-height: 1.8;
             box-shadow: -4px 0 15px rgba(0, 153, 255, 0.15);
             font-size: 1.05rem;
+            animation: pulse-blue 6s infinite ease-in-out;
+            transition: all 0.3s ease;
+        }
+
+        .insight-info:hover {
+            transform: translateX(4px);
+            background: linear-gradient(90deg, rgba(0, 153, 255, 0.25) 0%, rgba(0, 153, 255, 0.05) 100%);
+        }
+
+        @keyframes pulse-blue {
+            0% { box-shadow: -4px 0 15px rgba(0, 153, 255, 0.15); }
+            50% { box-shadow: -4px 0 25px rgba(0, 153, 255, 0.3); }
+            100% { box-shadow: -4px 0 15px rgba(0, 153, 255, 0.15); }
         }
         
         /* ===== HERO SECTION ===== */
