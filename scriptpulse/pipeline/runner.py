@@ -129,12 +129,12 @@ def run_pipeline(script_content, genre='drama', story_framework='3_act', **kwarg
         f_half = " ".join([l['text'] for l in scene_lines[:mid]]).lower()
         s_half = " ".join([l['text'] for l in scene_lines[mid:]]).lower()
         
-        pos = ['yes', 'love', 'safe', 'good', 'happy', 'success', 'win']
+        pos = ['yes', 'love', 'safe', 'good', 'happy', 'success', 'win', 'together', 'saved']
         neg = ['no', 'hate', 'die', 'danger', 'bad', 'fail', 'loss', 'quit', 'dead', 'body', 'kill']
-        violence_vibe = ['shot', 'ambush', 'massacre', 'gunfire', 'murder', 'blood']
+        violence_vibe = ['shot', 'ambush', 'massacre', 'gunfire', 'murder', 'blood', 'blast', 'assassin', 'corpse']
         
-        s1 = sum(1 for w in pos if w in f_half) - sum(1 for w in neg if w in f_half) - (sum(1 for w in violence_vibe if w in f_half) * 2)
-        s2 = sum(1 for w in pos if w in s_half) - sum(1 for w in neg if w in s_half) - (sum(1 for w in violence_vibe if w in s_half) * 2)
+        s1 = sum(1 for w in pos if w in f_half) - sum(1 for w in neg if w in f_half) - (sum(1 for w in violence_vibe if w in f_half) * 3)
+        s2 = sum(1 for w in pos if w in s_half) - sum(1 for w in neg if w in s_half) - (sum(1 for w in violence_vibe if w in s_half) * 3)
         
         label = "Flat"
         if s1 < 0 and s2 > 0: label = "Negative to Positive"

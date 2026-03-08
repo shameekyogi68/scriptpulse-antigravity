@@ -70,10 +70,11 @@ class WriterAgent:
         dashboard['writing_texture'] = self._diagnose_writing_texture(trace)
         dashboard['act_structure'] = self._build_act_structure(trace)
         dashboard['commercial_comps'] = self._find_commercial_comps(genre, dashboard.get('stakes_profile', {}).get('dominant', 'Social'))
-        # Cast count refinement (Task 3): Only count deterministic 5+ line characters
         # Merge character fragments (e.g. MICHAEL vs MICHAEL CORLEONE) for accurate thresholding
         v_fingerprints = final_output.get('voice_fingerprints', {})
         merged_casts = {}
+        generic_roles = {'MAN', 'WOMAN', 'VOICE', 'GUARD', 'SOLDIER', 'WAITER', 'DRIVER', 'OFFICER', 'COP', 'GUEST'}
+        
         # Sort names by number of words (longest name first) to find parent personae
         sorted_names = sorted(v_fingerprints.keys(), key=lambda x: len(x.split()), reverse=True)
         for name in sorted_names:
@@ -81,12 +82,17 @@ class WriterAgent:
             if not name: continue
             
             found_parent = False
+            name_parts = set(name.split())
+            
+            # If it's a generic role with a number (MAN 1), don't merge based on 'MAN'
+            is_generic = any(g in name_parts for g in generic_roles)
+            
             for existing in merged_casts:
-                # Smarter Merge: Look for shared full words (HAGEN vs TOM HAGEN), 
-                # but avoid merging DAN into DANIEL.
-                name_parts = set(name.split())
                 existing_parts = set(existing.split())
-                if name_parts.intersection(existing_parts):
+                overlap = name_parts.intersection(existing_parts)
+                
+                # Merge if they share a non-generic word, or if one is a signature word
+                if overlap and not (is_generic and len(overlap) == 1):
                     merged_casts[existing] += line_count
                     found_parent = True
                     break
@@ -1510,7 +1516,7 @@ class WriterAgent:
             ('Crime', 'Social'): ["The Godfather", "The Departed", "The Irishman"],
             ('Crime', 'Moral'): ["Chinatown", "No Country for Old Men", "There Will Be Blood"],
             ('Drama', 'Emotional'): ["Marriage Story", "Ordinary People", "Lady Bird"],
-            ('Drama', 'Social'): ["The Social Network", "Parasite", "The Crown"],
+            ('Drama', 'Social'): ["The Social Network", "Parasite", "The Big Short"],
             ('Action', 'Physical'): ["Mad Max: Fury Road", "Die Hard", "John Wick"],
             ('Action', 'Emotional'): ["Logan", "The Dark Knight", "Gladiator"],
             ('Horror', 'Existential'): ["Hereditary", "The Shining", "Midsommar"],
@@ -1518,7 +1524,7 @@ class WriterAgent:
             ('Sci-Fi', 'Existential'): ["2001: A Space Odyssey", "Arrival", "Blade Runner 2049"],
             ('Sci-Fi', 'Moral'): ["Gattaca", "Children of Men", "Ex Machina"],
             ('Thriller', 'Social'): ["Gone Girl", "Seven", "Prisoners"],
-            ('Comedy', 'Social'): ["The Big Short", "Knives Out", "The Favorite"],
+            ('Comedy', 'Social'): ["Knives Out", "Glass Onion", "The Favorite"],
             ('Comedy', 'Emotional'): ["Little Miss Sunshine", "The Holdovers", "Planes, Trains and Automobiles"],
             ('Romance', 'Emotional'): ["Before Sunrise", "Normal People", "The Notebook"]
         }

@@ -183,15 +183,22 @@ class InterpretationAgent:
                 )
                 break
 
-        # 6. Tonal Whiplash
+        # 6. Tonal Whiplash (Task: Stabilize detection)
+        # Requires extreme shift (> 0.5) AND a thematic anchor (Death, Discovery, or Conflict)
         for i in range(1, len(temporal_trace)):
             curr_sig = temporal_trace[i]['attentional_signal']
             prev_sig = temporal_trace[i-1]['attentional_signal']
+            feat = features[i]
+            purpose = feat.get('purpose', {}).get('purpose', '')
+            has_death = feat.get('narrative_closure', False)
             
-            if abs(curr_sig - prev_sig) > 0.6:
+            # Anchor triggers: Revelation, Discovery, Action, or explicit death
+            is_anchor_scene = any(kw in purpose for kw in ['Revelation', 'Discovery', 'Action', 'Conflict']) or has_death
+            
+            if abs(curr_sig - prev_sig) > 0.5 and is_anchor_scene:
                 snippet = self._get_snippet(scenes[i])
                 diagnosis.append(
-                    f"🎢 **Tonal Whiplash (Scene {i+1})**: Extreme shift in tension from the previous scene. (e.g., {snippet})"
+                    f"🎢 **Tonal Whiplash (Scene {i+1})**: Extreme shift in tension anchored by a sharp narrative turn. (e.g., {snippet})"
                 )
                 break
 

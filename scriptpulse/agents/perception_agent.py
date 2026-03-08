@@ -219,22 +219,24 @@ class EncodingAgent:
             return {'pos': 0.0, 'neg': 0.0, 'neu': 1.0, 'compound': 0.0}
 
         # 2. High-Priority Narrative Override: Violence & Death (Task 1)
-        # We must detect deaths even in action-heavy scenes without 'C' tags (explicit character names over dialogue).
+        # We must detect deaths even in action-heavy scenes without 'C' tags.
         violence_triggers = [
             'shot', 'killed', 'ambush', 'trap', 'gunfire', 'body', 'murder', 'blood', 'execution', 
-            'assassinate', 'bullet', 'massacre', 'stabbed', 'slaughter', 'wound', 'dying'
+            'assassinate', 'bullet', 'massacre', 'stabbed', 'slaughter', 'wound', 'dying',
+            'blast', 'explosion', 'corpse', 'funeral', 'firefight', 'gunmen', 'trigger',
+            'mowed down', 'sprayed', 'hitman', 'assassin', 'weapon', 'grenade', 'knife'
         ]
         
         # Check for character presence via tags OR capitalized names in Action lines
         has_character = any(l['tag'] == 'C' for l in lines)
         if not has_character:
-            # Look for [A-Z]{3,} name signals in Action text to identify character agency in dialogue-free scenes
+            # Look for [A-Z]{3,} name signals in Action text
             has_character = any(re.search(r'\b[A-Z]{3,}\b', l['text']) for l in lines if l['tag'] == 'A')
 
         has_violence = any(w in all_text for w in violence_triggers)
         if has_violence and has_character:
             # Force high-stakes Negative Sentiment for these cinematic story-beats
-            return {'pos': 0.01, 'neg': 0.95, 'neu': 0.04, 'compound': -0.98}
+            return {'pos': 0.00, 'neg': 0.98, 'neu': 0.02, 'compound': -0.99}
 
         if self.classifier:
             try:
