@@ -161,7 +161,7 @@ def render_quick_guide():
             <b style="color: {Theme.SEMANTIC_CRITICAL};">🔴 Red</b> — Fix this now — it could lose your reader<br/>
             <b style="color: {Theme.SEMANTIC_WARNING};">🟠 Orange</b> — Worth a second look in your next draft<br/>
             <b style="color: {Theme.SEMANTIC_GOOD};">🟢 Green</b> — Great job — this part works well<br/>
-            <b style="color: {Theme.ACCENT_PURPLE};">💡 Purple</b> — Something interesting to think about
+            <b style="color: {Theme.ACCENT_PURPLE};">💡 Purple</b> — Creative observations for deeper subtext or style
         </div>
     </div>
     """, unsafe_allow_html=True)
