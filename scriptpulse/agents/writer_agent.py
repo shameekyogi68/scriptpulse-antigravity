@@ -504,9 +504,8 @@ class WriterAgent:
             ratio = count / total if total > 0 else 0
             if ratio > 0.7:
                 assessments.append(
-                    f"⚠️ **Stakes Monoculture ({stype})**:  {round(ratio * 100)}% of your scenes rely on "
-                    f"{stype} stakes only. Great scripts layer Physical, Emotional, Social, and Moral stakes. "
-                    f"Consider adding a different type of risk to deepen the story."
+                    f"⚠️ **Stakes Concentration ({stype})**: {round(ratio * 100)}% of the narrative relies on "
+                    f"{stype} stakes. This pattern limits layered jeopardy across Physical, Emotional, Social, and Moral domains."
                 )
                 break  # Only report the worst offender
 
@@ -1200,8 +1199,8 @@ class WriterAgent:
             if hits:
                 eg = hits[0]
                 assessments.append(
-                    f"🚫 **Unfilmable Action (Scene {idx})**: Action lines describe internal states a camera cannot capture. "
-                    f"e.g. \"{eg}\" — Show this through behaviour, not narration."
+                    f"🚫 **Action Line Modifiers (Scene {idx})**: Action lines contain descriptors defining internal states. "
+                    f"e.g. \"{eg}\""
                 )
 
         # Name crowding
@@ -1210,8 +1209,8 @@ class WriterAgent:
             if rf.get('name_crowding'):
                 n = rf.get('unique_char_count', 4)
                 assessments.append(
-                    f"👥 **Name Flood (Scene {s['scene_index']})**: {n} characters introduced in one scene. "
-                    f"Readers struggle to track more than 2-3 new names at once. Stagger introductions."
+                    f"👥 **Character Density (Scene {s['scene_index']})**: {n} distinct characters are active simultaneously. "
+                    f"This creates a high referential load for the audience."
                 )
                 break
 
@@ -1221,8 +1220,8 @@ class WriterAgent:
             pairs = rf.get('similar_name_pairs', [])
             if pairs:
                 assessments.append(
-                    f"🔤 **Confusing Names (Scene {s['scene_index']})**: {pairs[0]} sound too similar. "
-                    f"Readers will mix them up. One rename is worth 10 clarifying rewrites."
+                    f"🔤 **Orthographic Proximity (Scene {s['scene_index']})**: Character names {pairs[0]} are lexically or phonetically similar. "
+                    f"This pattern frequently correlates with reader confusion tracking dialogue tags."
                 )
                 break
 
