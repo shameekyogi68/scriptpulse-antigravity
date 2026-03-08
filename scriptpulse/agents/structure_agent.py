@@ -201,6 +201,18 @@ class ParsingAgent:
             if line.startswith("("): return "M" # Parenthetical
             return "D"
             
+        if prev_tag == "M":
+            return "D" # The line immediately after a parenthetical under a character is dialogue
+            
+        if prev_tag == "D":
+            # If the previous line was dialogue, and this line isn't empty (empty lines become A)
+            # and it isn't a new character cue, it's a continuation of dialogue.
+            if line.isupper() and len(line) < 40 and not line.endswith((".", "?", "!")):
+                # Likely a new character or a transition/action
+                pass
+            else:
+                return "D"
+            
         if line.isupper() and len(line) < 40 and not line.endswith((".", "?", "!")):
             # Look ahead for dialogue
             if all_lines and index + 1 < len(all_lines):
