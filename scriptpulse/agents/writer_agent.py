@@ -48,7 +48,7 @@ class WriterAgent:
         narrative_health.extend(self._diagnose_representation_risks(final_output.get('fairness_audit', {})))
 
         # 2. Structural Dashboard with Arc Vectors + Scene Map
-        dashboard = self._build_dashboard(trace, genre)
+        dashboard = self._build_dashboard(trace, genre, final_output)
         dashboard['character_arcs'] = self._build_character_arcs(trace)
         dashboard['scene_purpose_map'] = self._build_scene_purpose_map(trace)
         dashboard['stakes_profile'] = self._build_stakes_profile(trace)
@@ -307,7 +307,7 @@ class WriterAgent:
         prioritized.sort(key=lambda x: x['score'], reverse=True)
         return prioritized
 
-    def _build_dashboard(self, trace, genre):
+    def _build_dashboard(self, trace, genre, report=None):
         """
         Key structural checkpoints.
         """
@@ -334,7 +334,7 @@ class WriterAgent:
             'act1_energy': round(act1_energy, 2),
             'total_scenes': len(trace),
             'production_risk_score': self._calculate_production_risks(trace),
-            'budget_impact': self._calculate_budget_impact(trace),
+            'budget_impact': self._calculate_budget_impact(trace, report),
             'market_readiness': self._calculate_market_readiness(trace)
         }
 
@@ -673,9 +673,10 @@ class WriterAgent:
         Compare against genre benchmarks and surface an insight.
         """
         benchmarks = {
-            'action':     0.40, 'thriller':   0.45, 'horror':     0.42,
-            'drama':      0.60, 'comedy':      0.65, 'romance':    0.65,
-            'sci-fi':     0.50, 'avant-garde': 0.55, 'general':    0.55
+            'action':      0.40, 'thriller':    0.45, 'horror':      0.42,
+            'drama':       0.60, 'crime drama': 0.58, 'comedy':      0.65, 
+            'romance':     0.65, 'sci-fi':      0.50, 'avant-garde': 0.55, 
+            'general':     0.55
         }
         total_d = sum(s.get('dialogue_action_ratio', {}).get('dialogue_lines', 0) for s in trace)
         total_a = sum(s.get('dialogue_action_ratio', {}).get('action_lines', 0) for s in trace)
@@ -685,7 +686,7 @@ class WriterAgent:
         benchmark = benchmarks.get(genre.lower(), 0.55)
         diff = global_ratio - benchmark
 
-        if diff > 0.15:
+        if diff > 0.12:
             note = f"Script is {round(diff * 100)}% more dialogue-heavy than genre expectations for {genre}."
         elif diff < -0.15:
             note = f"Script is {round(abs(diff) * 100)}% more action-heavy than genre expectations for {genre}."
@@ -836,14 +837,31 @@ class WriterAgent:
                 for j in range(i + 1, len(chars)):
                     rest_pairs.add(tuple(sorted([chars[i], chars[j]])))
 
+        # Detect character 'exits' (deaths/departures)
+        last_appearance = {}
+        for s in trace:
+            for char in get_characters(s):
+                last_appearance[char] = s['scene_index']
+        
+        total_scenes = len(trace)
+
         for pair, count in act1_pairs.items():
             if count >= 3 and pair not in rest_pairs:
                 a, b = pair
+                # Only flag if both characters remain in the script well after their last interaction
+                # If one character stops appearing shortly after, it's a resolution (death/exit).
+                a_exit = last_appearance.get(a, 0)
+                b_exit = last_appearance.get(b, 0)
+                
+                # If both characters are still around 15% of the script later but haven't interacted, it's dangling
                 if a in rest_individual_chars and b in rest_individual_chars:
-                    assessments.append(
-                        f"🧵 **Dangling Thread ({a} & {b})**: These characters share {count} scene(s) together "
-                        f"in Act 1 but never interact again. The audience is waiting for their story to resolve."
-                    )
+                    # Threshold for 'still around' - if they both appear in the final act
+                    if a_exit > total_scenes * 0.8 and b_exit > total_scenes * 0.8:
+                        assessments.append(
+                            f"🧵 **Dangling Thread ({a} & {b})**: These characters share {count} scene(s) together "
+                            f"in Act 1 but never interact again despite both being present in the finale. "
+                            f"The audience is waiting for their story to resolve."
+                        )
 
         return assessments[:2]
 
@@ -881,22 +899,26 @@ class WriterAgent:
         if a1 is None or a3 is None: return []
 
         delta = a3 - a1
-        if delta < -0.1:
+        if delta < -0.15:
             assessments.append(
                 f"📉 **Protagonist Regression ({protagonist})**: Agency drops from "
                 f"{a1:.2f} (Act 1) to {a3:.2f} (Act 3). Your protagonist ends the story "
-                f"MORE passive than they started. The fundamental arc must be reactive → active."
+                f"MORE passive than they started."
+            )
+        elif delta > 0.3:
+             assessments.append(
+                f"📈 **Protagonist Ascension ({protagonist})**: Agency spikes from "
+                f"{a1:.2f} → {a3:.2f}. A powerful transformation from reactive to total command."
             )
         elif abs(delta) < 0.05:
             assessments.append(
                 f"⬜ **Protagonist Flat Arc ({protagonist})**: Agency stays flat "
-                f"({a1:.2f} → {a3:.2f}) across the script. Is this a deliberate choice, "
-                f"or does your hero need more moments of decision?"
+                f"({a1:.2f} → {a3:.2f}) across the script."
             )
         else:
             assessments.append(
                 f"✅ **Protagonist Growth ({protagonist})**: Agency rises from "
-                f"{a1:.2f} → {a3:.2f}. Solid reactive-to-active transformation."
+                f"{a1:.2f} → {a3:.2f}. Standard reactive-to-active transformation."
             )
         return assessments[:1]
 
@@ -1424,15 +1446,28 @@ class WriterAgent:
         risk_score = (complexity * 70) + ( (1 - payoff) * 30 )
         return round(min(100, risk_score))
 
-    def _calculate_budget_impact(self, trace):
-        """Estimates relative budget intensity based on location churn and action density."""
+    def _calculate_budget_impact(self, trace, report=None):
+        """Estimates relative budget intensity based on location churn, cast size, and action density."""
         if not trace: return "Low"
-        unique_locs = len(set(s.get('location', 'Unknown') for s in trace))
+        # Fix: Look into location_data which was injected in runner.py
+        locs = set()
+        for s in trace:
+            loc = s.get('location_data', {}).get('location') or s.get('location', 'Unknown')
+            if loc != 'Unknown':
+                locs.add(loc)
+        
+        unique_locs = len(locs)
         avg_action = sum(s.get('visual_abstraction', {}).get('action_lines', 0) for s in trace) / len(trace)
         
-        score = (unique_locs * 2) + (avg_action * 5)
-        if score > 80: return "Blockbuster / High"
-        if score > 40: return "Medium / Standard"
+        # Cast size factor
+        cast_size = 0
+        if report and 'voice_fingerprints' in report:
+            cast_size = len(report['voice_fingerprints'])
+            
+        score = (unique_locs * 1.5) + (avg_action * 4) + (cast_size * 0.5)
+        
+        if score > 100 or unique_locs > 50 or cast_size > 40: return "Blockbuster / High"
+        if score > 35: return "Medium / Standard"
         return "Lean / Indie"
 
     def _calculate_market_readiness(self, trace):

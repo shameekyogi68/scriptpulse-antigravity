@@ -97,6 +97,12 @@ class DynamicsAgent:
             sentiment_val = affective.get('compound', 0)
             cognitive_resonance = min(1.0, (actual_conflict * 0.4) + (effort * 0.4) + (0.3 if abs(sentiment_val) > 0.6 else 0.0))
             
+            # Extract aggregate agency from character scene vectors
+            scene_agency = 0.0
+            arcs = feat.get('character_scene_vectors', {})
+            if arcs:
+                scene_agency = sum(v.get('agency', 0) for v in arcs.values()) / len(arcs)
+                
             out_sig = {
                 'scene_index': feat['scene_index'],
                 'instantaneous_effort': round(effort, 3),
@@ -106,7 +112,7 @@ class DynamicsAgent:
                 'cognitive_resonance': round(cognitive_resonance, 3),
                 'conflict': round(min(1.0, actual_conflict), 3),
                 'stakes': round(min(1.0, actual_stakes), 3),
-                'agency': round(feat.get('referential_load', {}).get('active_character_count', 0) * 0.15, 3),
+                'agency': round(scene_agency, 3),
                 'action_density': round(action_count / max(1, action_count + dial_count), 2),
                 'sentiment': round(sentiment_val, 3),
                 'narrative_position': round(i / max(1, len(features)), 3),

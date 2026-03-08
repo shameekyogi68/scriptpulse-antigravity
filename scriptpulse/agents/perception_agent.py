@@ -136,9 +136,10 @@ class EncodingAgent:
         for i in range(1, len(c_lines)):
             if c_lines[i]['text'] != c_lines[i-1]['text']: switches += 1
             
+        non_blank_lines = [l for l in lines if l['text'].strip()]
         return {
             'dialogue_line_count': len(d_lines),
-            'turn_velocity': round(len(d_lines) / max(1, len(lines)), 3),
+            'turn_velocity': round(len(d_lines) / max(1, len(non_blank_lines)), 3),
             'speaker_switches': switches
         }
 
@@ -155,9 +156,10 @@ class EncodingAgent:
             else:
                 in_run = False
                 
+        non_blank_lines = [l for l in lines if l['text'].strip()]
         return {
             'action_lines': len(a_lines),
-            'visual_intensity': round(len(a_lines) / max(1, len(lines)), 3),
+            'visual_intensity': round(len(a_lines) / max(1, len(non_blank_lines)), 3),
             'continuous_action_runs': runs
         }
 
@@ -293,19 +295,42 @@ class EncodingAgent:
         # 2. Character Arcs (Per-scene vectors based on context, not just word count)
         arcs = {}
         curr = None
+        proactive_lexicon = {'go', 'do', 'will', 'must', 'shall', 'stop', 'done', 'kill', 'give', 'take', 'enough'}
+        
         for i, l in enumerate(lines):
             if l['tag'] == 'C': curr = l['text'].strip()
             elif l['tag'] == 'D' and curr:
-                if curr not in arcs: arcs[curr] = {'sentiment': 0.0, 'agency': 0.0, 'line_count': 0}
+                if curr not in arcs: arcs[curr] = {'sentiment': 0.0, 'agency': 0.1, 'line_count': 0}
                 arcs[curr]['line_count'] += 1
                 dial_text = l['text'].lower()
+                dial_words = set(re.findall(r'\b\w+\b', dial_text))
                 
-                # Agency: Does the character initiate action/ask questions, or just react?
+                # Agency: Balanced between syntax (questions/commands) and proactivity
                 is_question = '?' in dial_text
-                is_command = len(dial_text.split()) < 6 and ('!' in dial_text or dial_text.isupper())
-                arcs[curr]['agency'] += 0.5 if (is_question or is_command) else -0.1
+                is_command = ('!' in dial_text or dial_text.isupper()) and len(dial_text.split()) < 8
                 
+                proactive_count = len(dial_words.intersection(proactive_lexicon))
+                
+                # Characters who speak more in a scene generally have higher agency (control)
+                # But they must also use decisive language
+                agency_inc = 0.1 # Base participation
+                if is_command: agency_inc += 0.4
+                elif is_question: agency_inc += 0.2 # Asking questions is often investigative control
+                
+                agency_inc += (proactive_count * 0.15)
+                
+                # Passive markers
+                if any(w in dial_text for w in ['maybe', 'sorry', 'i think', 'perhaps', 'suppose']):
+                    agency_inc -= 0.2
+                
+                arcs[curr]['agency'] += agency_inc
                 arcs[curr]['sentiment'] += 0.1 if 'yes' in dial_text else (-0.1 if 'no' in dial_text else 0)
+        
+        # Normalize Agency by participation density so quiet but decisive leaders aren't penalized
+        for c in arcs:
+            # Agency cap
+            arcs[c]['agency'] = round(min(1.0, arcs[c]['agency'] / max(1, arcs[c]['line_count'] * 0.5)), 3)
+            arcs[c]['sentiment'] = round(max(-1.0, min(1.0, arcs[c]['sentiment'] / max(1, arcs[c]['line_count']))), 3)
         
         # 3. Masterclass Diagnostics (Smart Heuristics using structural context)
         d_lines = [l['text'].lower() for l in lines if l['tag'] == 'D']
