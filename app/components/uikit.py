@@ -4,7 +4,10 @@ from app.components.theme import Theme
 
 def render_hero_section(title: str, subtitle: str):
     """Renders the main hero section of the application."""
-    title_html = f"<h1>{title}</h1>" if title else ""
+    if title == "ScriptPulse": # For backwards compatibility or direct calls
+        title = '<span class="brand-script">Script</span><span class="brand-pulse">Pulse</span>'
+    
+    title_html = f'<h1 style="background: none !important; -webkit-text-fill-color: initial !important;">{title}</h1>' if title else ""
     html_content = f"""<div class="hero-container">{title_html}<p class="hero-subtitle">{subtitle}</p></div>"""
     st.markdown(html_content, unsafe_allow_html=True)
 

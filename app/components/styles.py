@@ -187,6 +187,9 @@ def apply_custom_styles():
             font-size: 3.2rem !important;
             margin-bottom: 0.1rem;
             letter-spacing: -0.04em !important;
+            background: none !important;
+            -webkit-text-fill-color: initial !important;
+            background-clip: initial !important;
         }
 
         .brand-script {
