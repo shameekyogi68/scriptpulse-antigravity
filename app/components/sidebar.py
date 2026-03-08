@@ -27,8 +27,8 @@ def render_sidebar(ui_mode, is_cloud, stu):
 
         st.markdown("---")
 
-        # Color Guide
-        uikit.render_quick_guide()
+        # Color Guide removed - keep it clean and intuitive
+        # uikit.render_quick_guide()
 
         st.markdown("---")
 
