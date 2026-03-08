@@ -68,6 +68,7 @@ def generate_ai_summary(script_data, lens='viewer', api_key=None):
         "5. Avoid archaic or overly rigid length rules. Prestige features often exceed 120 minutes; only flag length if it meaningfully drags the pacing or structural integrity."
     )
     user_content = f"Experience Data: {json.dumps(data_payload)}"
+    errors = []
 
     # 1. Try GEMINI (Best for long-form reasoning and "Story Soul")
     if keys["gemini"] and GEMINI_AVAILABLE:
@@ -76,7 +77,8 @@ def generate_ai_summary(script_data, lens='viewer', api_key=None):
             model = genai.GenerativeModel('gemini-1.5-flash')
             response = model.generate_content(f"SYSTEM: {system_prompt}\n\nUSER: {user_content}")
             return response.text, None
-        except Exception as ge: pass
+        except Exception as e:
+            errors.append(f"Gemini: {str(e)}")
 
     # 2. Try GROQ (Blazing Fast)
     if keys["groq"] and GROQ_AVAILABLE:
@@ -89,7 +91,8 @@ def generate_ai_summary(script_data, lens='viewer', api_key=None):
                 max_tokens=2000
             )
             return completion.choices[0].message.content, None
-        except Exception: pass
+        except Exception as e:
+            errors.append(f"Groq: {str(e)}")
 
     # 3. Fallback to Hugging Face
     if keys["hf"]:
@@ -101,9 +104,10 @@ def generate_ai_summary(script_data, lens='viewer', api_key=None):
                 max_tokens=2000
             )
             return completion.choices[0].message.content, None
-        except Exception: pass
+        except Exception as e:
+            errors.append(f"HF: {str(e)}")
             
-    return None, "Ran out of AI API calls. Please try again in 60 seconds."
+    return None, f"All AI APIs failed. Details: {' | '.join(errors)}"
 
 def generate_section_insight(script_data, section_type, lens='viewer', api_key=None):
     """
@@ -160,6 +164,8 @@ def generate_section_insight(script_data, section_type, lens='viewer', api_key=N
         order = ['gemini', 'groq', 'hf']
     else:
         order = ['groq', 'gemini', 'hf']
+        
+    errors = []
 
     for provider in order:
         if provider == 'gemini' and keys["gemini"] and GEMINI_AVAILABLE:
@@ -170,7 +176,9 @@ def generate_section_insight(script_data, section_type, lens='viewer', api_key=N
                     contents=f"SYSTEM: {system_msg}\n\nUSER: {user_content}"
                 )
                 return response.text
-            except Exception: continue
+            except Exception as e:
+                errors.append(f"Gemini: {str(e)}")
+                continue
             
         if provider == 'groq' and keys["groq"] and GROQ_AVAILABLE:
             try:
@@ -182,7 +190,9 @@ def generate_section_insight(script_data, section_type, lens='viewer', api_key=N
                     temperature=0.8
                 )
                 return completion.choices[0].message.content
-            except Exception: continue
+            except Exception as e:
+                errors.append(f"Groq: {str(e)}")
+                continue
 
         if provider == 'hf' and keys["hf"]:
             try:
@@ -193,6 +203,8 @@ def generate_section_insight(script_data, section_type, lens='viewer', api_key=N
                     max_tokens=300
                 )
                 return completion.choices[0].message.content
-            except Exception: continue
+            except Exception as e:
+                errors.append(f"HF: {str(e)}")
+                continue
 
-    return "AI is gathering its thoughts... (Provider Busy)"
+    return f"AI Error: API failure. Details: {' | '.join(errors)}"
