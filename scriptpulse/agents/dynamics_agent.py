@@ -16,12 +16,13 @@ class DynamicsAgent:
     def __init__(self):
         # Priors as per PAPER_METHODS.md v1.3
         self.GENRE_PRIORS = {
-            'drama':    {'lambda': 0.90, 'beta': 0.25},
-            'thriller': {'lambda': 0.75, 'beta': 0.40},
-            'action':   {'lambda': 0.78, 'beta': 0.50},
-            'comedy':   {'lambda': 0.80, 'beta': 0.60},
-            'horror':   {'lambda': 0.70, 'beta': 0.15},
-            'sci-fi':   {'lambda': 0.82, 'beta': 0.35},
+            'drama':         {'lambda': 0.75, 'beta': 0.45}, # Higher recovery, lower retention for valleys
+            'crime drama':   {'lambda': 0.80, 'beta': 0.40}, 
+            'thriller':      {'lambda': 0.75, 'beta': 0.45},
+            'action':        {'lambda': 0.78, 'beta': 0.50},
+            'comedy':        {'lambda': 0.80, 'beta': 0.60},
+            'horror':        {'lambda': 0.70, 'beta': 0.25},
+            'sci-fi':        {'lambda': 0.82, 'beta': 0.35},
         }
 
     def run_simulation(self, input_data, genre=None, **kwargs):
@@ -37,63 +38,67 @@ class DynamicsAgent:
         if not features: return []
         
         signals = []
-        prev_signal = 0.5  # Neutral starting point
+        prev_signal = 0.25  # Neutral-low starting point for establishing tone
         
         for i, feat in enumerate(features):
-            # Use pre-normalized ratios from perception agent
+            # 1. Extraction & Feature Normalization
             norm_velocity = feat.get('dialogue_dynamics', {}).get('turn_velocity', 0)
+            switches = feat.get('dialogue_dynamics', {}).get('speaker_switches', 0)
             norm_action = feat.get('visual_abstraction', {}).get('visual_intensity', 0)
             
-            # Affective Extremes usually indicate high stakes or drama
+            # Conflict & Stakes (The primary drivers of Drama)
+            # Switches normalized by expected conversational density (8 switches per scene is active)
+            norm_switches = min(1.0, switches / 8.0)
+            dialogue_momentum = (norm_velocity * 0.3 + norm_switches * 0.7)
+            
             affective = feat.get('affective_load', {})
             comp_sentiment = abs(affective.get('compound', 0)) if isinstance(affective, dict) else 0
             
-            # Decrease weight of raw string length variables
-            norm_chars = min(1.0, feat.get('referential_load', {}).get('active_character_count', 0) / 6.0)
-            norm_entropy = min(1.0, feat.get('entropy_score', 0) / 15.0)
-
-            # Narrative Drive: Action and Dialogue back-and-forth create momentum
-            narrative_drive = (norm_velocity * 0.4 + norm_action * 0.4 + comp_sentiment * 0.2)
-            
-            # Scene Density: Too many characters or too many words drag pacing down
-            scene_density = (norm_chars * 0.5 + norm_entropy * 0.5)
-            
-            # Combine to Effort (Tension) range
-            raw_effort = (narrative_drive * 0.7 + scene_density * 0.3)
-            effort = 0.15 + (raw_effort * 0.7)
-            
-            # 2. Update Attentional Signal (S)
-            # Implement formula: A_t = A_t-1 * lambda + Effort_t - Recovery_t
-            decay = priors['lambda']
-            beta = priors['beta']
-            
-            # Calculate Recovery Credit (R_t)
-            # R_t = (1 - Effort) * Beta
-            recovery = (1.0 - effort) * beta
-            
-            # Update state
-            signal = (prev_signal * decay) + effort - recovery
-            
-            # Inject micro-spikes for high action or high conflict to force visual peaks
-            if norm_action > 0.6 or norm_velocity > 0.8:
-                signal += 0.1
-                
-            signal = min(0.98, max(0.05, signal)) # Keep in safe visible range
-            
-            # 3. Narrative Nuance (For UI logic)
-            action_count = feat.get('visual_abstraction', {}).get('action_lines', 0)
-            dial_count = feat.get('dialogue_dynamics', {}).get('dialogue_line_count', 0)
-            
-            # Real metrics based on actual inputs
-            actual_conflict = (norm_velocity * 0.6) + (max(0, -affective.get('compound', 0)) * 0.4)
+            # Real conflict and stakes calculations used for both Effort and Output
+            actual_conflict = (dialogue_momentum * 0.6) + (max(0, -affective.get('compound', 0)) * 0.4)
             
             stakes_breakdown = feat.get('stakes_taxonomy', {}).get('breakdown', {})
             dominant_stakes_value = max(stakes_breakdown.values()) if stakes_breakdown else norm_action
             actual_stakes = (norm_action * 0.5) + (dominant_stakes_value * 0.5)
+
+            # 2. Effort (Tension Contribution)
+            # Narrative Drive now weights Conflict and Stakes much heavier than raw dialogue volume
+            narrative_drive = (actual_conflict * 0.5 + actual_stakes * 0.4 + comp_sentiment * 0.1)
             
-            # --- ADVANCED AI METRIC: COGNITIVE RESONANCE ---
-            # Resonance occurs when high conflict meets strong emotional valence, creating lasting impact.
+            # Scene Density (Cognitive Load): Moderate contribution
+            norm_chars = min(1.0, feat.get('referential_load', {}).get('active_character_count', 0) / 8.0)
+            norm_entropy = min(1.0, feat.get('entropy_score', 0) / 12.0)
+            scene_density = (norm_chars * 0.4 + norm_entropy * 0.6)
+            
+            # Lower base effort (0.05) allows for deep valleys
+            raw_effort = (narrative_drive * 0.85 + scene_density * 0.15)
+            effort = 0.05 + (raw_effort * 0.9)
+            
+            # 3. Update Attentional Signal (S)
+            decay = priors['lambda']
+            beta = priors['beta']
+            
+            # Recovery Credit (R_t)
+            # Prestige dramas need "The Valley" — if effort is low, recovery is boosted
+            recovery = (1.0 - effort) * beta
+            if effort < 0.25:
+                recovery *= 1.5 # Extra recovery for quiet/domestic scenes
+            
+            # Update state with decay (The "Memory" of the simulation)
+            signal = (prev_signal * decay) + effort - recovery
+            
+            # Micro-spikes for visceral visual peaks (Action sequences)
+            if norm_action > 0.7:
+                signal += 0.15
+                
+            signal = min(0.98, max(0.05, signal)) 
+            
+            # 4. Contextual Nuance (For UI/Interpretation)
+            action_count = feat.get('visual_abstraction', {}).get('action_lines', 0)
+            dial_count = feat.get('dialogue_dynamics', {}).get('dialogue_line_count', 0)
             sentiment_val = affective.get('compound', 0)
+            
+            # Resonance occurs when high conflict meets strong emotional valence
             cognitive_resonance = min(1.0, (actual_conflict * 0.4) + (effort * 0.4) + (0.3 if abs(sentiment_val) > 0.6 else 0.0))
             
             # Extract aggregate agency from character scene vectors
