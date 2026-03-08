@@ -299,8 +299,16 @@ class EncodingAgent:
         curr = None
         proactive_lexicon = {'go', 'do', 'will', 'must', 'shall', 'stop', 'done', 'kill', 'give', 'take', 'enough', 'order', 'clear', 'business', 'family'}
         
+        # Check for narrative closure signals in action lines
+        death_lexicon = {'dies', 'dead', 'killed', 'murdered', 'body', 'corpse', 'funeral', 'leaves', 'departs', 'gone'}
+        all_action_text = " ".join([l['text'].lower() for l in lines if l['tag'] == 'A'])
+        scene_has_death = any(w in all_action_text for w in death_lexicon)
+
         for i, l in enumerate(lines):
-            if l['tag'] == 'C': curr = l['text'].strip()
+            if l['tag'] == 'C': 
+                # Normalize character name: Upper, strip non-alphanumeric trailing chars like . or :
+                raw_name = l['text'].upper()
+                curr = re.sub(r'[^A-Z0-9\s#]', '', raw_name).strip()
             elif l['tag'] == 'D' and curr:
                 if curr not in arcs: arcs[curr] = {'sentiment': 0.0, 'agency': 0.1, 'line_count': 0}
                 arcs[curr]['line_count'] += 1
@@ -369,12 +377,19 @@ class EncodingAgent:
 
         return {
             'stakes': {'dominant': dominant, 'breakdown': {k: round(v, 2) for k,v in scores.items()}},
-            'purpose': {'purpose': purpose},
             'payoff': {'payoff_density': round(sum(scores.values()) / max(1, len(lines)), 2)},
-            'on_the_nose': {'on_the_nose_ratio': min(1.0, otn_hits / max(1, len(d_lines)))},
-            'shoe_leather': {'has_shoe_leather': has_shoe_leather},
+            'on_the_nose': {
+                'on_the_nose_ratio': round(otn_hits / max(1, len(d_lines)), 3),
+                'hit_count': otn_hits
+            },
+            'shoe_leather': {
+                'has_shoe_leather': has_shoe_leather,
+                'scene_start_filler': 3 if has_shoe_leather else 0 # Placeholder for UI
+            },
             'tell_vs_show': {'tell_ratio': min(1.0, tvs_hits / max(1, len(a_lines))), 'literal_emotions': tvs_hits},
-            'arcs': arcs,
+            'purpose': purpose,
+            'character_scene_vectors': arcs,
+            'narrative_closure': scene_has_death,  # Inform the downstream agent if characters might be 'resolved' here
             'scene_vocabulary': list(vocab),
             'research_telemetry': {
                 'analytical_confidence': confidence,

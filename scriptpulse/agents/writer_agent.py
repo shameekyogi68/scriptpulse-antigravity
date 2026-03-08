@@ -19,32 +19,38 @@ class WriterAgent:
         
         # 1. Narrative Diagnosis (Start with existing cognitive insights from InterpretationAgent)
         narrative_health = final_output.get('narrative_diagnosis', [])
-        narrative_health.extend(self._diagnose_health(trace, genre))
         
-        # Phase 22-30 diagnostics
-        narrative_health.extend(self._diagnose_voice(final_output.get('voice_fingerprints', {})))
-        narrative_health.extend(self._diagnose_motifs(trace))
-        narrative_health.extend(self._diagnose_tell_vs_show(trace))
-        narrative_health.extend(self._diagnose_on_the_nose(trace))
-        narrative_health.extend(self._diagnose_shoe_leather(trace))
-        narrative_health.extend(self._diagnose_semantic_motifs(trace))
-        narrative_health.extend(self._diagnose_stakes_diversity(trace))
-        narrative_health.extend(self._diagnose_stichomythia(trace))
-        narrative_health.extend(self._diagnose_payoff_density(trace))
-        narrative_health.extend(self._diagnose_opening_hook(trace))
-        narrative_health.extend(self._diagnose_generic_dialogue(trace))
-        narrative_health.extend(self._diagnose_flat_scene_turns(trace))
-        narrative_health.extend(self._diagnose_passive_voice(trace))
-        narrative_health.extend(self._diagnose_tonal_whiplash(trace))
-        narrative_health.extend(self._diagnose_redundant_scenes(trace))
-        narrative_health.extend(self._diagnose_dangling_threads(trace))
-        narrative_health.extend(self._diagnose_protagonist_arc(trace))
-        narrative_health.extend(self._diagnose_interruption_dynamics(trace))
-        narrative_health.extend(self._diagnose_monologues(trace))
-        narrative_health.extend(self._diagnose_reader_frustration(trace))
-        narrative_health.extend(self._diagnose_neglected_characters(trace))
-        narrative_health.extend(self._diagnose_nonlinear_structure(trace))
-        narrative_health.extend(self._diagnose_theme_coherence(trace))
+        # Phase 22-30 diagnostics (Collected and sorted for score determinism)
+        new_diagnostics = []
+        new_diagnostics.extend(self._diagnose_health(trace, genre))
+        new_diagnostics.extend(self._diagnose_voice(final_output.get('voice_fingerprints', {})))
+        new_diagnostics.extend(self._diagnose_motifs(trace))
+        new_diagnostics.extend(self._diagnose_tell_vs_show(trace))
+        new_diagnostics.extend(self._diagnose_on_the_nose(trace))
+        new_diagnostics.extend(self._diagnose_shoe_leather(trace))
+        new_diagnostics.extend(self._diagnose_semantic_motifs(trace))
+        new_diagnostics.extend(self._diagnose_stakes_diversity(trace))
+        new_diagnostics.extend(self._diagnose_stichomythia(trace))
+        new_diagnostics.extend(self._diagnose_payoff_density(trace))
+        new_diagnostics.extend(self._diagnose_opening_hook(trace))
+        new_diagnostics.extend(self._diagnose_generic_dialogue(trace))
+        new_diagnostics.extend(self._diagnose_flat_scene_turns(trace))
+        new_diagnostics.extend(self._diagnose_passive_voice(trace))
+        new_diagnostics.extend(self._diagnose_tonal_whiplash(trace))
+        new_diagnostics.extend(self._diagnose_redundant_scenes(trace))
+        new_diagnostics.extend(self._diagnose_dangling_threads(trace))
+        new_diagnostics.extend(self._diagnose_protagonist_arc(trace))
+        new_diagnostics.extend(self._diagnose_interruption_dynamics(trace))
+        new_diagnostics.extend(self._diagnose_monologues(trace))
+        new_diagnostics.extend(self._diagnose_reader_frustration(trace))
+        new_diagnostics.extend(self._diagnose_neglected_characters(trace))
+        new_diagnostics.extend(self._diagnose_nonlinear_structure(trace))
+        new_diagnostics.extend(self._diagnose_theme_coherence(trace))
+        
+        # Determine unique items and sort to prevent non-deterministic score variations
+        unique_diagnostics = sorted(list(set(new_diagnostics)))
+        narrative_health.extend(unique_diagnostics)
+        
         narrative_health.extend(self._diagnose_representation_risks(final_output.get('fairness_audit', {})))
 
         # 2. Structural Dashboard with Arc Vectors + Scene Map
@@ -462,9 +468,13 @@ class WriterAgent:
             elif sentiment_delta > 0.3 and agency_delta > 0.2:
                 arc_label = "Hero's Journey ⭐"
                 arc_note = "Strong positive transformation in both sentiment and agency."
-            elif agency_delta < -0.3:
-                arc_label = "Descent 📉"
-                arc_note = "Character progressively loses their ability to act. Heavy."
+            elif agency_delta < -0.25:
+                if sentiment_delta > -0.1:
+                    arc_label = "Steadfast / Supportive 🛡️"
+                    arc_note = "Character loses agency but maintains emotional core. Often seen in loyal advisors."
+                else:
+                    arc_label = "Descent 📉"
+                    arc_note = "Character progressively loses their ability to act. Often tragic."
             else:
                 arc_label = "Complex Arc 🌀"
                 arc_note = "Non-standard but meaningful change detected."
@@ -1281,15 +1291,22 @@ class WriterAgent:
                 if char in ["SON", "MOM", "DAD", "FATHER", "MOTHER", "VOICE", "GUY", "MAN", "WOMAN"]:
                     continue
                 
-                # Thematic / Prologue Check: If the character is heavily concentrated in the first 10% 
-                # they might be a thematic setup (like Bonasera).
-                total_char_lines = sum(s.get('character_scene_vectors', {}).get(char, {}).get('line_count', 0) for s in trace)
-                prologue_lines = sum(s.get('character_scene_vectors', {}).get(char, {}).get('line_count', 0) for s in trace[:max(1, len(trace)//10)])
+                # Narrative Resolution Check: Did they die or exit functionally?
+                # Check for 'narrative_closure' signal in their last appearing scene or the one after
+                last_idx = -1
+                for i, s in enumerate(trace):
+                    if char in s.get('character_scene_vectors', {}):
+                        last_idx = i
                 
-                if prologue_lines > total_char_lines * 0.7:
-                    continue # Likely a thematic opener/prologue character
+                # Check scenes near last_idx for 'narrative_closure'
+                search_range = trace[max(0, last_idx-1):min(len(trace), last_idx+2)]
+                if any(s.get('narrative_closure', False) for s in search_range):
+                    continue # This character's thread reached a resolution (death/exit)
 
                 neglected.append(char)
+        
+        # Sort for determinism
+        neglected.sort()
         for char in neglected[:2]:
             assessments.append(
                 f"👻 **Neglected Character ({char})**: Present in Act 1 ({act1_counts[char]} lines) "
