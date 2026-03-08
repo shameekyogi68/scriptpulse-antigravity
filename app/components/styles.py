@@ -387,6 +387,10 @@ def apply_custom_styles():
             box-shadow: inset 0 2px 5px rgba(0,0,0,0.2) !important;
         }
         
+        [data-baseweb="select"], [data-baseweb="select"] div, [data-baseweb="select"] input {
+            cursor: pointer !important;
+        }
+        
         [data-baseweb="select"] > div:hover, [data-baseweb="input"] > div:hover, [data-baseweb="textarea"] > div:hover {
             border-color: #55e0ff !important;
             box-shadow: 0 0 15px rgba(85, 224, 255, 0.15), inset 0 2px 5px rgba(0,0,0,0.2) !important;
