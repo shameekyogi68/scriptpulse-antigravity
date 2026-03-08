@@ -3,20 +3,23 @@ import streamlit as st
 from app.components.theme import Theme
 
 def render_hero_section(title: str, subtitle: str):
-    """Renders the main hero section with absolute brand colors (White/Blue)."""
+    """Renders the main hero section with absolute White/Blue branding."""
+    # Build the brand HTML with hardcoded colors to bypass all themes
     brand_html = (
-        '<div style="text-align: center; margin-bottom: 10px; line-height: 1.1;">'
+        '<div style="text-align: center; margin-bottom: 2px;">'
         '<span style="font-family: \'Outfit\', sans-serif; font-weight: 700; font-size: 3.8rem; letter-spacing: -0.04em; '
-        'color: #FFFFFF !important; -webkit-text-fill-color: #FFFFFF !important;">Script</span>'
+        'color: #FFFFFF !important; -webkit-text-fill-color: #FFFFFF !important; background: none !important;">Script</span>'
         '<span style="font-family: \'Outfit\', sans-serif; font-weight: 700; font-size: 3.8rem; letter-spacing: -0.04em; '
-        'color: #0099ff !important; -webkit-text-fill-color: #0099ff !important; text-shadow: 0 0 30px rgba(0,153,255,0.2);">Pulse</span>'
+        'color: #0099ff !important; -webkit-text-fill-color: #0099ff !important; background: none !important; '
+        'text-shadow: 0 0 30px rgba(0, 153, 255, 0.4);">Pulse</span>'
         '</div>'
     )
     
     html_content = f"""
-    <div class="hero-container" style="text-align: center; padding: 2rem 0 1.5rem 0;">
+    <div class="hero-container" style="text-align: center; padding: 2.5rem 0 1.5rem 0; background: none !important;">
         {brand_html}
-        <div style="color: rgba(244, 246, 251, 0.75); font-size: 1.1rem; font-weight: 300; max-width: 800px; margin: 0 auto;">{subtitle}</div>
+        <div style="color: rgba(244, 246, 251, 0.7); font-size: 1.15rem; font-weight: 300; '
+        'max-width: 800px; margin: 0 auto; letter-spacing: 0.02em; line-height: 1.5;">{subtitle}</div>
     </div>
     """
     st.markdown(html_content, unsafe_allow_html=True)
