@@ -214,6 +214,10 @@ class ParsingAgent:
                 return "D"
             
         if line.isupper() and len(line) < 40 and not line.endswith((".", "?", "!")):
+            # Character cue blacklist
+            if line_upper in ["SON", "MOM", "DAD", "FATHER", "MOTHER", "WIFE", "HUSBAND", "VOICE", "OFF-SCREEN", "O.S.", "EXT", "INT"]:
+                return "A"
+
             # Look ahead for dialogue
             if all_lines and index + 1 < len(all_lines):
                  next_line = all_lines[index + 1].strip()

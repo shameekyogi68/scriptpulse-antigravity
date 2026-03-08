@@ -103,6 +103,11 @@ def normalize_script(text):
         if not is_upper and len(stripped) < 25 and no_punct:
              # It *mostly* looks like a name.
              # DANGER: "He runs" fits this.
+             
+             # Blacklist common action/stage words
+             if stripped.upper() in ["SON", "MOM", "DAD", "FATHER", "MOTHER", "VOICE", "GUY", "MAN", "WOMAN", "EXT", "INT"]:
+                 output_lines.append(stripped)
+                 continue
              # Check for common action verbs? No, too complex.
              # Check if next line exists and is non-empty?
              # If next line is dialogue, this is character.

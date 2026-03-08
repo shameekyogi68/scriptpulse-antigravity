@@ -136,10 +136,11 @@ class EncodingAgent:
         for i in range(1, len(c_lines)):
             if c_lines[i]['text'] != c_lines[i-1]['text']: switches += 1
             
-        non_blank_lines = [l for l in lines if l['text'].strip()]
+        non_blank_d = [l for l in d_lines if l['text'].strip()]
+        non_blank_total = [l for l in lines if l['text'].strip()]
         return {
-            'dialogue_line_count': len(d_lines),
-            'turn_velocity': round(len(d_lines) / max(1, len(non_blank_lines)), 3),
+            'dialogue_line_count': len(non_blank_d),
+            'turn_velocity': round(len(non_blank_d) / max(1, len(non_blank_total)), 3),
             'speaker_switches': switches
         }
 
@@ -156,10 +157,11 @@ class EncodingAgent:
             else:
                 in_run = False
                 
-        non_blank_lines = [l for l in lines if l['text'].strip()]
+        non_blank_a = [l for l in a_lines if l['text'].strip()]
+        non_blank_total = [l for l in lines if l['text'].strip()]
         return {
-            'action_lines': len(a_lines),
-            'visual_intensity': round(len(a_lines) / max(1, len(non_blank_lines)), 3),
+            'action_lines': len(non_blank_a),
+            'visual_intensity': round(len(non_blank_a) / max(1, len(non_blank_total)), 3),
             'continuous_action_runs': runs
         }
 
@@ -295,7 +297,7 @@ class EncodingAgent:
         # 2. Character Arcs (Per-scene vectors based on context, not just word count)
         arcs = {}
         curr = None
-        proactive_lexicon = {'go', 'do', 'will', 'must', 'shall', 'stop', 'done', 'kill', 'give', 'take', 'enough'}
+        proactive_lexicon = {'go', 'do', 'will', 'must', 'shall', 'stop', 'done', 'kill', 'give', 'take', 'enough', 'order', 'clear', 'business', 'family'}
         
         for i, l in enumerate(lines):
             if l['tag'] == 'C': curr = l['text'].strip()
@@ -314,10 +316,11 @@ class EncodingAgent:
                 # Characters who speak more in a scene generally have higher agency (control)
                 # But they must also use decisive language
                 agency_inc = 0.1 # Base participation
-                if is_command: agency_inc += 0.4
-                elif is_question: agency_inc += 0.2 # Asking questions is often investigative control
+                if is_command: agency_inc += 0.5
+                elif is_question: agency_inc += 0.3 # Asking questions is often investigative control
                 
-                agency_inc += (proactive_count * 0.15)
+                agency_inc += (proactive_count * 0.6) # Boosted from 0.4
+
                 
                 # Passive markers
                 if any(w in dial_text for w in ['maybe', 'sorry', 'i think', 'perhaps', 'suppose']):
@@ -329,7 +332,7 @@ class EncodingAgent:
         # Normalize Agency by participation density so quiet but decisive leaders aren't penalized
         for c in arcs:
             # Agency cap
-            arcs[c]['agency'] = round(min(1.0, arcs[c]['agency'] / max(1, arcs[c]['line_count'] * 0.5)), 3)
+            arcs[c]['agency'] = round(min(1.0, arcs[c]['agency'] / max(1, arcs[c]['line_count'] * 0.3)), 3)
             arcs[c]['sentiment'] = round(max(-1.0, min(1.0, arcs[c]['sentiment'] / max(1, arcs[c]['line_count']))), 3)
         
         # 3. Masterclass Diagnostics (Smart Heuristics using structural context)

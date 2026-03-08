@@ -910,7 +910,7 @@ class WriterAgent:
                 f"📈 **Protagonist Ascension ({protagonist})**: Agency spikes from "
                 f"{a1:.2f} → {a3:.2f}. A powerful transformation from reactive to total command."
             )
-        elif abs(delta) < 0.05:
+        elif abs(delta) < 0.02:
             assessments.append(
                 f"⬜ **Protagonist Flat Arc ({protagonist})**: Agency stays flat "
                 f"({a1:.2f} → {a3:.2f}) across the script."
@@ -1274,11 +1274,22 @@ class WriterAgent:
         act3_counts = char_lines(act3)
 
         # Characters with significant Act 1 presence (>5 lines) but no Act 3 presence
-        neglected = [
-            char for char, count in act1_counts.items()
-            if count > 5 and act3_counts.get(char, 0) == 0
-        ]
+        neglected = []
+        for char, count in act1_counts.items():
+            if count > 5 and act3_counts.get(char, 0) == 0:
+                # Blacklist generic roles that are often mis-parsed or one-off
+                if char in ["SON", "MOM", "DAD", "FATHER", "MOTHER", "VOICE", "GUY", "MAN", "WOMAN"]:
+                    continue
+                
+                # Thematic / Prologue Check: If the character is heavily concentrated in the first 10% 
+                # they might be a thematic setup (like Bonasera).
+                total_char_lines = sum(s.get('character_scene_vectors', {}).get(char, {}).get('line_count', 0) for s in trace)
+                prologue_lines = sum(s.get('character_scene_vectors', {}).get(char, {}).get('line_count', 0) for s in trace[:max(1, len(trace)//10)])
+                
+                if prologue_lines > total_char_lines * 0.7:
+                    continue # Likely a thematic opener/prologue character
 
+                neglected.append(char)
         for char in neglected[:2]:
             assessments.append(
                 f"👻 **Neglected Character ({char})**: Present in Act 1 ({act1_counts[char]} lines) "
@@ -1401,7 +1412,6 @@ class WriterAgent:
         
         provocations.append(genre_tips.get(genre.lower(), "Every scene should start as late as possible and end as early as possible. What can you cut from the next five pages without losing the story?"))
         
-        random.shuffle(provocations)
         return provocations[:3]
 
     def _calculate_page_turner_index(self, trace):
