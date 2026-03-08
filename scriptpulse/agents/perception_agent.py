@@ -68,7 +68,7 @@ class EncodingAgent:
                 'micro_structure': self._extract_micro(scene_lines),
                 'runtime_contribution': self._extract_runtime_contribution(scene_lines),
                 # Supporting metrics for UI consistency
-                'character_scene_vectors': metadata['arcs'],
+                'character_scene_vectors': metadata['character_scene_vectors'],
                 'stakes_taxonomy': metadata['stakes'],
                 'scene_purpose': metadata['purpose'],
                 'payoff_density': metadata['payoff'],
@@ -387,7 +387,7 @@ class EncodingAgent:
                 'scene_start_filler': 3 if has_shoe_leather else 0 # Placeholder for UI
             },
             'tell_vs_show': {'tell_ratio': min(1.0, tvs_hits / max(1, len(a_lines))), 'literal_emotions': tvs_hits},
-            'purpose': purpose,
+            'purpose': {'purpose': purpose},
             'character_scene_vectors': arcs,
             'narrative_closure': scene_has_death,  # Inform the downstream agent if characters might be 'resolved' here
             'scene_vocabulary': list(vocab),
