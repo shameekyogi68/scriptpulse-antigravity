@@ -3,12 +3,16 @@ import streamlit as st
 from app.components.theme import Theme
 
 def render_hero_section(title: str, subtitle: str):
-    """Renders the main hero section of the application."""
-    if title == "ScriptPulse": # For backwards compatibility or direct calls
-        title = '<span class="brand-script">Script</span><span class="brand-pulse">Pulse</span>'
+    """Renders the main hero section of the application with hard-coded brand colors."""
+    # Force the branding if title is ScriptPulse (raw or HTML)
+    if "Script" in title and "Pulse" in title:
+        title = (
+            '<span style="color: #FFFFFF !important; -webkit-text-fill-color: #FFFFFF !important; background: none !important;">Script</span>'
+            '<span style="color: #55E0FF !important; -webkit-text-fill-color: #55E0FF !important; background: none !important; text-shadow: 0 0 15px rgba(85, 224, 255, 0.4);">Pulse</span>'
+        )
     
-    title_html = f'<h1 style="background: none !important; -webkit-text-fill-color: initial !important;">{title}</h1>' if title else ""
-    html_content = f"""<div class="hero-container">{title_html}<p class="hero-subtitle">{subtitle}</p></div>"""
+    title_html = f'<h1 style="background: none !important; -webkit-text-fill-color: initial !important; background-clip: initial !important; color: white !important; font-size: 3.2rem !important;">{title}</h1>' if title else ""
+    html_content = f"""<div class="hero-container" style="text-align: center; padding: 2rem 1rem 1rem;">{title_html}<p class="hero-subtitle">{subtitle}</p></div>"""
     st.markdown(html_content, unsafe_allow_html=True)
 
 def render_section_header(icon: str, title: str, explainer: str):

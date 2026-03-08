@@ -74,7 +74,7 @@ st.session_state['ui_mode'] = sidebar_state['ui_mode']
 # HERO
 # =============================================================================
 render_hero_section(
-    '<span class="brand-script">Script</span><span class="brand-pulse">Pulse</span>',
+    "ScriptPulse",
     "AI Story Intelligence — See how your screenplay feels to an audience before you ever hit send."
 )
 
