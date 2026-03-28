@@ -586,8 +586,8 @@ class WriterAgent:
             max_depth = round(max(all_agencies) - min(all_agencies), 3) if all_agencies else 0
             
             # Elite Rule 2: Plot Success vs Moral Well-being
-            # Michael starts high well-being (idealist) and ends low well-being (cold).
-            # But starts low plot success (outsider) and ends high success (Don).
+            # The protagonist often starts with high moral well-being but low outward success,
+            # or vice-versa. We track the divergence to identify tragic vs heroic trajectories.
             moral_start = start['sentiment']
             moral_end = end['sentiment']
             moral_delta = round(moral_end - moral_start, 3)
@@ -724,9 +724,10 @@ class WriterAgent:
     def _analyze_thematic_coherence(self, trace):
         """Elite Rule 5: Detect thematic motifs (Power, Family, Corruption) and track their Sentiment Migration."""
         themes = {
-            'Family/Loyalty': ['family', 'brother', 'father', 'son', 'honor', 'loyalty', 'betrayal', 'blood'],
-            'Power/The Cost': ['business', 'money', 'power', 'control', 'order', 'respect', 'america', 'don', 'offer', 'refuse'],
-            'Morality/Corruption': ['soul', 'church', 'prayer', 'sin', 'guilt', 'kill', 'murder', 'innocent', 'corrupt', 'lie', 'dead']
+            'Family/Loyalty': ['legacy', 'honor', 'bloodline', 'loyal', 'betrayal', 'kin', 'allegiance'],
+            'Power/The Cost': ['business', 'money', 'power', 'control', 'empire', 'rule', 'authority', 'status'],
+            'Morality/Corruption': ['soul', 'prayer', 'sin', 'guilt', 'innocent', 'corrupt', 'lie', 'forbidden'],
+            'Identity/Self': ['name', 'identity', 'mask', 'secret', 'past', 'transformation', 'fate', 'nature']
         }
         
         n = len(trace)
@@ -1755,49 +1756,53 @@ class WriterAgent:
 
 
     def _calculate_page_turner_index(self, trace):
-        """
-        Calculates PTI (0-100) based on Dramatic Contrast and Resonance.
-        A 'Page-Turner' isn't just constant shouting; it's the rhythm of tension and relief.
-        """
-        if not trace: return 50
+        """Rule 13: Tension Signature Pattern Recognition (High-Fidelity)."""
+        if not trace: return {'index': 50, 'signature': "Neutral"}
         
-        # 1. Emotional Contrast: The standard deviation of the signal
-        # High contrast means the writer is using the 'Valley' effect correctly.
-        # Threshold: 0.18 is a strong delta for a normalized 0-1 signal.
         signals = [s.get('attentional_signal', 0) for s in trace]
-        contrast = statistics.stdev(signals) if len(signals) > 1 else 0
+        n = len(trace)
+        
+        # 1. Baseline Tension
+        avg_tension = sum(signals) / n
+        
+        # 2. Spike Frequency (Peaks per Act)
+        peaks = sum(1 for s in signals if s > 0.8)
+        peaks_per_act = round(peaks / 3.0, 1)
+        
+        # 3. Valley Depth (Min signal relative to avg)
+        min_v = min(signals)
+        valley_depth_rel = round(min_v / (avg_tension or 0.1), 2)
+        
+        # 4. Pattern Classification
+        # Calculate volatility (jumps)
+        diffs = [abs(signals[i] - signals[i-1]) for i in range(1, n)]
+        avg_jump = statistics.mean(diffs) if diffs else 0
+        
+        if avg_tension < 0.35 and peaks < (n * 0.1) and valley_depth_rel < 0.5:
+            signature = "Slow Burn (Baseline: Low, Spikes: Rare, Valleys: Deep) 🏔️"
+        elif avg_tension > 0.55 and peaks > (n * 0.25) and valley_depth_rel > 0.5:
+            signature = "Thriller (Baseline: High, Spikes: Frequent, Valleys: Shallow) 🌪️"
+        elif signals[-1] > (avg_tension + 0.2) and signals[0] < avg_tension:
+            signature = "Escalating (Baseline: Rising, Spike Intensity: Increasing) 📈"
+        elif avg_jump > 0.18 and valley_depth_rel < 0.4:
+            signature = "Operatic (Baseline: Variable, Spikes: Clustered, Valleys: Dramatic) 🎭"
+        else:
+            signature = "Episodic (Baseline: Medium, Spikes: Regular, Valleys: Regular) ⏱️"
+
+        # Calculate PTI Score
+        contrast = statistics.stdev(signals) if n > 1 else 0
         contrast_score = min(1.0, contrast / 0.18) * 35 # 35 pts for contrast
-        
-        # 2. Hook Density: Use Cognitive Resonance (Impact vs just Volume)
-        # Average resonance of 0.35 is quite high for a script with breathers.
-        resonance = sum(s.get('cognitive_resonance', 0) for s in trace) / len(trace)
+        resonance = sum(s.get('cognitive_resonance', 0) for s in trace) / n
         resonance_score = min(1.0, resonance / 0.35) * 45 # 45 pts for impact
-        
-        # 3. Cliffhangers: Scenes ending on high-intensity signals
         cliff_count = sum(1 for s in trace if s.get('attentional_signal', 0) > 0.82)
         cliffhangers = (min(cliff_count, 4) * 5) # 20 pts for peaks
         
-        # Elite Rule 4: Tension Signature Pattern Recognition
-        # 'Slow Burn (Operatic)' vs 'Classic Rising' vs 'Uniform High Octane'
-        diffs = [abs(signals[i] - signals[i-1]) for i in range(1, len(signals))]
-        avg_jump = sum(diffs) / len(diffs) if diffs else 0
-        peaks = sum(1 for s in signals if s > 0.8)
-        n_scenes = len(trace)
-        
-        # Operatic signature: High volatility (big jumps) but relatively infrequent peaks
-        # This captures the 'valleys of silence + spikes of violence' pattern.
-        if avg_jump > 0.15 and peaks < (n_scenes * 0.15):
-            signature = "Operatic / Slow Burn 🎭" 
-        elif avg_jump < 0.10:
-            signature = "Constant Pressure / Minimalist 🏔️"
-        elif signals[-1] > max(signals[:n_scenes//2]):
-            signature = "Classical Rising Action 📈"
-        else:
-            signature = "Procedural / Rhythmic ⏱️"
-            
         return {
             'index': min(100, round(20 + (contrast_score + resonance_score + cliffhangers) * 0.8)),
             'signature': signature,
+            'baseline_tension': round(avg_tension, 2),
+            'peaks_per_act': peaks_per_act,
+            'valley_depth': valley_depth_rel,
             'volatility': round(avg_jump, 2)
         }
 

@@ -466,6 +466,9 @@ class EncodingAgent:
         elif len(d_lines) > 10:
             purpose = 'Negotiation / Conflict'
 
+        # Heuristic for narrative closure/death events
+        scene_has_death = any(w in text.lower() for w in ['dies', 'dead', 'killed', 'murder', 'shot', 'grave'])
+
         return {
             'stakes': {'dominant': dominant, 'breakdown': {k: round(v, 2) for k,v in scores.items()}},
             'payoff': {'payoff_density': round(sum(scores.values()) / max(1, len(lines)), 2)},
