@@ -1671,7 +1671,7 @@ class WriterAgent:
         risk = dashboard.get('production_risk_score', 50)
         
         # Dialogue Harmony (15%): Reward hitting genre benchmarks
-        dr = dashboard.get('dialogue_ratio', {})
+        dr = dashboard.get('dialogue_action_ratio', {})
         d_ratio = dr.get('global_dialogue_ratio', 0.55)
         d_bench = dr.get('genre_benchmark', 0.55)
         d_harmony = max(0, 100 - abs(d_ratio - d_bench) * 200) # Loss of 2 pts per 1% dev
