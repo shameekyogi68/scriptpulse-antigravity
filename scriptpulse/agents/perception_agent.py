@@ -101,6 +101,11 @@ class EncodingAgent:
                 'is_exposition': metadata['purpose']['purpose'] == 'Exposition',
                 'scene_vocabulary': metadata['scene_vocabulary'],
                 'reader_frustration': self._extract_reader_frustration(scene_lines, referential['active_character_count']),
+                'stichomythia': metadata['stichomythia'],
+                'monologue_data': metadata['monologue_data'],
+                'passive_voice': metadata['passive_voice'],
+                'scene_economy': metadata['scene_economy'],
+                'opening_hook': metadata['opening_hook'],
                 'narrative_closure': metadata['narrative_closure'],
                 'research_telemetry': metadata.get('research_telemetry', {})
             }
@@ -521,7 +526,7 @@ class EncodingAgent:
             'passive_voice': {'passive_ratio': passive_count / max(1, n_lines), 'passive_count': passive_count, 'examples': passive_examples},
             'scene_economy': {'economy_label': economy_label, 'economy_score': economy_score},
             'opening_hook': {'hook_label': hook_label, 'lines_before_conflict': lines_before},
-            'scene_purpose': {'purpose': purpose},
+            'purpose': {'purpose': purpose},
             'on_the_nose': {
                 'on_the_nose_ratio': round(otn_hits / max(1, len(d_lines)), 3),
                 'hit_count': otn_hits
