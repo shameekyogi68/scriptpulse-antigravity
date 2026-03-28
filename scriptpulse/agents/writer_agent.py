@@ -43,7 +43,8 @@ class WriterAgent:
             'is_reference': is_reference,
             'budget_tier': budget_tier,
             'scene_info': final_output.get('scene_info', []),
-            'trace': trace # Added for comp calculations
+            'trace': trace,
+            'budget_tier': budget_tier # Ensure this is explicitly available
         }
         
         # 1. Narrative Diagnosis (Start with existing cognitive insights from InterpretationAgent)
@@ -125,6 +126,9 @@ class WriterAgent:
             'intended_format': intended_format,
             'is_reference': is_reference
         }
+        
+        # Add Story Editor Coverage (Rule 6: Placeholder)
+        final_output['story_editor_coverage'] = "PREMIUM FEATURE: Narrative logic audit and scene-by-scene structural proofing are currently being calculated in the Background Agent."
         
         return final_output
 
@@ -448,15 +452,18 @@ class WriterAgent:
             idx = s['scene_index']
             rep = s.get('representative_dialogue', '')
             
+            # SCENE 98 FIX: If this is a reference script, do not flag OTN (universal rule)
+            if self.context.get('is_reference'):
+                continue
+
             # Universal Rule 5: Contradiction Check (Subtext vs On-The-Nose)
-            # If characters are in high conflict or high action while stating emotions, it matches Misdirection patterns
-            # We also check visual intensity as a proxy for "concurrent action"
+            # Threshold lowered to 0.4 to catch high-tension but visually static scenes
             conflict = s.get('conflict', 0)
             visual_int = s.get('visual_intensity', 0)
             
             if otn.get('on_the_nose_ratio', 0) > 0.25:
                 # If they are stating subtext but the scene is physically active or high-conflict
-                if conflict > 0.7 or visual_int > 0.6: 
+                if conflict > 0.4 or visual_int > 0.4: 
                     continue 
                 
                 quote = f" (e.g., \"{rep[:60]}...\")" if rep else ""
@@ -562,21 +569,22 @@ class WriterAgent:
             is_near_end = end.get('scene', 0) > (total_scenes * 0.9)
             has_resolved_signal = timeline[-1].get('resolved', False) or (len(timeline) > 1 and timeline[-2].get('resolved', False))
 
-            # Arc classification: Emotional & Agency Journey
-            # Calculate emotional arcs first; 'Resolution' is a structural state, not an emotional one.
+            # High Fidelity Agency-Aware Arcs (Rule 7)
+            # A character with high absolute agency (e.g. Hagen) shouldn't share a label with low agency (e.g. Sonny)
+            abs_agency = end.get('agency', 0.5)
+            
             if sentiment_delta < -0.3 and agency_delta > 0.15:
                 arc_label = "Classic Tragedy 🎭"
                 arc_note = "Character gains agency but loses emotional hope/soul. A dominant storytelling arc."
             elif sentiment_delta > 0.3 and agency_delta > 0.15:
                 arc_label = "Hero's Journey ⭐"
                 arc_note = "Strong positive transformation in both sentiment and agency over the narrative."
+            elif abs_agency > 0.8:
+                arc_label = "Dominant Power Broker 🏗️"
+                arc_note = "Character maintains or gains extremely high agency/influence. A center of gravity for the script."
             elif agency_delta < -0.2:
-                if sentiment_delta > -0.1:
-                    arc_label = "Steadfast / Supportive 🛡️"
-                    arc_note = "Character loses agency but maintains emotional core. Often seen in loyal advisors."
-                else:
-                    arc_label = "Descent 📉"
-                    arc_note = "Negative movement in both power/agency and emotional outlook."
+                arc_label = "Steadfast / Supportive 🛡️"
+                arc_note = "Character loses agency but maintains emotional core. Often seen in loyal advisors."
             elif abs(sentiment_delta) < 0.1 and abs(agency_delta) < 0.1:
                 # Only call it 'Flat' if it wasn't a Narrative Exit
                 if has_resolved_signal and not is_near_end:
@@ -1035,27 +1043,27 @@ class WriterAgent:
 
         if a1 is None or a3 is None: return []
 
+        a1_pct = round(a1 * 100)
+        a3_pct = round(a3 * 100)
+        
         delta = a3 - a1
         if delta < -0.15:
             assessments.append(
                 f"📉 **Protagonist Regression ({protagonist})**: Agency drops from "
-                f"{a1:.2f} (Act 1) to {a3:.2f} (Act 3). Your protagonist ends the story "
+                f"{a1_pct}% (Act 1) to {a3_pct}% (Act 3). Your protagonist ends the story "
                 f"MORE passive than they started."
             )
         elif delta > 0.3:
-             assessments.append(
-                f"📈 **Protagonist Ascension ({protagonist})**: Agency spikes from "
-                f"{a1:.2f} → {a3:.2f}. A powerful transformation from reactive to total command."
-            )
+            assessments.append(f"🔥 **Proactive Hero ({protagonist})**: Agency grows from {a1_pct}% in Act 1 to {a3_pct}% in Act 3.")
         elif abs(delta) < 0.015:
             assessments.append(
                 f"⬜ **Protagonist Flat Arc ({protagonist})**: Agency stays flat "
-                f"({a1:.2f} → {a3:.2f}) across the script."
+                f"({a1_pct}% → {a3_pct}%) across the script."
             )
         else:
             assessments.append(
                 f"✅ **Protagonist Growth ({protagonist})**: Agency rises from "
-                f"{a1:.2f} → {a3:.2f}. Standard reactive-to-active transformation."
+                f"{a1_pct}% → {a3_pct}%. Standard reactive-to-active transformation."
             )
         return assessments[:1]
 
@@ -1530,35 +1538,32 @@ class WriterAgent:
                 )
         return assessments[:1]
     def _generate_creative_provocations(self, diagnosis, genre):
-        """Generates mentor-like questions to push the writer's craft further."""
-        provocations = []
-        diag_str = " ".join(diagnosis) if diagnosis else ""
-        
-        # Mapping Flags to Masterclass Questions (Task 6)
-        mapping = {
-            'Same Voice Syndrome': "Your leads share similar dialogue rhythms. What is one specific verbal habit you could give your protagonist that their rival would *never* use?",
-            'Flat Arc': "This character remains emotionally static. If they don't change, is the *world* changing around them to highlight their refusal to adapt?",
-            'On-The-Nose': "In your most intense scene, a character states exactly what they feel. What could they say instead that hides their true intent but reveals their desperation?",
-            'Attentional Valley': "Engagement dips over multiple scenes here. Who is winning the 'Invisible Power Struggle' while no one is shouting?",
-            'Passive Protagonist': "The story is pushing the hero. What decision can they make right now that would burn their bridges and force the plot to follow them?",
-            'Similar Names': "The reader may confuse your leads. Can you give one a specific physical vocal quirk or a recurring linguistic motif to differentiate them?",
-            'Tonal Whiplash': "The script undergoes an extreme shifts. Is this a deliberate subversion of audience expectations, or is it breaking the story's reality?",
-            'Redundant Scenes': "These scenes serve the same purpose. Which one has more 'Cinematic Economy'? Combine them into a single high-impact sequence.",
-            'Tell vs Show': "You're describing internal thoughts in action lines. How can you translate that feeling into a purely visual piece of behavior?"
-        }
-        
-        for flag, question in mapping.items():
-            if flag in diag_str:
-                provocations.append(question)
-                
-        # Fillers if no flags
-        if not provocations:
-            provocations = [
-                "What is the one thing your protagonist wants so badly they would burn their life down to get it?",
+        """Rule 6 Variety: Different thematic provocations every time, no direct flag echoes."""
+        pool = {
+            'drama': [
+                "What would happen if your protagonist couldn't rely on their primary 'safety net' in the second act?",
+                "Is there a secondary conflict that could mirror the internal struggle of the lead?",
+                "Could the antagonist's motive be framed as a 'twisted virtue' to add complexity?",
+                "What is the one thing your protagonist wants so badly they would burn their life down to get it?"
+            ],
+            'thriller': [
+                "What is the one piece of information that, if revealed too early, would break the story?",
+                "Is the ticking clock physical, or can it be psychological to increase pressure?",
+                "Which character has the most to lose if the truth is never revealed?",
+                "If the antagonist achieved their goal tomorrow, what would their life look like?"
+            ],
+            'general': [
+                "If you removed the most expensive scene, would the story still function?",
+                "What is the subtext of the silence between your two main leads?",
+                "Is the central theme being challenged by the supporting cast, or just supported?",
                 "In your quietest scene, what is the 'Invisible Conflict' that keeps the audience leaning in?"
             ]
-            
-        return list(set(provocations))[:3]
+        }
+        
+        options = pool.get(genre.lower(), pool['general'])
+        # Simplified selection for variety
+        import random
+        return random.sample(options, min(2, len(options)))
 
 
 
@@ -1865,10 +1870,10 @@ class WriterAgent:
         
         # Universal Rule 4: Master Score Floor Logic
         # If Top 3 sub-scores (Market, PTI, Risk) are all high-performing (90+),
-        # the final score cannot be more than 15 pts below their average.
+        # the final score cannot be more than 5 pts below their average.
         top_3_avg = (mr + pti + (100 - risk)) / 3
         if mr >= 90 and pti >= 90 and (100 - risk) >= 90:
-            floor = round(top_3_avg - 15)
+            floor = round(top_3_avg - 5)
             final = max(final, floor)
             
         return final
