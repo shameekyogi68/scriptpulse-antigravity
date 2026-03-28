@@ -9,7 +9,7 @@ class WriterAgent:
     Does not run simulations; interprets existing trace data.
     """
     
-    def analyze(self, final_output, genre="General", script_era="contemporary", intended_format="spec", is_reference=False):
+    def analyze(self, final_output, genre="General", script_era="contemporary", intended_format="spec", is_reference=False, **kwargs):
         """
         Enhances the final_output with a 'writer_intelligence' block.
         Applies Strict Constraints and Genre Nuance.
@@ -17,14 +17,32 @@ class WriterAgent:
         trace = final_output.get('temporal_trace', [])
         suggestions = final_output.get('suggestions', {})
         
-        if not trace: return final_output
+        # Determine script era (Rule 1: Auto-detect or user-input)
+        if not script_era or script_era == 'auto':
+            # Search for keyword markers of historical or period settings
+            # We'll use a broad 'classic' catch-all for anything clearly non-contemporary
+            classic_markers = ['horse', 'carriage', 'castle', 'sword', 'throne', 'kingdom', 'century', 'historical', 'period']
+            found_classic = False
+            for s in trace:
+                 heading = s.get('location_data', {}).get('raw_heading', '').lower()
+                 if any(w in heading for w in classic_markers):
+                      found_classic = True
+                      break
+            script_era = 'classic' if found_classic else 'contemporary'
+
+        # Determine budget tier
+        budget_tier = kwargs.get('budget_tier')
+        if not budget_tier:
+             budget_tier = self._calculate_budget_impact(trace).split()[0].lower()
 
         # Contextual metadata for deterministic diagnostic tuning
         self.context = {
             'genre': genre,
             'era': script_era,
             'format': intended_format,
-            'is_reference': is_reference
+            'is_reference': is_reference,
+            'budget_tier': budget_tier,
+            'scene_info': final_output.get('scene_info', [])
         }
         
         # 1. Narrative Diagnosis (Start with existing cognitive insights from InterpretationAgent)
@@ -111,22 +129,20 @@ class WriterAgent:
 
     def _format_scene_ref(self, start_idx, end_idx=None):
         """Standardized scene reference with page numbers and headers."""
-        # Page calculation: 1 page = 55 lines
-        # We need access to the trace or segmented data for line indices
-        # For now, let's assume we can find the scene in the context or trace
-        # v2.0 Page Heuristic: (scene_index * 1.5) as a rough surrogate if lines aren't piped
-        # But we actually have 'first_line' in some places. Let's look at trace entries.
-        
-        # We'll use a standard format: "Scenes 10-12 [pp. 18-21]"
+        scene_info = self.context.get('scene_info', [])
+        heading = ""
+        if start_idx < len(scene_info):
+            raw_h = scene_info[start_idx].get('heading', 'SCENE')
+            # Extract basic identifier (INT. LOCATION)
+            heading = f" ({raw_h.split(' - ')[0]})"
+
         if end_idx is None or end_idx == start_idx:
-            page = 1 + (start_idx * 55 // 55) # This is too simple, let's use a better surrogate
-            # In ScriptPulse v15, we assume ~1.2 scenes per page on average.
             p_start = max(1, round(start_idx * 0.85))
-            return f"Scene {start_idx} [p. {p_start}]"
+            return f"Scene {start_idx}{heading} [p. {p_start}]"
         else:
             p_start = max(1, round(start_idx * 0.85))
             p_end = max(p_start, round(end_idx * 0.85))
-            return f"Scenes {start_idx}-{end_idx} [pp. {p_start}-{p_end}]"
+            return f"Scenes {start_idx}-{end_idx}{heading} [pp. {p_start}-{p_end}]"
 
     def _diagnose_health(self, trace, genre):
         """
@@ -237,26 +253,26 @@ class WriterAgent:
         puncts = [c[1].get('punctuation_rate', 0) for c in valid_chars]
         words_per_turn = [c[1].get('words_per_turn', 0) for c in valid_chars]
         registers = [c[1].get('register', 'neutral') for c in valid_chars]
+        agencies = [c[1].get('agency', 0) for c in valid_chars]
         
-        std_comp = statistics.stdev(complexities) if len(complexities) > 1 else 0.0
-        std_pos = statistics.stdev(positivities) if len(positivities) > 1 else 0.0
-        std_punct = statistics.stdev(puncts) if len(puncts) > 1 else 0.0
         std_wpt = statistics.stdev(words_per_turn) if len(words_per_turn) > 1 else 0.0
+        std_agency = statistics.stdev(agencies) if len(agencies) > 1 else 0.0
         
-        # "Same Voice Syndrome" detection (Task 2)
-        # Now incorporates register collisions and words-per-turn similarity
+        # "Same Voice Syndrome" Universal Rule (Rule 2)
+        # Must trigger ONLY if ALL THREE are true: Register, WPT within 10%, and similar Power Dynamics
         unique_registers = len(set(registers))
+        avg_wpt = sum(words_per_turn) / len(words_per_turn) if words_per_turn else 1
+        wpt_similarity = std_wpt / avg_wpt < 0.10
+        agency_similarity = std_agency < 0.15
         
-        if std_comp < 0.1 and std_pos < 0.1 and std_punct < 0.05 and std_wpt < 2.0 and unique_registers == 1:
+        if unique_registers == 1 and wpt_similarity and agency_similarity:
             names = [c[0] for c in valid_chars[:3]]
-            assessments.append(f"🔴 **Same Voice Syndrome**: The primary characters ({', '.join(names)}) share nearly identical dialogue textures, registers ({registers[0]}), and speech lengths. Consider varying vocabulary registers or power dynamics to distinguish them.")
+            assessments.append(f"🔴 **Same Voice Syndrome**: Character speech patterns ({', '.join(names)}) lack distinct registers, word-per-turn variation, and power dynamic differentiation. Consider heightening their unique status or backgrounds to separate their voices.")
         
-        # Power Dynamics (Task 2)
-        # Identify if one character consistently interrupts others or has much higher agency
-        # We can look at this in _diagnose_interruption_dynamics, but let's add a voice-level insight here too.
+        # Power Dynamics Visualization
         top_char = valid_chars[0]
         if top_char[1].get('agency', 0) > 0.8:
-            assessments.append(f"⚖️ **Vocal Dominance ({top_char[0]})**: This character maintains high agency and linguistic control. This effectively establishes them as the vocal 'alpha' in most exchanges.")
+            assessments.append(f"⚖️ **Vocal Dominance ({top_char[0]})**: Maintains tactical control over exchanges. This character serves as the vocal 'alpha' in the current scene context.")
 
         return assessments
 
@@ -430,7 +446,18 @@ class WriterAgent:
             otn = s.get('on_the_nose', {})
             idx = s['scene_index']
             rep = s.get('representative_dialogue', '')
+            
+            # Universal Rule 5: Contradiction Check (Subtext vs On-The-Nose)
+            # If characters are in high conflict or high action while stating emotions, it matches Misdirection patterns
+            # We also check visual intensity as a proxy for "concurrent action"
+            conflict = s.get('conflict', 0)
+            visual_int = s.get('visual_intensity', 0)
+            
             if otn.get('on_the_nose_ratio', 0) > 0.25:
+                # If they are stating subtext but the scene is physically active or high-conflict
+                if conflict > 0.7 or visual_int > 0.6: 
+                    continue 
+                
                 quote = f" (e.g., \"{rep[:60]}...\")" if rep else ""
                 ref = self._format_scene_ref(idx)
                 assessments.append(
@@ -745,10 +772,9 @@ class WriterAgent:
         assessments = []
         flat_ranges = self._find_ranges(trace, lambda s: s.get('scene_turn', {}).get('turn_label') == 'Flat')
         for start, end in flat_ranges:
-            # Task 5: Slow Opening Penalty Override
-            # If the flat turns are in the opening (Scenes 0-1) but followed by a sharp spike, it's valid.
-            if start <= 1:
-                # Look ahead for a 'Negative to Positive', 'Positive to Negative' or 'High Energy' turn in next 3 scenes
+            # Universal Rule 8: Slow Opening Detection Override
+            # Flat turns in scenes 1-3 are only a problem if no spike follows within 3 scenes.
+            if start <= 2:
                 followed_by_spike = False
                 for j in range(end + 1, min(len(trace), end + 4)):
                     turn = trace[j].get('scene_turn', {}).get('turn_label')
@@ -756,7 +782,7 @@ class WriterAgent:
                         followed_by_spike = True
                         break
                 if followed_by_spike:
-                     continue # Valid structural pattern (Slow Burn opening)
+                     continue 
 
             if (end - start + 1) >= 2:
                 ref = self._format_scene_ref(start, end)
@@ -1105,8 +1131,8 @@ class WriterAgent:
 
     def _build_location_profile(self, trace):
         """
-        Aggregate unique locations and INT/EXT balance across the script.
-        Warn if >60% of scenes share the same top location.
+        Aggregate unique locations and INT/EXT balance across the script (Rule 6).
+        Warn if location count exceeds threshold for detected budget tier.
         """
         location_counts = {}
         int_count = 0
@@ -1125,17 +1151,24 @@ class WriterAgent:
         sorted_locs = sorted(location_counts.items(), key=lambda x: x[1], reverse=True)
         top_loc, top_count = sorted_locs[0] if sorted_locs else ('UNKNOWN', 0)
         top_ratio = top_count / total
+        unique_count = len(sorted_locs)
+
+        # Rule 6 thresholds
+        budget = self.context.get('budget_tier', 'indie').lower()
+        thresholds = {'micro': 15, 'indie': 40, 'mid': 80, 'blockbuster': 200}
+        thresh = thresholds.get(budget, 40)
 
         warning = None
-        if top_ratio > 0.6 and len(sorted_locs) < 5:
+        if unique_count > thresh:
+            warning = f"Location count ({unique_count}) exceeds standard {budget.upper()} threshold ({thresh}). Consider consolidation if budget is a constraint."
+        elif top_ratio > 0.6 and unique_count < 5:
             warning = (
                 f"{round(top_ratio * 100)}% of scenes are set in '{top_loc}'. "
-                f"Only {len(sorted_locs)} unique location(s) total. "
                 f"Consider varying the physical world to add visual range."
             )
 
         return {
-            'unique_locations': len(sorted_locs),
+            'unique_locations': unique_count,
             'top_location': top_loc,
             'top_location_ratio': round(top_ratio, 3),
             'int_scenes': int_count,
@@ -1571,8 +1604,9 @@ class WriterAgent:
         return "Cinematic / Visual"
 
     def _find_commercial_comps(self, genre, dominant_stakes='Social'):
-        """Task 3: Subgenre-aware matching for feature films only."""
-        # Map Dominant Stakes to specialized 'Subgenres'
+        """Rule 7: Era-Aware Comp Selection (within 15 years and genre match)."""
+        era = self.context.get('era', 'contemporary')
+        
         stakes_to_sub = {
             'Social': 'Political/Mob/Society',
             'Moral': 'Psychological/Moral',
@@ -1582,35 +1616,31 @@ class WriterAgent:
         }
         subgenre = stakes_to_sub.get(dominant_stakes, 'General')
         
+        # Comps categorized by era
         lookup = {
-            ('Crime', 'Political/Mob/Society'): ["The Godfather", "The Departed", "The Irishman"],
-            ('Crime', 'Psychological/Moral'): ["Chinatown", "No Country for Old Men", "Heat"],
-            ('Drama', 'Personal/Relational'): ["Marriage Story", "Ordinary People", "Lady Bird"],
-            ('Drama', 'Political/Mob/Society'): ["The Social Network", "Parasite", "The Big Short"],
-            ('Action', 'Visceral/Action'): ["Mad Max: Fury Road", "Die Hard", "John Wick"],
-            ('Action', 'Personal/Relational'): ["Logan", "The Dark Knight", "Gladiator"],
-            ('Horror', 'Philosophical/Surreal'): ["Hereditary", "The Shining", "Midsommar"],
-            ('Horror', 'Visceral/Action'): ["Halloween", "A Quiet Place", "The Conjuring"],
-            ('Sci-Fi', 'Philosophical/Surreal'): ["2001: A Space Odyssey", "Arrival", "Blade Runner 2049"],
-            ('Sci-Fi', 'Psychological/Moral'): ["Gattaca", "Children of Men", "Ex Machina"],
-            ('Thriller', 'Political/Mob/Society'): ["Gone Girl", "Seven", "Prisoners"],
-            ('Comedy', 'Political/Mob/Society'): ["Knives Out", "Glass Onion", "The Favorite"],
-            ('Comedy', 'Personal/Relational'): ["Little Miss Sunshine", "The Holdovers", "Planes, Trains and Automobiles"],
-            ('Romance', 'Personal/Relational'): ["Before Sunrise", "Normal People", "The Notebook"]
+            # CLASSIC (pre-2000s)
+            ('classic', 'Crime'): ["The Godfather", "Chinatown", "Taxi Driver"],
+            ('classic', 'Drama'): ["Ordinary People", "Citizen Kane", "Sunset Blvd."],
+            ('classic', 'Thriller'): ["The Conversation", "Alien", "Blow Out"],
+            ('classic', 'Horror'): ["The Shining", "Suspiria", "Halloween"],
+            # CONTEMPORARY (post-2010s)
+            ('contemporary', 'Crime'): ["The Irishman", "The Departed", "Uncut Gems"],
+            ('contemporary', 'Drama'): ["Manchester by the Sea", "Moonlight", "Marriage Story"],
+            ('contemporary', 'Thriller'): ["Parasite", "Nightcrawler", "Seven"],
+            ('contemporary', 'Horror'): ["Hereditary", "Get Out", "Talk to Me"]
         }
         
         g = genre.replace('-', ' ').split()[0].title() 
         if 'Sci' in g: g = 'Sci-Fi'
         
-        # Primary Match: Genre + Subgenre
-        key = (g, subgenre)
+        key = (era.lower(), g)
         if key in lookup: return lookup[key]
         
-        # Secondary Match: Just Genre + any stake
-        for k_g, k_s in lookup.keys():
-            if k_g == g: return lookup[(k_g, k_s)]
+        # Fallback to genre-only contemporary
+        for (e, k_g), v in lookup.items():
+            if k_g == g and e == 'contemporary': return v
             
-        return ["The Social Network", "Parasite", "Pulp Fiction"] # Ultimate fallbacks
+        return ["The Social Network", "Parasite", "Everything Everywhere All At Once"]
 
     def _calculate_production_risks(self, trace):
         """
@@ -1802,4 +1832,13 @@ class WriterAgent:
         )
         
         final = max(0, min(100, round(raw - health_penalty)))
+        
+        # Universal Rule 4: Master Score Floor Logic
+        # If Top 3 sub-scores (Market, PTI, Risk) are all high-performing (90+),
+        # the final score cannot be more than 15 pts below their average.
+        top_3_avg = (mr + pti + (100 - risk)) / 3
+        if mr >= 90 and pti >= 90 and (100 - risk) >= 90:
+            floor = round(top_3_avg - 15)
+            final = max(final, floor)
+            
         return final

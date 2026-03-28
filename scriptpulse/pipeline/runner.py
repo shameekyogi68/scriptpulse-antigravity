@@ -224,7 +224,7 @@ def run_pipeline(script_content, genre='drama', story_framework='3_act', script_
     
     # --- STAGE 5: Writer Intelligence (Expert Layer) ---
     writer = WriterAgent()
-    report = writer.analyze(report, genre=genre, script_era=script_era, intended_format=intended_format, is_reference=is_reference)
+    report = writer.analyze(report, genre=genre, script_era=script_era, intended_format=intended_format, is_reference=is_reference, **kwargs)
     
     return report
 
