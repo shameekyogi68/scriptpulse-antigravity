@@ -504,6 +504,14 @@ class EncodingAgent:
         elif len(d_lines) > 10:
             purpose = 'Negotiation / Conflict'
 
+        # Check for narrative closure signals in action lines (Strict death/exit detection)
+        death_lexicon = {
+            'dies', 'dead', 'killed', 'murdered', 'body', 'corpse', 'funeral', 
+            'passing', 'expiring', 'deathbed', 'fatal', 'slain', 'slumps', 'falls', 'collapses',
+            'no longer with us', 'rest in peace'
+        }
+        scene_has_death = any(w in all_text for w in death_lexicon)
+
         return {
             'character_scene_vectors': arcs,
             'stakes': {'dominant': dominant, 'breakdown': {k: round(v, 2) for k,v in scores.items()}},
