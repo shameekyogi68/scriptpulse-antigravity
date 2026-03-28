@@ -28,24 +28,7 @@ def run_pipeline(script_content, genre='drama', story_framework='3_act', script_
     
     # --- STAGE 0: Normalize & Prepare ---
     if not script_content or not script_content.strip():
-        # Minimal valid return for empty/whitespace scripts
-        return {
-            'meta': {
-                'status': 'empty', 'execution_time': '0s', 'version': 'v15.0', 
-                'total_scenes': 0, 'run_id': 'empty', 'agent_timings': {}
-            },
-            'total_scenes': 0,
-            'temporal_trace': [],
-            'perceptual_features': [],
-            'structure_map': {},
-            'narrative_diagnosis': [],
-            'suggestions': [],
-            'scene_info': [],
-            'voice_fingerprints': {},
-            'fairness_audit': {},
-            'agency_analysis': {},
-            'fairness_audit': {} # Ensuring key exists for tests
-        }
+        raise ValueError("ScriptPulse requires more text. Input script is empty or whitespace-only.")
     script_content = normalizer.normalize_script(script_content)
     telemetry['stages']['normalization_ms'] = round((time.time() - _t_start) * 1000, 2)
     
@@ -210,6 +193,11 @@ def run_pipeline(script_content, genre='drama', story_framework='3_act', script_
     telemetry['stages']['assembly_ms'] = round((time.time() - _t_stage) * 1000, 2)
     telemetry['total_execution_ms'] = round((_t_end - _t_start) * 1000, 2)
 
+    # 4. Confidence Band (Task 2: Data-Driven Calibration)
+    from scriptpulse.utils.confidence_scorer import ConfidenceScorer
+    scorer = ConfidenceScorer()
+    confidence_data = scorer.calculate(temporal_trace)
+
     report = {
         'meta': {
             'run_id': f"sp-{int(time.time())}", 
@@ -220,7 +208,7 @@ def run_pipeline(script_content, genre='drama', story_framework='3_act', script_
             'genre': genre,
             'framework': story_framework,
             'version': "v15.0 (Research Edition)",
-            'confidence': 0.98 if len(segmented_scenes) > 5 else 0.85
+            'confidence_score': confidence_data
         },
         'temporal_trace': temporal_trace,
         'perceptual_features': perceptual_features,

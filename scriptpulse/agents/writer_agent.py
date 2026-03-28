@@ -282,8 +282,8 @@ class WriterAgent:
         # "Same Voice Syndrome" Universal Rule (Rule 2)
         # Must trigger ONLY if ALL THREE are true: Register, WPT within 10%, and similar Power Dynamics
         unique_registers = len(set(registers))
-        avg_wpt = sum(words_per_turn) / len(words_per_turn) if words_per_turn else 1
-        wpt_similarity = std_wpt / avg_wpt < 0.10
+        avg_wpt = sum(words_per_turn) / max(1, len(words_per_turn))
+        wpt_similarity = std_wpt / max(0.01, avg_wpt) < 0.10
         agency_similarity = std_agency < 0.15
         
         if unique_registers == 1 and wpt_similarity and agency_similarity:
@@ -670,8 +670,8 @@ class WriterAgent:
         
         # 2. THEMATIC CONSISTENCY SCORE (0-100)
         # avg_coherence (act distribution) + frequency density
-        avg_coh = statistics.mean([m['coherence_score'] for m in motif_results.values()])
-        density = min(1.0, sum(sum(m['act_frequency']) for m in motif_results.values()) / (len(trace) * 2.5))
+        avg_coh = statistics.mean([m['coherence_score'] for m in motif_results.values()]) if motif_results else 0
+        density = min(1.0, sum(sum(m['act_frequency']) for m in motif_results.values()) / max(1.0, (len(trace) * 2.5)))
         consistency_score = int((avg_coh * 75) + (density * 25))
         
         # 3. THEMATIC PAYOFF (Evaluating the ending's answer)

@@ -54,8 +54,8 @@ def estimate_runtime(scenes):
 
     total_lines = dialogue_lines + action_lines # Used for ratio only
     
-    if total_pages == 0:
-        return {'min_minutes': 0, 'max_minutes': 0, 'avg_minutes': 0}
+    if total_pages == 0 or total_lines == 0:
+        return {'min_minutes': 0, 'max_minutes': 0, 'avg_minutes': 0, 'dialogue_ratio': 0}
     
     # Base estimate: 1 page = 1 minute (industry standard)
     base_minutes = total_pages

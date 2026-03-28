@@ -82,7 +82,7 @@ class DriftMonitor:
             if fp == current_fp:
                 repetition_count += 1
                 
-        repetition_ratio = repetition_count / len(fingerprints)
+        repetition_ratio = repetition_count / max(1, len(fingerprints))
         
         if repetition_ratio > 0.6 and len(fingerprints) > 5:
             self.drift_score = 0.8
@@ -106,7 +106,7 @@ class DriftMonitor:
         
         headers = sum(1 for line in script_lines if line.strip().upper().startswith(("INT.", "EXT.")))
         
-        ratio_headers = headers / len(script_lines)
+        ratio_headers = headers / max(1, len(script_lines))
         
         if headers == 0:
             print("[Warning] Risk R-01: Domain Drift. No Scene Headings detected.")

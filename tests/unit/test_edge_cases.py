@@ -26,15 +26,14 @@ class TestEdgeCases(unittest.TestCase):
 
     # ── Empty / trivial inputs ────────────────────────────────────────
     def test_empty_string(self):
-        """Empty script does not crash and returns valid structure."""
-        result = run_pipeline("")
-        self.assertIsInstance(result, dict)
-        self.assertIn('total_scenes', result)
+        """Empty script raises ValueError."""
+        with self.assertRaises(ValueError):
+            run_pipeline("")
 
     def test_whitespace_only(self):
-        """Whitespace-only input does not crash."""
-        result = run_pipeline("   \n\n\t\n   ")
-        self.assertIsInstance(result, dict)
+        """Whitespace-only input raises ValueError."""
+        with self.assertRaises(ValueError):
+            run_pipeline("   \n\n\t\n   ")
 
     def test_single_scene_heading(self):
         """Single scene heading returns at least 1 scene."""
