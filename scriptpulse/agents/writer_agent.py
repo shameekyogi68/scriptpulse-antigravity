@@ -76,14 +76,15 @@ class WriterAgent:
         new_diagnostics.extend(self._diagnose_neglected_characters(trace))
         new_diagnostics.extend(self._diagnose_nonlinear_structure(trace))
         new_diagnostics.extend(self._diagnose_theme_coherence(trace))
+        new_diagnostics.extend(self._diagnose_action_peaks(trace))
         
         # Elite Rule 2: Moral Paradox (The 'Tragic Alpha' Signature)
         arc_data = self._build_character_arcs(trace)
         for char, data in arc_data.items():
-            if data['arc_type'] == "Moral Descent 🩸":
-                new_diagnostics.append(f"🌗 **Moral Paradox ({char})**: Character achieves ultimate power (+{data['agency_delta']} agency) but collapses morally ({data['moral_journey']} sentiment). Masterclass structural ambiguity.")
-            elif data['transformation_depth'] > 0.6:
-                new_diagnostics.append(f"🌔 **Deep Transformation ({char})**: A massive journey across {round(data['transformation_depth']*100)}% of the agency spectrum. Highly immersive development.")
+            if data['arc_type'] == "Corrupted Victor 🩸":
+                new_diagnostics.append(f"🌗 **Moral Paradox ({char})**: Character achieves ultimate power (+{data['agency_delta']} agency) but collapses morally ({data['moral_delta']} sentiment). Masterclass structural ambiguity.")
+            elif data.get('agency_delta', 0) > 0.4:
+                new_diagnostics.append(f"🌔 **Deep Transformation ({char})**: A massive journey of agency shift (+{data['agency_delta']}). Highly immersive development.")
         
         # Determine unique items and sort EVERYTHING for absolute score determinism
         # This ensures the penalty calculation always sees the exact same input order.
@@ -114,6 +115,11 @@ class WriterAgent:
         pti_result = self._calculate_page_turner_index(trace)
         dashboard['page_turner_index'] = pti_result['index']
         dashboard['tension_signature'] = pti_result['signature']
+        dashboard['tension_metrics'] = {
+            'baseline': pti_result['baseline_tension'],
+            'spike_frequency': pti_result['peaks_per_act'],
+            'valley_depth': pti_result['valley_depth']
+        }
         
         # Market Readiness (Task 5)
         dashboard['market_readiness'] = self._calculate_market_readiness(dashboard)
@@ -550,115 +556,97 @@ class WriterAgent:
             for char, data in s.get('character_scene_vectors', {}).items():
                 if char not in char_timeline:
                     char_timeline[char] = []
+                
+                # Rule 4: Extract the raw signals
                 char_timeline[char].append({
                     'scene': s['scene_index'],
+                    'decisions': data.get('decisions', 0),
+                    'initiations': data.get('initiations', 0),
+                    'commands': data.get('commands', 0),
+                    'consequences': data.get('consequences', 0),
+                    'presence_ratio': data.get('presence_ratio', 0.0),
                     'sentiment': data.get('sentiment', 0.0),
-                    'agency': data.get('agency', 0.0),
-                    'lines': data.get('line_count', 0),
-                    'resolved': s.get('narrative_closure', False) # Track if the scene resolved them
+                    'moral_sentiment': data.get('moral_sentiment', 0.0),
+                    'resolved': s.get('narrative_closure', False)
                 })
 
         arc_summary = {}
         total_scenes = max([s.get('scene_index', 0) for s in trace]) if trace else 100
         
         for char, timeline in sorted(char_timeline.items()):
-            if len(timeline) < 3:
-                continue  # Need at least 3 appearances to track an arc
+            if len(timeline) < 2: continue # Ignore background noise
 
-            total_lines = sum(t['lines'] for t in timeline)
-            if total_lines < 8:
-                continue  # Ignore minor characters
-
-            start = timeline[0]
-            end = timeline[-1]
-            sentiment_delta = round(end['sentiment'] - start['sentiment'], 3)
-            agency_delta = round(end['agency'] - start['agency'], 3)
-
-            # High Fidelity Resolution Logic
-            # (New logic: must be before final 10% of script to be an 'Exit')
-            is_near_end = end.get('scene', 0) > (total_scenes * 0.9)
-            has_resolved_signal = timeline[-1].get('resolved', False) or (len(timeline) > 1 and timeline[-2].get('resolved', False))
-
-            # Elite Rule 3: Transformation Absolute Depth
-            # Michael Corleone: 0.1 (Outsider) -> 0.9 (Don) is a 0.8 depth journey.
-            # We track the max span between any two points in the timeline.
-            all_agencies = [t['agency'] for t in timeline]
-            max_depth = round(max(all_agencies) - min(all_agencies), 3) if all_agencies else 0
+            # Rule 4: Agency Scoring (Deterministic)
+            # 1. Decision Density (+4% per choice)
+            total_decisions = sum(t['decisions'] for t in timeline)
+            decision_bonus = total_decisions * 0.04
             
-            # Elite Rule 2: Plot Success vs Moral Well-being
-            # The protagonist often starts with high moral well-being but low outward success,
-            # or vice-versa. We track the divergence to identify tragic vs heroic trajectories.
-            moral_start = start['sentiment']
-            moral_end = end['sentiment']
-            moral_delta = round(moral_end - moral_start, 3)
+            # 2. Initiation Ratio (Initiators vs Reactors)
+            total_initiations = sum(t['initiations'] for t in timeline)
+            init_ratio = total_initiations / len(timeline)
+            
+            # 3. Command Language (+0.5% net)
+            total_commands = sum(t['commands'] for t in timeline)
+            command_bonus = total_commands * 0.005
+            
+            # 4. Presence Score (Vocal/Physical Coverage)
+            avg_presence = statistics.mean([t['presence_ratio'] for t in timeline])
+            
+            # 5. Consequence Weight (+3% per consequence)
+            total_consequences = sum(t['consequences'] for t in timeline)
+            consequence_bonus = total_consequences * 0.03
+            
+            # Final Normalized Agency
+            # Base logic: Presence forms the floor, bonuses add the 'Protagonist' quality
+            final_agency = avg_presence + decision_bonus + (init_ratio * 0.2) + command_bonus + consequence_bonus
+            final_agency = round(min(1.0, max(0.0, final_agency)), 3)
 
-            # Dimension 1: Power Trajectory (Agency Delta)
-            power_traj = "stable"
-            if agency_delta > 0.15: power_traj = "UP"
-            elif agency_delta < -0.15: power_traj = "DOWN"
+            # Act 1 vs Act 3 Comparison (Rule 4)
+            # Find timeline indices in first 25% and last 25% of script
+            act1_window = [t for t in timeline if t['scene'] <= total_scenes * 0.25]
+            act3_window = [t for t in timeline if t['scene'] >= total_scenes * 0.75]
             
-            # Dimension 2: Moral Trajectory (Moral Delta)
-            moral_traj = "stable"
-            if moral_delta > 0.15: moral_traj = "UP"
-            elif moral_delta < -0.15: moral_traj = "DOWN"
-            
-            # Dimension 3: Agency Score (Current End Level)
-            abs_agency = end['agency']
-            agency_level = "Medium"
-            if abs_agency < 0.5: agency_level = "Low"
-            elif abs_agency > 0.7: agency_level = "High"
+            # Use middle of act window for delta calculation if multiple scenes
+            start_agency = act1_window[0]['presence_ratio'] if act1_window else (timeline[0]['presence_ratio'] if timeline else 0)
+            end_agency = final_agency # The cumulative whole
+
+            # Trajectories
+            agency_delta = round(end_agency - start_agency, 3)
+            moral_delta = round(timeline[-1]['moral_sentiment'] - timeline[0]['moral_sentiment'], 3)
 
             # Arc Classification (Rule 7)
+            # High Fidelity Labels
+            power_traj = "UP" if agency_delta > 0.1 else ("DOWN" if agency_delta < -0.1 else "stable")
+            moral_traj = "UP" if moral_delta > 0.1 else ("DOWN" if moral_delta < -0.1 else "stable")
+            
             arc_label = "Character Evolution"
             arc_note = "A standard narrative trajectory based on agency and moral shift."
             
-            if power_traj == "UP" and moral_traj == "DOWN" and agency_level == "High":
+            if power_traj == "UP" and moral_traj == "DOWN" and final_agency > 0.6:
                 arc_label = "Corrupted Victor 🩸"
                 arc_note = "Character achieves ultimate plot success but suffers total moral collapse. A 'tragic victory' signature."
-            elif power_traj == "DOWN" and moral_traj == "stable" and agency_level == "Low":
+            elif power_traj == "DOWN" and moral_traj == "stable" and final_agency < 0.4:
                 arc_label = "Tragic Decline 📉"
-                arc_note = "A significant loss of power and status while maintaining moral consistency. A fall from grace."
-            elif power_traj == "stable" and moral_traj == "stable":
-                if agency_level == "High":
-                    arc_label = "Steadfast Pillar 🛡️"
-                    arc_note = "Character remains an unwavering core of the story, maintaining high agency and constant morality."
-                elif agency_level == "Medium":
-                    arc_label = "Supportive Anchor ⚓"
-                    arc_note = "A reliable secondary presence that maintains stability throughout the narrative."
+                arc_note = "Significant loss of power while maintaining moral consistency. A classic fall from grace."
             elif power_traj == "UP" and moral_traj == "UP":
                 arc_label = "Heroic Transformation 🌔"
                 arc_note = "Character rises in both influence and moral character. A classic heroic journey."
-            elif power_traj == "DOWN" and moral_traj == "UP" and agency_level == "Low":
+            elif power_traj == "DOWN" and moral_traj == "UP" and final_agency < 0.4:
                 arc_label = "Redemptive Fall ✨"
                 arc_note = "Character loses worldly power but achieves moral or spiritual redemption."
-            elif power_traj == "UP" and moral_traj == "stable" and agency_level == "High":
-                arc_label = "Pragmatic Ascent ⛰️"
-                arc_note = "Character gains significant influence without a major moral shift (either upwards or downwards)."
-
-            # Dominance Qualifiers: Check if we already have this label with significant agency difference
-            curr_agency = end.get('agency', 0.5)
-            for existing_char, existing_data in arc_summary.items():
-                if existing_data.get('arc_type') == arc_label:
-                    other_agency = existing_data.get('agency_score', 0.5)
-                    if abs(curr_agency - other_agency) > 0.2:
-                        # Append qualifiers if agency diff > 20 points
-                        if curr_agency > other_agency:
-                            arc_label = f"Dominant {arc_label}"
-                            existing_data['arc_type'] = f"Passive {existing_data['arc_type']}"
-                        else:
-                            arc_label = f"Passive {arc_label}"
-                            existing_data['arc_type'] = f"Dominant {existing_data['arc_type']}"
+            elif power_traj == "stable" and final_agency > 0.7:
+                arc_label = "Steadfast Pillar 🛡️"
+                arc_note = "Character is a core stable presence with consistently high agency."
 
             arc_summary[char] = {
                 'arc_type': arc_label,
                 'note': arc_note,
-                'agency_score': curr_agency,
+                'agency_score': final_agency,
                 'agency_delta': agency_delta,
-                'moral_journey': moral_delta,
-                'transformation_depth': max_depth,
-                'scenes_present': len(timeline)
+                'moral_delta': moral_delta,
+                'decision_density': total_decisions / len(timeline)
             }
-
+        
         return arc_summary
 
     def _perform_elite_thematic_analysis(self, trace):
@@ -1259,16 +1247,16 @@ class WriterAgent:
 
     def _build_runtime_estimate(self, trace, genre):
         """
-        Sum runtime contributions from all scenes to estimate total script runtime.
-        Compare against genre benchmarks and flag if out of range.
+        Rule 1: Deterministic Runtime calculation (total scene count × average scene length).
         """
         total_seconds = sum(s.get('runtime_contribution', {}).get('estimated_seconds', 0) for s in trace)
+        avg_seconds = total_seconds / max(1, len(trace))
         total_minutes = round(total_seconds / 60, 1)
 
         benchmarks = {
             'feature': (85, 130), 
-            'drama': (90, 150),       # Expanded for prestige drama
-            'crime drama': (100, 180), # Epic crime dramas like The Godfather
+            'drama': (90, 150),
+            'crime drama': (100, 180),
             'comedy': (85, 110),
             'thriller': (90, 130), 
             'horror': (80, 105), 
@@ -1278,27 +1266,28 @@ class WriterAgent:
             'general': (85, 130),
             'avant-garde': (70, 100) 
         }
-        low, high = benchmarks.get(genre.lower(), (85, 125))
-
+        
+        low, high = benchmarks.get(genre.lower(), benchmarks['general'])
+        
         if total_minutes < low:
-            status = f"Under — {total_minutes} min (target: {low}–{high} min for {genre}). Script may be too short."
+            status = f"Under — {total_minutes} min (target: {low}–{high} min for {genre})."
         elif total_minutes > high:
-            status = f"Over — {total_minutes} min (target: {low}–{high} min for {genre}). Script may be too long."
+            status = f"Over — {total_minutes} min (target: {low}–{high} min for {genre})."
         else:
             status = f"On Target — {total_minutes} min (target: {low}–{high} min for {genre})."
 
         return {
             'estimated_minutes': total_minutes,
-            'estimated_seconds': round(total_seconds),
-            'genre_target_min': low,
-            'genre_target_max': high,
+            'avg_scene_length_seconds': round(avg_seconds, 1),
+            'scene_count': len(trace),
+            'calculation': f"({len(trace)} scenes × {round(avg_seconds, 1)}s avg)",
+            'benchmark': f"{low}–{high} min",
             'status': status
         }
 
     def _build_location_profile(self, trace):
         """
-        Aggregate unique locations and INT/EXT balance across the script (Rule 6).
-        Warn if location count exceeds threshold for detected budget tier.
+        Rule 1: Deterministic Location count (unique location names only).
         """
         location_counts = {}
         int_count = 0
@@ -1306,19 +1295,20 @@ class WriterAgent:
 
         for s in trace:
             loc_data = s.get('location_data', {})
-            loc = loc_data.get('location', 'UNKNOWN')
-            interior = loc_data.get('interior')
+            # Normalized location name for deduplication (Rule 1)
+            loc = loc_data.get('location', 'UNKNOWN').strip().upper()
+            interior = loc_data.get('interior', '').strip().upper()
 
-            location_counts[loc] = location_counts.get(loc, 0) + 1
-            if interior == 'INT': int_count += 1
-            elif interior == 'EXT': ext_count += 1
+            if loc and loc != 'UNKNOWN':
+                location_counts[loc] = location_counts.get(loc, 0) + 1
+            
+            if 'INT' in interior: int_count += 1
+            elif 'EXT' in interior: ext_count += 1
 
         total = max(1, len(trace))
         sorted_locs = sorted(location_counts.items(), key=lambda x: x[1], reverse=True)
-        top_loc, top_count = sorted_locs[0] if sorted_locs else ('UNKNOWN', 0)
-        top_ratio = top_count / total
         unique_count = len(sorted_locs)
-
+        
         # Rule 6 thresholds (Budget-Aware Location Guard)
         budget = self.context.get('budget_tier', 'indie').lower()
         thresholds = {
@@ -1807,6 +1797,25 @@ class WriterAgent:
             'volatility': round(avg_jump, 2)
         }
 
+    def _diagnose_action_peaks(self, trace):
+        """Rule 6: Action Peak Detection (High-Fidelity Intersection)."""
+        peaks = []
+        for s in trace:
+            if s.get('is_action_peak', False):
+                ref = self._format_scene_ref(s['scene_index'])
+                # Variety: Different thematic provocations (Rule 6 Variety)
+                narrative_context = s.get('representative_action', '').lower()
+                
+                if 'kill' in narrative_context or 'shot' in narrative_context:
+                    provocation = "The physicality of the violence here must not obscure the thematic decision being made."
+                elif 'run' in narrative_context or 'chase' in narrative_context:
+                    provocation = "Kinetic urgency is high — ensure the visual geography of the space is clear to maintain tension."
+                else:
+                    provocation = "This intersection of stakes and physicality represents a key dramatic pivot."
+                
+                peaks.append(f"⚡ **Action Peak ({ref})**: {provocation}")
+        return peaks[:3] # Limit to top 3 peaks for clarity
+    
     def _diagnose_writing_texture(self, trace):
         """Identifies if the script is 'Cinematic' (lean) or 'Novelistic' (dense)."""
         action_densities = [s.get('visual_abstraction', {}).get('action_lines', 0) for s in trace]
@@ -2129,7 +2138,7 @@ class WriterAgent:
         
         final = max(0, min(100, round(raw - health_penalty)))
         
-        # Universal Rule 4: Master Score Floor Logic
+        # Rule 9: Score Performance Floor (Task 2)
         # If Top 3 sub-scores (Market, PTI, Risk) are all high-performing (90+),
         # the final score cannot be more than 5 pts below their average.
         top_3_avg = (mr + pti + (100 - risk)) / 3

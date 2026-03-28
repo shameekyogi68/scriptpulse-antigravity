@@ -313,191 +313,120 @@ class EncodingAgent:
         text = " ".join([l['text'] for l in lines]).lower()
         vocab = set(re.findall(r'\b\w+\b', text))
         
-        # 1. Real Cognitive Stakes Detection (ML or Advanced Heuristics)
-        dominant = 'Physical'
-        scores = {}
-        confidence = 0.65 # Base heuristic confidence
+        # 1. Real Cognitive Stakes Detection (Rule 6 Signals)
+        physical_signals = ['hit', 'run', 'shoot', 'gun', 'blood', 'fight', 'attack', 'explosion', 'crash', 'chase']
+        tension_signals = ['hurry', 'quick', 'fast', 'now', 'stop', 'wait', 'listen', 'look out', 'hide']
+        stakes_signals = ['die', 'dead', 'kill', 'lose', 'end', 'forever', 'life', 'death', 'grave', 'murder']
         
+        has_physical = any(w in text for w in physical_signals)
+        # Tension check: look for urgency markers and short fragmented syntax (mean len < 5)
+        sent_lengths = [len(s.split()) for s in re.split(r'[.!?]', text) if s.strip()]
+        avg_sent_len = statistics.mean(sent_lengths) if sent_lengths else 10
+        has_tension = any(w in text for w in tension_signals) or avg_sent_len < 6
+        has_stakes = any(w in text for w in stakes_signals)
+        
+        is_action_peak = has_physical and has_tension and has_stakes
+        
+        # Stakes Taxonomy (Rule 6)
+        dominant = 'Physical' # Default
+        scores = {}
         if self.classifier and len(text.split()) > 10:
             try:
                 res = self.classifier(text[:1024], self.stakes_labels)
                 label_map = {'Physical Survival': 'Physical', 'Emotional Connection': 'Emotional', 'Social Status': 'Social', 'Moral Dilemma': 'Moral', 'Existential Dread': 'Existential'}
                 scores = {label_map[k]: v for k, v in zip(res['labels'], res['scores'])}
                 dominant = label_map[res['labels'][0]]
-                confidence = 0.92 # ML-backed confidence
-            except:
-                pass
-        
-        if not scores: # Fallback
-            stakes_map = {
-                'Physical': ['kill', 'blood', 'gun', 'fight', 'run', 'dead', 'attack', 'hide'],
-                'Emotional': ['love', 'cry', 'heart', 'fear', 'happy', 'sad', 'forgive', 'hate'],
-                'Social': ['reputation', 'friend', 'betray', 'secret', 'status', 'boss', 'fired', 'party'],
-                'Moral': ['right', 'wrong', 'lie', 'truth', 'guilt', 'confess', 'promise', 'swear'],
-                'Existential': ['meaning', 'exist', 'god', 'death', 'soul', 'purpose', 'destiny']
-            }
-            raw_scores = {k: sum(text.count(w) for w in v) for k, v in stakes_map.items()}
-            dominant = max(raw_scores, key=raw_scores.get) if any(raw_scores.values()) else 'Social'
-            total_raw = sum(raw_scores.values()) or 1
-            scores = {k: v/total_raw for k, v in raw_scores.items()}
-        
-        # 2. Character Arcs (Per-scene vectors based on context, not just word count)
+            except: pass
+            
+        # 2. Character Agency Metrics (Rule 4)
         arcs = {}
         char_texts = {}
-        # Core 'Elite' Proactive Lexicon (Rule 3: Commands and Vetoes)
-        proactive_lexicon = {'go', 'do', 'will', 'must', 'shall', 'stop', 'done', 'kill', 'give', 'take', 'enough', 'order', 'clear', 'business', 'family', 'offer', 'refuse', 'understand', 'settle'}
-        corruption_lexicon = {'lie', 'blood', 'dead', 'money', 'kill', 'murder', 'sin', 'guilt', 'soul', 'darkness', 'betrayal', 'alone', 'cold'}
+        # Decision Lexicon: Active choices
+        decision_lexicon = {"i will", "i must", "i shall", "i'm going to", "we will", "we must", "i'm choosing", "i've decided"}
+        command_lexicon = {'stop', 'go', 'give', 'take', 'do it', 'enough', 'listen', 'look', 'stay'}
+        consequence_lexicon = {'because of you', 'your fault', 'you did this', 'you caused', 'result of', 'consequence'}
 
-        total_lines = max(1, len([l for l in lines if l['tag'] == 'D']))
-        
-        # Track previous speaker for 'Brevity/Veto' detection
-        prev_speaker_lines = 0
-        curr_speaker = None
-
+        # Track first actor/speaker for Initiation Ratio
+        first_char = None
         for l in lines:
-            if l['tag'] == 'C': 
-                name = normalize_character_name(l['text'])
-                if name: curr_speaker = name
-                else: curr_speaker = None
-                prev_speaker_lines = 0
-            elif l['tag'] == 'D' and curr_speaker:
-                if curr_speaker not in arcs: arcs[curr_speaker] = {'sentiment': 0.0, 'moral_sentiment': 0.0, 'agency': 0.0, 'line_count': 0}
-                if curr_speaker not in char_texts: char_texts[curr_speaker] = []
-                
-                char_texts[curr_speaker].append(l['text'])
-                arcs[curr_speaker]['line_count'] += 1
-                dial_text = l['text'].lower()
-                dial_words = set(re.findall(r'\b\w+\b', dial_text))
-                
-                # Rule 1: Oxygen Score (Vocal Dominance)
-                # Participation is the base layer of agency. If you speak, you are present.
-                participation_weight = 0.15 
-                
-                # Rule 2: Tactical Brevity (The 'Command' Veto)
-                # If a character speaks a very short line (<5 words) after someone else spoke at length, 
-                # or if it's a command/capstone line, it carries massive agency.
-                is_command = ('!' in dial_text or dial_text.isupper()) and len(dial_words) < 8
-                is_veto = len(dial_words) < 5 and any(w in dial_words for w in ['no', 'stop', 'enough', 'dead', 'settled', 'done', 'clear'])
-                
-                proactive_count = len(dial_words.intersection(proactive_lexicon))
-                corruption_count = len(dial_words.intersection(corruption_lexicon))
-                
-                agency_inc = participation_weight
-                if is_command: agency_inc += 0.4
-                if is_veto: agency_inc += 0.6
-                agency_inc += (proactive_count * 0.3)
-                
-                # Rule 3: Passive Penalties
-                if any(w in dial_text for w in ['maybe', 'sorry', 'i think', 'perhaps', 'suppose', 'guess']):
-                    agency_inc -= 0.2
-                
-                arcs[curr_speaker]['agency'] += agency_inc
-                
-                # Moral vs Tactical Sentiment
-                # Positive/Negative based on standard cues for plot
-                plot_inc = 0.1 if 'yes' in dial_text or 'good' in dial_text else (-0.1 if 'no' in dial_text or 'stop' in dial_text else 0)
-                arcs[curr_speaker]['sentiment'] += plot_inc
-                
-                # Moral weight: Corruption keywords pull the moral score DOWN even if plot sentiment is high
-                moral_inc = (proactive_count * 0.05) - (corruption_count * 0.2)
-                arcs[curr_speaker]['moral_sentiment'] += moral_inc
-
-        # Final Normalization
-        for c in arcs:
-            # Oxygen Score Factor: % of lines in scene
-            oxygen_ratio = arcs[c]['line_count'] / total_lines
-            
-            # Final Agency: (Vocal Real Estate * 0.4) + (Tactical Quality * 0.6)
-            raw_qual = arcs[c]['agency'] / max(1, arcs[c]['line_count'])
-            final_agency = (oxygen_ratio * 0.5) + (raw_qual * 0.5)
-            
-            arcs[c]['agency'] = round(min(1.0, final_agency), 3)
-            # Sentiment is weighted by average feel
-            arcs[c]['sentiment'] = round(max(-1.0, min(1.0, arcs[c]['sentiment'] / max(1, arcs[c]['line_count']))), 3)
-            # Moral Sentiment is often the delta between plot success and soul health
-            arcs[c]['moral_journey'] = round(max(-1.0, min(1.0, arcs[c]['moral_sentiment'] / max(1, arcs[c]['line_count']))), 3)
-            
-            # Phase 32: Enhanced Voice Metrics
-            char_text = " ".join(char_texts.get(c, []))
-            c_words = char_text.split()
-            arcs[c]['words_per_turn'] = round(len(c_words) / max(1, arcs[c]['line_count']), 2)
-            
-            # Register Detection
-            if len(c_words) > 0:
-                formal_words = {'furthermore', 'nevertheless', 'consequently', 'therefore', 'shall', 'whom', 'indeed', 'perhaps', 'ascertain', 'observe'}
-                street_words = {'yo', 'aint', 'gonna', 'wanna', 'yeah', 'man', 'hey', 'listen', 'look', 'get', 'got', 'shit', 'fuck', 'hell'}
-                
-                f_count = sum(1 for w in c_words if w.lower().strip(',.?!') in formal_words)
-                s_count = sum(1 for w in c_words if w.lower().strip(',.?!') in street_words)
-                
-                if f_count > s_count and f_count > 0: arcs[c]['register'] = 'formal'
-                elif s_count > f_count and s_count > 0: arcs[c]['register'] = 'street'
-                elif len(c_words) / max(1, arcs[c]['line_count']) < 5: arcs[c]['register'] = 'clipped'
-                else: arcs[c]['register'] = 'neutral'
-            else:
-                arcs[c]['register'] = 'neutral'
-                arcs[c]['words_per_turn'] = 0
+            if l['tag'] == 'C':
+                first_char = normalize_character_name(l['text'])
+                break
         
-        # 3. Masterclass Diagnostics (Smart Heuristics using structural context)
+        for l in lines:
+            if l['tag'] == 'C':
+                name = normalize_character_name(l['text'])
+                if name:
+                    if name not in arcs:
+                        arcs[name] = {
+                            'decisions': 0, 'initiations': 0, 'commands': 0, 
+                            'consequences': 0, 'line_count': 0, 'agency': 0.0,
+                            'sentiment': 0.0, 'moral_sentiment': 0.0
+                        }
+                        if name not in char_texts: char_texts[name] = []
+                    
+                    if name == first_char: arcs[name]['initiations'] += 1
+                    
+            elif l['tag'] == 'D' and name:
+                dial_text = l['text'].lower()
+                arcs[name]['line_count'] += 1
+                char_texts[name].append(l['text'])
+                
+                # Signal 1: Decisions (+4% each weighted here for writer agent to sum)
+                if any(phrase in dial_text for phrase in decision_lexicon):
+                    arcs[name]['decisions'] += 1
+                
+                # Signal 3: Command Language (+0.5% net weighted here)
+                if any(w in dial_text.split() for w in command_lexicon):
+                    arcs[name]['commands'] += 1
+                
+                # Signal 5: Consequence Weight (+3% each)
+                if any(phrase in dial_text for phrase in consequence_lexicon):
+                    arcs[name]['consequences'] += 1
+                
+                # Moral Cues (Rule 5)
+                if any(w in dial_text for w in ['honesty', 'truth', 'help', 'save', 'right']):
+                    arcs[name]['moral_sentiment'] += 0.2
+                if any(w in dial_text for w in ['lie', 'kill', 'betray', 'steal', 'wrong', 'guilt']):
+                    arcs[name]['moral_sentiment'] -= 0.3
+
+        # Normalization of scene-level vectors
+        for c in arcs:
+            total_lines = len([l for l in lines if l['tag'] == 'D'])
+            arcs[c]['presence_ratio'] = arcs[c]['line_count'] / max(1, total_lines)
+            # Rule 4: sum signals will happen in WriterAgent
+            
+        # 3. Masterclass Diagnostics (Rule 7, 11)
         d_lines = [l['text'].lower() for l in lines if l['tag'] == 'D']
         a_lines = [l['text'].lower() for l in lines if l['tag'] == 'A']
         
-        # On-the-Nose: Direct emotion stating in dialogue
-        otn_phrases = ['i feel', 'i am feeling', 'i am very angry', 'i am so sad', 'i am depressed', 'i hate you so much', 'i am terrified', 'i love you so much', 'i am so mad']
+        # On-the-Nose (Rule 7)
+        otn_phrases = ['i feel', 'i am feeling', 'i am very angry', 'i am so sad', 'i am depressed', 'i hate you so much']
         otn_hits = sum(1 for d in d_lines if any(p in d for p in otn_phrases))
+        # Rule 7 Checks (Placeholders for semantic reasoning)
+        otn_meta = {
+            'contradiction_check': False, 
+            'irony_check': False, 
+            'tactical_check': False
+        }
         
-        # Shoe-Leather: Pleasantries in the VERY FIRST few dialogue lines of a scene
-        shoe_leather_phrases = ['hello', 'hi ', 'hey ', 'good morning', 'how are you', 'how have you been', 'nice to see you', 'good afternoon', 'whats up', 'what is up']
-        has_shoe_leather = False
-        if len(d_lines) > 0:
-            first_few = " ".join(d_lines[:3])
-            has_shoe_leather = any(p in first_few for p in shoe_leather_phrases)
-            
-        # Tell vs Show: Internal emotional states described in Action lines (which can't be filmed easily)
-        emotion_adjectives = ['angry', 'sad', 'happy', 'depressed', 'terrified', 'furious', 'devastated', 'upset', 'jealous', 'nervous', 'anxious']
-        tvs_hits = 0
-        for a in a_lines:
-            for em in emotion_adjectives:
-                if f" is {em}" in a or f" feels {em}" in a or f" seems {em}" in a or f" looks {em}" in a:
-                    tvs_hits += 1
-
-        # Purpose Detection: Based on action vs dialogue vs vocabulary novelty
         purpose = 'Transition'
-        if len(a_lines) > len(d_lines) * 2 and len(a_lines) > 5:
-            purpose = 'Escalation / Action'
-        elif any(w in text for w in ['realize', 'discover', 'reveal', 'finds', 'truth']):
-            purpose = 'Revelation / Discovery'
-        elif len(d_lines) > 10:
-            purpose = 'Negotiation / Conflict'
-
-        # Heuristic for narrative closure/death events
-        scene_has_death = any(w in text.lower() for w in ['dies', 'dead', 'killed', 'murder', 'shot', 'grave'])
-
-        # Representative Pulls for summary memory
-        rep_dialogue = d_lines[len(d_lines)//2] if d_lines else ""
-        rep_action = a_lines[0] if a_lines else ""
+        if is_action_peak: purpose = 'Action Peak / Climax'
+        elif len(d_lines) > 10: purpose = 'Negotiation / Dialogue'
+        
+        scene_has_death = any(w in text.lower() for w in ['dies', 'dead', 'killed', 'murder', 'shot'])
 
         return {
-            'stakes': {'dominant': dominant, 'breakdown': {k: round(v, 2) for k,v in scores.items()}},
-            'payoff': {'payoff_density': round(sum(scores.values()) / max(1, len(lines)), 2)},
+            'is_action_peak': is_action_peak,
+            'stakes': {'dominant': dominant, 'breakdown': scores},
             'on_the_nose': {
-                'on_the_nose_ratio': round(otn_hits / max(1, len(d_lines)), 3),
-                'hit_count': otn_hits
+                'hits': otn_hits,
+                'valid_flags': otn_hits > 0 and not any(otn_meta.values())
             },
-            'shoe_leather': {
-                'has_shoe_leather': has_shoe_leather,
-                'scene_start_filler': 3 if has_shoe_leather else 0 # Placeholder for UI
-            },
-            'tell_vs_show': {'tell_ratio': min(1.0, tvs_hits / max(1, len(a_lines))), 'literal_emotions': tvs_hits},
-            'purpose': {'purpose': purpose},
             'character_scene_vectors': arcs,
-            'narrative_closure': scene_has_death,  # Inform the downstream agent if characters might be 'resolved' here
-            'representative_dialogue': rep_dialogue, # Used by writer agent for pulls
-            'representative_action': rep_action,
-            'scene_vocabulary': list(vocab),
-            'research_telemetry': {
-                'analytical_confidence': confidence,
-                'semantic_density': len(vocab) / max(1, len(text.split())),
-                'heuristic_fallback': confidence < 0.8
-            }
+            'purpose': {'purpose': purpose},
+            'narrative_closure': scene_has_death,
+            'representative_dialogue': d_lines[len(d_lines)//2] if d_lines else "",
+            'representative_action': a_lines[0] if a_lines else "",
+            'scene_vocabulary': list(vocab)
         }
