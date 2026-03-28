@@ -456,12 +456,12 @@ class EncodingAgent:
             arcs[c]['positivity'] = round(arcs[c]['positivity'] / n, 2)
             arcs[c]['punctuation_rate'] = round(arcs[c]['punctuation_rate'] / n, 3)
 
-        # Scene-level Efficiency/Diagnostics
+        # 4. Scene-level Efficiency/Diagnostics
         n_lines = len([l for l in lines if l['tag'] in ['D', 'A']])
         economy_score = min(100, (sum(1 for l in lines if l['tag'] == 'D') * 5 + sum(1 for l in lines if l['tag'] == 'A') * 3))
         economy_label = 'High Economy' if economy_score < 40 else 'Moderate Economy' if economy_score < 75 else 'Low Economy'
         
-        # Opening Hook Detection (Rule based for Scene 0 only)
+        # 5. Opening Hook Detection (Rule based for Scene 0 only)
         hook_label = 'Indeterminate'
         lines_before = 0
         if lines:
@@ -470,7 +470,40 @@ class EncodingAgent:
                     hook_label = 'Strong Hook'
                     lines_before = i
                     break
+
+        # 6. Masterclass Diagnostics (Smart Heuristics using structural context)
+        d_lines = [l['text'].lower() for l in lines if l['tag'] == 'D']
+        a_lines = [l['text'].lower() for l in lines if l['tag'] == 'A']
+        all_text = " ".join([l['text'] for l in lines]).lower()
         
+        # On-the-Nose: Direct emotion stating in dialogue
+        otn_phrases = ['i feel', 'i am feeling', 'i am very angry', 'i am so sad', 'i am depressed', 'i hate you so much', 'i am terrified', 'i love you so much', 'i am so mad']
+        otn_hits = sum(1 for d in d_lines if any(p in d for p in otn_phrases))
+        
+        # Shoe-Leather: Pleasantries in the VERY FIRST few dialogue lines of a scene
+        shoe_leather_phrases = ['hello', 'hi ', 'hey ', 'good morning', 'how are you', 'how have you been', 'nice to see you', 'good afternoon', 'whats up', 'what is up']
+        has_shoe_leather = False
+        if len(d_lines) > 0:
+            first_few = " ".join(d_lines[:3])
+            has_shoe_leather = any(p in first_few for p in shoe_leather_phrases)
+            
+        # Tell vs Show: Internal emotional states described in Action lines
+        emotion_adjectives = ['angry', 'sad', 'happy', 'depressed', 'terrified', 'furious', 'devastated', 'upset', 'jealous', 'nervous', 'anxious']
+        tvs_hits = 0
+        for a in a_lines:
+            for em in emotion_adjectives:
+                if f" is {em}" in a or f" feels {em}" in a or f" seems {em}" in a or f" looks {em}" in a:
+                    tvs_hits += 1
+
+        # Purpose Detection: Based on action vs dialogue vs vocabulary novelty
+        purpose = 'Transition'
+        if len(a_lines) > len(d_lines) * 2 and len(a_lines) > 5:
+            purpose = 'Escalation / Action'
+        elif any(w in all_text for w in ['realize', 'discover', 'reveal', 'finds', 'truth']):
+            purpose = 'Revelation / Discovery'
+        elif len(d_lines) > 10:
+            purpose = 'Negotiation / Conflict'
+
         return {
             'character_scene_vectors': arcs,
             'stakes': {'dominant': dominant, 'breakdown': {k: round(v, 2) for k,v in scores.items()}},
@@ -480,20 +513,18 @@ class EncodingAgent:
             'passive_voice': {'passive_ratio': passive_count / max(1, n_lines), 'passive_count': passive_count, 'examples': passive_examples},
             'scene_economy': {'economy_label': economy_label, 'economy_score': economy_score},
             'opening_hook': {'hook_label': hook_label, 'lines_before_conflict': lines_before},
-            'purpose': {'purpose': purpose},
+            'scene_purpose': {'purpose': purpose},
             'on_the_nose': {
                 'on_the_nose_ratio': round(otn_hits / max(1, len(d_lines)), 3),
                 'hit_count': otn_hits
             },
             'shoe_leather': {
                 'has_shoe_leather': has_shoe_leather,
-                'scene_start_filler': 3 if has_shoe_leather else 0 # Placeholder for UI
+                'scene_start_filler': 3 if has_shoe_leather else 0
             },
             'tell_vs_show': {'tell_ratio': min(1.0, tvs_hits / max(1, len(a_lines))), 'literal_emotions': tvs_hits},
-            'purpose': {'purpose': purpose},
-            'character_scene_vectors': arcs,
-            'narrative_closure': scene_has_death,  # Inform the downstream agent if characters might be 'resolved' here
-            'representative_dialogue': rep_dialogue, # Used by writer agent for pulls
+            'narrative_closure': scene_has_death,
+            'representative_dialogue': rep_dialogue,
             'representative_action': rep_action,
             'scene_vocabulary': list(vocab),
             'research_telemetry': {
