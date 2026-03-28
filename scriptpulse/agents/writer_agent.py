@@ -99,6 +99,7 @@ class WriterAgent:
         # 2. Structural Dashboard with Arc Vectors + Scene Map
         dashboard = self._build_dashboard(trace, genre, final_output)
         dashboard['character_arcs'] = self._build_character_arcs(trace)
+        self.context['char_arcs'] = dashboard['character_arcs']
         dashboard['scene_purpose_map'] = self._build_scene_purpose_map(trace)
         dashboard['stakes_profile'] = self._build_stakes_profile(trace)
         dashboard['scene_turn_map'] = self._build_scene_turn_map(trace)
@@ -120,13 +121,16 @@ class WriterAgent:
         # Composite ScriptPulse Score (0-100) using the truly sorted diagnostics
         dashboard['scriptpulse_score'] = self._calculate_scriptpulse_score(dashboard, all_diagnostics)
         
-        # Inject into output (Removing prescriptive 'rewrite_priorities')
+        # Elite Thematic Layer
+        thematic_report = self._perform_elite_thematic_analysis(trace)
+        
+        # Inject into output
         final_output['writer_intelligence'] = {
             'narrative_diagnosis': all_diagnostics[:15],
             'structural_dashboard': dashboard,
             'narrative_summary': self._build_narrative_summary(trace, genre, all_diagnostics),
             'creative_provocations': self._generate_creative_provocations(all_diagnostics, genre),
-            'thematic_coherence': self.context.get('themes', {}),
+            'thematic_intelligence': thematic_report,
             'genre_context': genre,
             'script_era': script_era,
             'intended_format': intended_format,
@@ -655,6 +659,67 @@ class WriterAgent:
             }
 
         return arc_summary
+
+    def _perform_elite_thematic_analysis(self, trace):
+        """Rule 12: High-fidelity thematic analysis layer (Soul over Plot)."""
+        motif_results = self._analyze_thematic_coherence(trace)
+        if not motif_results:
+            return {"status": "Thematic density too low for high-fidelity extraction."}
+            
+        # 1. THEME DETECTION: Identify central question via top frequency
+        sorted_motifs = sorted(motif_results.items(), key=lambda x: sum(x[1]['act_frequency']), reverse=True)
+        top_motif = sorted_motifs[0][0]
+        
+        # Mapping motifs to core human nature questions
+        q_map = {
+            'Family/Loyalty': "What is the true price of absolute loyalty to one's own?",
+            'Power/The Cost': "Does the pursuit of power inevitably lead to the loss of self?",
+            'Morality/Corruption': "Can a moral center survive a world of compromise?",
+            'DEFAULT': "How do our choices under pressure define our final nature?"
+        }
+        central_question = q_map.get(top_motif, q_map['DEFAULT'])
+        
+        # 2. THEMATIC CONSISTENCY SCORE (0-100)
+        # avg_coherence (act distribution) + frequency density
+        avg_coh = statistics.mean([m['coherence'] for m in motif_results.values()])
+        density = min(1.0, sum(sum(m['act_frequency']) for m in motif_results.values()) / (len(trace) * 2.5))
+        consistency_score = int((avg_coh * 75) + (density * 25))
+        
+        # 3. THEMATIC PAYOFF (Evaluating the ending's answer)
+        delta = motif_results[top_motif]['migration_delta']
+        if abs(delta) > 0.4:
+            payoff = "Complete ✅ - Question answered with definitive dramatic change."
+        elif abs(delta) > 0.15:
+            payoff = "Partial 🌓 - Narrative closure reached but emotional ambiguity remains."
+        elif abs(delta) < 0.05 and any(motif_results[top_motif]['act_frequency']):
+            payoff = "Subverted/Open ☁️ - Intentional resistance to simple narrative payoff."
+        else:
+            payoff = "Unresolved ❓ - The script avoids a thematic conclusion."
+            
+        # 4. THEME VS PLOT TENSION (Named Explicitly)
+        all_arcs = self.context.get('char_arcs', {})
+        tension = "Reinforced (Symmetry between Plot outcome and Thematic statement)"
+        
+        if all_arcs:
+            protag = sorted(all_arcs.items(), key=lambda x: x[1].get('agency_score', 0), reverse=True)[0][0]
+            arc = all_arcs[protag]
+            
+            # If Plot represents material success (Agency UP) but Theme represents decay
+            if arc['agency_delta'] > 0.15 and delta < -0.2:
+                tension = "Pyrrhic Tension (The protagonist gains the world but loses the soul)"
+            elif arc['agency_delta'] < -0.15 and delta > 0.2:
+                tension = "Redemptive Tension (Plot failure enables thematic/moral growth)"
+            elif abs(arc['agency_delta'] < 0.1) and abs(delta) > 0.3:
+                tension = "Introspective Tension (Thematic transformation despite plot stasis)"
+
+        return {
+            'central_question': central_question,
+            'top_motif': top_motif,
+            'thematic_consistency_score': consistency_score,
+            'thematic_payoff': payoff,
+            'theme_vs_plot_tension': tension,
+            'motif_migration_details': motif_results
+        }
 
     def _analyze_thematic_coherence(self, trace):
         """Elite Rule 5: Detect thematic motifs (Power, Family, Corruption) and track their Sentiment Migration."""
