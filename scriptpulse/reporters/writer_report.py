@@ -86,12 +86,19 @@ def generate_writer_report(pipeline_output, title="Untitled Script", genre=None)
     # -------------------------------------------------------------------------
     analysis_date = pipeline_output.get('meta', {}).get('timestamp')
     if not analysis_date:
-        analysis_date = datetime.now().strftime('%B %d, %Y (%H:%M)')
+        analysis_date = datetime.now().strftime('%B % d, %Y (%H:%M)')
+        
+    era = wi.get('script_era', 'contemporary').upper()
+    fmt = wi.get('intended_format', 'spec').upper()
+    is_ref = wi.get('is_reference', False)
+    mode_str = "💎 MASTERWORK / REFERENCE MODE" if is_ref else "🛠️ PRESCRIPTIVE / DEVELOPMENT MODE"
         
     lines.append(f"# 🖋️ Script<span style='color: #0052FF;'>Pulse</span> Intelligence Report")
-    lines.append(f"**PROJECT:** `{title.upper()}`  ")
-    lines.append(f"**GENRE PROFILE:** `{genre.upper()}`  ")
-    lines.append(f"**ANALYSIS DATE:** {analysis_date}  ")
+    lines.append(f"**PROJECT:** `{title.upper()}`")
+    lines.append(f"**GENRE PROFILE:** `{genre.upper()}`")
+    lines.append(f"**SCRIPT ERA:** `{era}` | **FORMAT:** `{fmt}`")
+    lines.append(f"**ANALYSIS MODE:** `{mode_str}`")
+    lines.append(f"**ANALYSIS DATE:** {analysis_date}")
     lines.append(f"**ENGINE VERSION:** `v15.0 Gold`  ")
     lines.append("\n" + "---" * 10 + "\n")
 

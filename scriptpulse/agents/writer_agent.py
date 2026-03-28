@@ -9,7 +9,7 @@ class WriterAgent:
     Does not run simulations; interprets existing trace data.
     """
     
-    def analyze(self, final_output, genre="General"):
+    def analyze(self, final_output, genre="General", script_era="contemporary", intended_format="spec", is_reference=False):
         """
         Enhances the final_output with a 'writer_intelligence' block.
         Applies Strict Constraints and Genre Nuance.
@@ -18,6 +18,14 @@ class WriterAgent:
         suggestions = final_output.get('suggestions', {})
         
         if not trace: return final_output
+
+        # Contextual metadata for deterministic diagnostic tuning
+        self.context = {
+            'genre': genre,
+            'era': script_era,
+            'format': intended_format,
+            'is_reference': is_reference
+        }
         
         # 1. Narrative Diagnosis (Start with existing cognitive insights from InterpretationAgent)
         narrative_health = final_output.get('narrative_diagnosis', [])
@@ -53,6 +61,13 @@ class WriterAgent:
         # This ensures the penalty calculation always sees the exact same input order.
         all_diagnostics = sorted(list(set(narrative_health + new_diagnostics + self._diagnose_representation_risks(final_output.get('fairness_audit', {})))))
         
+        # Reference Script Mode Transformation:Analytical vs Prescriptive (Task 4)
+        if is_reference:
+            all_diagnostics = [
+                f"💎 **Masterwork Insight**: {d.replace('🔴', '✨').replace('🟠', '✨').replace('🟡', '✨').replace('Consider', 'Intentional use of').replace('Fix', 'Analytical study of')}"
+                for d in all_diagnostics
+            ]
+
         # 2. Structural Dashboard with Arc Vectors + Scene Map
         dashboard = self._build_dashboard(trace, genre, final_output)
         dashboard['character_arcs'] = self._build_character_arcs(trace)
@@ -86,23 +101,49 @@ class WriterAgent:
             'structural_dashboard': dashboard,
             'narrative_summary': self._build_narrative_summary(trace, genre, all_diagnostics),
             'creative_provocations': self._generate_creative_provocations(all_diagnostics, genre),
-            'genre_context': genre
+            'genre_context': genre,
+            'script_era': script_era,
+            'intended_format': intended_format,
+            'is_reference': is_reference
         }
         
         return final_output
+
+    def _format_scene_ref(self, start_idx, end_idx=None):
+        """Standardized scene reference with page numbers and headers."""
+        # Page calculation: 1 page = 55 lines
+        # We need access to the trace or segmented data for line indices
+        # For now, let's assume we can find the scene in the context or trace
+        # v2.0 Page Heuristic: (scene_index * 1.5) as a rough surrogate if lines aren't piped
+        # But we actually have 'first_line' in some places. Let's look at trace entries.
+        
+        # We'll use a standard format: "Scenes 10-12 [pp. 18-21]"
+        if end_idx is None or end_idx == start_idx:
+            page = 1 + (start_idx * 55 // 55) # This is too simple, let's use a better surrogate
+            # In ScriptPulse v15, we assume ~1.2 scenes per page on average.
+            p_start = max(1, round(start_idx * 0.85))
+            return f"Scene {start_idx} [p. {p_start}]"
+        else:
+            p_start = max(1, round(start_idx * 0.85))
+            p_end = max(p_start, round(end_idx * 0.85))
+            return f"Scenes {start_idx}-{end_idx} [pp. {p_start}-{p_end}]"
 
     def _diagnose_health(self, trace, genre):
         """
         Converts math signals to story terms.
         Clusters consecutive issues.
-        Adapts thresholds based on Genre.
+        Adapts thresholds based on Genre, Era and Format.
         """
         assessments = []
+        era = self.context.get('era', 'contemporary')
         
-        # Genre Thresholds
+        # Genre & Era Thresholds
         boredom_thresh = 0.2
         if genre in ["Horror", "Drama", "Art House", "Avant-Garde", "Non-Linear"]:
             boredom_thresh = 0.1 # Tolerate slower pacing
+            
+        if era == "classic":
+            boredom_thresh -= 0.05 # Classic films allow much slower setup
             
         fatigue_thresh = 0.8
         if genre in ["Action", "Thriller"]:
@@ -117,15 +158,17 @@ class WriterAgent:
                 length = end - start + 1
                 if length > 3:
                     duration_mins = length * 2
+                    ref = self._format_scene_ref(start, end)
                     assessments.append(
-                        f"🔴 **Sustained Intensity (Scenes {start}-{end})**: Consistently high attentional demand for ~{duration_mins} mins. May lead to audience fatigue."
+                        f"🔴 **Sustained Intensity ({ref})**: Consistently high attentional demand for ~{duration_mins} mins. May lead to audience fatigue."
                     )
 
         # 2. Confusion Clustering
         strain_ranges = self._find_ranges(trace, lambda s: s.get('expectation_strain', 0) > 0.8)
         for start, end in strain_ranges:
+             ref = self._format_scene_ref(start, end)
              assessments.append(
-                 f"🟠 **Information Density (Scenes {start}-{end})**: High volume of new narrative elements. May increase cognitive load for the reader."
+                 f"🟠 **Information Density ({ref})**: High volume of new narrative elements. May increase cognitive load for the reader."
              )
             
         # 3. Boredom vs Tense Silence
@@ -133,36 +176,41 @@ class WriterAgent:
         true_boredom_ranges = self._find_ranges(trace, lambda s: s['attentional_signal'] < boredom_thresh and max(s.get('conflict', 0), s.get('stakes', 0)) <= 0.5)
         for start, end in true_boredom_ranges:
             if (end - start + 1) >= 5: # Reward 2-4 scene valleys as 'effective recovery'
+                 ref = self._format_scene_ref(start, end)
                  assessments.append(
-                     f"🔵 **Engagement Drop (Scenes {start}-{end})**: Attentional signals are low for an extended duration. Consider tightening the pacing or adding a 'hook' to keep the audience locked in."
+                     f"🔵 **Engagement Drop ({ref})**: Attentional signals are low for an extended duration. Consider tightening the pacing or adding a 'hook' to keep the audience locked in."
                  )
 
         tense_silence_ranges = self._find_ranges(trace, lambda s: s['attentional_signal'] < boredom_thresh and max(s.get('conflict', 0), s.get('stakes', 0)) > 0.6)
         for start, end in tense_silence_ranges:
             if (end - start + 1) >= 2:
+                 ref = self._format_scene_ref(start, end)
                  assessments.append(
-                     f"🤫 **Tense Silence (Scenes {start}-{end})**: Low dialogue density but high conflict. Effective subtextual tension."
+                     f"🤫 **Tense Silence ({ref})**: Low dialogue density but high conflict. Effective subtextual tension."
                  )
 
         # 4. Exposition Clustering
         expo_ranges = self._find_ranges(trace, lambda s: s.get('exposition_score', 0) > 0.7)
         for start, end in expo_ranges:
+            ref = self._format_scene_ref(start, end)
             assessments.append(
-                f"💬 **Exposition Heavy (Scenes {start}-{end})**: Characters are explaining details explicitly rather than through action."
+                f"💬 **Exposition Heavy ({ref})**: Characters are explaining details explicitly rather than through action."
             )
 
         # 5. Pacing Volatility (The 'Avant-Garde' Special)
         volatility_ranges = self._find_ranges(trace, lambda s: s.get('pacing_volatility', 0) > 0.8)
         for start, end in volatility_ranges:
+            ref = self._format_scene_ref(start, end)
             assessments.append(
-                f"🎢 **Erratic Pacing (Scenes {start}-{end})**: Extreme shifts in rhythm. Use sparingly for effect."
+                f"🎢 **Erratic Pacing ({ref})**: Extreme shifts in rhythm. Use sparingly for effect."
             )
 
         # 6. Irony / Dissonance
         irony_ranges = self._find_ranges(trace, lambda s: s.get('sentiment', 0) > 0.6 and s.get('conflict', 0) > 0.7)
         for start, end in irony_ranges:
+             ref = self._format_scene_ref(start, end)
              assessments.append(
-                f"🎭 **Irony Detected (Scenes {start}-{end})**: Positive tone matches high conflict. Unsettling and effective."
+                f"🎭 **Irony Detected ({ref})**: Positive tone matches high conflict. Unsettling and effective."
             )
             
         # 7. Final Polish
@@ -187,15 +235,29 @@ class WriterAgent:
         complexities = [c[1].get('complexity', 0) for c in valid_chars]
         positivities = [c[1].get('positivity', 0) for c in valid_chars]
         puncts = [c[1].get('punctuation_rate', 0) for c in valid_chars]
+        words_per_turn = [c[1].get('words_per_turn', 0) for c in valid_chars]
+        registers = [c[1].get('register', 'neutral') for c in valid_chars]
         
         std_comp = statistics.stdev(complexities) if len(complexities) > 1 else 0.0
         std_pos = statistics.stdev(positivities) if len(positivities) > 1 else 0.0
         std_punct = statistics.stdev(puncts) if len(puncts) > 1 else 0.0
+        std_wpt = statistics.stdev(words_per_turn) if len(words_per_turn) > 1 else 0.0
         
-        if std_comp < 0.1 and std_pos < 0.1 and std_punct < 0.05:
+        # "Same Voice Syndrome" detection (Task 2)
+        # Now incorporates register collisions and words-per-turn similarity
+        unique_registers = len(set(registers))
+        
+        if std_comp < 0.1 and std_pos < 0.1 and std_punct < 0.05 and std_wpt < 2.0 and unique_registers == 1:
             names = [c[0] for c in valid_chars[:3]]
-            assessments.append(f"🔴 **Same Voice Syndrome**: The primary characters ({', '.join(names)}) share nearly identical dialogue textures. Consider varying sentence structures or punctuation habits to distinguish them.")
-            
+            assessments.append(f"🔴 **Same Voice Syndrome**: The primary characters ({', '.join(names)}) share nearly identical dialogue textures, registers ({registers[0]}), and speech lengths. Consider varying vocabulary registers or power dynamics to distinguish them.")
+        
+        # Power Dynamics (Task 2)
+        # Identify if one character consistently interrupts others or has much higher agency
+        # We can look at this in _diagnose_interruption_dynamics, but let's add a voice-level insight here too.
+        top_char = valid_chars[0]
+        if top_char[1].get('agency', 0) > 0.8:
+            assessments.append(f"⚖️ **Vocal Dominance ({top_char[0]})**: This character maintains high agency and linguistic control. This effectively establishes them as the vocal 'alpha' in most exchanges.")
+
         return assessments
 
     def _diagnose_motifs(self, trace):
@@ -216,10 +278,12 @@ class WriterAgent:
         for m, data in motif_tracker.items():
             if data['count'] > 1:
                 spread = data['last'] - data['first']
+                ref_first = self._format_scene_ref(data['first'])
+                ref_last = self._format_scene_ref(data['last'])
                 if data['first'] < total_scenes * 0.3 and data['last'] > total_scenes * 0.7:
-                    assessments.append(f"✨ **Successful Motif Payoff**: The object '{m}' was introduced early (Scene {data['first']}) and paid off late (Scene {data['last']}). Strong thematic resonance.")
+                    assessments.append(f"✨ **Successful Motif Payoff**: The object '{m}' was introduced early ({ref_first}) and paid off late ({ref_last}). Strong thematic resonance.")
                 elif data['first'] < total_scenes * 0.3 and spread < total_scenes * 0.1:
-                    assessments.append(f"🟡 **Abandoned Motif**: The object '{m}' was introduced in Scene {data['first']} but never reappears after Scene {data['last']}. Consider paying it off or cutting it.")
+                    assessments.append(f"🟡 **Abandoned Motif**: The object '{m}' was introduced in {ref_first} but never reappears after {ref_last}. Consider paying it off or cutting it.")
         
         # Sort so we only show the best ones
         # Prioritize payoffs over abandoned
@@ -227,10 +291,12 @@ class WriterAgent:
         return assessments[:2] # Limit to 2
 
     def _diagnose_tell_vs_show(self, trace):
+        """Analyze 'Tell, Don't Show' traps."""
         assessments = []
         tell_trap_ranges = self._find_ranges(trace, lambda s: s.get('tell_vs_show', {}).get('tell_ratio', 0.0) > 0.6 and s.get('tell_vs_show', {}).get('literal_emotions', 0) >= 2)
         for start, end in tell_trap_ranges:
-            assessments.append(f"🟠 **'Tell, Don't Show' Trap (Scenes {start}-{end})**: Relying heavily on literal emotion words (e.g. 'sad', 'angry') in action lines rather than physical blocking/behavior.")
+            ref = self._format_scene_ref(start, end)
+            assessments.append(f"🟠 **'Tell, Don't Show' Trap ({ref})**: Relying heavily on literal emotion words (e.g. 'sad', 'angry') in action lines rather than physical blocking/behavior.")
         return assessments[:1]
 
     def _find_ranges(self, trace, condition_fn):
@@ -366,8 +432,9 @@ class WriterAgent:
             rep = s.get('representative_dialogue', '')
             if otn.get('on_the_nose_ratio', 0) > 0.25:
                 quote = f" (e.g., \"{rep[:60]}...\")" if rep else ""
+                ref = self._format_scene_ref(idx)
                 assessments.append(
-                    f"🗣️ **On-The-Nose Dialogue (Scene {idx})**: Characters are stating their internal subtext as text{quote}. "
+                    f"🗣️ **On-The-Nose Dialogue ({ref})**: Characters are stating their internal subtext as text{quote}. "
                     f"Subvert the lines to hide the real emotion behind a defensive or tactical goal."
                 )
         return assessments[:2]
@@ -383,8 +450,9 @@ class WriterAgent:
             rep = s.get('representative_dialogue', '')
             if sl.get('has_shoe_leather', False):
                 quote = f" (e.g., \"{rep[:60]}...\")" if rep else ""
+                ref = self._format_scene_ref(idx)
                 assessments.append(
-                    f"✂️ **Shoe-Leather Detected (Scene {idx})**: "
+                    f"✂️ **Shoe-Leather Detected ({ref})**: "
                     f"Filler dialogue at the start or end of the scene{quote}. "
                     f"Arrive late, leave early — cut the pleasantries."
                 )
@@ -665,8 +733,9 @@ class WriterAgent:
             examples = gd.get('examples', [])
             count = gd.get('cliche_count', 0)
             eg_str = f' (e.g. "{examples[0]}")' if examples else ''
+            ref = self._format_scene_ref(idx)
             assessments.append(
-                f"💬 **Generic Dialogue (Scene {idx})**: {count} interchangeable cliché line(s) detected{eg_str}. "
+                f"💬 **Generic Dialogue ({ref})**: {count} interchangeable cliché line(s) detected{eg_str}. "
                 f"Rewrite these to be hyper-specific to THIS character in THIS moment."
             )
         return assessments[:2]
@@ -676,9 +745,23 @@ class WriterAgent:
         assessments = []
         flat_ranges = self._find_ranges(trace, lambda s: s.get('scene_turn', {}).get('turn_label') == 'Flat')
         for start, end in flat_ranges:
+            # Task 5: Slow Opening Penalty Override
+            # If the flat turns are in the opening (Scenes 0-1) but followed by a sharp spike, it's valid.
+            if start <= 1:
+                # Look ahead for a 'Negative to Positive', 'Positive to Negative' or 'High Energy' turn in next 3 scenes
+                followed_by_spike = False
+                for j in range(end + 1, min(len(trace), end + 4)):
+                    turn = trace[j].get('scene_turn', {}).get('turn_label')
+                    if turn in ['Negative to Positive', 'Positive to Negative', 'High Energy']:
+                        followed_by_spike = True
+                        break
+                if followed_by_spike:
+                     continue # Valid structural pattern (Slow Burn opening)
+
             if (end - start + 1) >= 2:
+                ref = self._format_scene_ref(start, end)
                 assessments.append(
-                    f"⬜ **Flat Scene Turns (Scenes {start}–{end})**: Emotional trajectory remains stagnant. These scenes end in the same relative position they began."
+                    f"⬜ **Flat Scene Turns ({ref})**: Emotional trajectory remains stagnant. These scenes end in the same relative position they began."
                 )
         return assessments[:1]
 
@@ -746,8 +829,9 @@ class WriterAgent:
             eg = pv.get('examples', [])
             count = pv.get('passive_count', 0)
             eg_str = f' (e.g. "{eg[0][:55]}...")' if eg else ''
+            ref = self._format_scene_ref(idx)
             assessments.append(
-                f"✍️ **Passive Action Lines (Scene {idx})**: {count} passive construction(s) detected{eg_str}. "
+                f"✍️ **Passive Action Lines ({ref})**: {count} passive construction(s) detected{eg_str}. "
                 f"Active voice typically increases cinematic energy."
             )
         return assessments[:1]
@@ -819,12 +903,12 @@ class WriterAgent:
 
                 if similarity > 0.55 and (idx_a, idx_b) not in flagged:
                     flagged.add((idx_a, idx_b))
+                    ref = self._format_scene_ref(idx_a, idx_b)
                     assessments.append(
-                        f"♻️ **Possible Redundancy (Scenes {idx_a} & {idx_b})**: Both are '{purpose_a}' "
+                        f"♻️ **Possible Redundancy ({ref})**: Both are '{purpose_a}' "
                         f"scenes with {round(similarity * 100)}% vocabulary overlap. "
                         f"They may be covering the same ground — consider merging or differentiating."
                     )
-
         return assessments[:2]
 
     def _diagnose_dangling_threads(self, trace):
@@ -1076,8 +1160,9 @@ class WriterAgent:
                 for m in mdata.get('monologues', []):
                     char = m.get('character', 'Unknown')
                     length = m.get('length', 0)
+                    ref = self._format_scene_ref(s['scene_index'])
                     assessments.append(
-                        f"🎙️ **Monologue Risk (Scene {s['scene_index']}, {char})**: "
+                        f"🎙️ **Monologue Risk ({ref}, {char})**: "
                         f"{length}-line uninterrupted solo. Long monologues are high-risk — "
                         f"can stop a film cold if not earned. Ensure every line reveals character or advances plot."
                     )
@@ -1229,8 +1314,9 @@ class WriterAgent:
             hits = rf.get('internal_state_hits', [])
             if hits:
                 eg = hits[0]
+                ref = self._format_scene_ref(idx)
                 assessments.append(
-                    f"🚫 **Action Line Modifiers (Scene {idx})**: Action lines contain descriptors defining internal states. "
+                    f"🚫 **Action Line Modifiers ({ref})**: Action lines contain descriptors defining internal states. "
                     f"e.g. \"{eg}\""
                 )
 
@@ -1239,8 +1325,9 @@ class WriterAgent:
             rf = s.get('reader_frustration', {})
             if rf.get('name_crowding'):
                 n = rf.get('unique_char_count', 4)
+                ref = self._format_scene_ref(s['scene_index'])
                 assessments.append(
-                    f"👥 **Character Density (Scene {s['scene_index']})**: {n} distinct characters are active simultaneously. "
+                    f"👥 **Character Density ({ref})**: {n} distinct characters are active simultaneously. "
                     f"This creates a high referential load for the audience."
                 )
                 break
@@ -1250,8 +1337,9 @@ class WriterAgent:
             rf = s.get('reader_frustration', {})
             pairs = rf.get('similar_name_pairs', [])
             if pairs:
+                ref = self._format_scene_ref(s['scene_index'])
                 assessments.append(
-                    f"🔤 **Orthographic Proximity (Scene {s['scene_index']})**: Character names {pairs[0]} are lexically or phonetically similar. "
+                    f"🔤 **Orthographic Proximity ({ref})**: Character names {pairs[0]} are lexically or phonetically similar. "
                     f"This pattern frequently correlates with reader confusion tracking dialogue tags."
                 )
                 break
@@ -1668,11 +1756,20 @@ class WriterAgent:
         mr = dashboard.get('market_readiness', 50)
         risk = dashboard.get('production_risk_score', 50)
         
+        # Task 1: Era & Format-aware Scoring adjustments
+        era = self.context.get('era', 'contemporary')
+        i_format = self.context.get('format', 'spec')
+        
         # Dialogue Harmony (15%): Reward hitting genre benchmarks
         dr = dashboard.get('dialogue_ratio', {})
         d_ratio = dr.get('global_dialogue_ratio', 0.55)
         d_bench = dr.get('genre_benchmark', 0.55)
-        d_harmony = max(0, 100 - abs(d_ratio - d_bench) * 200) # Loss of 2 pts per 1% dev
+        
+        if era == 'classic':
+             # Classic films are more talky, ease the penalty for high dialogue ratio
+             d_harmony = max(0, 100 - abs(d_ratio - (d_bench + 0.1)) * 150)
+        else:
+             d_harmony = max(0, 100 - abs(d_ratio - d_bench) * 200) # Loss of 2 pts per 1% dev
         
         # Pacing balance: penalize extreme values
         act_struct = dashboard.get('act_structure', {})
@@ -1688,7 +1785,12 @@ class WriterAgent:
         # Diagnostic health: fewer critical issues = higher score
         critical_count = sum(1 for d in diagnostics if isinstance(d, str) and any(x in d for x in ['🔴', '🚫']))
         warning_count = sum(1 for d in diagnostics if isinstance(d, str) and any(x in d for x in ['🟠', '🟡', '⬜']))
-        health_penalty = min(30, (critical_count * 8) + (warning_count * 3))
+        
+        # Masterwork Mode: Reference scripts aren't penalized for 'flaws' (Task 4)
+        if self.context.get('is_reference'):
+             health_penalty = 0
+        else:
+             health_penalty = min(30, (critical_count * 8) + (warning_count * 3))
         
         raw = (
             (pti * 0.25) +

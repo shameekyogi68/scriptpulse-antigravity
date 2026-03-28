@@ -405,11 +405,40 @@ class EncodingAgent:
                 arcs[curr]['agency'] += agency_inc
                 arcs[curr]['sentiment'] += 0.1 if 'yes' in dial_text else (-0.1 if 'no' in dial_text else 0)
         
+        char_texts = {c: [] for c in arcs}
+        for l in lines:
+            if l['tag'] == 'C':
+                curr = normalize_character_name(l['text'])
+            elif l['tag'] == 'D' and curr:
+                if curr not in char_texts: char_texts[curr] = []
+                char_texts[curr].append(l['text'])
+
         # Normalize Agency by participation density so quiet but decisive leaders aren't penalized
         for c in arcs:
             # Agency cap - Dampened divisor to allow growth without hitting 100% too easily
             arcs[c]['agency'] = round(min(1.0, arcs[c]['agency'] / (1.0 + arcs[c]['line_count'] * 0.15)), 3)
             arcs[c]['sentiment'] = round(max(-1.0, min(1.0, arcs[c]['sentiment'] / max(1, arcs[c]['line_count']))), 3)
+            
+            # Phase 32: Enhanced Voice Metrics
+            char_text = " ".join(char_texts.get(c, []))
+            c_words = char_text.split()
+            arcs[c]['words_per_turn'] = round(len(c_words) / max(1, arcs[c]['line_count']), 2)
+            
+            # Register Detection
+            if len(c_words) > 0:
+                formal_words = {'furthermore', 'nevertheless', 'consequently', 'therefore', 'shall', 'whom', 'indeed', 'perhaps', 'ascertain', 'observe'}
+                street_words = {'yo', 'aint', 'gonna', 'wanna', 'yeah', 'man', 'hey', 'listen', 'look', 'get', 'got', 'shit', 'fuck', 'hell'}
+                
+                f_count = sum(1 for w in c_words if w.lower().strip(',.?!') in formal_words)
+                s_count = sum(1 for w in c_words if w.lower().strip(',.?!') in street_words)
+                
+                if f_count > s_count and f_count > 0: arcs[c]['register'] = 'formal'
+                elif s_count > f_count and s_count > 0: arcs[c]['register'] = 'street'
+                elif len(c_words) / max(1, arcs[c]['line_count']) < 5: arcs[c]['register'] = 'clipped'
+                else: arcs[c]['register'] = 'neutral'
+            else:
+                arcs[c]['register'] = 'neutral'
+                arcs[c]['words_per_turn'] = 0
         
         # 3. Masterclass Diagnostics (Smart Heuristics using structural context)
         d_lines = [l['text'].lower() for l in lines if l['tag'] == 'D']

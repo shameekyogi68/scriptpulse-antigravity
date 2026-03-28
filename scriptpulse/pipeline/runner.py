@@ -14,7 +14,7 @@ from scriptpulse.agents.ethics_agent import EthicsAgent
 from scriptpulse.agents.writer_agent import WriterAgent
 from scriptpulse.utils import normalizer, runtime
 
-def run_pipeline(script_content, genre='drama', story_framework='3_act', **kwargs):
+def run_pipeline(script_content, genre='drama', story_framework='3_act', script_era='contemporary', intended_format='spec', is_reference=False, **kwargs):
     """
     Executes the 4-Stage ScriptPulse Research Pipeline.
     1. Structure (Parsing)
@@ -163,10 +163,12 @@ def run_pipeline(script_content, genre='drama', story_framework='3_act', **kwarg
     for f in perceptual_features:
         for char, v in f.get('character_scene_vectors', {}).items():
             if char not in voice_fingerprints:
-                voice_fingerprints[char] = {'agency': 0, 'sentiment': 0, 'line_count': 0}
+                voice_fingerprints[char] = {'agency': 0, 'sentiment': 0, 'line_count': 0, 'words_per_turn': 0, 'registers': []}
             voice_fingerprints[char]['line_count'] += v['line_count']
             voice_fingerprints[char]['agency'] += v['agency']
             voice_fingerprints[char]['sentiment'] += v['sentiment']
+            voice_fingerprints[char]['words_per_turn'] += v.get('words_per_turn', 0)
+            voice_fingerprints[char]['registers'].append(v.get('register', 'neutral'))
     
     # Normalize averages & Meld with Agency
     for char in voice_fingerprints:
@@ -179,6 +181,14 @@ def run_pipeline(script_content, genre='drama', story_framework='3_act', **kwarg
             voice_fingerprints[char]['centrality'] = agency_map[char]['centrality']
         else:
             voice_fingerprints[char]['agency'] = round(voice_fingerprints[char]['agency'] / max(1, count), 2)
+        
+        # Phase 32: Average Voice Metrics
+        scene_count = len(voice_fingerprints[char]['registers'])
+        voice_fingerprints[char]['words_per_turn'] = round(voice_fingerprints[char]['words_per_turn'] / max(1, scene_count), 2)
+        from collections import Counter
+        reg_counts = Counter(voice_fingerprints[char]['registers'])
+        voice_fingerprints[char]['register'] = reg_counts.most_common(1)[0][0] if voice_fingerprints[char]['registers'] else 'neutral'
+        del voice_fingerprints[char]['registers']
 
     telemetry['stages']['assembly_ms'] = round((time.time() - _t_stage) * 1000, 2)
     telemetry['total_execution_ms'] = round((_t_end - _t_start) * 1000, 2)
@@ -214,7 +224,7 @@ def run_pipeline(script_content, genre='drama', story_framework='3_act', **kwarg
     
     # --- STAGE 5: Writer Intelligence (Expert Layer) ---
     writer = WriterAgent()
-    report = writer.analyze(report, genre=genre)
+    report = writer.analyze(report, genre=genre, script_era=script_era, intended_format=intended_format, is_reference=is_reference)
     
     return report
 
