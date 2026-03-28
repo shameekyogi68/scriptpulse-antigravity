@@ -42,7 +42,8 @@ class WriterAgent:
             'format': intended_format,
             'is_reference': is_reference,
             'budget_tier': budget_tier,
-            'scene_info': final_output.get('scene_info', [])
+            'scene_info': final_output.get('scene_info', []),
+            'trace': trace # Added for comp calculations
         }
         
         # 1. Narrative Diagnosis (Start with existing cognitive insights from InterpretationAgent)
@@ -1603,44 +1604,73 @@ class WriterAgent:
         if avg_action < 4: return "Sparse / Minimalist"
         return "Cinematic / Visual"
 
+    def _calculate_tone_score(self, trace):
+        """Rule 1: Detect Tone Score (1-10) from action intensity and conflict."""
+        if not trace: return 5
+        action = sum(s.get('visual_abstraction', {}).get('action_lines', 0) for s in trace) / len(trace)
+        conflict = sum(s.get('conflict', 0) for s in trace) / len(trace)
+        # Epic/High Intensity (10) vs Intimate/Low Action (1)
+        score = (action * 0.6) + (conflict * 10 * 0.4)
+        return round(max(1, min(10, score)))
+
+    def _calculate_scale_score(self, trace):
+        """Rule 2: Detect Scale Score (1-10) from locations and budget."""
+        if not trace: return 5
+        locs = self._build_location_profile(trace).get('unique_locations', 0)
+        budget = self.context.get('budget_tier', 'indie')
+        b_map = {'micro': 1, 'indie': 3, 'mid': 6, 'blockbuster': 10}
+        b_val = b_map.get(budget.lower(), 4)
+        
+        # Scale weighted by loc count (normalized to 1-10 via ~50 locs = max)
+        score = (min(locs, 50) / 5) + (b_val * 0.5)
+        return round(max(1, min(10, score)))
+
     def _find_commercial_comps(self, genre, dominant_stakes='Social'):
-        """Rule 7: Era-Aware Comp Selection (within 15 years and genre match)."""
-        era = self.context.get('era', 'contemporary')
+        """Rule 4 & 5: Multi-dimensional Comp Selection (Subgenre + Tone + Scale + Era)."""
+        trace = self.context.get('trace', [])
+        tone = self._calculate_tone_score(trace)
+        scale = self._calculate_scale_score(trace)
+        era_label = self.context.get('era', 'contemporary')
+        year = 2024 if era_label == 'contemporary' else 1975
         
-        stakes_to_sub = {
-            'Social': 'Political/Mob/Society',
-            'Moral': 'Psychological/Moral',
-            'Emotional': 'Personal/Relational',
-            'Physical': 'Visceral/Action',
-            'Existential': 'Philosophical/Surreal'
-        }
-        subgenre = stakes_to_sub.get(dominant_stakes, 'General')
+        # Comp DB: [Name, Subgenre, Tone(1-10), Scale(1-10), Year]
+        db = [
+            ("The Godfather", "Crime Epic", 8, 9, 1972),
+            ("Goodfellas", "Crime Epic", 9, 8, 1990),
+            ("Chinatown", "Crime Epic", 7, 7, 1974),
+            ("Scarface", "Crime Epic", 10, 9, 1983),
+            ("Marriage Story", "Domestic Drama", 3, 2, 2019),
+            ("Kramer vs Kramer", "Domestic Drama", 3, 2, 1979),
+            ("Blue Valentine", "Domestic Drama", 4, 2, 2010),
+            ("Manchester by the Sea", "Domestic Drama", 2, 3, 2016),
+            ("Parasite", "Social Thriller", 7, 5, 2019),
+            ("Get Out", "Social Thriller", 6, 4, 2017),
+            ("Knives Out", "Social Thriller", 5, 6, 2019),
+            ("Taxi Driver", "Character Study", 8, 4, 1976),
+            ("Moonlight", "Character Study", 3, 3, 2016),
+            ("Suspiria", "Body Horror", 9, 6, 1977),
+            ("Hereditary", "Body Horror", 8, 4, 2018),
+            ("Mad Max: Fury Road", "Action Epic", 10, 10, 2015),
+            ("Die Hard", "Action Epic", 9, 7, 1988),
+            ("John Wick", "Action Epic", 9, 5, 2014)
+        ]
         
-        # Comps categorized by era
-        lookup = {
-            # CLASSIC (pre-2000s)
-            ('classic', 'Crime'): ["The Godfather", "Chinatown", "Taxi Driver"],
-            ('classic', 'Drama'): ["Ordinary People", "Citizen Kane", "Sunset Blvd."],
-            ('classic', 'Thriller'): ["The Conversation", "Alien", "Blow Out"],
-            ('classic', 'Horror'): ["The Shining", "Suspiria", "Halloween"],
-            # CONTEMPORARY (post-2010s)
-            ('contemporary', 'Crime'): ["The Irishman", "The Departed", "Uncut Gems"],
-            ('contemporary', 'Drama'): ["Manchester by the Sea", "Moonlight", "Marriage Story"],
-            ('contemporary', 'Thriller'): ["Parasite", "Nightcrawler", "Seven"],
-            ('contemporary', 'Horror'): ["Hereditary", "Get Out", "Talk to Me"]
-        }
-        
-        g = genre.replace('-', ' ').split()[0].title() 
-        if 'Sci' in g: g = 'Sci-Fi'
-        
-        key = (era.lower(), g)
-        if key in lookup: return lookup[key]
-        
-        # Fallback to genre-only contemporary
-        for (e, k_g), v in lookup.items():
-            if k_g == g and e == 'contemporary': return v
+        matches = []
+        for name, sub, t, s, y in db:
+            score = 0
+            # Tone Match (+/- 2)
+            if abs(t - tone) <= 2: score += 1
+            # Scale Match (+/- 2)
+            if abs(s - scale) <= 2: score += 1
+            # Era Match (+/- 20 years)
+            if abs(y - year) <= 20: score += 1
             
-        return ["The Social Network", "Parasite", "Everything Everywhere All At Once"]
+            # Universal Rule Summary: Reject if fails > 1 criteria
+            if score >= 2:
+                matches.append((name, score))
+        
+        matches.sort(key=lambda x: x[1], reverse=True)
+        return [m[0] for m in matches[:3]] if matches else ["The Social Network", "Parasite"]
 
     def _calculate_production_risks(self, trace):
         """
