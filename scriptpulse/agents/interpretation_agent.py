@@ -123,9 +123,8 @@ class InterpretationAgent:
             
             if churn >= 3.0 and att_sig < 0.5:
                 snippet = self._get_snippet(scenes[i])
-                p = max(1, round(i * 0.85))
                 diagnosis.append(
-                    f"🟠 **Information Churn (Scene {i+1} [p. {p}])**: High rate of introduction for new elements or characters. (e.g., {snippet})"
+                    f"🟠 **Information Churn (Scene {i+1})**: High rate of introduction for new elements or characters. (e.g., {snippet})"
                 )
                 break
 
@@ -137,9 +136,8 @@ class InterpretationAgent:
             
             if action > 6 and att_sig > 0.8:
                 snippet = self._get_snippet(scenes[i])
-                p = max(1, round(i * 0.85))
                 diagnosis.append(
-                    f"✨ **Action Peak (Scene {i+1} [p. {p}])**: Strong integration of physical action and tension. (e.g., {snippet})"
+                    f"✨ **Action Peak (Scene {i+1})**: Strong integration of physical action and tension. (e.g., {snippet})"
                 )
                 break
                 
@@ -153,9 +151,8 @@ class InterpretationAgent:
             
             if high_runs >= sag_scenes:
                 snippet = self._get_snippet(scenes[i])
-                p = max(1, round(i * 0.85))
                 diagnosis.append(
-                    f"🟠 **Attentional Valley (Scene {i+1} [p. {p}])**: Cumulative period of lower dramatic signals. (e.g., {snippet})"
+                    f"🟠 **Attentional Valley (Scene {i+1})**: Cumulative period of lower dramatic signals. (e.g., {snippet})"
                 )
                 break
                 
@@ -167,9 +164,8 @@ class InterpretationAgent:
             
             if entropy > 3.0 and att_sig < 0.4:
                 snippet = self._get_snippet(scenes[i])
-                p = max(1, round(i * 0.85))
                 diagnosis.append(
-                    f"💡 **Informational Peak (Scene {i+1} [p. {p}])**: High text density with lower immediate dramatic conflict. (e.g., {snippet})"
+                    f"💡 **Informational Peak (Scene {i+1})**: High text density with lower immediate dramatic conflict. (e.g., {snippet})"
                 )
                 break
 
@@ -182,9 +178,8 @@ class InterpretationAgent:
             
             if dial > 12 and action < 2 and 0.4 < att_sig < 0.6:
                 snippet = self._get_snippet(scenes[i])
-                p = max(1, round(i * 0.85))
                 diagnosis.append(
-                    f"🗣️ **Talking Heads (Scene {i+1} [p. {p}])**: Characters are talking extensively with minimal physical action. (e.g., {snippet})"
+                    f"🗣️ **Talking Heads (Scene {i+1})**: Characters are talking extensively with minimal physical action. (e.g., {snippet})"
                 )
                 break
 
@@ -238,22 +233,19 @@ class InterpretationAgent:
         # Now add filtered diagnostics to result
         for idx in sorted(final_whiplash)[:1]: # Show only the primary whiplash
             snippet = self._get_snippet(scenes[idx])
-            p = max(1, round(idx * 0.85))
-            diagnosis.append(f"🎢 **Tonal Whiplash (Scene {idx+1} [p. {p}])**: Extreme shift in tension anchored by a sharp narrative turn. (e.g., {snippet})")
+            diagnosis.append(f"🎢 **Tonal Whiplash (Scene {idx+1})**: Extreme shift in tension anchored by a sharp narrative turn. (e.g., {snippet})")
             
         for idx in sorted(final_resonance)[:1]: # Show only the primary resonance
             snippet = self._get_snippet(scenes[idx])
-            p = max(1, round(idx * 0.85))
-            diagnosis.append(f"💎 **Cognitive Resonance (Scene {idx+1} [p. {p}])**: High harmonization of narrative conflict and emotional impact. (e.g., {snippet})")
+            diagnosis.append(f"💎 **Cognitive Resonance (Scene {idx+1})**: High harmonization of narrative conflict and emotional impact. (e.g., {snippet})")
 
         # 7. Similar Name Confusion
         for i in range(len(features)):
             frustration = features[i].get('reader_frustration', {})
             similar_pairs = frustration.get('similar_name_pairs', [])
             if similar_pairs:
-                p = max(1, round(i * 0.85))
                 diagnosis.append(
-                    f"🧠 **Audience Confusion (Scene {i+1} [p. {p}])**: Characters with similar names ({', '.join(similar_pairs)}) may confuse the reader."
+                    f"🧠 **Audience Confusion (Scene {i+1})**: Characters with similar names ({', '.join(similar_pairs)}) may confuse the reader."
                 )
                 break
 

@@ -277,32 +277,11 @@ class SegmentationAgent:
         for i, line_data in enumerate(parsed_lines):
             if i == 0: continue
             tag = line_data['tag']
-            text = line_data['text'].upper().strip()
-            
             confidence = 0.0
-            if tag == 'S':
-                # Rule: Shots and certain sub-headers are NOT new scene boundaries
-                non_boundary_patterns = [
-                    "CLOSE ON", "ANGLE ON", "ANOTHER ANGLE", "BACK TO SCENE", "POV", 
-                    "TITLE", "INSERT", "SERIES OF SHOTS", "MONTAGE", "THE END"
-                ]
-                
-                # If it's a standard INT./EXT. it's high confidence
-                if text.startswith(("INT.", "EXT.", "INT ", "EXT ", "I/E.")):
-                    confidence = 0.95
-                # If it's a known non-boundary shot/marker, it's low confidence (usually grouped)
-                elif any(nb in text for nb in non_boundary_patterns):
-                    confidence = 0.1
-                # If it's a 'mini-slug' (e.g., 'KITCHEN' or 'THE OFFICE') without a time jump, 
-                # we give it lower confidence to encourage merging if it's too short.
-                elif not any(t in text for t in ["DAY", "NIGHT", "DAWN", "DUSK", "MORNING"]):
-                    confidence = 0.4
-                else:
-                    confidence = 0.8
-            elif tag == 'M': 
-                confidence = 0.4
+            if tag == 'S': confidence = 0.9
+            elif tag == 'M': confidence = 0.4
             
-            if confidence > 0.6: # Primary scene breaks only
+            if confidence > 0.3:
                 boundaries.append((i, confidence))
         return boundaries
 

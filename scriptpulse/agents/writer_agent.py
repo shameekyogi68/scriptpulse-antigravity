@@ -9,7 +9,7 @@ class WriterAgent:
     Does not run simulations; interprets existing trace data.
     """
     
-    def analyze(self, final_output, genre="General", script_era="contemporary", intended_format="spec", is_reference=False, **kwargs):
+    def analyze(self, final_output, genre="General"):
         """
         Enhances the final_output with a 'writer_intelligence' block.
         Applies Strict Constraints and Genre Nuance.
@@ -17,35 +17,7 @@ class WriterAgent:
         trace = final_output.get('temporal_trace', [])
         suggestions = final_output.get('suggestions', {})
         
-        # Determine script era (Rule 1: Auto-detect or user-input)
-        if not script_era or script_era == 'auto':
-            # Search for keyword markers of historical or period settings
-            # We'll use a broad 'classic' catch-all for anything clearly non-contemporary
-            classic_markers = ['horse', 'carriage', 'castle', 'sword', 'throne', 'kingdom', 'century', 'historical', 'period']
-            found_classic = False
-            for s in trace:
-                 heading = s.get('location_data', {}).get('raw_heading', '').lower()
-                 if any(w in heading for w in classic_markers):
-                      found_classic = True
-                      break
-            script_era = 'classic' if found_classic else 'contemporary'
-
-        # Determine budget tier
-        budget_tier = kwargs.get('budget_tier')
-        if not budget_tier:
-             budget_tier = self._calculate_budget_impact(trace).split()[0].lower()
-
-        # Contextual metadata for deterministic diagnostic tuning
-        self.context = {
-            'genre': genre,
-            'era': script_era,
-            'format': intended_format,
-            'is_reference': is_reference,
-            'budget_tier': budget_tier,
-            'scene_info': final_output.get('scene_info', []),
-            'trace': trace,
-            'themes': self._analyze_thematic_coherence(trace) # Rule 1
-        }
+        if not trace: return final_output
         
         # 1. Narrative Diagnosis (Start with existing cognitive insights from InterpretationAgent)
         narrative_health = final_output.get('narrative_diagnosis', [])
@@ -76,31 +48,14 @@ class WriterAgent:
         new_diagnostics.extend(self._diagnose_neglected_characters(trace))
         new_diagnostics.extend(self._diagnose_nonlinear_structure(trace))
         new_diagnostics.extend(self._diagnose_theme_coherence(trace))
-        new_diagnostics.extend(self._diagnose_action_peaks(trace))
-        
-        # Elite Rule 2: Moral Paradox (The 'Tragic Alpha' Signature)
-        arc_data = self._build_character_arcs(trace)
-        for char, data in arc_data.items():
-            if data['arc_type'] == "Corrupted Victor 🩸":
-                new_diagnostics.append(f"🌗 **Moral Paradox ({char})**: Character achieves ultimate power (+{data['agency_delta']} agency) but collapses morally ({data['moral_delta']} sentiment). Masterclass structural ambiguity.")
-            elif data.get('agency_delta', 0) > 0.4:
-                new_diagnostics.append(f"🌔 **Deep Transformation ({char})**: A massive journey of agency shift (+{data['agency_delta']}). Highly immersive development.")
         
         # Determine unique items and sort EVERYTHING for absolute score determinism
         # This ensures the penalty calculation always sees the exact same input order.
         all_diagnostics = sorted(list(set(narrative_health + new_diagnostics + self._diagnose_representation_risks(final_output.get('fairness_audit', {})))))
         
-        # Reference Script Mode Transformation:Analytical vs Prescriptive (Task 4)
-        if is_reference:
-            all_diagnostics = [
-                f"💎 **Masterwork Insight**: {d.replace('🔴', '✨').replace('🟠', '✨').replace('🟡', '✨').replace('Consider', 'Intentional use of').replace('Fix', 'Analytical study of')}"
-                for d in all_diagnostics
-            ]
-
         # 2. Structural Dashboard with Arc Vectors + Scene Map
         dashboard = self._build_dashboard(trace, genre, final_output)
         dashboard['character_arcs'] = self._build_character_arcs(trace)
-        self.context['char_arcs'] = dashboard['character_arcs']
         dashboard['scene_purpose_map'] = self._build_scene_purpose_map(trace)
         dashboard['stakes_profile'] = self._build_stakes_profile(trace)
         dashboard['scene_turn_map'] = self._build_scene_turn_map(trace)
@@ -111,76 +66,43 @@ class WriterAgent:
         dashboard['location_profile'] = self._build_location_profile(trace)
         dashboard['structural_turning_points'] = self._find_structural_turning_points(trace)
         dashboard['scene_economy_map'] = self._build_scene_economy_map(trace)
-        dashboard['commercial_comps'] = self._find_commercial_comps(trace, genre)
-        # Page Turner Index (Rule 2 Sub-score)
-        pti_result = self._calculate_page_turner_index(trace)
-        dashboard['page_turner_index'] = pti_result['index']
+        dashboard['page_turner_index'] = self._calculate_page_turner_index(trace)
+        dashboard['writing_texture'] = self._diagnose_writing_texture(trace)
+        dashboard['act_structure'] = self._build_act_structure(trace)
+        dashboard['commercial_comps'] = self._find_commercial_comps(genre, dashboard.get('stakes_profile', {}).get('dominant', 'Social'))
+        v_fingerprints = final_output.get('voice_fingerprints', {})
+        # Purely deterministic line-count threshold for 'Cast' status (Tasks 3/Cast Count)
+        dashboard['cast_count_deterministic'] = len([c for c, v in v_fingerprints.items() if v.get('line_count', 0) >= 5])
+
+        # Market Readiness (Task 5)
+        dashboard['market_readiness'] = self._calculate_market_readiness(dashboard)
+
+        # Composite ScriptPulse Score (0-100) using the truly sorted diagnostics
+        dashboard['scriptpulse_score'] = self._calculate_scriptpulse_score(dashboard, all_diagnostics)
         
-        # Rule 2: Master Score Formula Compliance
-        # We return sub-scores only. Master score is calculated in the application layer.
-        dashboard['pacing_score'] = self._calculate_pacing_score(trace, genre)
-        dashboard['structural_integrity'] = self._calculate_structural_integrity(trace)
-        dashboard['character_arc_depth'] = self._calculate_character_arc_depth(dashboard['character_arcs'])
-        
-        # Rule 2: Contradiction Flagging (> 30 points)
-        scores = [dashboard['page_turner_index'], dashboard['pacing_score'], dashboard['structural_integrity'], dashboard['character_arc_depth']]
-        if max(scores) - min(scores) > 30:
-            all_diagnostics.append("⚠️ **Metric Contradiction**: Divergence between sub-scores exceeds 30 points. The narrative structure might be highly irregular.")
-        
-        # Elite Thematic Layer
-        thematic_report = self._perform_elite_thematic_analysis(trace)
-        
-        # Inject into output
+        # Inject into output (Removing prescriptive 'rewrite_priorities')
         final_output['writer_intelligence'] = {
             'narrative_diagnosis': all_diagnostics[:15],
             'structural_dashboard': dashboard,
             'narrative_summary': self._build_narrative_summary(trace, genre, all_diagnostics),
             'creative_provocations': self._generate_creative_provocations(all_diagnostics, genre),
-            'thematic_intelligence': thematic_report,
-            'genre_context': genre,
-            'script_era': script_era,
-            'intended_format': intended_format,
-            'is_reference': is_reference
+            'genre_context': genre
         }
         
-        # Add Story Editor Coverage (Rule 6: Placeholder)
-        final_output['story_editor_coverage'] = "PREMIUM FEATURE: Narrative logic audit and scene-by-scene structural proofing are currently being calculated in the Background Agent."
-        
         return final_output
-
-    def _format_scene_ref(self, start_idx, end_idx=None):
-        """Standardized scene reference with page numbers and headers."""
-        scene_info = self.context.get('scene_info', [])
-        heading = ""
-        if start_idx < len(scene_info):
-            raw_h = scene_info[start_idx].get('heading', 'SCENE')
-            # Extract basic identifier (INT. LOCATION)
-            heading = f" ({raw_h.split(' - ')[0]})"
-
-        if end_idx is None or end_idx == start_idx:
-            p_start = max(1, round(start_idx * 0.85))
-            return f"Scene {start_idx}{heading} [p. {p_start}]"
-        else:
-            p_start = max(1, round(start_idx * 0.85))
-            p_end = max(p_start, round(end_idx * 0.85))
-            return f"Scenes {start_idx}-{end_idx}{heading} [pp. {p_start}-{p_end}]"
 
     def _diagnose_health(self, trace, genre):
         """
         Converts math signals to story terms.
         Clusters consecutive issues.
-        Adapts thresholds based on Genre, Era and Format.
+        Adapts thresholds based on Genre.
         """
         assessments = []
-        era = self.context.get('era', 'contemporary')
         
-        # Genre & Era Thresholds
+        # Genre Thresholds
         boredom_thresh = 0.2
         if genre in ["Horror", "Drama", "Art House", "Avant-Garde", "Non-Linear"]:
             boredom_thresh = 0.1 # Tolerate slower pacing
-            
-        if era == "classic":
-            boredom_thresh -= 0.05 # Classic films allow much slower setup
             
         fatigue_thresh = 0.8
         if genre in ["Action", "Thriller"]:
@@ -195,17 +117,15 @@ class WriterAgent:
                 length = end - start + 1
                 if length > 3:
                     duration_mins = length * 2
-                    ref = self._format_scene_ref(start, end)
                     assessments.append(
-                        f"🔴 **Sustained Intensity ({ref})**: Consistently high attentional demand for ~{duration_mins} mins. May lead to audience fatigue."
+                        f"🔴 **Sustained Intensity (Scenes {start}-{end})**: Consistently high attentional demand for ~{duration_mins} mins. May lead to audience fatigue."
                     )
 
         # 2. Confusion Clustering
         strain_ranges = self._find_ranges(trace, lambda s: s.get('expectation_strain', 0) > 0.8)
         for start, end in strain_ranges:
-             ref = self._format_scene_ref(start, end)
              assessments.append(
-                 f"🟠 **Information Density ({ref})**: High volume of new narrative elements. May increase cognitive load for the reader."
+                 f"🟠 **Information Density (Scenes {start}-{end})**: High volume of new narrative elements. May increase cognitive load for the reader."
              )
             
         # 3. Boredom vs Tense Silence
@@ -213,41 +133,36 @@ class WriterAgent:
         true_boredom_ranges = self._find_ranges(trace, lambda s: s['attentional_signal'] < boredom_thresh and max(s.get('conflict', 0), s.get('stakes', 0)) <= 0.5)
         for start, end in true_boredom_ranges:
             if (end - start + 1) >= 5: # Reward 2-4 scene valleys as 'effective recovery'
-                 ref = self._format_scene_ref(start, end)
                  assessments.append(
-                     f"🔵 **Engagement Drop ({ref})**: Attentional signals are low for an extended duration. Consider tightening the pacing or adding a 'hook' to keep the audience locked in."
+                     f"🔵 **Engagement Drop (Scenes {start}-{end})**: Attentional signals are low for an extended duration. Consider tightening the pacing or adding a 'hook' to keep the audience locked in."
                  )
 
         tense_silence_ranges = self._find_ranges(trace, lambda s: s['attentional_signal'] < boredom_thresh and max(s.get('conflict', 0), s.get('stakes', 0)) > 0.6)
         for start, end in tense_silence_ranges:
             if (end - start + 1) >= 2:
-                 ref = self._format_scene_ref(start, end)
                  assessments.append(
-                     f"🤫 **Tense Silence ({ref})**: Low dialogue density but high conflict. Effective subtextual tension."
+                     f"🤫 **Tense Silence (Scenes {start}-{end})**: Low dialogue density but high conflict. Effective subtextual tension."
                  )
 
         # 4. Exposition Clustering
         expo_ranges = self._find_ranges(trace, lambda s: s.get('exposition_score', 0) > 0.7)
         for start, end in expo_ranges:
-            ref = self._format_scene_ref(start, end)
             assessments.append(
-                f"💬 **Exposition Heavy ({ref})**: Characters are explaining details explicitly rather than through action."
+                f"💬 **Exposition Heavy (Scenes {start}-{end})**: Characters are explaining details explicitly rather than through action."
             )
 
         # 5. Pacing Volatility (The 'Avant-Garde' Special)
         volatility_ranges = self._find_ranges(trace, lambda s: s.get('pacing_volatility', 0) > 0.8)
         for start, end in volatility_ranges:
-            ref = self._format_scene_ref(start, end)
             assessments.append(
-                f"🎢 **Erratic Pacing ({ref})**: Extreme shifts in rhythm. Use sparingly for effect."
+                f"🎢 **Erratic Pacing (Scenes {start}-{end})**: Extreme shifts in rhythm. Use sparingly for effect."
             )
 
         # 6. Irony / Dissonance
         irony_ranges = self._find_ranges(trace, lambda s: s.get('sentiment', 0) > 0.6 and s.get('conflict', 0) > 0.7)
         for start, end in irony_ranges:
-             ref = self._format_scene_ref(start, end)
              assessments.append(
-                f"🎭 **Irony Detected ({ref})**: Positive tone matches high conflict. Unsettling and effective."
+                f"🎭 **Irony Detected (Scenes {start}-{end})**: Positive tone matches high conflict. Unsettling and effective."
             )
             
         # 7. Final Polish
@@ -272,29 +187,15 @@ class WriterAgent:
         complexities = [c[1].get('complexity', 0) for c in valid_chars]
         positivities = [c[1].get('positivity', 0) for c in valid_chars]
         puncts = [c[1].get('punctuation_rate', 0) for c in valid_chars]
-        words_per_turn = [c[1].get('words_per_turn', 0) for c in valid_chars]
-        registers = [c[1].get('register', 'neutral') for c in valid_chars]
-        agencies = [c[1].get('agency', 0) for c in valid_chars]
         
-        std_wpt = statistics.stdev(words_per_turn) if len(words_per_turn) > 1 else 0.0
-        std_agency = statistics.stdev(agencies) if len(agencies) > 1 else 0.0
+        std_comp = statistics.stdev(complexities) if len(complexities) > 1 else 0.0
+        std_pos = statistics.stdev(positivities) if len(positivities) > 1 else 0.0
+        std_punct = statistics.stdev(puncts) if len(puncts) > 1 else 0.0
         
-        # "Same Voice Syndrome" Universal Rule (Rule 2)
-        # Must trigger ONLY if ALL THREE are true: Register, WPT within 10%, and similar Power Dynamics
-        unique_registers = len(set(registers))
-        avg_wpt = sum(words_per_turn) / max(1, len(words_per_turn))
-        wpt_similarity = std_wpt / max(0.01, avg_wpt) < 0.10
-        agency_similarity = std_agency < 0.15
-        
-        if unique_registers == 1 and wpt_similarity and agency_similarity:
+        if std_comp < 0.1 and std_pos < 0.1 and std_punct < 0.05:
             names = [c[0] for c in valid_chars[:3]]
-            assessments.append(f"🔴 **Same Voice Syndrome**: Character speech patterns ({', '.join(names)}) lack distinct registers, word-per-turn variation, and power dynamic differentiation. Consider heightening their unique status or backgrounds to separate their voices.")
-        
-        # Power Dynamics Visualization
-        top_char = valid_chars[0]
-        if top_char[1].get('agency', 0) > 0.8:
-            assessments.append(f"⚖️ **Vocal Dominance ({top_char[0]})**: Maintains tactical control over exchanges. This character serves as the vocal 'alpha' in the current scene context.")
-
+            assessments.append(f"🔴 **Same Voice Syndrome**: The primary characters ({', '.join(names)}) share nearly identical dialogue textures. Consider varying sentence structures or punctuation habits to distinguish them.")
+            
         return assessments
 
     def _diagnose_motifs(self, trace):
@@ -315,12 +216,10 @@ class WriterAgent:
         for m, data in motif_tracker.items():
             if data['count'] > 1:
                 spread = data['last'] - data['first']
-                ref_first = self._format_scene_ref(data['first'])
-                ref_last = self._format_scene_ref(data['last'])
                 if data['first'] < total_scenes * 0.3 and data['last'] > total_scenes * 0.7:
-                    assessments.append(f"✨ **Successful Motif Payoff**: The object '{m}' was introduced early ({ref_first}) and paid off late ({ref_last}). Strong thematic resonance.")
+                    assessments.append(f"✨ **Successful Motif Payoff**: The object '{m}' was introduced early (Scene {data['first']}) and paid off late (Scene {data['last']}). Strong thematic resonance.")
                 elif data['first'] < total_scenes * 0.3 and spread < total_scenes * 0.1:
-                    assessments.append(f"🟡 **Abandoned Motif**: The object '{m}' was introduced in {ref_first} but never reappears after {ref_last}. Consider paying it off or cutting it.")
+                    assessments.append(f"🟡 **Abandoned Motif**: The object '{m}' was introduced in Scene {data['first']} but never reappears after Scene {data['last']}. Consider paying it off or cutting it.")
         
         # Sort so we only show the best ones
         # Prioritize payoffs over abandoned
@@ -328,12 +227,10 @@ class WriterAgent:
         return assessments[:2] # Limit to 2
 
     def _diagnose_tell_vs_show(self, trace):
-        """Analyze 'Tell, Don't Show' traps."""
         assessments = []
         tell_trap_ranges = self._find_ranges(trace, lambda s: s.get('tell_vs_show', {}).get('tell_ratio', 0.0) > 0.6 and s.get('tell_vs_show', {}).get('literal_emotions', 0) >= 2)
         for start, end in tell_trap_ranges:
-            ref = self._format_scene_ref(start, end)
-            assessments.append(f"🟠 **'Tell, Don't Show' Trap ({ref})**: Relying heavily on literal emotion words (e.g. 'sad', 'angry') in action lines rather than physical blocking/behavior.")
+            assessments.append(f"🟠 **'Tell, Don't Show' Trap (Scenes {start}-{end})**: Relying heavily on literal emotion words (e.g. 'sad', 'angry') in action lines rather than physical blocking/behavior.")
         return assessments[:1]
 
     def _find_ranges(self, trace, condition_fn):
@@ -467,25 +364,10 @@ class WriterAgent:
             otn = s.get('on_the_nose', {})
             idx = s['scene_index']
             rep = s.get('representative_dialogue', '')
-            
-            # SCENE 98 FIX: If this is a reference script, do not flag OTN (universal rule)
-            if self.context.get('is_reference'):
-                continue
-
-            # Universal Rule 5: Contradiction Check (Subtext vs On-The-Nose)
-            # Threshold lowered to 0.4 to catch high-tension but visually static scenes
-            conflict = s.get('conflict', 0)
-            visual_int = s.get('visual_intensity', 0)
-            
             if otn.get('on_the_nose_ratio', 0) > 0.25:
-                # If they are stating subtext but the scene is physically active or high-conflict
-                if conflict > 0.4 or visual_int > 0.4: 
-                    continue 
-                
                 quote = f" (e.g., \"{rep[:60]}...\")" if rep else ""
-                ref = self._format_scene_ref(idx)
                 assessments.append(
-                    f"🗣️ **On-The-Nose Dialogue ({ref})**: Characters are stating their internal subtext as text{quote}. "
+                    f"🗣️ **On-The-Nose Dialogue (Scene {idx})**: Characters are stating their internal subtext as text{quote}. "
                     f"Subvert the lines to hide the real emotion behind a defensive or tactical goal."
                 )
         return assessments[:2]
@@ -501,9 +383,8 @@ class WriterAgent:
             rep = s.get('representative_dialogue', '')
             if sl.get('has_shoe_leather', False):
                 quote = f" (e.g., \"{rep[:60]}...\")" if rep else ""
-                ref = self._format_scene_ref(idx)
                 assessments.append(
-                    f"✂️ **Shoe-Leather Detected ({ref})**: "
+                    f"✂️ **Shoe-Leather Detected (Scene {idx})**: "
                     f"Filler dialogue at the start or end of the scene{quote}. "
                     f"Arrive late, leave early — cut the pleasantries."
                 )
@@ -556,192 +437,80 @@ class WriterAgent:
             for char, data in s.get('character_scene_vectors', {}).items():
                 if char not in char_timeline:
                     char_timeline[char] = []
-                
-                # Rule 4: Extract the raw signals
                 char_timeline[char].append({
                     'scene': s['scene_index'],
-                    'decisions': data.get('decisions', 0),
-                    'initiations': data.get('initiations', 0),
-                    'commands': data.get('commands', 0),
-                    'consequences': data.get('consequences', 0),
-                    'presence_ratio': data.get('presence_ratio', 0.0),
                     'sentiment': data.get('sentiment', 0.0),
-                    'moral_sentiment': data.get('moral_sentiment', 0.0),
-                    'resolved': s.get('narrative_closure', False)
+                    'agency': data.get('agency', 0.0),
+                    'lines': data.get('line_count', 0),
+                    'resolved': s.get('narrative_closure', False) # Track if the scene resolved them
                 })
 
         arc_summary = {}
-        total_scenes = len(trace) if trace else 1
-        
-        # Pre-calculate presence for all characters to identify Top 3 / Primary / Minor
-        char_presence = {c: len(timeline) / total_scenes for c, timeline in char_timeline.items()}
-        sorted_chars = sorted(char_presence.items(), key=lambda x: x[1], reverse=True)
-        top_3_names = [c[0] for c in sorted_chars[:3]]
+        total_scenes = max([s.get('scene_index', 0) for s in trace]) if trace else 100
         
         for char, timeline in sorted(char_timeline.items()):
-            presence_ratio = char_presence[char]
-            is_primary = presence_ratio > 0.15 or char in top_3_names
-            
-            if not is_primary:
-                continue # Rule 4: Only show primary characters in character arcs section
+            if len(timeline) < 3:
+                continue  # Need at least 3 appearances to track an arc
 
-            # Rule 4: Agency Scoring (Deterministic Signal based)
-            def calculate_agency(window_timeline, window_total_scenes):
-                # SIGNAL 1 - ACTIVE DECISIONS (+5% each)
-                decisions = sum(t['decisions'] for t in window_timeline)
-                signal_1 = decisions * 0.05
-                
-                # SIGNAL 2 - SCENE PRESENCE (Percentage * 0.5)
-                # Corrected logic: Use percentage of total scenes character appears in. Multiply by 0.5.
-                presence = len(window_timeline) / max(1, window_total_scenes)
-                signal_2 = presence * 0.5
-                
-                # Rule 4: Cap at 100%, Floor at 10%. Never return 0% for primary.
-                return round(min(1.0, max(0.1, signal_1 + signal_2)), 3)
+            total_lines = sum(t['lines'] for t in timeline)
+            if total_lines < 8:
+                continue  # Ignore minor characters
 
-            # Act 1 (First 25%) and Act 3 (Last 25%)
-            act1_window = [t for t in timeline if t['scene'] <= total_scenes * 0.25]
-            act3_window = [t for t in timeline if t['scene'] >= total_scenes * 0.75]
-            
-            act1_scenes = max(1, total_scenes // 4)
-            act3_scenes = max(1, total_scenes // 4)
-            
-            agency_act1 = calculate_agency(act1_window, act1_scenes)
-            agency_act3 = calculate_agency(act3_window, act3_scenes)
-            
-            # Final Metrics
-            agency_delta = round(agency_act3 - agency_act1, 3)
-            moral_delta = round(timeline[-1]['moral_sentiment'] - (timeline[0]['moral_sentiment'] if timeline else 0.0), 3)
+            start = timeline[0]
+            end = timeline[-1]
+            sentiment_delta = round(end['sentiment'] - start['sentiment'], 3)
+            agency_delta = round(end['agency'] - start['agency'], 3)
 
-            # Arc Classification (Strict Rule 4 definitions)
-            arc_label = "Character Evolution"
-            if agency_delta > 0.2: arc_label = "Aspirational Rise 🌔"
-            elif agency_delta < -0.2: arc_label = "Tragic Fall 🥀"
-            elif abs(moral_delta) > 0.4: arc_label = "Moral Transformation 🎭"
-            
+            # High Fidelity Resolution Logic
+            # (New logic: must be before final 10% of script to be an 'Exit')
+            is_near_end = end.get('scene', 0) > (total_scenes * 0.9)
+            has_resolved_signal = timeline[-1].get('resolved', False) or (len(timeline) > 1 and timeline[-2].get('resolved', False))
+
+            # Arc classification: Emotional & Agency Journey
+            # Calculate emotional arcs first; 'Resolution' is a structural state, not an emotional one.
+            if sentiment_delta < -0.3 and agency_delta > 0.15:
+                arc_label = "Classic Tragedy 🎭"
+                arc_note = "Character gains agency but loses emotional hope/soul. A dominant storytelling arc."
+            elif sentiment_delta > 0.3 and agency_delta > 0.15:
+                arc_label = "Hero's Journey ⭐"
+                arc_note = "Strong positive transformation in both sentiment and agency over the narrative."
+            elif agency_delta < -0.2:
+                if sentiment_delta > -0.1:
+                    arc_label = "Steadfast / Supportive 🛡️"
+                    arc_note = "Character loses agency but maintains emotional core. Often seen in loyal advisors."
+                else:
+                    arc_label = "Descent 📉"
+                    arc_note = "Negative movement in both power/agency and emotional outlook."
+            elif abs(sentiment_delta) < 0.1 and abs(agency_delta) < 0.1:
+                # Only call it 'Flat' if it wasn't a Narrative Exit
+                if has_resolved_signal and not is_near_end:
+                    arc_label = "Resolved (Narrative Exit) 💀"
+                    arc_note = "Character's narrative thread reached a definitive conclusion or exit."
+                else:
+                    arc_label = "Flat Arc ⚠️"
+                    arc_note = "No measurable emotional or agency change. Is this intentional?"
+            else:
+                # Fallback for structural resolution
+                if has_resolved_signal:
+                    arc_label = "Resolved / Conclusive 🏁" if is_near_end else "Resolved (Narrative Exit) 💀"
+                    arc_note = "Character's narrative purpose reached a structural conclusion."
+                else:
+                    arc_label = "Developing Arc 📈"
+                    arc_note = "The character shows consistent development across the story beats."
+
             arc_summary[char] = {
                 'arc_type': arc_label,
-                'agency_act1': agency_act1,
-                'agency_act3': agency_act3,
+                'note': arc_note,
+                'sentiment_start': start['sentiment'],
+                'sentiment_end': end['sentiment'],
+                'sentiment_delta': sentiment_delta,
+                'agency_start': start['agency'],
+                'agency_end': end['agency'],
                 'agency_delta': agency_delta,
-                'moral_delta': moral_delta,
-                'presence_score': round(presence_ratio, 3),
-                'status': 'Primary' if presence_ratio > 0.15 else 'Top 3 (Support)'
+                'scenes_present': len(timeline)
             }
-        
+
         return arc_summary
-
-    def _perform_elite_thematic_analysis(self, trace):
-        """Rule 12: High-fidelity thematic analysis layer (Soul over Plot)."""
-        motif_results = self._analyze_thematic_coherence(trace)
-        if not motif_results:
-            return {"status": "Thematic density too low for high-fidelity extraction."}
-            
-        # 1. THEME DETECTION: Identify central question via top frequency
-        sorted_motifs = sorted(motif_results.items(), key=lambda x: sum(x[1]['act_frequency']), reverse=True)
-        top_motif = sorted_motifs[0][0]
-        
-        # Mapping motifs to core human nature questions
-        q_map = {
-            'Family/Loyalty': "What is the true price of absolute loyalty to one's own?",
-            'Power/The Cost': "Does the pursuit of power inevitably lead to the loss of self?",
-            'Morality/Corruption': "Can a moral center survive a world of compromise?",
-            'DEFAULT': "How do our choices under pressure define our final nature?"
-        }
-        central_question = q_map.get(top_motif, q_map['DEFAULT'])
-        
-        # 2. THEMATIC CONSISTENCY SCORE (0-100)
-        # avg_coherence (act distribution) + frequency density
-        avg_coh = statistics.mean([m['coherence_score'] for m in motif_results.values()]) if motif_results else 0
-        density = min(1.0, sum(sum(m['act_frequency']) for m in motif_results.values()) / max(1.0, (len(trace) * 2.5)))
-        consistency_score = int((avg_coh * 75) + (density * 25))
-        
-        # 3. THEMATIC PAYOFF (Evaluating the ending's answer)
-        delta = motif_results[top_motif]['migration_delta']
-        if abs(delta) > 0.4:
-            payoff = "Complete ✅ - Question answered with definitive dramatic change."
-        elif abs(delta) > 0.15:
-            payoff = "Partial 🌓 - Narrative closure reached but emotional ambiguity remains."
-        elif abs(delta) < 0.05 and any(motif_results[top_motif]['act_frequency']):
-            payoff = "Subverted/Open ☁️ - Intentional resistance to simple narrative payoff."
-        else:
-            payoff = "Unresolved ❓ - The script avoids a thematic conclusion."
-            
-        # 4. THEME VS PLOT TENSION (Named Explicitly)
-        all_arcs = self.context.get('char_arcs', {})
-        tension = "Reinforced (Symmetry between Plot outcome and Thematic statement)"
-        
-        if all_arcs:
-            protag = sorted(all_arcs.items(), key=lambda x: x[1].get('agency_score', 0), reverse=True)[0][0]
-            arc = all_arcs[protag]
-            
-            # If Plot represents material success (Agency UP) but Theme represents decay
-            if arc['agency_delta'] > 0.15 and delta < -0.2:
-                tension = "Pyrrhic Tension (The protagonist gains the world but loses the soul)"
-            elif arc['agency_delta'] < -0.15 and delta > 0.2:
-                tension = "Redemptive Tension (Plot failure enables thematic/moral growth)"
-            elif abs(arc['agency_delta'] < 0.1) and abs(delta) > 0.3:
-                tension = "Introspective Tension (Thematic transformation despite plot stasis)"
-
-        return {
-            'central_question': central_question,
-            'top_motif': top_motif,
-            'thematic_consistency_score': consistency_score,
-            'thematic_payoff': payoff,
-            'theme_vs_plot_tension': tension,
-            'motif_migration_details': motif_results
-        }
-
-    def _analyze_thematic_coherence(self, trace):
-        """Elite Rule 5: Detect thematic motifs (Power, Family, Corruption) and track their Sentiment Migration."""
-        themes = {
-            'Family/Loyalty': ['legacy', 'honor', 'bloodline', 'loyal', 'betrayal', 'kin', 'allegiance'],
-            'Power/The Cost': ['business', 'money', 'power', 'control', 'empire', 'rule', 'authority', 'status'],
-            'Morality/Corruption': ['soul', 'prayer', 'sin', 'guilt', 'innocent', 'corrupt', 'lie', 'forbidden'],
-            'Identity/Self': ['name', 'identity', 'mask', 'secret', 'past', 'transformation', 'fate', 'nature']
-        }
-        
-        n = len(trace)
-        if n < 3: return {}
-        third = max(1, n // 3)
-        
-        results = {}
-        for t_name, keywords in themes.items():
-            act_counts = [0, 0, 0]
-            act_sentiments = [[], [], []]
-            
-            for i, s in enumerate(trace):
-                text = str(s).lower()
-                # Use a combined text check for all keywords in this theme
-                found = sum(text.count(kw) for kw in keywords)
-                if found > 0:
-                    act_idx = min(2, i // third)
-                    act_counts[act_idx] += found
-                    act_sentiments[act_idx].append(s.get('sentiment', 0.0))
-            
-            # Migration: Calculating the shift in 'Moral Temperature' for this motif
-            # If the sentiment of 'Family' drops from Act 1 (+0.2) to Act 3 (-0.5), it signifies CORRUPTION.
-            start_temp = statistics.mean(act_sentiments[0]) if act_sentiments[0] else 0
-            end_temp = statistics.mean(act_sentiments[2]) if act_sentiments[2] else 0
-            migration_delta = round(end_temp - start_temp, 3)
-            
-            coherence = round(min(1.0, (sum(1 for c in act_counts if c > 0) / 3.0)), 2)
-            
-            migration_label = "Neutral"
-            if migration_delta < -0.3: migration_label = "Corrupted / Decay 🖤"
-            elif migration_delta > 0.3: migration_label = "Uplifting / Growth 🌱"
-            elif abs(migration_delta) < 0.1 and act_counts[2] > 0: migration_label = "Steadfast ⚓"
-            
-            results[t_name] = {
-                'act_frequency': act_counts,
-                'coherence_score': coherence,
-                'migration_delta': migration_delta,
-                'thematic_arc': migration_label
-            }
-            
-        return results
-
-        return results
 
 
     def _diagnose_stakes_diversity(self, trace):
@@ -896,9 +665,8 @@ class WriterAgent:
             examples = gd.get('examples', [])
             count = gd.get('cliche_count', 0)
             eg_str = f' (e.g. "{examples[0]}")' if examples else ''
-            ref = self._format_scene_ref(idx)
             assessments.append(
-                f"💬 **Generic Dialogue ({ref})**: {count} interchangeable cliché line(s) detected{eg_str}. "
+                f"💬 **Generic Dialogue (Scene {idx})**: {count} interchangeable cliché line(s) detected{eg_str}. "
                 f"Rewrite these to be hyper-specific to THIS character in THIS moment."
             )
         return assessments[:2]
@@ -908,22 +676,9 @@ class WriterAgent:
         assessments = []
         flat_ranges = self._find_ranges(trace, lambda s: s.get('scene_turn', {}).get('turn_label') == 'Flat')
         for start, end in flat_ranges:
-            # Universal Rule 8: Slow Opening Detection Override
-            # Flat turns in scenes 1-3 are only a problem if no spike follows within 3 scenes.
-            if start <= 2:
-                followed_by_spike = False
-                for j in range(end + 1, min(len(trace), end + 4)):
-                    turn = trace[j].get('scene_turn', {}).get('turn_label')
-                    if turn in ['Negative to Positive', 'Positive to Negative', 'High Energy']:
-                        followed_by_spike = True
-                        break
-                if followed_by_spike:
-                     continue 
-
             if (end - start + 1) >= 2:
-                ref = self._format_scene_ref(start, end)
                 assessments.append(
-                    f"⬜ **Flat Scene Turns ({ref})**: Emotional trajectory remains stagnant. These scenes end in the same relative position they began."
+                    f"⬜ **Flat Scene Turns (Scenes {start}–{end})**: Emotional trajectory remains stagnant. These scenes end in the same relative position they began."
                 )
         return assessments[:1]
 
@@ -991,9 +746,8 @@ class WriterAgent:
             eg = pv.get('examples', [])
             count = pv.get('passive_count', 0)
             eg_str = f' (e.g. "{eg[0][:55]}...")' if eg else ''
-            ref = self._format_scene_ref(idx)
             assessments.append(
-                f"✍️ **Passive Action Lines ({ref})**: {count} passive construction(s) detected{eg_str}. "
+                f"✍️ **Passive Action Lines (Scene {idx})**: {count} passive construction(s) detected{eg_str}. "
                 f"Active voice typically increases cinematic energy."
             )
         return assessments[:1]
@@ -1065,12 +819,12 @@ class WriterAgent:
 
                 if similarity > 0.55 and (idx_a, idx_b) not in flagged:
                     flagged.add((idx_a, idx_b))
-                    ref = self._format_scene_ref(idx_a, idx_b)
                     assessments.append(
-                        f"♻️ **Possible Redundancy ({ref})**: Both are '{purpose_a}' "
+                        f"♻️ **Possible Redundancy (Scenes {idx_a} & {idx_b})**: Both are '{purpose_a}' "
                         f"scenes with {round(similarity * 100)}% vocabulary overlap. "
                         f"They may be covering the same ground — consider merging or differentiating."
                     )
+
         return assessments[:2]
 
     def _diagnose_dangling_threads(self, trace):
@@ -1170,27 +924,27 @@ class WriterAgent:
 
         if a1 is None or a3 is None: return []
 
-        a1_pct = round(a1 * 100)
-        a3_pct = round(a3 * 100)
-        
         delta = a3 - a1
         if delta < -0.15:
             assessments.append(
                 f"📉 **Protagonist Regression ({protagonist})**: Agency drops from "
-                f"{a1_pct}% (Act 1) to {a3_pct}% (Act 3). Your protagonist ends the story "
+                f"{a1:.2f} (Act 1) to {a3:.2f} (Act 3). Your protagonist ends the story "
                 f"MORE passive than they started."
             )
         elif delta > 0.3:
-            assessments.append(f"🔥 **Proactive Hero ({protagonist})**: Agency grows from {a1_pct}% in Act 1 to {a3_pct}% in Act 3.")
+             assessments.append(
+                f"📈 **Protagonist Ascension ({protagonist})**: Agency spikes from "
+                f"{a1:.2f} → {a3:.2f}. A powerful transformation from reactive to total command."
+            )
         elif abs(delta) < 0.015:
             assessments.append(
                 f"⬜ **Protagonist Flat Arc ({protagonist})**: Agency stays flat "
-                f"({a1_pct}% → {a3_pct}%) across the script."
+                f"({a1:.2f} → {a3:.2f}) across the script."
             )
         else:
             assessments.append(
                 f"✅ **Protagonist Growth ({protagonist})**: Agency rises from "
-                f"{a1_pct}% → {a3_pct}%. Standard reactive-to-active transformation."
+                f"{a1:.2f} → {a3:.2f}. Standard reactive-to-active transformation."
             )
         return assessments[:1]
 
@@ -1229,16 +983,16 @@ class WriterAgent:
 
     def _build_runtime_estimate(self, trace, genre):
         """
-        Rule 1: Deterministic Runtime calculation (total scene count × average scene length).
+        Sum runtime contributions from all scenes to estimate total script runtime.
+        Compare against genre benchmarks and flag if out of range.
         """
         total_seconds = sum(s.get('runtime_contribution', {}).get('estimated_seconds', 0) for s in trace)
-        avg_seconds = total_seconds / max(1, len(trace))
         total_minutes = round(total_seconds / 60, 1)
 
         benchmarks = {
             'feature': (85, 130), 
-            'drama': (90, 150),
-            'crime drama': (100, 180),
+            'drama': (90, 150),       # Expanded for prestige drama
+            'crime drama': (100, 180), # Epic crime dramas like The Godfather
             'comedy': (85, 110),
             'thriller': (90, 130), 
             'horror': (80, 105), 
@@ -1248,28 +1002,27 @@ class WriterAgent:
             'general': (85, 130),
             'avant-garde': (70, 100) 
         }
-        
-        low, high = benchmarks.get(genre.lower(), benchmarks['general'])
-        
+        low, high = benchmarks.get(genre.lower(), (85, 125))
+
         if total_minutes < low:
-            status = f"Under — {total_minutes} min (target: {low}–{high} min for {genre})."
+            status = f"Under — {total_minutes} min (target: {low}–{high} min for {genre}). Script may be too short."
         elif total_minutes > high:
-            status = f"Over — {total_minutes} min (target: {low}–{high} min for {genre})."
+            status = f"Over — {total_minutes} min (target: {low}–{high} min for {genre}). Script may be too long."
         else:
             status = f"On Target — {total_minutes} min (target: {low}–{high} min for {genre})."
 
         return {
             'estimated_minutes': total_minutes,
-            'avg_scene_length_seconds': round(avg_seconds, 1),
-            'scene_count': len(trace),
-            'calculation': f"({len(trace)} scenes × {round(avg_seconds, 1)}s avg)",
-            'benchmark': f"{low}–{high} min",
+            'estimated_seconds': round(total_seconds),
+            'genre_target_min': low,
+            'genre_target_max': high,
             'status': status
         }
 
     def _build_location_profile(self, trace):
         """
-        Rule 1: Deterministic Location count (unique location names only).
+        Aggregate unique locations and INT/EXT balance across the script.
+        Warn if >60% of scenes share the same top location.
         """
         location_counts = {}
         int_count = 0
@@ -1277,47 +1030,28 @@ class WriterAgent:
 
         for s in trace:
             loc_data = s.get('location_data', {})
-            # Normalized location name for deduplication (Rule 1)
-            loc = (loc_data.get('location') or 'UNKNOWN').strip().upper()
-            interior = (loc_data.get('interior') or '').strip().upper()
+            loc = loc_data.get('location', 'UNKNOWN')
+            interior = loc_data.get('interior')
 
-            if loc and loc != 'UNKNOWN':
-                location_counts[loc] = location_counts.get(loc, 0) + 1
-            
-            if 'INT' in interior: int_count += 1
-            elif 'EXT' in interior: ext_count += 1
+            location_counts[loc] = location_counts.get(loc, 0) + 1
+            if interior == 'INT': int_count += 1
+            elif interior == 'EXT': ext_count += 1
 
         total = max(1, len(trace))
         sorted_locs = sorted(location_counts.items(), key=lambda x: x[1], reverse=True)
-        unique_count = len(sorted_locs)
-        top_loc = sorted_locs[0][0] if sorted_locs else "N/A"
-        top_ratio = (sorted_locs[0][1] / total) if sorted_locs else 0.0
-        
-        # Rule 6 thresholds (Budget-Aware Location Guard)
-        budget = self.context.get('budget_tier', 'indie').lower()
-        thresholds = {
-            'micro': 15,
-            'indie': 40,
-            'mid': 80,
-            'studio': 150,
-            'blockbuster': 250
-        }
-        thresh = thresholds.get(budget, thresholds['indie'])
+        top_loc, top_count = sorted_locs[0] if sorted_locs else ('UNKNOWN', 0)
+        top_ratio = top_count / total
 
         warning = None
-        if unique_count > thresh:
-            warning = f"Location count ({unique_count}) exceeds standard {budget.upper()} threshold ({thresh}). Consider consolidation if budget is a constraint."
-        else:
-            # Rule: Replace warning with neutral observation if within appropriate range
-            warning = f"{unique_count} locations — consistent with {budget} scope."
-
-        # Special visual variety check (secondary)
-        if top_ratio > 0.6 and unique_count < 5 and not warning.startswith("Location count"):
-            # We keep this as a separate note if it doesn't conflict
-            warning += f" Note: {round(top_ratio * 100)}% of scenes are set in '{top_loc}'. Consider physical variety."
+        if top_ratio > 0.6 and len(sorted_locs) < 5:
+            warning = (
+                f"{round(top_ratio * 100)}% of scenes are set in '{top_loc}'. "
+                f"Only {len(sorted_locs)} unique location(s) total. "
+                f"Consider varying the physical world to add visual range."
+            )
 
         return {
-            'unique_locations': unique_count,
+            'unique_locations': len(sorted_locs),
             'top_location': top_loc,
             'top_location_ratio': round(top_ratio, 3),
             'int_scenes': int_count,
@@ -1342,9 +1076,8 @@ class WriterAgent:
                 for m in mdata.get('monologues', []):
                     char = m.get('character', 'Unknown')
                     length = m.get('length', 0)
-                    ref = self._format_scene_ref(s['scene_index'])
                     assessments.append(
-                        f"🎙️ **Monologue Risk ({ref}, {char})**: "
+                        f"🎙️ **Monologue Risk (Scene {s['scene_index']}, {char})**: "
                         f"{length}-line uninterrupted solo. Long monologues are high-risk — "
                         f"can stop a film cold if not earned. Ensure every line reveals character or advances plot."
                     )
@@ -1430,8 +1163,11 @@ class WriterAgent:
         }
 
     def _build_narrative_summary(self, trace, genre, diagnostics):
-        """Rule 10/11: Synthesizes all elite diagnostic markers into a compelling executive narrative."""
-        if not trace: return "Analysis pending."
+        """
+        Synthesize all signals into a dynamic narrative of the reader's emotional journey.
+        Builds 8–10 conditional sentence templates that activate based on script-specific spikes.
+        """
+        if not trace: return "Unable to generate summary."
         diag_str = " ".join(diagnostics) if diagnostics else ""
         
         # 1. Opening Intelligence
@@ -1451,85 +1187,26 @@ class WriterAgent:
         # 3. Dynamic Flag Intelligence
         specifics = []
         if "Same Voice Syndrome" in diag_str:
-            specifics.append("The dialogue shows high phonetic overlap, suggesting speech rhythms across characters.")
+            specifics.append("The dialogue shows high phonetic overlap, suggesting your characters share similar speech rhythms.")
         if "Passive Protagonist" in diag_str:
-            specifics.append("The protagonist currently faces high narrative resistance, making their journey reactive.")
-        if "Moral Paradox" in diag_str or "Pyrrhic" in diag_str:
-            specifics.append("The script utilizes a sophisticated moral arc, achieving a complex 'tragic victory' signature.")
+            specifics.append("The protagonist currently faces high narrative resistance, making their journey reactive in the second act.")
+        if "On-The-Nose" in diag_str:
+            specifics.append("There are moments where characters state their interior subtext directly, potentially diluting the dramatic irony.")
         if "Tonal Whiplash" in diag_str:
             specifics.append("The script undergoes rapid emotional shifts that challenge the reader's cognitive framing.")
-
-        # 4. Closing / Payoff (NEW Dual-Layer Intelligence)
-        ending_note = self._analyze_ending_complexity(trace)
-        closing = f"Ultimately, the story concludes in a {ending_note}"
+        
+        # 4. Closing / Payoff
+        s3 = sum([s.get('sentiment', 0) for s in trace[-(len(trace)//3):]]) / (len(trace)//3 or 1)
+        if s3 < -0.3:
+            closing = "The journey concludes with a definitive tragic descent, delivering a soul-crushing emotional payoff."
+        elif s3 > 0.3:
+            closing = "The story resolves with a hard-earned sense of triumph and narrative closure."
+        else:
+            closing = "The resolution maintains an ambiguous emotional tone, consistent with complex prestige dramas."
 
         # Aggregate summary
         summary = f"{opening} {spike_text} " + " ".join(specifics[:2]) + f" {closing}"
         return {'summary': summary.strip()}
-        
-    def _analyze_ending_complexity(self, trace):
-        """Rule 11: Dual-layer Ending Analysis (Plot vs Moral/Emotional Outcome)."""
-        if not trace: return "A narrative conclusion reached."
-        
-        last_scene = trace[-1]
-        char_arcs = last_scene.get('narrative_arcs', {})
-        
-        # Identify protagonist (highest overall agency)
-        all_arcs = self.context.get('char_arcs', {})
-        if not all_arcs: return "A conclusion reached with moderate narrative closure."
-        
-        # Find protag by highest avg agency_score across all scenes
-        protag_candidates = sorted(all_arcs.items(), key=lambda x: x[1].get('agency_score', 0), reverse=True)
-        if not protag_candidates: return "The story resolves with an evocative final beat."
-        protagonist = protag_candidates[0][0]
-        
-        # 1. Plot Outcome (Final Agency)
-        protag_end = char_arcs.get(protagonist, {})
-        agency_final = protag_end.get('agency', 0.5)
-        plot_status = "WIN" if agency_final > 0.7 else ("LOSS" if agency_final < 0.4 else "AMBIGUOUS")
-        
-        # 2. Moral/Emotional Outcome (Moral Journey Delta)
-        moral_delta = all_arcs.get(protagonist, {}).get('moral_journey', 0.0)
-        moral_status = "WIN" if moral_delta > 0.3 else ("LOSS" if moral_delta < -0.3 else "AMBIGUOUS")
-        
-        # Ending Complexity Labels
-        label = "Resolution"
-        note = ""
-        
-        if plot_status == "WIN" and moral_status == "LOSS":
-            label = "Pyrrhic Victory 🌓"
-            note = "the protagonist achieves their worldly goal but suffers total moral or emotional collapse."
-        elif plot_status == "LOSS" and moral_status == "WIN":
-            label = "Redemptive Defeat ✨"
-            note = "material/plot failure is overshadowed by ultimate moral growth or spiritual redemption."
-        elif plot_status == "WIN" and moral_status == "AMBIGUOUS":
-            label = "Hollow Victory 🧥"
-            note = "narrative goals are met, but the personal resonance remains hauntingly uncertain."
-        elif plot_status == "AMBIGUOUS" and moral_status == "LOSS":
-            label = "Quiet Tragedy 🕯️"
-            note = "the plot resolution is left hanging, but the protagonist's moral decline is definitive."
-        elif plot_status == "WIN" and moral_status == "WIN":
-            label = "Triumphant Resolution 🏆"
-            note = "a complete alignment of material success and profound personal growth."
-        elif plot_status == "LOSS" and moral_status == "LOSS":
-            label = "Unmitigated Tragedy 🌑"
-            note = "total loss across both the physical and moral spectrums of the story."
-        else:
-            label = "Complex Ambiguity ☁️"
-            note = "the script concludes with a sophisticated refusal of simple narrative closure."
-
-        # 3. Weighted Reaction Rule (The 'Witness' POV)
-        others = {k: v for k, v in char_arcs.items() if k != protagonist}
-        if others:
-            # Find the most emotionally active secondary character in the final scene
-            loudest_other = max(others.items(), key=lambda x: abs(x[1].get('sentiment', 0)))[0]
-            other_sent = others[loudest_other].get('sentiment', 0.0)
-            if abs(other_sent) > 0.6:
-                # If a witness's reaction is huge, it defines the final sentiment
-                note += f" | Final focus is on {loudest_other}'s reaction, which anchors the script's emotional result."
-
-        return f"**{label}**: {note}"
-
 
     # =========================================================================
     # PHASE 29: READER EXPERIENCE & THEMATIC DEPTH METHODS
@@ -1552,9 +1229,8 @@ class WriterAgent:
             hits = rf.get('internal_state_hits', [])
             if hits:
                 eg = hits[0]
-                ref = self._format_scene_ref(idx)
                 assessments.append(
-                    f"🚫 **Action Line Modifiers ({ref})**: Action lines contain descriptors defining internal states. "
+                    f"🚫 **Action Line Modifiers (Scene {idx})**: Action lines contain descriptors defining internal states. "
                     f"e.g. \"{eg}\""
                 )
 
@@ -1563,9 +1239,8 @@ class WriterAgent:
             rf = s.get('reader_frustration', {})
             if rf.get('name_crowding'):
                 n = rf.get('unique_char_count', 4)
-                ref = self._format_scene_ref(s['scene_index'])
                 assessments.append(
-                    f"👥 **Character Density ({ref})**: {n} distinct characters are active simultaneously. "
+                    f"👥 **Character Density (Scene {s['scene_index']})**: {n} distinct characters are active simultaneously. "
                     f"This creates a high referential load for the audience."
                 )
                 break
@@ -1575,9 +1250,8 @@ class WriterAgent:
             rf = s.get('reader_frustration', {})
             pairs = rf.get('similar_name_pairs', [])
             if pairs:
-                ref = self._format_scene_ref(s['scene_index'])
                 assessments.append(
-                    f"🔤 **Orthographic Proximity ({ref})**: Character names {pairs[0]} are lexically or phonetically similar. "
+                    f"🔤 **Orthographic Proximity (Scene {s['scene_index']})**: Character names {pairs[0]} are lexically or phonetically similar. "
                     f"This pattern frequently correlates with reader confusion tracking dialogue tags."
                 )
                 break
@@ -1683,43 +1357,86 @@ class WriterAgent:
         return assessments[:1]
 
     def _diagnose_theme_coherence(self, trace):
-        """Rule 1 Integration: Surface identifying themes and coherence status."""
-        themes = self.context.get('themes', {})
+        """
+        Aggregate thematic clusters across the full script and check Act-level consistency.
+        Flag if the dominant theme shifts significantly between Acts.
+        """
         assessments = []
-        for name, data in themes.items():
-            if data['coherence_score'] >= 0.9:
-                assessments.append(f"🛡️ **Thematic Core ({name})**: Dominant presence across all three Acts. Strong structural coherence.")
-            elif data['coherence_score'] <= 0.3:
-                 assessments.append(f"🌫️ **Thematic Ghost ({name})**: Found in one Act but abandoned elsewhere. Suggests a 'dangling' thematic promise.")
-        return assessments
+        if len(trace) < 4: return []
 
+        third = max(1, len(trace) // 3)
+
+        def dominant_theme(scenes):
+            agg = {}
+            for s in scenes:
+                for theme, score in s.get('thematic_clusters', {}).get('theme_scores', {}).items():
+                    agg[theme] = agg.get(theme, 0) + score
+            if not agg: return None
+            return max(agg, key=agg.get)
+
+        t1 = dominant_theme(trace[:third])
+        t2 = dominant_theme(trace[third:third*2])
+        t3 = dominant_theme(trace[third*2:])
+
+        # Script-wide dominant theme
+        all_themes = {}
+        for s in trace:
+            for theme, score in s.get('thematic_clusters', {}).get('theme_scores', {}).items():
+                all_themes[theme] = all_themes.get(theme, 0) + score
+
+        if not all_themes:
+            return []
+
+        top_global = sorted(all_themes.items(), key=lambda x: x[1], reverse=True)[:2]
+        global_themes = [t for t, _ in top_global]
+
+        # Check for thematic drift between acts
+        themes = [t for t in [t1, t2, t3] if t]
+        if len(set(themes)) == len(themes) and len(themes) == 3:
+            assessments.append(
+                f"🎭 **Thematic Drift**: Dominant theme shifts each Act "
+                f"({t1} → {t2} → {t3}). Strong scripts stay anchored to 1-2 core themes. "
+                f"Your script appears to be exploring '{global_themes[0]}' overall — "
+                f"consider threading it more consistently across all 3 Acts."
+            )
+        else:
+            if global_themes:
+                assessments.append(
+                    f"✅ **Thematic Coherence**: Core themes are "
+                    f"**{global_themes[0]}**{(' & **' + global_themes[1] + '**') if len(global_themes) > 1 else ''} "
+                    f"— consistent across Acts. Strong thematic spine."
+                )
+        return assessments[:1]
     def _generate_creative_provocations(self, diagnosis, genre):
-        """Rule 6 Variety: Different thematic provocations every time, no direct flag echoes."""
-        pool = {
-            'drama': [
-                "What would happen if your protagonist couldn't rely on their primary 'safety net' in the second act?",
-                "Is there a secondary conflict that could mirror the internal struggle of the lead?",
-                "Could the antagonist's motive be framed as a 'twisted virtue' to add complexity?",
-                "What is the one thing your protagonist wants so badly they would burn their life down to get it?"
-            ],
-            'thriller': [
-                "What is the one piece of information that, if revealed too early, would break the story?",
-                "Is the ticking clock physical, or can it be psychological to increase pressure?",
-                "Which character has the most to lose if the truth is never revealed?",
-                "If the antagonist achieved their goal tomorrow, what would their life look like?"
-            ],
-            'general': [
-                "If you removed the most expensive scene, would the story still function?",
-                "What is the subtext of the silence between your two main leads?",
-                "Is the central theme being challenged by the supporting cast, or just supported?",
-                "In your quietest scene, what is the 'Invisible Conflict' that keeps the audience leaning in?"
-            ]
+        """Generates mentor-like questions to push the writer's craft further."""
+        provocations = []
+        diag_str = " ".join(diagnosis) if diagnosis else ""
+        
+        # Mapping Flags to Masterclass Questions (Task 6)
+        mapping = {
+            'Same Voice Syndrome': "Your leads share similar dialogue rhythms. What is one specific verbal habit you could give your protagonist that their rival would *never* use?",
+            'Flat Arc': "This character remains emotionally static. If they don't change, is the *world* changing around them to highlight their refusal to adapt?",
+            'On-The-Nose': "In your most intense scene, a character states exactly what they feel. What could they say instead that hides their true intent but reveals their desperation?",
+            'Attentional Valley': "Engagement dips over multiple scenes here. Who is winning the 'Invisible Power Struggle' while no one is shouting?",
+            'Passive Protagonist': "The story is pushing the hero. What decision can they make right now that would burn their bridges and force the plot to follow them?",
+            'Similar Names': "The reader may confuse your leads. Can you give one a specific physical vocal quirk or a recurring linguistic motif to differentiate them?",
+            'Tonal Whiplash': "The script undergoes an extreme shifts. Is this a deliberate subversion of audience expectations, or is it breaking the story's reality?",
+            'Redundant Scenes': "These scenes serve the same purpose. Which one has more 'Cinematic Economy'? Combine them into a single high-impact sequence.",
+            'Tell vs Show': "You're describing internal thoughts in action lines. How can you translate that feeling into a purely visual piece of behavior?"
         }
         
-        options = pool.get(genre.lower(), pool['general'])
-        # Simplified selection for variety
-        import random
-        return random.sample(options, min(2, len(options)))
+        for flag, question in mapping.items():
+            if flag in diag_str:
+                provocations.append(question)
+                
+        # Fillers if no flags
+        if not provocations:
+            provocations = [
+                "What is the one thing your protagonist wants so badly they would burn their life down to get it?",
+                "In your quietest scene, what is the 'Invisible Conflict' that keeps the audience leaning in?"
+            ]
+            
+        return list(set(provocations))[:3]
 
 
 
@@ -1731,75 +1448,31 @@ class WriterAgent:
 
 
     def _calculate_page_turner_index(self, trace):
-        """Rule 13: Tension Signature Pattern Recognition (High-Fidelity)."""
-        if not trace: return {'index': 50, 'signature': "Neutral"}
+        """
+        Calculates PTI (0-100) based on Dramatic Contrast and Resonance.
+        A 'Page-Turner' isn't just constant shouting; it's the rhythm of tension and relief.
+        """
+        if not trace: return 50
         
+        # 1. Emotional Contrast: The standard deviation of the signal
+        # High contrast means the writer is using the 'Valley' effect correctly.
+        # Threshold: 0.18 is a strong delta for a normalized 0-1 signal.
         signals = [s.get('attentional_signal', 0) for s in trace]
-        n = len(trace)
-        
-        # 1. Baseline Tension
-        avg_tension = sum(signals) / n
-        
-        # 2. Spike Frequency (Peaks per Act)
-        peaks = sum(1 for s in signals if s > 0.8)
-        peaks_per_act = round(peaks / 3.0, 1)
-        
-        # 3. Valley Depth (Min signal relative to avg)
-        min_v = min(signals)
-        valley_depth_rel = round(min_v / (avg_tension or 0.1), 2)
-        
-        # 4. Pattern Classification
-        # Calculate volatility (jumps)
-        diffs = [abs(signals[i] - signals[i-1]) for i in range(1, n)]
-        avg_jump = statistics.mean(diffs) if diffs else 0
-        
-        if avg_tension < 0.35 and peaks < (n * 0.1) and valley_depth_rel < 0.5:
-            signature = "Slow Burn (Baseline: Low, Spikes: Rare, Valleys: Deep) 🏔️"
-        elif avg_tension > 0.55 and peaks > (n * 0.25) and valley_depth_rel > 0.5:
-            signature = "Thriller (Baseline: High, Spikes: Frequent, Valleys: Shallow) 🌪️"
-        elif signals[-1] > (avg_tension + 0.2) and signals[0] < avg_tension:
-            signature = "Escalating (Baseline: Rising, Spike Intensity: Increasing) 📈"
-        elif avg_jump > 0.18 and valley_depth_rel < 0.4:
-            signature = "Operatic (Baseline: Variable, Spikes: Clustered, Valleys: Dramatic) 🎭"
-        else:
-            signature = "Episodic (Baseline: Medium, Spikes: Regular, Valleys: Regular) ⏱️"
-
-        # Calculate PTI Score
-        contrast = statistics.stdev(signals) if n > 1 else 0
+        contrast = statistics.stdev(signals) if len(signals) > 1 else 0
         contrast_score = min(1.0, contrast / 0.18) * 35 # 35 pts for contrast
-        resonance = sum(s.get('cognitive_resonance', 0) for s in trace) / n
+        
+        # 2. Hook Density: Use Cognitive Resonance (Impact vs just Volume)
+        # Average resonance of 0.35 is quite high for a script with breathers.
+        resonance = sum(s.get('cognitive_resonance', 0) for s in trace) / len(trace)
         resonance_score = min(1.0, resonance / 0.35) * 45 # 45 pts for impact
+        
+        # 3. Cliffhangers: Scenes ending on high-intensity signals
         cliff_count = sum(1 for s in trace if s.get('attentional_signal', 0) > 0.82)
         cliffhangers = (min(cliff_count, 4) * 5) # 20 pts for peaks
         
-        return {
-            'index': min(100, round(20 + (contrast_score + resonance_score + cliffhangers) * 0.8)),
-            'signature': signature,
-            'baseline_tension': round(avg_tension, 2),
-            'peaks_per_act': peaks_per_act,
-            'valley_depth': valley_depth_rel,
-            'volatility': round(avg_jump, 2)
-        }
+        # Base completion bonus (20%) + Metrics
+        return min(100, round(20 + (contrast_score + resonance_score + cliffhangers) * 0.8))
 
-    def _diagnose_action_peaks(self, trace):
-        """Rule 6: Action Peak Detection (High-Fidelity Intersection)."""
-        peaks = []
-        for s in trace:
-            if s.get('is_action_peak', False):
-                ref = self._format_scene_ref(s['scene_index'])
-                # Variety: Different thematic provocations (Rule 6 Variety)
-                narrative_context = s.get('representative_action', '').lower()
-                
-                if 'kill' in narrative_context or 'shot' in narrative_context:
-                    provocation = "The physicality of the violence here must not obscure the thematic decision being made."
-                elif 'run' in narrative_context or 'chase' in narrative_context:
-                    provocation = "Kinetic urgency is high — ensure the visual geography of the space is clear to maintain tension."
-                else:
-                    provocation = "This intersection of stakes and physicality represents a key dramatic pivot."
-                
-                peaks.append(f"⚡ **Action Peak ({ref})**: {provocation}")
-        return peaks[:3] # Limit to top 3 peaks for clarity
-    
     def _diagnose_writing_texture(self, trace):
         """Identifies if the script is 'Cinematic' (lean) or 'Novelistic' (dense)."""
         action_densities = [s.get('visual_abstraction', {}).get('action_lines', 0) for s in trace]
@@ -1809,120 +1482,47 @@ class WriterAgent:
         if avg_action < 4: return "Sparse / Minimalist"
         return "Cinematic / Visual"
 
-    def _calculate_tone_score(self, trace):
-        """Rule 1: Detect Tone Score (1-10) from action intensity and conflict."""
-        if not trace: return 5
-        action = sum(s.get('visual_abstraction', {}).get('action_lines', 0) for s in trace) / len(trace)
-        conflict = sum(s.get('conflict', 0) for s in trace) / len(trace)
-        # Epic/High Intensity (10) vs Intimate/Low Action (1)
-        score = (action * 0.6) + (conflict * 10 * 0.4)
-        return round(max(1, min(10, score)))
-
-    def _calculate_scale_score(self, trace):
-        """Rule 2: Detect Scale Score (1-10) from locations and budget."""
-        if not trace: return 5
-        locs = self._build_location_profile(trace).get('unique_locations', 0)
-        budget = self.context.get('budget_tier', 'indie')
-        b_map = {'micro': 1, 'indie': 3, 'mid': 6, 'blockbuster': 10}
-        b_val = b_map.get(budget.lower(), 4)
-        
-        # Scale weighted by loc count (normalized to 1-10 via ~50 locs = max)
-        score = (min(locs, 50) / 5) + (b_val * 0.5)
-        return round(max(1, min(10, score)))
-
-    def _detect_subgenre(self, trace):
-        """Rule 1: Detect specific subgenre from plot mechanics and dynamics."""
-        if not trace: return "Character Study"
-        
-        # Conflict types & Stakes markers
-        locations = self._build_location_profile(trace).get('unique_locations', 0)
-        action_density = sum(s.get('visual_abstraction', {}).get('action_lines', 0) for s in trace) / len(trace)
-        dialogue_density = 1 - action_density / 20 # Normalized relative to avg
-        conflict_std = self._calculate_tension_map(trace).get('volatility', 0)
-        stakes = self.context.get('stakes', 'Personal')
-
-        # Logic for subgenre categorization
-        if "Political" in stakes or "Global" in stakes: return "Political Thriller"
-        if "Crime" in stakes or "Power" in stakes:
-            if locations > 25: return "Crime Epic"
-            if action_density > 8: return "Heist"
-            return "Crime Drama"
-        if "Family" in stakes or "Social" in stakes:
-            if dialogue_density > 0.7: return "Domestic Drama"
-            return "Coming of Age"
-        if conflict_std > 0.2: return "Revenge Tragedy"
-        
-        return "Character Study"
-
-    def _find_commercial_comps(self, trace, genre):
-        """Rule 9: Comparable Films. Match on Subgenre and Tone/Scale Combined."""
-        # 1. Detect Classification (Tone + Scale)
-        avg_engagement = statistics.mean([s['attentional_signal'] for s in trace]) if trace else 0.5
-        cast_size = len(self.context.get('char_arcs', {}))
-        loc_count = len(set(s.get('location_data', {}).get('location', 'Unknown') for s in trace))
-        
-        # Classification Detection (Rule 9)
-        classification = "Grounded Mid Drama" # Default
-        if avg_engagement > 0.7:
-            if cast_size > 15 or loc_count > 30: classification = "Epic Operatic Saga"
-            else: classification = "Intense Large Drama"
-        elif avg_engagement < 0.4:
-            if loc_count < 10: classification = "Intimate Small Drama"
-            else: classification = "Dark Character Study"
-        elif cast_size < 5 and loc_count < 8:
-            classification = "Contained Thriller"
-        elif loc_count > 40:
-            classification = "Expansive Action"
-
-        # 2. Match on Subgenre (Derived from Conflict/Goal)
-        # Placeholder for subgenre extraction (Rule 9 Dimensions)
-        # Detect subgenre from trace metadata (conflict type)
-        def get_dominant(s):
-            st = s.get('stakes', {})
-            if isinstance(st, dict): return st.get('dominant', 'Physical')
-            return s.get('stakes_taxonomy', {}).get('dominant', 'Physical')
-            
-        conflict_types = [get_dominant(s) for s in trace]
-        dominant_conflict = max(set(conflict_types), key=conflict_types.count) if conflict_types else 'Physical'
-        
-        sub_map = {
-            'Physical': 'Survival Thriller',
-            'Emotional': 'Relationship Drama',
-            'Social': 'Political Thriller',
-            'Moral': 'Legal Drama',
-            'Existential': 'Speculative Noir'
+    def _find_commercial_comps(self, genre, dominant_stakes='Social'):
+        """Task 3: Subgenre-aware matching for feature films only."""
+        # Map Dominant Stakes to specialized 'Subgenres'
+        stakes_to_sub = {
+            'Social': 'Political/Mob/Society',
+            'Moral': 'Psychological/Moral',
+            'Emotional': 'Personal/Relational',
+            'Physical': 'Visceral/Action',
+            'Existential': 'Philosophical/Surreal'
         }
-        subgenre = sub_map.get(dominant_conflict, 'Generic ' + genre)
-
-        db = [
-            ("Blue Valentine", "Relationship Drama", "Intimate Small Drama"),
-            ("Manchester by the Sea", "Relationship Drama", "Dark Character Study"),
-            ("Michael Clayton", "Political Thriller", "Grounded Mid Drama"),
-            ("All the President's Men", "Political Thriller", "Intense Large Drama"),
-            ("Lady Bird", "Coming of Age", "Intimate Small Drama"),
-            ("Heat", "Heist Thriller", "Intense Large Drama"),
-            ("Parasite", "Social Thriller", "Intense Large Drama"),
-            ("Taxi Driver", "Character Study", "Dark Character Study"),
-            ("Moonlight", "Character Study", "Intimate Small Drama"),
-            ("Joker", "Character Study", "Dark Character Study"),
-            ("Sicario", "Survival Thriller", "Intense Large Drama"),
-            ("Ex Machina", "Speculative Noir", "Contained Thriller")
-        ]
+        subgenre = stakes_to_sub.get(dominant_stakes, 'General')
         
-        matches = [name for name, s, c in db if s == subgenre or c == classification]
-        # Sort so that Dual matches (score 3) > Subgenre only (score 2) > Classification only (score 1)
-        matches = sorted(list(set(matches)), key=lambda x: (sum(2 for n, s, c in db if n == x and s == subgenre) + 
-                                                           sum(1 for n, s, c in db if n == x and c == classification)), reverse=True)
+        lookup = {
+            ('Crime', 'Political/Mob/Society'): ["The Godfather", "The Departed", "The Irishman"],
+            ('Crime', 'Psychological/Moral'): ["Chinatown", "No Country for Old Men", "Heat"],
+            ('Drama', 'Personal/Relational'): ["Marriage Story", "Ordinary People", "Lady Bird"],
+            ('Drama', 'Political/Mob/Society'): ["The Social Network", "Parasite", "The Big Short"],
+            ('Action', 'Visceral/Action'): ["Mad Max: Fury Road", "Die Hard", "John Wick"],
+            ('Action', 'Personal/Relational'): ["Logan", "The Dark Knight", "Gladiator"],
+            ('Horror', 'Philosophical/Surreal'): ["Hereditary", "The Shining", "Midsommar"],
+            ('Horror', 'Visceral/Action'): ["Halloween", "A Quiet Place", "The Conjuring"],
+            ('Sci-Fi', 'Philosophical/Surreal'): ["2001: A Space Odyssey", "Arrival", "Blade Runner 2049"],
+            ('Sci-Fi', 'Psychological/Moral'): ["Gattaca", "Children of Men", "Ex Machina"],
+            ('Thriller', 'Political/Mob/Society'): ["Gone Girl", "Seven", "Prisoners"],
+            ('Comedy', 'Political/Mob/Society'): ["Knives Out", "Glass Onion", "The Favorite"],
+            ('Comedy', 'Personal/Relational'): ["Little Miss Sunshine", "The Holdovers", "Planes, Trains and Automobiles"],
+            ('Romance', 'Personal/Relational'): ["Before Sunrise", "Normal People", "The Notebook"]
+        }
         
-        final_comps = matches[:3]
-        if len(final_comps) < 3:
-            # Padding if fewer than 3 strong matches exist
-            if len(final_comps) < 3 and final_comps:
-                final_comps.append(f"{final_comps[0]} (Approximate Match) 🚩")
-            while len(final_comps) < 3:
-                final_comps.append("Generic Industry Reference 🚩")
-                
-        return final_comps
+        g = genre.replace('-', ' ').split()[0].title() 
+        if 'Sci' in g: g = 'Sci-Fi'
+        
+        # Primary Match: Genre + Subgenre
+        key = (g, subgenre)
+        if key in lookup: return lookup[key]
+        
+        # Secondary Match: Just Genre + any stake
+        for k_g, k_s in lookup.keys():
+            if k_g == g: return lookup[(k_g, k_s)]
+            
+        return ["The Social Network", "Parasite", "Pulp Fiction"] # Ultimate fallbacks
 
     def _calculate_production_risks(self, trace):
         """
@@ -1977,22 +1577,10 @@ class WriterAgent:
         unique_stakes = len([v for k, v in stakes.items() if (isinstance(v, (int, float)) and v > 0)])
         stakes_score = min(1.0, unique_stakes / 4.0) * 20
         
-        # 2. Production Polish (20%): Manageable Cast/Location count for budget tier
-        budget = self.context.get('budget_tier', 'indie').lower()
-        # Thresholds matching the Budget-Aware Location Guard
-        loc_thresholds = {'micro': 15, 'indie': 40, 'mid': 80, 'studio': 150, 'blockbuster': 250}
-        cast_thresholds = {'micro': 8, 'indie': 20, 'mid': 45, 'studio': 80, 'blockbuster': 150}
-        
-        loc_thresh = loc_thresholds.get(budget, 40)
-        cast_thresh = cast_thresholds.get(budget, 20)
-        
+        # 2. Production Polish (20%): Manageable Cast/Location count for genre
         cast_count = d.get('cast_count_deterministic', 10)
-        loc_count = d.get('location_data', {}).get('unique_locations', 25) # Use pre-calculated unique count
-        
-        # Scoring: Full points if under threshold, scaling deduction if over
-        loc_penalty = max(0, (loc_count - loc_thresh) / loc_thresh) * 10
-        cast_penalty = max(0, (cast_count - cast_thresh) / cast_thresh) * 10
-        prod_score = max(0, 20 - loc_penalty - cast_penalty)
+        loc_count = len(d.get('location_profile', []))
+        prod_score = (max(0, 100 - abs(cast_count - 15)) * 0.1) + (max(0, 100 - abs(loc_count - 25)) * 0.1)
         
         # 3. Structural Stability (30%): Act Balance
         balance = d.get('act_structure', {}).get('balance', 'Unknown')
@@ -2071,41 +1659,45 @@ class WriterAgent:
             'pacing_benchmark': pacing
         }
 
-    def _calculate_pacing_score(self, trace, genre):
-        """Rule 2 Sub-score: Pacing."""
-        if not trace: return 50
-        # Calculate volatility and rhythm consistency
-        rhythms = [s.get('attentional_signal', 0.5) for s in trace]
-        if len(rhythms) < 2: return 50
+    def _calculate_scriptpulse_score(self, dashboard, diagnostics):
+        """
+        Weighs: Page-Turner (25%), Market Readiness (20%), Low Risk (15%),
+                Pacing Balance (15%), Dialogue Harmony (15%), Stakes Diversity (10%).
+        """
+        pti = dashboard.get('page_turner_index', 50)
+        mr = dashboard.get('market_readiness', 50)
+        risk = dashboard.get('production_risk_score', 50)
         
-        diffs = [abs(rhythms[i] - rhythms[i-1]) for i in range(1, len(rhythms))]
-        volatility = statistics.mean(diffs)
+        # Dialogue Harmony (15%): Reward hitting genre benchmarks
+        dr = dashboard.get('dialogue_ratio', {})
+        d_ratio = dr.get('global_dialogue_ratio', 0.55)
+        d_bench = dr.get('genre_benchmark', 0.55)
+        d_harmony = max(0, 100 - abs(d_ratio - d_bench) * 200) # Loss of 2 pts per 1% dev
         
-        # Action/Thriller expect higher volatility (0.15-0.25)
-        # Drama expects lower (0.05-0.10)
-        target = 0.2 if str(genre).lower() in ['action', 'thriller'] else 0.08
-        dev = abs(volatility - target)
-        return round(max(0, min(100, 100 - (dev * 400))))
-
-    def _calculate_structural_integrity(self, trace):
-        """Rule 2 Sub-score: Structural Integrity."""
-        if not trace: return 50
-        # Check for presence of key turning points (Inciting, MP, Climax)
-        # Heuristic: Are there engagement peaks near standard structural positions?
-        n = len(trace)
-        inciting_peak = any(s.get('attentional_signal', 0) > 0.6 for s in trace[int(n*0.1):int(n*0.25)])
-        midpoint_peak = any(s.get('attentional_signal', 0) > 0.7 for s in trace[int(n*0.45):int(n*0.55)])
-        climax_peak = any(s.get('attentional_signal', 0) > 0.8 for s in trace[int(n*0.85):int(n*0.95)])
+        # Pacing balance: penalize extreme values
+        act_struct = dashboard.get('act_structure', {})
+        balance_label = act_struct.get('balance', 'Unknown')
+        pacing_score = 80 if balance_label == 'Balanced' else 50
         
-        score = 40 + (20 if inciting_peak else 0) + (20 if midpoint_peak else 0) + (20 if climax_peak else 0)
-        return min(100, score)
-
-    def _calculate_character_arc_depth(self, char_arcs):
-        """Rule 2 Sub-score: Character Arc Depth."""
-        if not char_arcs: return 50
-        # Average agency delta among primary characters
-        deltas = [abs(a.get('agency_delta', 0)) for a in char_arcs.values()]
-        if not deltas: return 50
-        avg_delta = statistics.mean(deltas)
-        # Average delta of 0.3 should yield ~100
-        return round(min(100, (avg_delta / 0.3) * 60 + 40))
+        # Stakes diversity bonus
+        stakes = dashboard.get('stakes_profile', {})
+        # Sort keys to ensure deterministic count (though dicts are ordered in 3.7+, this is safer)
+        unique_stakes = len([v for k in sorted(stakes.keys()) if (v := stakes[k]) and isinstance(v, (int, float)) and v > 0])
+        stakes_score = min(100, unique_stakes * 20)
+        
+        # Diagnostic health: fewer critical issues = higher score
+        critical_count = sum(1 for d in diagnostics if isinstance(d, str) and any(x in d for x in ['🔴', '🚫']))
+        warning_count = sum(1 for d in diagnostics if isinstance(d, str) and any(x in d for x in ['🟠', '🟡', '⬜']))
+        health_penalty = min(30, (critical_count * 8) + (warning_count * 3))
+        
+        raw = (
+            (pti * 0.25) +
+            (mr * 0.20) +
+            ((100 - risk) * 0.15) +
+            (pacing_score * 0.15) +
+            (d_harmony * 0.15) +
+            (stakes_score * 0.10)
+        )
+        
+        final = max(0, min(100, round(raw - health_penalty)))
+        return final

@@ -46,19 +46,14 @@ def generate_ai_summary(script_data, lens='viewer', api_key=None):
     dashboard = script_data.get("writer_intelligence", {}).get("structural_dashboard", {})
     
     # CRITICAL: Slim down the dashboard payload to avoid Groq's 12,000 TPM free tier limit
-    # Include character arcs for specific narrative analysis (Task: Restore Character Balance)
-    char_arcs = dashboard.get("character_arcs", {})
-    # Send top 5 characters to ensure main cast like Paulie/Carlo are present
-    top_characters = dict(sorted(char_arcs.items(), key=lambda x: x[1].get('scenes_present', 0), reverse=True)[:5])
-    
+    # Do NOT send full scene-by-scene arrays like scene_turn_map or scene_economy_map
     slim_dashboard = {
         "scriptpulse_score": dashboard.get("scriptpulse_score"),
         "page_turner_index": dashboard.get("page_turner_index"),
         "market_readiness": dashboard.get("market_readiness"),
         "act_structure": dashboard.get("act_structure"),
         "budget_impact": dashboard.get("budget_impact"),
-        "commercial_comps": dashboard.get("commercial_comps"),
-        "character_arc_excerpts": top_characters
+        "commercial_comps": dashboard.get("commercial_comps")
     }
     
     data_payload = {
@@ -77,16 +72,13 @@ def generate_ai_summary(script_data, lens='viewer', api_key=None):
 
     system_prompt = (
         f"You are {persona_desc} "
-        "Provide a comprehensive, high-stakes narrative analysis based on the structural and emotional data provided. "
-        "REPORT STRUCTURE: \n"
-        "1. Start with a header: '### NARRATIVE INTELLIGENCE REPORT'. This should be a professional, high-level synthesis (e.g., 'The script is a Ferrari in second gear').\n"
-        "2. Follow with a header: '### CHARACTER GPS'. Provide specific, data-driven insights into the character arcs provided (e.g., mention characters like Paulie or Carlo explicitly if they appear in the data).\n"
-        "3. Conclude with '### SHOOT-READY FIXES'. Provide 3 concrete, actionable changes (one per bullet) to elevate the script for production.\n\n"
+        "Provide a comprehensive, actionable narrative analysis based on the structural and emotional data provided. "
         "CRITICAL RULES: \n"
         "1. Strictly maintain this specific professional persona. Use role-appropriate vocabulary (e.g., Executive uses 'ROI', 'Comp', 'Demographic'; Editor uses 'Beat', 'Arc', 'Causality'; Coordinator uses 'White Space', 'Rhythm', 'Flow').\n"
-        "2. AVOID generic LLM advice like 'the narrative has potential but may benefit from refinement' or 'arrive late, leave early'. Be specific to THIS story's patterns.\n"
-        "3. If you mention 'ScriptPulse', ALWAYS format it EXACTLY like this: Script<span style='color: #0052FF; font-weight: bold;'>Pulse</span>\n"
-        "4. Avoid archaic or overly rigid length rules. Prestige features often exceed 120 minutes; only flag length if it meaningfully drags the pacing or structural integrity."
+        "2. Prioritize your specific areas of expertise in the report.\n"
+        "3. ALWAYS provide 3 concrete 'Fix Suggestions' at the end of the report to elevate the script for production.\n"
+        "4. If you mention 'ScriptPulse', ALWAYS format it EXACTLY like this: Script<span style='color: #0052FF; font-weight: bold;'>Pulse</span>\n"
+        "5. Avoid archaic or overly rigid length rules. Prestige features often exceed 120 minutes; only flag length if it meaningfully drags the pacing or structural integrity."
     )
     user_content = f"Experience Data: {json.dumps(data_payload)}"
     errors = []
@@ -94,15 +86,9 @@ def generate_ai_summary(script_data, lens='viewer', api_key=None):
     # 1. Try GEMINI (Best for long-form reasoning and "Story Soul")
     if keys["gemini"] and GEMINI_AVAILABLE:
         try:
-            client = genai.Client(api_key=keys["gemini"])
-            response = client.models.generate_content(
-                model='gemini-1.5-flash',
-                contents=user_content,
-                config={
-                    "system_instruction": system_prompt,
-                    "generation_config": {"max_output_tokens": 2000, "temperature": 0.7}
-                }
-            )
+            genai.configure(api_key=keys["gemini"])
+            model = genai.GenerativeModel('gemini-1.5-flash')
+            response = model.generate_content(f"SYSTEM: {system_prompt}\n\nUSER: {user_content}")
             return response.text, None
         except Exception as e:
             errors.append(f"Gemini: {str(e)}")
@@ -115,7 +101,7 @@ def generate_ai_summary(script_data, lens='viewer', api_key=None):
                 model="llama-3.3-70b-versatile",
                 messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_content}],
                 temperature=0.6,
-                max_tokens=2000
+                max_tokens=1200
             )
             return completion.choices[0].message.content, None
         except Exception as e:
@@ -128,7 +114,7 @@ def generate_ai_summary(script_data, lens='viewer', api_key=None):
             completion = client.chat.completions.create(
                 model="moonshotai/Kimi-K2-Instruct-0905",
                 messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_content}],
-                max_tokens=3000
+                max_tokens=1200
             )
             return completion.choices[0].message.content, None
         except Exception as e:
@@ -200,11 +186,7 @@ def generate_section_insight(script_data, section_type, lens='viewer', api_key=N
                 client = genai.Client(api_key=keys["gemini"])
                 response = client.models.generate_content(
                     model='gemini-1.5-flash',
-                    contents=user_content,
-                    config={
-                        "system_instruction": system_msg,
-                        "generation_config": {"max_output_tokens": 1200, "temperature": 0.7}
-                    }
+                    contents=f"SYSTEM: {system_msg}\n\nUSER: {user_content}"
                 )
                 return response.text
             except Exception as e:
@@ -217,7 +199,7 @@ def generate_section_insight(script_data, section_type, lens='viewer', api_key=N
                 completion = client.chat.completions.create(
                     model="llama-3.1-8b-instant",
                     messages=[{"role": "system", "content": system_msg}, {"role": "user", "content": user_content}],
-                    max_tokens=1200,
+                    max_tokens=300,
                     temperature=0.8
                 )
                 return completion.choices[0].message.content
@@ -231,7 +213,7 @@ def generate_section_insight(script_data, section_type, lens='viewer', api_key=N
                 completion = client.chat.completions.create(
                     model="moonshotai/Kimi-K2-Instruct-0905",
                     messages=[{"role": "system", "content": system_msg}, {"role": "user", "content": user_content}],
-                    max_tokens=1200
+                    max_tokens=300
                 )
                 return completion.choices[0].message.content
             except Exception as e:

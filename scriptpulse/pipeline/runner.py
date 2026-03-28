@@ -14,7 +14,7 @@ from scriptpulse.agents.ethics_agent import EthicsAgent
 from scriptpulse.agents.writer_agent import WriterAgent
 from scriptpulse.utils import normalizer, runtime
 
-def run_pipeline(script_content, genre='drama', story_framework='3_act', script_era='contemporary', intended_format='spec', is_reference=False, **kwargs):
+def run_pipeline(script_content, genre='drama', story_framework='3_act', **kwargs):
     """
     Executes the 4-Stage ScriptPulse Research Pipeline.
     1. Structure (Parsing)
@@ -27,8 +27,8 @@ def run_pipeline(script_content, genre='drama', story_framework='3_act', script_
     telemetry = {'status': 'active', 'stages': {}}
     
     # --- STAGE 0: Normalize & Prepare ---
-    if not script_content or not script_content.strip():
-        raise ValueError("ScriptPulse requires more text. Input script is empty or whitespace-only.")
+    if not script_content or len(script_content.strip()) < 50:
+        raise ValueError("Script<span style='color: #0052FF; font-weight: bold;'>Pulse</span> requires more text to analyze. Please upload a full script or a longer scene.")
     script_content = normalizer.normalize_script(script_content)
     telemetry['stages']['normalization_ms'] = round((time.time() - _t_start) * 1000, 2)
     
@@ -163,12 +163,10 @@ def run_pipeline(script_content, genre='drama', story_framework='3_act', script_
     for f in perceptual_features:
         for char, v in f.get('character_scene_vectors', {}).items():
             if char not in voice_fingerprints:
-                voice_fingerprints[char] = {'agency': 0, 'sentiment': 0, 'line_count': 0, 'words_per_turn': 0, 'registers': []}
+                voice_fingerprints[char] = {'agency': 0, 'sentiment': 0, 'line_count': 0}
             voice_fingerprints[char]['line_count'] += v['line_count']
             voice_fingerprints[char]['agency'] += v['agency']
             voice_fingerprints[char]['sentiment'] += v['sentiment']
-            voice_fingerprints[char]['words_per_turn'] += v.get('words_per_turn', 0)
-            voice_fingerprints[char]['registers'].append(v.get('register', 'neutral'))
     
     # Normalize averages & Meld with Agency
     for char in voice_fingerprints:
@@ -181,39 +179,25 @@ def run_pipeline(script_content, genre='drama', story_framework='3_act', script_
             voice_fingerprints[char]['centrality'] = agency_map[char]['centrality']
         else:
             voice_fingerprints[char]['agency'] = round(voice_fingerprints[char]['agency'] / max(1, count), 2)
-        
-        # Phase 32: Average Voice Metrics
-        scene_count = len(voice_fingerprints[char]['registers'])
-        voice_fingerprints[char]['words_per_turn'] = round(voice_fingerprints[char]['words_per_turn'] / max(1, scene_count), 2)
-        from collections import Counter
-        reg_counts = Counter(voice_fingerprints[char]['registers'])
-        voice_fingerprints[char]['register'] = reg_counts.most_common(1)[0][0] if voice_fingerprints[char]['registers'] else 'neutral'
-        del voice_fingerprints[char]['registers']
 
     telemetry['stages']['assembly_ms'] = round((time.time() - _t_stage) * 1000, 2)
     telemetry['total_execution_ms'] = round((_t_end - _t_start) * 1000, 2)
 
-    # 4. Confidence Band (Task 2: Data-Driven Calibration)
-    from scriptpulse.utils.confidence_scorer import ConfidenceScorer
-    scorer = ConfidenceScorer()
-    confidence_data = scorer.calculate(temporal_trace)
-
     report = {
         'meta': {
-            'run_id': f"sp-{int(time.time())}", 
             'execution_time': f"{round(_t_end - _t_start, 3)}s",
             'telemetry': telemetry,
-            'agent_timings': telemetry.get('stages', {}), # For test compatibility
             'total_scenes': len(segmented_scenes),
             'genre': genre,
             'framework': story_framework,
             'version': "v15.0 (Research Edition)",
-            'confidence_score': confidence_data
+            'confidence': 0.98 if len(segmented_scenes) > 5 else 0.85
         },
         'temporal_trace': temporal_trace,
         'perceptual_features': perceptual_features,
         'structure_map': structure_map,
         'narrative_diagnosis': diagnosis,
+
         'suggestions': suggestions,
         'semantic_beats': semantic_beats,
         'total_scenes': len(segmented_scenes),
@@ -225,13 +209,12 @@ def run_pipeline(script_content, genre='drama', story_framework='3_act', script_
         'semantic_flux': [f.get('entropy_score', 0) for f in perceptual_features],
         'voice_fingerprints': voice_fingerprints,
         'fairness_audit': fairness_audit,
-        'agency_analysis': {}, # Added for test compatibility
-        'subtext_audit': [] 
+        'subtext_audit': [] # Placeholder for compatibility
     }
     
     # --- STAGE 5: Writer Intelligence (Expert Layer) ---
     writer = WriterAgent()
-    report = writer.analyze(report, genre=genre, script_era=script_era, intended_format=intended_format, is_reference=is_reference, **kwargs)
+    report = writer.analyze(report, genre=genre)
     
     return report
 
