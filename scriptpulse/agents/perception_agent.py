@@ -360,7 +360,7 @@ class EncodingAgent:
 
         arcs = {}
         curr = None
-        proactive_lexicon = {'go', 'do', 'will', 'must', 'shall', 'stop', 'done', 'kill', 'give', 'take', 'enough', 'order', 'clear', 'business', 'family'}
+        proactive_lexicon = {'go', 'do', 'will', 'must', 'shall', 'stop', 'done', 'kill', 'give', 'take', 'enough', 'order', 'clear', 'business', 'family', 'offer', 'refuse', 'respect', 'decide', 'arrange', 'settle', 'deal'}
         
         # Check for narrative closure signals in action lines (Strict death/exit detection)
         # Removed 'leaves', 'gone', 'shot', 'fires' etc. as they cause false positives for living characters
@@ -393,7 +393,7 @@ class EncodingAgent:
                 # But they must also use decisive language
                 agency_inc = 0.1 # Base participation
                 if is_command: agency_inc += 0.5
-                elif is_question: agency_inc += 0.3 # Asking questions is often investigative control
+                elif is_question: agency_inc += 0.1 # Reduced bonus for asking questions
                 
                 agency_inc += (proactive_count * 0.6) # Boosted from 0.4
 

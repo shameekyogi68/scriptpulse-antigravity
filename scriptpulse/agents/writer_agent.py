@@ -1030,7 +1030,9 @@ class WriterAgent:
 
         for s in trace:
             loc_data = s.get('location_data', {})
-            loc = loc_data.get('location', 'UNKNOWN')
+            raw_loc = loc_data.get('location', 'UNKNOWN')
+            # Fix 1: Strip time-of-day suffixes for better deduplication
+            loc = re.sub(r'\s*[-–—]\s*(DAY|NIGHT|DAWN|DUSK|MORNING|EVENING|CONTINUOUS|LATER|SAME|MOMENTS?\s+LATER).*$', '', raw_loc, flags=re.IGNORECASE).strip()
             interior = loc_data.get('interior')
 
             location_counts[loc] = location_counts.get(loc, 0) + 1
