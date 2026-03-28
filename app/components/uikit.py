@@ -14,13 +14,33 @@ def get_brand_html(size: str = "3.8rem", align: str = "center", margin_bottom: s
     )
 
 def render_hero_section(title: str, subtitle: str):
-    """Renders the main hero section using the standardized brand logo."""
+    """Renders the main hero section with the ScriptPulse icon logo above the brand text."""
+    import os, base64
+
+    # Resolve icon path relative to any working directory
+    _here = os.path.dirname(os.path.abspath(__file__))
+    icon_path = os.path.join(_here, "..", "assets", "ScriptPulse_Icon.png")
+    icon_path = os.path.normpath(icon_path)
+
+    logo_html = ""
+    if os.path.exists(icon_path):
+        with open(icon_path, "rb") as f:
+            b64 = base64.b64encode(f.read()).decode()
+        logo_html = (
+            f'<img src="data:image/png;base64,{b64}" '
+            f'style="width: 80px; height: 80px; object-fit: contain; '
+            f'margin-bottom: 16px; filter: drop-shadow(0 0 18px rgba(0, 82, 255, 0.55));" '
+            f'alt="ScriptPulse Logo" /><br/>'
+        )
+
     brand_html = get_brand_html(size="3.8rem", align="center", margin_bottom="10px")
-    
+
     html_content = f"""
-    <div style="text-align: center; padding: 0rem 0 1.5rem 0; width: 100%; background: transparent !important;">
+    <div style="text-align: center; padding: 2rem 0 1.5rem 0; width: 100%; background: transparent !important;">
+        {logo_html}
         {brand_html}
-        <div style="color: #A3A0B3 !important; font-size: 1.15rem; font-weight: 300; max-width: 800px; margin: 0 auto;">{subtitle}</div>
+        <div style="color: #A3A0B3 !important; font-size: 1.15rem; font-weight: 300;
+                    max-width: 800px; margin: 0 auto;">{subtitle}</div>
     </div>
     """
     st.markdown(html_content, unsafe_allow_html=True)
