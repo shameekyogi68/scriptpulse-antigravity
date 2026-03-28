@@ -342,82 +342,76 @@ class EncodingAgent:
             scores = {k: v/total_raw for k, v in raw_scores.items()}
         
         # 2. Character Arcs (Per-scene vectors based on context, not just word count)
-        # Collect diagnostic representative quotes for later reference
-        rep_dialogue = ""
-        max_d_len = -1
-        rep_action = ""
-        max_a_len = -1
-        
-        for l in lines:
-            txt = l.get('text', '')
-            tag = l.get('tag', '')
-            if tag == 'D' and len(txt) > max_d_len:
-                max_d_len = len(txt)
-                rep_dialogue = txt
-            elif tag == 'A' and len(txt) > max_a_len:
-                max_a_len = len(txt)
-                rep_action = txt
-
         arcs = {}
-        curr = None
-        proactive_lexicon = {'go', 'do', 'will', 'must', 'shall', 'stop', 'done', 'kill', 'give', 'take', 'enough', 'order', 'clear', 'business', 'family'}
-        
-        # Check for narrative closure signals in action lines (Strict death/exit detection)
-        # Removed 'leaves', 'gone', 'shot', 'fires' etc. as they cause false positives for living characters
-        death_lexicon = {
-            'dies', 'dead', 'killed', 'murdered', 'body', 'corpse', 'funeral', 
-            'passing', 'expiring', 'deathbed', 'fatal', 'slain', 'slumps', 'falls', 'collapses',
-            'no longer with us', 'rest in peace'
-        }
-        all_action_text = " ".join([l['text'].lower() for l in lines if l['tag'] == 'A'])
-        scene_has_death = any(w in all_action_text for w in death_lexicon)
+        # Core 'Elite' Proactive Lexicon (Rule 3: Commands and Vetoes)
+        proactive_lexicon = {'go', 'do', 'will', 'must', 'shall', 'stop', 'done', 'kill', 'give', 'take', 'enough', 'order', 'clear', 'business', 'family', 'offer', 'refuse', 'understand', 'settle'}
+        corruption_lexicon = {'lie', 'blood', 'dead', 'money', 'kill', 'murder', 'sin', 'guilt', 'soul', 'darkness', 'betrayal', 'alone', 'cold'}
 
-        for i, l in enumerate(lines):
+        total_lines = max(1, len([l for l in lines if l['tag'] == 'D']))
+        
+        # Track previous speaker for 'Brevity/Veto' detection
+        prev_speaker_lines = 0
+        curr_speaker = None
+
+        for l in lines:
             if l['tag'] == 'C': 
                 name = normalize_character_name(l['text'])
-                if name: curr = name
-                else: curr = None
-            elif l['tag'] == 'D' and curr:
-                if curr not in arcs: arcs[curr] = {'sentiment': 0.0, 'agency': 0.1, 'line_count': 0}
-                arcs[curr]['line_count'] += 1
+                if name: curr_speaker = name
+                else: curr_speaker = None
+                prev_speaker_lines = 0
+            elif l['tag'] == 'D' and curr_speaker:
+                if curr_speaker not in arcs: arcs[curr_speaker] = {'sentiment': 0.0, 'moral_sentiment': 0.0, 'agency': 0.0, 'line_count': 0}
+                arcs[curr_speaker]['line_count'] += 1
                 dial_text = l['text'].lower()
                 dial_words = set(re.findall(r'\b\w+\b', dial_text))
                 
-                # Agency: Balanced between syntax (questions/commands) and proactivity
-                is_question = '?' in dial_text
-                is_command = ('!' in dial_text or dial_text.isupper()) and len(dial_text.split()) < 8
+                # Rule 1: Oxygen Score (Vocal Dominance)
+                # Participation is the base layer of agency. If you speak, you are present.
+                participation_weight = 0.15 
+                
+                # Rule 2: Tactical Brevity (The 'Command' Veto)
+                # If a character speaks a very short line (<5 words) after someone else spoke at length, 
+                # or if it's a command/capstone line, it carries massive agency.
+                is_command = ('!' in dial_text or dial_text.isupper()) and len(dial_words) < 8
+                is_veto = len(dial_words) < 5 and any(w in dial_words for w in ['no', 'stop', 'enough', 'dead', 'settled', 'done', 'clear'])
                 
                 proactive_count = len(dial_words.intersection(proactive_lexicon))
+                corruption_count = len(dial_words.intersection(corruption_lexicon))
                 
-                # Characters who speak more in a scene generally have higher agency (control)
-                # But they must also use decisive language
-                agency_inc = 0.1 # Base participation
-                if is_command: agency_inc += 0.5
-                elif is_question: agency_inc += 0.3 # Asking questions is often investigative control
+                agency_inc = participation_weight
+                if is_command: agency_inc += 0.4
+                if is_veto: agency_inc += 0.6
+                agency_inc += (proactive_count * 0.3)
                 
-                agency_inc += (proactive_count * 0.6) # Boosted from 0.4
-
-                
-                # Passive markers
-                if any(w in dial_text for w in ['maybe', 'sorry', 'i think', 'perhaps', 'suppose']):
+                # Rule 3: Passive Penalties
+                if any(w in dial_text for w in ['maybe', 'sorry', 'i think', 'perhaps', 'suppose', 'guess']):
                     agency_inc -= 0.2
                 
-                arcs[curr]['agency'] += agency_inc
-                arcs[curr]['sentiment'] += 0.1 if 'yes' in dial_text else (-0.1 if 'no' in dial_text else 0)
-        
-        char_texts = {c: [] for c in arcs}
-        for l in lines:
-            if l['tag'] == 'C':
-                curr = normalize_character_name(l['text'])
-            elif l['tag'] == 'D' and curr:
-                if curr not in char_texts: char_texts[curr] = []
-                char_texts[curr].append(l['text'])
+                arcs[curr_speaker]['agency'] += agency_inc
+                
+                # Moral vs Tactical Sentiment
+                # Positive/Negative based on standard cues for plot
+                plot_inc = 0.1 if 'yes' in dial_text or 'good' in dial_text else (-0.1 if 'no' in dial_text or 'stop' in dial_text else 0)
+                arcs[curr_speaker]['sentiment'] += plot_inc
+                
+                # Moral weight: Corruption keywords pull the moral score DOWN even if plot sentiment is high
+                moral_inc = (proactive_count * 0.05) - (corruption_count * 0.2)
+                arcs[curr_speaker]['moral_sentiment'] += moral_inc
 
-        # Normalize Agency by participation density so quiet but decisive leaders aren't penalized
+        # Final Normalization
         for c in arcs:
-            # Agency cap - Dampened divisor to allow growth without hitting 100% too easily
-            arcs[c]['agency'] = round(min(1.0, arcs[c]['agency'] / (1.0 + arcs[c]['line_count'] * 0.15)), 3)
+            # Oxygen Score Factor: % of lines in scene
+            oxygen_ratio = arcs[c]['line_count'] / total_lines
+            
+            # Final Agency: (Vocal Real Estate * 0.4) + (Tactical Quality * 0.6)
+            raw_qual = arcs[c]['agency'] / max(1, arcs[c]['line_count'])
+            final_agency = (oxygen_ratio * 0.5) + (raw_qual * 0.5)
+            
+            arcs[c]['agency'] = round(min(1.0, final_agency), 3)
+            # Sentiment is weighted by average feel
             arcs[c]['sentiment'] = round(max(-1.0, min(1.0, arcs[c]['sentiment'] / max(1, arcs[c]['line_count']))), 3)
+            # Moral Sentiment is often the delta between plot success and soul health
+            arcs[c]['moral_journey'] = round(max(-1.0, min(1.0, arcs[c]['moral_sentiment'] / max(1, arcs[c]['line_count']))), 3)
             
             # Phase 32: Enhanced Voice Metrics
             char_text = " ".join(char_texts.get(c, []))

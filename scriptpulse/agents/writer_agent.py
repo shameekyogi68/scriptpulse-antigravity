@@ -44,7 +44,7 @@ class WriterAgent:
             'budget_tier': budget_tier,
             'scene_info': final_output.get('scene_info', []),
             'trace': trace,
-            'budget_tier': budget_tier # Ensure this is explicitly available
+            'themes': self._analyze_thematic_coherence(trace) # Rule 1
         }
         
         # 1. Narrative Diagnosis (Start with existing cognitive insights from InterpretationAgent)
@@ -77,6 +77,14 @@ class WriterAgent:
         new_diagnostics.extend(self._diagnose_nonlinear_structure(trace))
         new_diagnostics.extend(self._diagnose_theme_coherence(trace))
         
+        # Elite Rule 2: Moral Paradox (The 'Tragic Alpha' Signature)
+        arc_data = self._build_character_arcs(trace)
+        for char, data in arc_data.items():
+            if data['arc_type'] == "Moral Descent 🩸":
+                new_diagnostics.append(f"🌗 **Moral Paradox ({char})**: Character achieves ultimate power (+{data['agency_delta']} agency) but collapses morally ({data['moral_journey']} sentiment). Masterclass structural ambiguity.")
+            elif data['transformation_depth'] > 0.6:
+                new_diagnostics.append(f"🌔 **Deep Transformation ({char})**: A massive journey across {round(data['transformation_depth']*100)}% of the agency spectrum. Highly immersive development.")
+        
         # Determine unique items and sort EVERYTHING for absolute score determinism
         # This ensures the penalty calculation always sees the exact same input order.
         all_diagnostics = sorted(list(set(narrative_health + new_diagnostics + self._diagnose_representation_risks(final_output.get('fairness_audit', {})))))
@@ -101,14 +109,11 @@ class WriterAgent:
         dashboard['location_profile'] = self._build_location_profile(trace)
         dashboard['structural_turning_points'] = self._find_structural_turning_points(trace)
         dashboard['scene_economy_map'] = self._build_scene_economy_map(trace)
-        dashboard['page_turner_index'] = self._calculate_page_turner_index(trace)
-        dashboard['writing_texture'] = self._diagnose_writing_texture(trace)
-        dashboard['act_structure'] = self._build_act_structure(trace)
-        dashboard['commercial_comps'] = self._find_commercial_comps(genre, dashboard.get('stakes_profile', {}).get('dominant', 'Social'))
-        v_fingerprints = final_output.get('voice_fingerprints', {})
-        # Purely deterministic line-count threshold for 'Cast' status (Tasks 3/Cast Count)
-        dashboard['cast_count_deterministic'] = len([c for c, v in v_fingerprints.items() if v.get('line_count', 0) >= 5])
-
+        # Page Turner Index (Task 1) - Rule 4 Signature
+        pti_result = self._calculate_page_turner_index(trace)
+        dashboard['page_turner_index'] = pti_result['index']
+        dashboard['tension_signature'] = pti_result['signature']
+        
         # Market Readiness (Task 5)
         dashboard['market_readiness'] = self._calculate_market_readiness(dashboard)
 
@@ -121,6 +126,7 @@ class WriterAgent:
             'structural_dashboard': dashboard,
             'narrative_summary': self._build_narrative_summary(trace, genre, all_diagnostics),
             'creative_provocations': self._generate_creative_provocations(all_diagnostics, genre),
+            'thematic_coherence': self.context.get('themes', {}),
             'genre_context': genre,
             'script_era': script_era,
             'intended_format': intended_format,
@@ -569,38 +575,50 @@ class WriterAgent:
             is_near_end = end.get('scene', 0) > (total_scenes * 0.9)
             has_resolved_signal = timeline[-1].get('resolved', False) or (len(timeline) > 1 and timeline[-2].get('resolved', False))
 
+            # Elite Rule 3: Transformation Absolute Depth
+            # Michael Corleone: 0.1 (Outsider) -> 0.9 (Don) is a 0.8 depth journey.
+            # We track the max span between any two points in the timeline.
+            all_agencies = [t['agency'] for t in timeline]
+            max_depth = round(max(all_agencies) - min(all_agencies), 3) if all_agencies else 0
+            
+            # Elite Rule 2: Plot Success vs Moral Well-being
+            # Michael starts high well-being (idealist) and ends low well-being (cold).
+            # But starts low plot success (outsider) and ends high success (Don).
+            moral_start = start['sentiment']
+            moral_end = end['sentiment']
+            moral_delta = round(moral_end - moral_start, 3)
+
             # High Fidelity Agency-Aware Arcs (Rule 7)
-            # A character with high absolute agency (e.g. Hagen) shouldn't share a label with low agency (e.g. Sonny)
             abs_agency = end.get('agency', 0.5)
             
-            if sentiment_delta < -0.3 and agency_delta > 0.15:
-                arc_label = "Classic Tragedy 🎭"
-                arc_note = "Character gains agency but loses emotional hope/soul. A dominant storytelling arc."
-            elif sentiment_delta > 0.3 and agency_delta > 0.15:
-                arc_label = "Hero's Journey ⭐"
-                arc_note = "Strong positive transformation in both sentiment and agency over the narrative."
+            if moral_delta < -0.4 and agency_delta > 0.3:
+                arc_label = "Moral Descent 🩸" # The 'Tragic Alpha' archtype
+                arc_note = f"Character achieves ultimate plot success (+{agency_delta} power) but suffers total moral collapse ({moral_delta} sentiment). A classic 'tragic victory' signature."
+            elif moral_delta < -0.1 and agency_delta < -0.3:
+                arc_label = "Tragic Decline 📉" # The 'Fallen King' archtype
+                arc_note = f"Character undergoes a decline in power and emotional well-being ({agency_delta} agency loss). A king losing his throne or life."
+            elif max_depth > 0.4:
+                arc_label = "Metamorphic Transformation 🌗"
+                arc_note = f"A massive narrative journey covering {round(max_depth*100)}% of the agency spectrum. Deeply immersive character growth."
             elif abs_agency > 0.8:
-                arc_label = "Dominant Power Broker 🏗️"
-                arc_note = "Character maintains or gains extremely high agency/influence. A center of gravity for the script."
-            elif agency_delta < -0.2:
-                arc_label = "Steadfast / Supportive 🛡️"
-                arc_note = "Character loses agency but maintains emotional core. Often seen in loyal advisors."
-            elif abs(sentiment_delta) < 0.1 and abs(agency_delta) < 0.1:
-                # Only call it 'Flat' if it wasn't a Narrative Exit
-                if has_resolved_signal and not is_near_end:
-                    arc_label = "Resolved (Narrative Exit) 💀"
-                    arc_note = "Character's narrative thread reached a definitive conclusion or exit."
+                arc_label = "Dominant Center of Gravity ⛰️"
+                arc_note = "Character maintains extremely high agency/influence. They are the fixed point around which the plot revolves."
+            elif abs(agency_delta) < 0.15 and abs(moral_delta) < 0.15:
+                # The 'Vito playing in the garden' peaceful end or 'Steadfast'
+                if abs_agency < 0.3:
+                    arc_label = "Supportive / Steadfast 🛡️"
+                    arc_note = "Character loses/lacks agency but maintains emotional core. A loyal anchor for others."
                 else:
-                    arc_label = "Flat Arc ⚠️"
-                    arc_note = "No measurable emotional or agency change. Is this intentional?"
+                    arc_label = "Flat Arc / Consistent 📏"
+                    arc_note = "Minimal change in agency or moral alignment. Is this a static 'Force of Nature' character?"
             else:
                 # Fallback for structural resolution
                 if has_resolved_signal:
-                    arc_label = "Resolved / Conclusive 🏁" if is_near_end else "Resolved (Narrative Exit) 💀"
-                    arc_note = "Character's narrative purpose reached a structural conclusion."
+                    arc_label = "Resolved Arc 🏁"
+                    arc_note = "The character's narrative thread reached a definitive conclusion."
                 else:
                     arc_label = "Developing Arc 📈"
-                    arc_note = "The character shows consistent development across the story beats."
+                    arc_note = "The character shows consistent development, but the final outcome is ambiguous."
 
             arc_summary[char] = {
                 'arc_type': arc_label,
@@ -611,10 +629,62 @@ class WriterAgent:
                 'agency_start': start['agency'],
                 'agency_end': end['agency'],
                 'agency_delta': agency_delta,
+                'transformation_depth': max_depth,
+                'moral_journey': moral_delta,
                 'scenes_present': len(timeline)
             }
 
         return arc_summary
+
+    def _analyze_thematic_coherence(self, trace):
+        """Elite Rule 5: Detect thematic motifs (Power, Family, Corruption) and track their Sentiment Migration."""
+        themes = {
+            'Family/Loyalty': ['family', 'brother', 'father', 'son', 'honor', 'loyalty', 'betrayal', 'blood'],
+            'Power/The Cost': ['business', 'money', 'power', 'control', 'order', 'respect', 'america', 'don', 'offer', 'refuse'],
+            'Morality/Corruption': ['soul', 'church', 'prayer', 'sin', 'guilt', 'kill', 'murder', 'innocent', 'corrupt', 'lie', 'dead']
+        }
+        
+        n = len(trace)
+        if n < 3: return {}
+        third = max(1, n // 3)
+        
+        results = {}
+        for t_name, keywords in themes.items():
+            act_counts = [0, 0, 0]
+            act_sentiments = [[], [], []]
+            
+            for i, s in enumerate(trace):
+                text = str(s).lower()
+                # Use a combined text check for all keywords in this theme
+                found = sum(text.count(kw) for kw in keywords)
+                if found > 0:
+                    act_idx = min(2, i // third)
+                    act_counts[act_idx] += found
+                    act_sentiments[act_idx].append(s.get('sentiment', 0.0))
+            
+            # Migration: Calculating the shift in 'Moral Temperature' for this motif
+            # If the sentiment of 'Family' drops from Act 1 (+0.2) to Act 3 (-0.5), it signifies CORRUPTION.
+            start_temp = statistics.mean(act_sentiments[0]) if act_sentiments[0] else 0
+            end_temp = statistics.mean(act_sentiments[2]) if act_sentiments[2] else 0
+            migration_delta = round(end_temp - start_temp, 3)
+            
+            coherence = round(min(1.0, (sum(1 for c in act_counts if c > 0) / 3.0)), 2)
+            
+            migration_label = "Neutral"
+            if migration_delta < -0.3: migration_label = "Corrupted / Decay 🖤"
+            elif migration_delta > 0.3: migration_label = "Uplifting / Growth 🌱"
+            elif abs(migration_delta) < 0.1 and act_counts[2] > 0: migration_label = "Steadfast ⚓"
+            
+            results[t_name] = {
+                'act_frequency': act_counts,
+                'coherence': coherence,
+                'migration_delta': migration_delta,
+                'thematic_arc': migration_label
+            }
+            
+        return results
+
+        return results
 
 
     def _diagnose_stakes_diversity(self, trace):
@@ -1487,56 +1557,16 @@ class WriterAgent:
         return assessments[:1]
 
     def _diagnose_theme_coherence(self, trace):
-        """
-        Aggregate thematic clusters across the full script and check Act-level consistency.
-        Flag if the dominant theme shifts significantly between Acts.
-        """
+        """Rule 1 Integration: Surface identifying themes and coherence status."""
+        themes = self.context.get('themes', {})
         assessments = []
-        if len(trace) < 4: return []
+        for name, data in themes.items():
+            if data['coherence_score'] >= 0.9:
+                assessments.append(f"🛡️ **Thematic Core ({name})**: Dominant presence across all three Acts. Strong structural coherence.")
+            elif data['coherence_score'] <= 0.3:
+                 assessments.append(f"🌫️ **Thematic Ghost ({name})**: Found in one Act but abandoned elsewhere. Suggests a 'dangling' thematic promise.")
+        return assessments
 
-        third = max(1, len(trace) // 3)
-
-        def dominant_theme(scenes):
-            agg = {}
-            for s in scenes:
-                for theme, score in s.get('thematic_clusters', {}).get('theme_scores', {}).items():
-                    agg[theme] = agg.get(theme, 0) + score
-            if not agg: return None
-            return max(agg, key=agg.get)
-
-        t1 = dominant_theme(trace[:third])
-        t2 = dominant_theme(trace[third:third*2])
-        t3 = dominant_theme(trace[third*2:])
-
-        # Script-wide dominant theme
-        all_themes = {}
-        for s in trace:
-            for theme, score in s.get('thematic_clusters', {}).get('theme_scores', {}).items():
-                all_themes[theme] = all_themes.get(theme, 0) + score
-
-        if not all_themes:
-            return []
-
-        top_global = sorted(all_themes.items(), key=lambda x: x[1], reverse=True)[:2]
-        global_themes = [t for t, _ in top_global]
-
-        # Check for thematic drift between acts
-        themes = [t for t in [t1, t2, t3] if t]
-        if len(set(themes)) == len(themes) and len(themes) == 3:
-            assessments.append(
-                f"🎭 **Thematic Drift**: Dominant theme shifts each Act "
-                f"({t1} → {t2} → {t3}). Strong scripts stay anchored to 1-2 core themes. "
-                f"Your script appears to be exploring '{global_themes[0]}' overall — "
-                f"consider threading it more consistently across all 3 Acts."
-            )
-        else:
-            if global_themes:
-                assessments.append(
-                    f"✅ **Thematic Coherence**: Core themes are "
-                    f"**{global_themes[0]}**{(' & **' + global_themes[1] + '**') if len(global_themes) > 1 else ''} "
-                    f"— consistent across Acts. Strong thematic spine."
-                )
-        return assessments[:1]
     def _generate_creative_provocations(self, diagnosis, genre):
         """Rule 6 Variety: Different thematic provocations every time, no direct flag echoes."""
         pool = {
@@ -1597,8 +1627,29 @@ class WriterAgent:
         cliff_count = sum(1 for s in trace if s.get('attentional_signal', 0) > 0.82)
         cliffhangers = (min(cliff_count, 4) * 5) # 20 pts for peaks
         
-        # Base completion bonus (20%) + Metrics
-        return min(100, round(20 + (contrast_score + resonance_score + cliffhangers) * 0.8))
+        # Elite Rule 4: Tension Signature Pattern Recognition
+        # 'Slow Burn (Operatic)' vs 'Classic Rising' vs 'Uniform High Octane'
+        diffs = [abs(signals[i] - signals[i-1]) for i in range(1, len(signals))]
+        avg_jump = sum(diffs) / len(diffs) if diffs else 0
+        peaks = sum(1 for s in signals if s > 0.8)
+        n_scenes = len(trace)
+        
+        # Operatic signature: High volatility (big jumps) but relatively infrequent peaks
+        # This captures the 'valleys of silence + spikes of violence' pattern.
+        if avg_jump > 0.15 and peaks < (n_scenes * 0.15):
+            signature = "Operatic / Slow Burn 🎭" 
+        elif avg_jump < 0.10:
+            signature = "Constant Pressure / Minimalist 🏔️"
+        elif signals[-1] > max(signals[:n_scenes//2]):
+            signature = "Classical Rising Action 📈"
+        else:
+            signature = "Procedural / Rhythmic ⏱️"
+            
+        return {
+            'index': min(100, round(20 + (contrast_score + resonance_score + cliffhangers) * 0.8)),
+            'signature': signature,
+            'volatility': round(avg_jump, 2)
+        }
 
     def _diagnose_writing_texture(self, trace):
         """Identifies if the script is 'Cinematic' (lean) or 'Novelistic' (dense)."""
