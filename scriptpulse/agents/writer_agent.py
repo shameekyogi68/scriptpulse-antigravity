@@ -603,6 +603,7 @@ class WriterAgent:
             elif moral_delta < -0.15: moral_traj = "DOWN"
             
             # Dimension 3: Agency Score (Current End Level)
+            abs_agency = end['agency']
             agency_level = "Medium"
             if abs_agency < 0.5: agency_level = "Low"
             elif abs_agency > 0.7: agency_level = "High"
