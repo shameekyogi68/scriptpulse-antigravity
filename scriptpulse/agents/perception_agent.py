@@ -343,6 +343,7 @@ class EncodingAgent:
         
         # 2. Character Arcs (Per-scene vectors based on context, not just word count)
         arcs = {}
+        char_texts = {}
         # Core 'Elite' Proactive Lexicon (Rule 3: Commands and Vetoes)
         proactive_lexicon = {'go', 'do', 'will', 'must', 'shall', 'stop', 'done', 'kill', 'give', 'take', 'enough', 'order', 'clear', 'business', 'family', 'offer', 'refuse', 'understand', 'settle'}
         corruption_lexicon = {'lie', 'blood', 'dead', 'money', 'kill', 'murder', 'sin', 'guilt', 'soul', 'darkness', 'betrayal', 'alone', 'cold'}
@@ -361,6 +362,9 @@ class EncodingAgent:
                 prev_speaker_lines = 0
             elif l['tag'] == 'D' and curr_speaker:
                 if curr_speaker not in arcs: arcs[curr_speaker] = {'sentiment': 0.0, 'moral_sentiment': 0.0, 'agency': 0.0, 'line_count': 0}
+                if curr_speaker not in char_texts: char_texts[curr_speaker] = []
+                
+                char_texts[curr_speaker].append(l['text'])
                 arcs[curr_speaker]['line_count'] += 1
                 dial_text = l['text'].lower()
                 dial_words = set(re.findall(r'\b\w+\b', dial_text))
@@ -468,6 +472,10 @@ class EncodingAgent:
 
         # Heuristic for narrative closure/death events
         scene_has_death = any(w in text.lower() for w in ['dies', 'dead', 'killed', 'murder', 'shot', 'grave'])
+
+        # Representative Pulls for summary memory
+        rep_dialogue = d_lines[len(d_lines)//2] if d_lines else ""
+        rep_action = a_lines[0] if a_lines else ""
 
         return {
             'stakes': {'dominant': dominant, 'breakdown': {k: round(v, 2) for k,v in scores.items()}},
