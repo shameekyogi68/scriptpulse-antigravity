@@ -1296,8 +1296,8 @@ class WriterAgent:
         for s in trace:
             loc_data = s.get('location_data', {})
             # Normalized location name for deduplication (Rule 1)
-            loc = loc_data.get('location', 'UNKNOWN').strip().upper()
-            interior = loc_data.get('interior', '').strip().upper()
+            loc = (loc_data.get('location') or 'UNKNOWN').strip().upper()
+            interior = (loc_data.get('interior') or '').strip().upper()
 
             if loc and loc != 'UNKNOWN':
                 location_counts[loc] = location_counts.get(loc, 0) + 1
@@ -1308,6 +1308,8 @@ class WriterAgent:
         total = max(1, len(trace))
         sorted_locs = sorted(location_counts.items(), key=lambda x: x[1], reverse=True)
         unique_count = len(sorted_locs)
+        top_loc = sorted_locs[0][0] if sorted_locs else "N/A"
+        top_ratio = (sorted_locs[0][1] / total) if sorted_locs else 0.0
         
         # Rule 6 thresholds (Budget-Aware Location Guard)
         budget = self.context.get('budget_tier', 'indie').lower()

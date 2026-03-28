@@ -348,11 +348,13 @@ class EncodingAgent:
 
         # Track first actor/speaker for Initiation Ratio
         first_char = None
+        name = None
         for l in lines:
             if l['tag'] == 'C':
                 first_char = normalize_character_name(l['text'])
                 break
         
+        name = None
         for l in lines:
             if l['tag'] == 'C':
                 name = normalize_character_name(l['text'])
@@ -411,10 +413,33 @@ class EncodingAgent:
         }
         
         purpose = 'Transition'
+        expo_keywords = {'explain', 'understand', 'history', 'background', 'know', 'remember', 'truth', 'reason'}
+        has_expo = any(w in dial_text for dial_text in d_lines for w in expo_keywords)
+        
         if is_action_peak: purpose = 'Action Peak / Climax'
+        elif has_expo and len(d_lines) > 5: purpose = 'Exposition'
         elif len(d_lines) > 10: purpose = 'Negotiation / Dialogue'
+        elif len(d_lines) < 2 and len(a_lines) > 5: purpose = 'Physical Action'
         
         scene_has_death = any(w in text.lower() for w in ['dies', 'dead', 'killed', 'murder', 'shot'])
+
+        # Rule 11: Payoff Density (Cognitive Reward)
+        # High payoff if it's a peak OR has narrative closure (death/win)
+        payoff_label = "Standard Resolution"
+        if is_action_peak: payoff_label = "Powerful Compression"
+        elif scene_has_death: payoff_label = "High Impact Payoff"
+        elif len(d_lines) > 15 and has_tension: payoff_label = "Cognitive Payoff"
+        elif len(d_lines) < 3 and len(a_lines) < 3: payoff_label = "Diluted Impact"
+
+        # Shoe-Leather (Rule 10): Transition filler dialogue
+        fillers = ['hello', 'hi', 'how are you', 'good morning', 'good night', 'anyways', 'so...']
+        has_shoe_leather = any(w in dial_text for dial_text in d_lines[:2] for w in fillers)
+
+        # Show vs Tell (Rule 7)
+        # Heuristic: High dialogue with many 'feeling' words vs low action
+        tell_words = ['feel', 'think', 'seems', 'angry', 'sad', 'happy', 'know']
+        tell_count = sum(1 for d in d_lines if any(w in d for w in tell_words))
+        tell_vs_show = (tell_count * 1.5) / max(1, len(a_lines))
 
         return {
             'is_action_peak': is_action_peak,
@@ -425,8 +450,11 @@ class EncodingAgent:
             },
             'character_scene_vectors': arcs,
             'purpose': {'purpose': purpose},
+            'payoff': {'label': payoff_label},
+            'shoe_leather': {'has_shoe_leather': has_shoe_leather},
+            'tell_vs_show': {'score': tell_vs_show},
+            'scene_vocabulary': list(vocab),
             'narrative_closure': scene_has_death,
             'representative_dialogue': d_lines[len(d_lines)//2] if d_lines else "",
-            'representative_action': a_lines[0] if a_lines else "",
-            'scene_vocabulary': list(vocab)
+            'representative_action': a_lines[0] if a_lines else ""
         }

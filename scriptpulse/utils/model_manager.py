@@ -57,7 +57,13 @@ class ModelManager:
         """Initialize caching and device settings."""
         # Persistent Cache Directory
         self.cache_dir = os.path.expanduser("~/.scriptpulse/models")
-        os.makedirs(self.cache_dir, exist_ok=True)
+        try:
+            os.makedirs(self.cache_dir, exist_ok=True)
+        except (PermissionError, OSError):
+            # Fallback to local project cache if home is restricted
+            self.cache_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '.cache', 'models'))
+            os.makedirs(self.cache_dir, exist_ok=True)
+            logger.warning("Fell back to local project cache due to permission issues: %s", self.cache_dir)
         
         # Device Selection
         self.device = -1
