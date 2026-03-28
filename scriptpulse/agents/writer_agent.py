@@ -588,49 +588,69 @@ class WriterAgent:
             moral_end = end['sentiment']
             moral_delta = round(moral_end - moral_start, 3)
 
-            # High Fidelity Agency-Aware Arcs (Rule 7)
-            abs_agency = end.get('agency', 0.5)
+            # Dimension 1: Power Trajectory (Agency Delta)
+            power_traj = "stable"
+            if agency_delta > 0.15: power_traj = "UP"
+            elif agency_delta < -0.15: power_traj = "DOWN"
             
-            if moral_delta < -0.4 and agency_delta > 0.3:
-                arc_label = "Moral Descent 🩸" # The 'Tragic Alpha' archtype
-                arc_note = f"Character achieves ultimate plot success (+{agency_delta} power) but suffers total moral collapse ({moral_delta} sentiment). A classic 'tragic victory' signature."
-            elif moral_delta < -0.1 and agency_delta < -0.3:
-                arc_label = "Tragic Decline 📉" # The 'Fallen King' archtype
-                arc_note = f"Character undergoes a decline in power and emotional well-being ({agency_delta} agency loss). A king losing his throne or life."
-            elif max_depth > 0.4:
-                arc_label = "Metamorphic Transformation 🌗"
-                arc_note = f"A massive narrative journey covering {round(max_depth*100)}% of the agency spectrum. Deeply immersive character growth."
-            elif abs_agency > 0.8:
-                arc_label = "Dominant Center of Gravity ⛰️"
-                arc_note = "Character maintains extremely high agency/influence. They are the fixed point around which the plot revolves."
-            elif abs(agency_delta) < 0.15 and abs(moral_delta) < 0.15:
-                # The 'Vito playing in the garden' peaceful end or 'Steadfast'
-                if abs_agency < 0.3:
-                    arc_label = "Supportive / Steadfast 🛡️"
-                    arc_note = "Character loses/lacks agency but maintains emotional core. A loyal anchor for others."
-                else:
-                    arc_label = "Flat Arc / Consistent 📏"
-                    arc_note = "Minimal change in agency or moral alignment. Is this a static 'Force of Nature' character?"
-            else:
-                # Fallback for structural resolution
-                if has_resolved_signal:
-                    arc_label = "Resolved Arc 🏁"
-                    arc_note = "The character's narrative thread reached a definitive conclusion."
-                else:
-                    arc_label = "Developing Arc 📈"
-                    arc_note = "The character shows consistent development, but the final outcome is ambiguous."
+            # Dimension 2: Moral Trajectory (Moral Delta)
+            moral_traj = "stable"
+            if moral_delta > 0.15: moral_traj = "UP"
+            elif moral_delta < -0.15: moral_traj = "DOWN"
+            
+            # Dimension 3: Agency Score (Current End Level)
+            agency_level = "Medium"
+            if abs_agency < 0.5: agency_level = "Low"
+            elif abs_agency > 0.7: agency_level = "High"
+
+            # Arc Classification (Rule 7)
+            arc_label = "Character Evolution"
+            arc_note = "A standard narrative trajectory based on agency and moral shift."
+            
+            if power_traj == "UP" and moral_traj == "DOWN" and agency_level == "High":
+                arc_label = "Corrupted Victor 🩸"
+                arc_note = "Character achieves ultimate plot success but suffers total moral collapse. A 'tragic victory' signature."
+            elif power_traj == "DOWN" and moral_traj == "stable" and agency_level == "Low":
+                arc_label = "Tragic Decline 📉"
+                arc_note = "A significant loss of power and status while maintaining moral consistency. A fall from grace."
+            elif power_traj == "stable" and moral_traj == "stable":
+                if agency_level == "High":
+                    arc_label = "Steadfast Pillar 🛡️"
+                    arc_note = "Character remains an unwavering core of the story, maintaining high agency and constant morality."
+                elif agency_level == "Medium":
+                    arc_label = "Supportive Anchor ⚓"
+                    arc_note = "A reliable secondary presence that maintains stability throughout the narrative."
+            elif power_traj == "UP" and moral_traj == "UP":
+                arc_label = "Heroic Transformation 🌔"
+                arc_note = "Character rises in both influence and moral character. A classic heroic journey."
+            elif power_traj == "DOWN" and moral_traj == "UP" and agency_level == "Low":
+                arc_label = "Redemptive Fall ✨"
+                arc_note = "Character loses worldly power but achieves moral or spiritual redemption."
+            elif power_traj == "UP" and moral_traj == "stable" and agency_level == "High":
+                arc_label = "Pragmatic Ascent ⛰️"
+                arc_note = "Character gains significant influence without a major moral shift (either upwards or downwards)."
+
+            # Dominance Qualifiers: Check if we already have this label with significant agency difference
+            curr_agency = end.get('agency', 0.5)
+            for existing_char, existing_data in arc_summary.items():
+                if existing_data.get('arc_type') == arc_label:
+                    other_agency = existing_data.get('agency_score', 0.5)
+                    if abs(curr_agency - other_agency) > 0.2:
+                        # Append qualifiers if agency diff > 20 points
+                        if curr_agency > other_agency:
+                            arc_label = f"Dominant {arc_label}"
+                            existing_data['arc_type'] = f"Passive {existing_data['arc_type']}"
+                        else:
+                            arc_label = f"Passive {arc_label}"
+                            existing_data['arc_type'] = f"Dominant {existing_data['arc_type']}"
 
             arc_summary[char] = {
                 'arc_type': arc_label,
                 'note': arc_note,
-                'sentiment_start': start['sentiment'],
-                'sentiment_end': end['sentiment'],
-                'sentiment_delta': sentiment_delta,
-                'agency_start': start['agency'],
-                'agency_end': end['agency'],
+                'agency_score': curr_agency,
                 'agency_delta': agency_delta,
-                'transformation_depth': max_depth,
                 'moral_journey': moral_delta,
+                'transformation_depth': max_depth,
                 'scenes_present': len(timeline)
             }
 
@@ -1232,19 +1252,28 @@ class WriterAgent:
         top_ratio = top_count / total
         unique_count = len(sorted_locs)
 
-        # Rule 6 thresholds
+        # Rule 6 thresholds (Budget-Aware Location Guard)
         budget = self.context.get('budget_tier', 'indie').lower()
-        thresholds = {'micro': 15, 'indie': 40, 'mid': 80, 'blockbuster': 200}
-        thresh = thresholds.get(budget, 40)
+        thresholds = {
+            'micro': 15,
+            'indie': 40,
+            'mid': 80,
+            'studio': 150,
+            'blockbuster': 250
+        }
+        thresh = thresholds.get(budget, thresholds['indie'])
 
         warning = None
         if unique_count > thresh:
             warning = f"Location count ({unique_count}) exceeds standard {budget.upper()} threshold ({thresh}). Consider consolidation if budget is a constraint."
-        elif top_ratio > 0.6 and unique_count < 5:
-            warning = (
-                f"{round(top_ratio * 100)}% of scenes are set in '{top_loc}'. "
-                f"Consider varying the physical world to add visual range."
-            )
+        else:
+            # Rule: Replace warning with neutral observation if within appropriate range
+            warning = f"{unique_count} locations — consistent with {budget} scope."
+
+        # Special visual variety check (secondary)
+        if top_ratio > 0.6 and unique_count < 5 and not warning.startswith("Location count"):
+            # We keep this as a separate note if it doesn't conflict
+            warning += f" Note: {round(top_ratio * 100)}% of scenes are set in '{top_loc}'. Consider physical variety."
 
         return {
             'unique_locations': unique_count,
@@ -1360,11 +1389,8 @@ class WriterAgent:
         }
 
     def _build_narrative_summary(self, trace, genre, diagnostics):
-        """
-        Synthesize all signals into a dynamic narrative of the reader's emotional journey.
-        Builds 8–10 conditional sentence templates that activate based on script-specific spikes.
-        """
-        if not trace: return "Unable to generate summary."
+        """Rule 10/11: Synthesizes all elite diagnostic markers into a compelling executive narrative."""
+        if not trace: return "Analysis pending."
         diag_str = " ".join(diagnostics) if diagnostics else ""
         
         # 1. Opening Intelligence
@@ -1384,26 +1410,85 @@ class WriterAgent:
         # 3. Dynamic Flag Intelligence
         specifics = []
         if "Same Voice Syndrome" in diag_str:
-            specifics.append("The dialogue shows high phonetic overlap, suggesting your characters share similar speech rhythms.")
+            specifics.append("The dialogue shows high phonetic overlap, suggesting speech rhythms across characters.")
         if "Passive Protagonist" in diag_str:
-            specifics.append("The protagonist currently faces high narrative resistance, making their journey reactive in the second act.")
-        if "On-The-Nose" in diag_str:
-            specifics.append("There are moments where characters state their interior subtext directly, potentially diluting the dramatic irony.")
+            specifics.append("The protagonist currently faces high narrative resistance, making their journey reactive.")
+        if "Moral Paradox" in diag_str or "Pyrrhic" in diag_str:
+            specifics.append("The script utilizes a sophisticated moral arc, achieving a complex 'tragic victory' signature.")
         if "Tonal Whiplash" in diag_str:
             specifics.append("The script undergoes rapid emotional shifts that challenge the reader's cognitive framing.")
-        
-        # 4. Closing / Payoff
-        s3 = sum([s.get('sentiment', 0) for s in trace[-(len(trace)//3):]]) / (len(trace)//3 or 1)
-        if s3 < -0.3:
-            closing = "The journey concludes with a definitive tragic descent, delivering a soul-crushing emotional payoff."
-        elif s3 > 0.3:
-            closing = "The story resolves with a hard-earned sense of triumph and narrative closure."
-        else:
-            closing = "The resolution maintains an ambiguous emotional tone, consistent with complex prestige dramas."
+
+        # 4. Closing / Payoff (NEW Dual-Layer Intelligence)
+        ending_note = self._analyze_ending_complexity(trace)
+        closing = f"Ultimately, the story concludes in a {ending_note}"
 
         # Aggregate summary
         summary = f"{opening} {spike_text} " + " ".join(specifics[:2]) + f" {closing}"
         return {'summary': summary.strip()}
+        
+    def _analyze_ending_complexity(self, trace):
+        """Rule 11: Dual-layer Ending Analysis (Plot vs Moral/Emotional Outcome)."""
+        if not trace: return "A narrative conclusion reached."
+        
+        last_scene = trace[-1]
+        char_arcs = last_scene.get('narrative_arcs', {})
+        
+        # Identify protagonist (highest overall agency)
+        all_arcs = self.context.get('char_arcs', {})
+        if not all_arcs: return "A conclusion reached with moderate narrative closure."
+        
+        # Find protag by highest avg agency_score across all scenes
+        protag_candidates = sorted(all_arcs.items(), key=lambda x: x[1].get('agency_score', 0), reverse=True)
+        if not protag_candidates: return "The story resolves with an evocative final beat."
+        protagonist = protag_candidates[0][0]
+        
+        # 1. Plot Outcome (Final Agency)
+        protag_end = char_arcs.get(protagonist, {})
+        agency_final = protag_end.get('agency', 0.5)
+        plot_status = "WIN" if agency_final > 0.7 else ("LOSS" if agency_final < 0.4 else "AMBIGUOUS")
+        
+        # 2. Moral/Emotional Outcome (Moral Journey Delta)
+        moral_delta = all_arcs.get(protagonist, {}).get('moral_journey', 0.0)
+        moral_status = "WIN" if moral_delta > 0.3 else ("LOSS" if moral_delta < -0.3 else "AMBIGUOUS")
+        
+        # Ending Complexity Labels
+        label = "Resolution"
+        note = ""
+        
+        if plot_status == "WIN" and moral_status == "LOSS":
+            label = "Pyrrhic Victory 🌓"
+            note = "the protagonist achieves their worldly goal but suffers total moral or emotional collapse."
+        elif plot_status == "LOSS" and moral_status == "WIN":
+            label = "Redemptive Defeat ✨"
+            note = "material/plot failure is overshadowed by ultimate moral growth or spiritual redemption."
+        elif plot_status == "WIN" and moral_status == "AMBIGUOUS":
+            label = "Hollow Victory 🧥"
+            note = "narrative goals are met, but the personal resonance remains hauntingly uncertain."
+        elif plot_status == "AMBIGUOUS" and moral_status == "LOSS":
+            label = "Quiet Tragedy 🕯️"
+            note = "the plot resolution is left hanging, but the protagonist's moral decline is definitive."
+        elif plot_status == "WIN" and moral_status == "WIN":
+            label = "Triumphant Resolution 🏆"
+            note = "a complete alignment of material success and profound personal growth."
+        elif plot_status == "LOSS" and moral_status == "LOSS":
+            label = "Unmitigated Tragedy 🌑"
+            note = "total loss across both the physical and moral spectrums of the story."
+        else:
+            label = "Complex Ambiguity ☁️"
+            note = "the script concludes with a sophisticated refusal of simple narrative closure."
+
+        # 3. Weighted Reaction Rule (The 'Witness' POV)
+        others = {k: v for k, v in char_arcs.items() if k != protagonist}
+        if others:
+            # Find the most emotionally active secondary character in the final scene
+            loudest_other = max(others.items(), key=lambda x: abs(x[1].get('sentiment', 0)))[0]
+            other_sent = others[loudest_other].get('sentiment', 0.0)
+            if abs(other_sent) > 0.6:
+                # If a witness's reaction is huge, it defines the final sentiment
+                note += f" | Final focus is on {loudest_other}'s reaction, which anchors the script's emotional result."
+
+        return f"**{label}**: {note}"
+
 
     # =========================================================================
     # PHASE 29: READER EXPERIENCE & THEMATIC DEPTH METHODS
@@ -1681,52 +1766,94 @@ class WriterAgent:
         score = (min(locs, 50) / 5) + (b_val * 0.5)
         return round(max(1, min(10, score)))
 
+    def _detect_subgenre(self, trace):
+        """Rule 1: Detect specific subgenre from plot mechanics and dynamics."""
+        if not trace: return "Character Study"
+        
+        # Conflict types & Stakes markers
+        locations = self._build_location_profile(trace).get('unique_locations', 0)
+        action_density = sum(s.get('visual_abstraction', {}).get('action_lines', 0) for s in trace) / len(trace)
+        dialogue_density = 1 - action_density / 20 # Normalized relative to avg
+        conflict_std = self._calculate_tension_map(trace).get('volatility', 0)
+        stakes = self.context.get('stakes', 'Personal')
+
+        # Logic for subgenre categorization
+        if "Political" in stakes or "Global" in stakes: return "Political Thriller"
+        if "Crime" in stakes or "Power" in stakes:
+            if locations > 25: return "Crime Epic"
+            if action_density > 8: return "Heist"
+            return "Crime Drama"
+        if "Family" in stakes or "Social" in stakes:
+            if dialogue_density > 0.7: return "Domestic Drama"
+            return "Coming of Age"
+        if conflict_std > 0.2: return "Revenge Tragedy"
+        
+        return "Character Study"
+
     def _find_commercial_comps(self, genre, dominant_stakes='Social'):
         """Rule 4 & 5: Multi-dimensional Comp Selection (Subgenre + Tone + Scale + Era)."""
         trace = self.context.get('trace', [])
+        subgenre = self._detect_subgenre(trace)
         tone = self._calculate_tone_score(trace)
         scale = self._calculate_scale_score(trace)
-        era_label = self.context.get('era', 'contemporary')
-        year = 2024 if era_label == 'contemporary' else 1975
         
+        current_year = 2024
+        # Setting Era detection
+        era_label = str(self.context.get('era', 'contemporary')).lower()
+        if "1970" in era_label: script_year = 1975
+        elif "1980" in era_label: script_year = 1985
+        elif "1990" in era_label: script_year = 1995
+        elif "period" in era_label or "history" in era_label: script_year = 1950
+        else: script_year = current_year
+
         # Comp DB: [Name, Subgenre, Tone(1-10), Scale(1-10), Year]
         db = [
             ("The Godfather", "Crime Epic", 8, 9, 1972),
-            ("Goodfellas", "Crime Epic", 9, 8, 1990),
-            ("Chinatown", "Crime Epic", 7, 7, 1974),
+            ("Heat", "Crime Epic", 9, 8, 1995),
+            ("Chinatown", "Crime Drama", 7, 7, 1974),
+            ("The Departed", "Crime Drama", 9, 7, 2006),
             ("Scarface", "Crime Epic", 10, 9, 1983),
             ("Marriage Story", "Domestic Drama", 3, 2, 2019),
             ("Kramer vs Kramer", "Domestic Drama", 3, 2, 1979),
             ("Blue Valentine", "Domestic Drama", 4, 2, 2010),
             ("Manchester by the Sea", "Domestic Drama", 2, 3, 2016),
+            ("Michael Clayton", "Political Thriller", 6, 6, 2007),
+            ("All the President's Men", "Political Thriller", 5, 7, 1976),
+            ("The Ides of March", "Political Thriller", 6, 5, 2011),
+            ("Lady Bird", "Coming of Age", 4, 3, 2017),
+            ("The Graduate", "Coming of Age", 5, 4, 1967),
+            ("Boyhood", "Coming of Age", 4, 4, 2014),
+            ("Heat", "Heist", 10, 8, 1995),
+            ("Ocean's Eleven", "Heist", 6, 8, 2001),
+            ("The Town", "Heist", 8, 6, 2010),
+            ("Oldboy", "Revenge Tragedy", 9, 5, 2003),
+            ("Gladiator", "Revenge Tragedy", 10, 10, 2000),
+            ("John Wick", "Revenge Tragedy", 9, 6, 2014),
             ("Parasite", "Social Thriller", 7, 5, 2019),
-            ("Get Out", "Social Thriller", 6, 4, 2017),
-            ("Knives Out", "Social Thriller", 5, 6, 2019),
             ("Taxi Driver", "Character Study", 8, 4, 1976),
             ("Moonlight", "Character Study", 3, 3, 2016),
-            ("Suspiria", "Body Horror", 9, 6, 1977),
-            ("Hereditary", "Body Horror", 8, 4, 2018),
-            ("Mad Max: Fury Road", "Action Epic", 10, 10, 2015),
-            ("Die Hard", "Action Epic", 9, 7, 1988),
-            ("John Wick", "Action Epic", 9, 5, 2014)
+            ("Joker", "Character Study", 9, 7, 2019)
         ]
         
         matches = []
         for name, sub, t, s, y in db:
-            score = 0
-            # Tone Match (+/- 2)
-            if abs(t - tone) <= 2: score += 1
-            # Scale Match (+/- 2)
-            if abs(s - scale) <= 2: score += 1
-            # Era Match (+/- 20 years)
-            if abs(y - year) <= 20: score += 1
+            # Score each dimension (5 points for subgenre, 3 for others)
+            sub_pass = (sub == subgenre)
+            tone_pass = (abs(t - tone) <= 2)
+            scale_pass = (abs(s - scale) <= 2)
+            era_pass = (abs(y - script_year) <= 20)
             
-            # Universal Rule Summary: Reject if fails > 1 criteria
-            if score >= 2:
-                matches.append((name, score))
+            passes = sum([sub_pass, tone_pass, scale_pass, era_pass])
+            
+            # Rejection Logic: Reject if fails > 1 dimension (needs at least 3 passes)
+            if passes >= 3:
+                total_score = (5 if sub_pass else 0) + (3 if tone_pass else 0) + (3 if scale_pass else 0) + (3 if era_pass else 0)
+                matches.append((name, total_score))
         
+        # Rank by total score
         matches.sort(key=lambda x: x[1], reverse=True)
-        return [m[0] for m in matches[:3]] if matches else ["The Social Network", "Parasite"]
+        # Return exactly 3 rank-ordered comps
+        return [m[0] for m in matches[:3]] if len(matches) >= 3 else [m[0] for m in matches] + ["Generic Industry Comp"]*(3-len(matches))
 
     def _calculate_production_risks(self, trace):
         """
@@ -1781,10 +1908,22 @@ class WriterAgent:
         unique_stakes = len([v for k, v in stakes.items() if (isinstance(v, (int, float)) and v > 0)])
         stakes_score = min(1.0, unique_stakes / 4.0) * 20
         
-        # 2. Production Polish (20%): Manageable Cast/Location count for genre
+        # 2. Production Polish (20%): Manageable Cast/Location count for budget tier
+        budget = self.context.get('budget_tier', 'indie').lower()
+        # Thresholds matching the Budget-Aware Location Guard
+        loc_thresholds = {'micro': 15, 'indie': 40, 'mid': 80, 'studio': 150, 'blockbuster': 250}
+        cast_thresholds = {'micro': 8, 'indie': 20, 'mid': 45, 'studio': 80, 'blockbuster': 150}
+        
+        loc_thresh = loc_thresholds.get(budget, 40)
+        cast_thresh = cast_thresholds.get(budget, 20)
+        
         cast_count = d.get('cast_count_deterministic', 10)
-        loc_count = len(d.get('location_profile', []))
-        prod_score = (max(0, 100 - abs(cast_count - 15)) * 0.1) + (max(0, 100 - abs(loc_count - 25)) * 0.1)
+        loc_count = d.get('location_data', {}).get('unique_locations', 25) # Use pre-calculated unique count
+        
+        # Scoring: Full points if under threshold, scaling deduction if over
+        loc_penalty = max(0, (loc_count - loc_thresh) / loc_thresh) * 10
+        cast_penalty = max(0, (cast_count - cast_thresh) / cast_thresh) * 10
+        prod_score = max(0, 20 - loc_penalty - cast_penalty)
         
         # 3. Structural Stability (30%): Act Balance
         balance = d.get('act_structure', {}).get('balance', 'Unknown')
