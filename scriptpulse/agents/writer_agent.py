@@ -111,21 +111,21 @@ class WriterAgent:
         dashboard['location_profile'] = self._build_location_profile(trace)
         dashboard['structural_turning_points'] = self._find_structural_turning_points(trace)
         dashboard['scene_economy_map'] = self._build_scene_economy_map(trace)
-        # Page Turner Index (Task 1) - Rule 4 Signature
+        dashboard['commercial_comps'] = self._find_commercial_comps(trace, genre)
+        # Page Turner Index (Rule 2 Sub-score)
         pti_result = self._calculate_page_turner_index(trace)
         dashboard['page_turner_index'] = pti_result['index']
-        dashboard['tension_signature'] = pti_result['signature']
-        dashboard['tension_metrics'] = {
-            'baseline': pti_result['baseline_tension'],
-            'spike_frequency': pti_result['peaks_per_act'],
-            'valley_depth': pti_result['valley_depth']
-        }
         
-        # Market Readiness (Task 5)
-        dashboard['market_readiness'] = self._calculate_market_readiness(dashboard)
-
-        # Composite ScriptPulse Score (0-100) using the truly sorted diagnostics
-        dashboard['scriptpulse_score'] = self._calculate_scriptpulse_score(dashboard, all_diagnostics)
+        # Rule 2: Master Score Formula Compliance
+        # We return sub-scores only. Master score is calculated in the application layer.
+        dashboard['pacing_score'] = self._calculate_pacing_score(trace, genre)
+        dashboard['structural_integrity'] = self._calculate_structural_integrity(trace)
+        dashboard['character_arc_depth'] = self._calculate_character_arc_depth(dashboard['character_arcs'])
+        
+        # Rule 2: Contradiction Flagging (> 30 points)
+        scores = [dashboard['page_turner_index'], dashboard['pacing_score'], dashboard['structural_integrity'], dashboard['character_arc_depth']]
+        if max(scores) - min(scores) > 30:
+            all_diagnostics.append("⚠️ **Metric Contradiction**: Divergence between sub-scores exceeds 30 points. The narrative structure might be highly irregular.")
         
         # Elite Thematic Layer
         thematic_report = self._perform_elite_thematic_analysis(trace)
@@ -571,80 +571,62 @@ class WriterAgent:
                 })
 
         arc_summary = {}
-        total_scenes = max([s.get('scene_index', 0) for s in trace]) if trace else 100
+        total_scenes = len(trace) if trace else 1
+        
+        # Pre-calculate presence for all characters to identify Top 3 / Primary / Minor
+        char_presence = {c: len(timeline) / total_scenes for c, timeline in char_timeline.items()}
+        sorted_chars = sorted(char_presence.items(), key=lambda x: x[1], reverse=True)
+        top_3_names = [c[0] for c in sorted_chars[:3]]
         
         for char, timeline in sorted(char_timeline.items()):
-            if len(timeline) < 2: continue # Ignore background noise
+            presence_ratio = char_presence[char]
+            is_primary = presence_ratio > 0.15 or char in top_3_names
+            
+            if not is_primary:
+                continue # Rule 4: Only show primary characters in character arcs section
 
-            # Rule 4: Agency Scoring (Deterministic)
-            # 1. Decision Density (+4% per choice)
-            total_decisions = sum(t['decisions'] for t in timeline)
-            decision_bonus = total_decisions * 0.04
-            
-            # 2. Initiation Ratio (Initiators vs Reactors)
-            total_initiations = sum(t['initiations'] for t in timeline)
-            init_ratio = total_initiations / len(timeline)
-            
-            # 3. Command Language (+0.5% net)
-            total_commands = sum(t['commands'] for t in timeline)
-            command_bonus = total_commands * 0.005
-            
-            # 4. Presence Score (Vocal/Physical Coverage)
-            avg_presence = statistics.mean([t['presence_ratio'] for t in timeline])
-            
-            # 5. Consequence Weight (+3% per consequence)
-            total_consequences = sum(t['consequences'] for t in timeline)
-            consequence_bonus = total_consequences * 0.03
-            
-            # Final Normalized Agency
-            # Base logic: Presence forms the floor, bonuses add the 'Protagonist' quality
-            final_agency = avg_presence + decision_bonus + (init_ratio * 0.2) + command_bonus + consequence_bonus
-            final_agency = round(min(1.0, max(0.0, final_agency)), 3)
+            # Rule 4: Agency Scoring (Deterministic Signal based)
+            def calculate_agency(window_timeline, window_total_scenes):
+                # SIGNAL 1 - ACTIVE DECISIONS (+5% each)
+                decisions = sum(t['decisions'] for t in window_timeline)
+                signal_1 = decisions * 0.05
+                
+                # SIGNAL 2 - SCENE PRESENCE (Percentage * 0.5)
+                # Corrected logic: Use percentage of total scenes character appears in. Multiply by 0.5.
+                presence = len(window_timeline) / max(1, window_total_scenes)
+                signal_2 = presence * 0.5
+                
+                # Rule 4: Cap at 100%, Floor at 10%. Never return 0% for primary.
+                return round(min(1.0, max(0.1, signal_1 + signal_2)), 3)
 
-            # Act 1 vs Act 3 Comparison (Rule 4)
-            # Find timeline indices in first 25% and last 25% of script
+            # Act 1 (First 25%) and Act 3 (Last 25%)
             act1_window = [t for t in timeline if t['scene'] <= total_scenes * 0.25]
             act3_window = [t for t in timeline if t['scene'] >= total_scenes * 0.75]
             
-            # Use middle of act window for delta calculation if multiple scenes
-            start_agency = act1_window[0]['presence_ratio'] if act1_window else (timeline[0]['presence_ratio'] if timeline else 0)
-            end_agency = final_agency # The cumulative whole
-
-            # Trajectories
-            agency_delta = round(end_agency - start_agency, 3)
-            moral_delta = round(timeline[-1]['moral_sentiment'] - timeline[0]['moral_sentiment'], 3)
-
-            # Arc Classification (Rule 7)
-            # High Fidelity Labels
-            power_traj = "UP" if agency_delta > 0.1 else ("DOWN" if agency_delta < -0.1 else "stable")
-            moral_traj = "UP" if moral_delta > 0.1 else ("DOWN" if moral_delta < -0.1 else "stable")
+            act1_scenes = max(1, total_scenes // 4)
+            act3_scenes = max(1, total_scenes // 4)
             
+            agency_act1 = calculate_agency(act1_window, act1_scenes)
+            agency_act3 = calculate_agency(act3_window, act3_scenes)
+            
+            # Final Metrics
+            agency_delta = round(agency_act3 - agency_act1, 3)
+            moral_delta = round(timeline[-1]['moral_sentiment'] - (timeline[0]['moral_sentiment'] if timeline else 0.0), 3)
+
+            # Arc Classification (Strict Rule 4 definitions)
             arc_label = "Character Evolution"
-            arc_note = "A standard narrative trajectory based on agency and moral shift."
+            if agency_delta > 0.2: arc_label = "Aspirational Rise 🌔"
+            elif agency_delta < -0.2: arc_label = "Tragic Fall 🥀"
+            elif abs(moral_delta) > 0.4: arc_label = "Moral Transformation 🎭"
             
-            if power_traj == "UP" and moral_traj == "DOWN" and final_agency > 0.6:
-                arc_label = "Corrupted Victor 🩸"
-                arc_note = "Character achieves ultimate plot success but suffers total moral collapse. A 'tragic victory' signature."
-            elif power_traj == "DOWN" and moral_traj == "stable" and final_agency < 0.4:
-                arc_label = "Tragic Decline 📉"
-                arc_note = "Significant loss of power while maintaining moral consistency. A classic fall from grace."
-            elif power_traj == "UP" and moral_traj == "UP":
-                arc_label = "Heroic Transformation 🌔"
-                arc_note = "Character rises in both influence and moral character. A classic heroic journey."
-            elif power_traj == "DOWN" and moral_traj == "UP" and final_agency < 0.4:
-                arc_label = "Redemptive Fall ✨"
-                arc_note = "Character loses worldly power but achieves moral or spiritual redemption."
-            elif power_traj == "stable" and final_agency > 0.7:
-                arc_label = "Steadfast Pillar 🛡️"
-                arc_note = "Character is a core stable presence with consistently high agency."
-
             arc_summary[char] = {
                 'arc_type': arc_label,
-                'note': arc_note,
-                'agency_score': final_agency,
+                'agency_act1': agency_act1,
+                'agency_act3': agency_act3,
                 'agency_delta': agency_delta,
                 'moral_delta': moral_delta,
-                'decision_density': total_decisions / len(timeline)
+                'presence_score': round(presence_ratio, 3),
+                'status': 'Primary' if presence_ratio > 0.15 else 'Top 3 (Support)'
             }
         
         return arc_summary
@@ -1872,70 +1854,75 @@ class WriterAgent:
         
         return "Character Study"
 
-    def _find_commercial_comps(self, genre, dominant_stakes='Social'):
-        """Rule 4 & 5: Multi-dimensional Comp Selection (Subgenre + Tone + Scale + Era)."""
-        trace = self.context.get('trace', [])
-        subgenre = self._detect_subgenre(trace)
-        tone = self._calculate_tone_score(trace)
-        scale = self._calculate_scale_score(trace)
+    def _find_commercial_comps(self, trace, genre):
+        """Rule 9: Comparable Films. Match on Subgenre and Tone/Scale Combined."""
+        # 1. Detect Classification (Tone + Scale)
+        avg_engagement = statistics.mean([s['attentional_signal'] for s in trace]) if trace else 0.5
+        cast_size = len(self.context.get('char_arcs', {}))
+        loc_count = len(set(s.get('location_data', {}).get('location', 'Unknown') for s in trace))
         
-        current_year = 2024
-        # Setting Era detection
-        era_label = str(self.context.get('era', 'contemporary')).lower()
-        if "1970" in era_label: script_year = 1975
-        elif "1980" in era_label: script_year = 1985
-        elif "1990" in era_label: script_year = 1995
-        elif "period" in era_label or "history" in era_label: script_year = 1950
-        else: script_year = current_year
+        # Classification Detection (Rule 9)
+        classification = "Grounded Mid Drama" # Default
+        if avg_engagement > 0.7:
+            if cast_size > 15 or loc_count > 30: classification = "Epic Operatic Saga"
+            else: classification = "Intense Large Drama"
+        elif avg_engagement < 0.4:
+            if loc_count < 10: classification = "Intimate Small Drama"
+            else: classification = "Dark Character Study"
+        elif cast_size < 5 and loc_count < 8:
+            classification = "Contained Thriller"
+        elif loc_count > 40:
+            classification = "Expansive Action"
 
-        # Comp DB: [Name, Subgenre, Tone(1-10), Scale(1-10), Year]
+        # 2. Match on Subgenre (Derived from Conflict/Goal)
+        # Placeholder for subgenre extraction (Rule 9 Dimensions)
+        # Detect subgenre from trace metadata (conflict type)
+        def get_dominant(s):
+            st = s.get('stakes', {})
+            if isinstance(st, dict): return st.get('dominant', 'Physical')
+            return s.get('stakes_taxonomy', {}).get('dominant', 'Physical')
+            
+        conflict_types = [get_dominant(s) for s in trace]
+        dominant_conflict = max(set(conflict_types), key=conflict_types.count) if conflict_types else 'Physical'
+        
+        sub_map = {
+            'Physical': 'Survival Thriller',
+            'Emotional': 'Relationship Drama',
+            'Social': 'Political Thriller',
+            'Moral': 'Legal Drama',
+            'Existential': 'Speculative Noir'
+        }
+        subgenre = sub_map.get(dominant_conflict, 'Generic ' + genre)
+
         db = [
-            ("The Godfather", "Crime Epic", 8, 9, 1972),
-            ("Heat", "Crime Epic", 9, 8, 1995),
-            ("Chinatown", "Crime Drama", 7, 7, 1974),
-            ("The Departed", "Crime Drama", 9, 7, 2006),
-            ("Scarface", "Crime Epic", 10, 9, 1983),
-            ("Marriage Story", "Domestic Drama", 3, 2, 2019),
-            ("Kramer vs Kramer", "Domestic Drama", 3, 2, 1979),
-            ("Blue Valentine", "Domestic Drama", 4, 2, 2010),
-            ("Manchester by the Sea", "Domestic Drama", 2, 3, 2016),
-            ("Michael Clayton", "Political Thriller", 6, 6, 2007),
-            ("All the President's Men", "Political Thriller", 5, 7, 1976),
-            ("The Ides of March", "Political Thriller", 6, 5, 2011),
-            ("Lady Bird", "Coming of Age", 4, 3, 2017),
-            ("The Graduate", "Coming of Age", 5, 4, 1967),
-            ("Boyhood", "Coming of Age", 4, 4, 2014),
-            ("Heat", "Heist", 10, 8, 1995),
-            ("Ocean's Eleven", "Heist", 6, 8, 2001),
-            ("The Town", "Heist", 8, 6, 2010),
-            ("Oldboy", "Revenge Tragedy", 9, 5, 2003),
-            ("Gladiator", "Revenge Tragedy", 10, 10, 2000),
-            ("John Wick", "Revenge Tragedy", 9, 6, 2014),
-            ("Parasite", "Social Thriller", 7, 5, 2019),
-            ("Taxi Driver", "Character Study", 8, 4, 1976),
-            ("Moonlight", "Character Study", 3, 3, 2016),
-            ("Joker", "Character Study", 9, 7, 2019)
+            ("Blue Valentine", "Relationship Drama", "Intimate Small Drama"),
+            ("Manchester by the Sea", "Relationship Drama", "Dark Character Study"),
+            ("Michael Clayton", "Political Thriller", "Grounded Mid Drama"),
+            ("All the President's Men", "Political Thriller", "Intense Large Drama"),
+            ("Lady Bird", "Coming of Age", "Intimate Small Drama"),
+            ("Heat", "Heist Thriller", "Intense Large Drama"),
+            ("Parasite", "Social Thriller", "Intense Large Drama"),
+            ("Taxi Driver", "Character Study", "Dark Character Study"),
+            ("Moonlight", "Character Study", "Intimate Small Drama"),
+            ("Joker", "Character Study", "Dark Character Study"),
+            ("Sicario", "Survival Thriller", "Intense Large Drama"),
+            ("Ex Machina", "Speculative Noir", "Contained Thriller")
         ]
         
-        matches = []
-        for name, sub, t, s, y in db:
-            # Score each dimension (5 points for subgenre, 3 for others)
-            sub_pass = (sub == subgenre)
-            tone_pass = (abs(t - tone) <= 2)
-            scale_pass = (abs(s - scale) <= 2)
-            era_pass = (abs(y - script_year) <= 20)
-            
-            passes = sum([sub_pass, tone_pass, scale_pass, era_pass])
-            
-            # Rejection Logic: Reject if fails > 1 dimension (needs at least 3 passes)
-            if passes >= 3:
-                total_score = (5 if sub_pass else 0) + (3 if tone_pass else 0) + (3 if scale_pass else 0) + (3 if era_pass else 0)
-                matches.append((name, total_score))
+        matches = [name for name, s, c in db if s == subgenre or c == classification]
+        # Sort so that Dual matches (score 3) > Subgenre only (score 2) > Classification only (score 1)
+        matches = sorted(list(set(matches)), key=lambda x: (sum(2 for n, s, c in db if n == x and s == subgenre) + 
+                                                           sum(1 for n, s, c in db if n == x and c == classification)), reverse=True)
         
-        # Rank by total score
-        matches.sort(key=lambda x: x[1], reverse=True)
-        # Return exactly 3 rank-ordered comps
-        return [m[0] for m in matches[:3]] if len(matches) >= 3 else [m[0] for m in matches] + ["Generic Industry Comp"]*(3-len(matches))
+        final_comps = matches[:3]
+        if len(final_comps) < 3:
+            # Padding if fewer than 3 strong matches exist
+            if len(final_comps) < 3 and final_comps:
+                final_comps.append(f"{final_comps[0]} (Approximate Match) 🚩")
+            while len(final_comps) < 3:
+                final_comps.append("Generic Industry Reference 🚩")
+                
+        return final_comps
 
     def _calculate_production_risks(self, trace):
         """
@@ -2084,68 +2071,41 @@ class WriterAgent:
             'pacing_benchmark': pacing
         }
 
-    def _calculate_scriptpulse_score(self, dashboard, diagnostics):
-        """
-        Weighs: Page-Turner (25%), Market Readiness (20%), Low Risk (15%),
-                Pacing Balance (15%), Dialogue Harmony (15%), Stakes Diversity (10%).
-        """
-        pti = dashboard.get('page_turner_index', 50)
-        mr = dashboard.get('market_readiness', 50)
-        risk = dashboard.get('production_risk_score', 50)
+    def _calculate_pacing_score(self, trace, genre):
+        """Rule 2 Sub-score: Pacing."""
+        if not trace: return 50
+        # Calculate volatility and rhythm consistency
+        rhythms = [s.get('attentional_signal', 0.5) for s in trace]
+        if len(rhythms) < 2: return 50
         
-        # Task 1: Era & Format-aware Scoring adjustments
-        era = self.context.get('era', 'contemporary')
-        i_format = self.context.get('format', 'spec')
+        diffs = [abs(rhythms[i] - rhythms[i-1]) for i in range(1, len(rhythms))]
+        volatility = statistics.mean(diffs)
         
-        # Dialogue Harmony (15%): Reward hitting genre benchmarks
-        dr = dashboard.get('dialogue_ratio', {})
-        d_ratio = dr.get('global_dialogue_ratio', 0.55)
-        d_bench = dr.get('genre_benchmark', 0.55)
+        # Action/Thriller expect higher volatility (0.15-0.25)
+        # Drama expects lower (0.05-0.10)
+        target = 0.2 if str(genre).lower() in ['action', 'thriller'] else 0.08
+        dev = abs(volatility - target)
+        return round(max(0, min(100, 100 - (dev * 400))))
+
+    def _calculate_structural_integrity(self, trace):
+        """Rule 2 Sub-score: Structural Integrity."""
+        if not trace: return 50
+        # Check for presence of key turning points (Inciting, MP, Climax)
+        # Heuristic: Are there engagement peaks near standard structural positions?
+        n = len(trace)
+        inciting_peak = any(s.get('attentional_signal', 0) > 0.6 for s in trace[int(n*0.1):int(n*0.25)])
+        midpoint_peak = any(s.get('attentional_signal', 0) > 0.7 for s in trace[int(n*0.45):int(n*0.55)])
+        climax_peak = any(s.get('attentional_signal', 0) > 0.8 for s in trace[int(n*0.85):int(n*0.95)])
         
-        if era == 'classic':
-             # Classic films are more talky, ease the penalty for high dialogue ratio
-             d_harmony = max(0, 100 - abs(d_ratio - (d_bench + 0.1)) * 150)
-        else:
-             d_harmony = max(0, 100 - abs(d_ratio - d_bench) * 200) # Loss of 2 pts per 1% dev
-        
-        # Pacing balance: penalize extreme values
-        act_struct = dashboard.get('act_structure', {})
-        balance_label = act_struct.get('balance', 'Unknown')
-        pacing_score = 80 if balance_label == 'Balanced' else 50
-        
-        # Stakes diversity bonus
-        stakes = dashboard.get('stakes_profile', {})
-        # Sort keys to ensure deterministic count (though dicts are ordered in 3.7+, this is safer)
-        unique_stakes = len([v for k in sorted(stakes.keys()) if (v := stakes[k]) and isinstance(v, (int, float)) and v > 0])
-        stakes_score = min(100, unique_stakes * 20)
-        
-        # Diagnostic health: fewer critical issues = higher score
-        critical_count = sum(1 for d in diagnostics if isinstance(d, str) and any(x in d for x in ['🔴', '🚫']))
-        warning_count = sum(1 for d in diagnostics if isinstance(d, str) and any(x in d for x in ['🟠', '🟡', '⬜']))
-        
-        # Masterwork Mode: Reference scripts aren't penalized for 'flaws' (Task 4)
-        if self.context.get('is_reference'):
-             health_penalty = 0
-        else:
-             health_penalty = min(30, (critical_count * 8) + (warning_count * 3))
-        
-        raw = (
-            (pti * 0.25) +
-            (mr * 0.20) +
-            ((100 - risk) * 0.15) +
-            (pacing_score * 0.15) +
-            (d_harmony * 0.15) +
-            (stakes_score * 0.10)
-        )
-        
-        final = max(0, min(100, round(raw - health_penalty)))
-        
-        # Rule 9: Score Performance Floor (Task 2)
-        # If Top 3 sub-scores (Market, PTI, Risk) are all high-performing (90+),
-        # the final score cannot be more than 5 pts below their average.
-        top_3_avg = (mr + pti + (100 - risk)) / 3
-        if mr >= 90 and pti >= 90 and (100 - risk) >= 90:
-            floor = round(top_3_avg - 5)
-            final = max(final, floor)
-            
-        return final
+        score = 40 + (20 if inciting_peak else 0) + (20 if midpoint_peak else 0) + (20 if climax_peak else 0)
+        return min(100, score)
+
+    def _calculate_character_arc_depth(self, char_arcs):
+        """Rule 2 Sub-score: Character Arc Depth."""
+        if not char_arcs: return 50
+        # Average agency delta among primary characters
+        deltas = [abs(a.get('agency_delta', 0)) for a in char_arcs.values()]
+        if not deltas: return 50
+        avg_delta = statistics.mean(deltas)
+        # Average delta of 0.3 should yield ~100
+        return round(min(100, (avg_delta / 0.3) * 60 + 40))

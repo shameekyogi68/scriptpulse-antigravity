@@ -1,0 +1,107 @@
+test_all_caps_script (__main__.TestEdgeCases.test_all_caps_script)
+ALL-CAPS script does not crash. ... Fell back to local project cache due to permission issues: /Users/shameekyogi/Desktop/scriptpulse-antigravity/.cache/models
+ok
+test_empty_genre_does_not_crash (__main__.TestEdgeCases.test_empty_genre_does_not_crash)
+Empty genre string does not crash. ... ok
+test_empty_string (__main__.TestEdgeCases.test_empty_string)
+Empty script does not crash and returns valid structure. ... ok
+test_long_single_line (__main__.TestEdgeCases.test_long_single_line)
+A single action line of 10,000 chars does not crash. ... ok
+test_meta_block_present_and_typed (__main__.TestEdgeCases.test_meta_block_present_and_typed)
+meta block contains run_id, version, agent_timings. ... FAIL
+test_no_dialogue (__main__.TestEdgeCases.test_no_dialogue)
+Script with zero dialogue does not crash. ... ok
+test_no_scene_headings (__main__.TestEdgeCases.test_no_scene_headings)
+Script with no scene headings (pure dialogue) does not crash. ... ERROR
+test_only_parentheticals (__main__.TestEdgeCases.test_only_parentheticals)
+Script consisting only of parentheticals does not crash. ... ERROR
+test_prompt_injection_string (__main__.TestEdgeCases.test_prompt_injection_string)
+Prompt injection attempt is treated as plain script text. ... ok
+test_repeated_scene_heading (__main__.TestEdgeCases.test_repeated_scene_heading)
+Same scene heading repeated 20 times does not crash. ... ok
+test_script_with_code_block (__main__.TestEdgeCases.test_script_with_code_block)
+Code inside script is treated as plain text. ... ok
+test_single_scene_heading (__main__.TestEdgeCases.test_single_scene_heading)
+Single scene heading returns at least 1 scene. ... ok
+test_standard_output_keys_always_present (__main__.TestEdgeCases.test_standard_output_keys_always_present)
+Standard output keys are always present regardless of script content. ... FAIL
+test_temporal_trace_length_matches_scenes (__main__.TestEdgeCases.test_temporal_trace_length_matches_scenes)
+temporal_trace length equals total_scenes. ... ok
+test_unicode_characters (__main__.TestEdgeCases.test_unicode_characters)
+Script with unicode characters (French, emoji) does not crash. ... ok
+test_unknown_genre_does_not_crash (__main__.TestEdgeCases.test_unknown_genre_does_not_crash)
+Unknown genre string does not crash the pipeline. ... ok
+test_very_short_scenes (__main__.TestEdgeCases.test_very_short_scenes)
+Many 1-line scenes does not crash. ... ok
+test_whitespace_only (__main__.TestEdgeCases.test_whitespace_only)
+Whitespace-only input does not crash. ... ok
+
+======================================================================
+ERROR: test_no_scene_headings (__main__.TestEdgeCases.test_no_scene_headings)
+Script with no scene headings (pure dialogue) does not crash.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/shameekyogi/Desktop/scriptpulse-antigravity/tests/unit/test_edge_cases.py", line 53, in test_no_scene_headings
+    result = run_pipeline(script)
+             ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/shameekyogi/Desktop/scriptpulse-antigravity/tests/unit/test_edge_cases.py", line 22, in run_pipeline
+    return runner.run_pipeline(script, cpu_safe_mode=True, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/shameekyogi/Desktop/scriptpulse-antigravity/tests/unit/../../scriptpulse/pipeline/runner.py", line 244, in run_pipeline
+    report = writer.analyze(report, genre=genre, script_era=script_era, intended_format=intended_format, is_reference=is_reference, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/shameekyogi/Desktop/scriptpulse-antigravity/tests/unit/../../scriptpulse/agents/writer_agent.py", line 111, in analyze
+    dashboard['location_profile'] = self._build_location_profile(trace)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/shameekyogi/Desktop/scriptpulse-antigravity/tests/unit/../../scriptpulse/agents/writer_agent.py", line 1300, in _build_location_profile
+    interior = loc_data.get('interior', '').strip().upper()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'strip'
+
+======================================================================
+ERROR: test_only_parentheticals (__main__.TestEdgeCases.test_only_parentheticals)
+Script consisting only of parentheticals does not crash.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/shameekyogi/Desktop/scriptpulse-antigravity/tests/unit/test_edge_cases.py", line 105, in test_only_parentheticals
+    result = run_pipeline(script)
+             ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/shameekyogi/Desktop/scriptpulse-antigravity/tests/unit/test_edge_cases.py", line 22, in run_pipeline
+    return runner.run_pipeline(script, cpu_safe_mode=True, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/shameekyogi/Desktop/scriptpulse-antigravity/tests/unit/../../scriptpulse/pipeline/runner.py", line 244, in run_pipeline
+    report = writer.analyze(report, genre=genre, script_era=script_era, intended_format=intended_format, is_reference=is_reference, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/shameekyogi/Desktop/scriptpulse-antigravity/tests/unit/../../scriptpulse/agents/writer_agent.py", line 111, in analyze
+    dashboard['location_profile'] = self._build_location_profile(trace)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/shameekyogi/Desktop/scriptpulse-antigravity/tests/unit/../../scriptpulse/agents/writer_agent.py", line 1300, in _build_location_profile
+    interior = loc_data.get('interior', '').strip().upper()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'strip'
+
+======================================================================
+FAIL: test_meta_block_present_and_typed (__main__.TestEdgeCases.test_meta_block_present_and_typed)
+meta block contains run_id, version, agent_timings.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/shameekyogi/Desktop/scriptpulse-antigravity/tests/unit/test_edge_cases.py", line 128, in test_meta_block_present_and_typed
+    self.assertIn('run_id', meta)
+AssertionError: 'run_id' not found in {'execution_time': '0.0s', 'telemetry': {'status': 'active', 'stages': {'normalization_ms': 0.01, 'structural_parsing_ms': 0.02, 'feature_extraction_ms': 0.07, 'cognitive_simulation_ms': 0.08, 'interpretation_ms': 0.01, 'ethics_audit_ms': 0.02, 'assembly_ms': 0.01}, 'total_execution_ms': 0.15}, 'total_scenes': 1, 'genre': 'drama', 'framework': '3_act', 'version': 'v15.0 (Research Edition)', 'confidence': 0.85}
+
+======================================================================
+FAIL: test_standard_output_keys_always_present (__main__.TestEdgeCases.test_standard_output_keys_always_present)
+Standard output keys are always present regardless of script content.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/shameekyogi/Desktop/scriptpulse-antigravity/tests/unit/test_edge_cases.py", line 114, in test_standard_output_keys_always_present
+    self.assertIn(key, result, f"Output missing required key: '{key}'")
+AssertionError: 'agency_analysis' not found in {'meta': {'execution_time': '0.0s', 'telemetry': {'status': 'active', 'stages': {'normalization_ms': 0.01, 'structural_parsing_ms': 0.03, 'feature_extraction_ms': 0.09, 'cognitive_simulation_ms': 0.1, 'interpretation_ms': 0.01, 'ethics_audit_ms': 0.03, 'assembly_ms': 0.02}, 'total_execution_ms': 0.19}, 'total_scenes': 1, 'genre': 'drama', 'framework': '3_act', 'version': 'v15.0 (Research Edition)', 'confidence': 0.85}, 'temporal_trace': [{'scene_index': 0, 'instantaneous_effort': 0.13, 'attentional_signal': 0.05, 'recovery_credit': 0.587, 'fatigue_state': 0.0, 'cognitive_resonance': 0.102, 'conflict': 0.124, 'stakes': 0.0, 'agency': 0.0, 'action_density': 0.0, 'sentiment': 0.0, 'narrative_position': 0.0, 'dialogue_action_ratio': {'dialogue_lines': 2, 'action_lines': 0}, 'structural_change': {'event_boundary_score': 0.0}, 'affective_load': {'pos': 0.0, 'neg': 0.0, 'neu': 1.0, 'compound': 0.0}, 'ambient_signals': {'ambient_score': 0.8, 'component_scores': {'stillness': 1.0}}, 'micro_structure': [{'tag': 'S', 'word_count': 4}, {'tag': 'A', 'word_count': 0}, {'tag': 'C', 'word_count': 1}, {'tag': 'D', 'word_count': 1}, {'tag': 'A', 'word_count': 0}, {'tag': 'C', 'word_count': 1}, {'tag': 'D', 'word_count': 1}], 'runtime_contribution': {'estimated_seconds': 2}, 'character_scene_vectors': {'JOHN': {'decisions': 0, 'initiations': 1, 'commands': 0, 'consequences': 0, 'line_count': 1, 'agency': 0.0, 'sentiment': 0.0, 'moral_sentiment': 0.0, 'presence_ratio': 0.5}, 'MARY': {'decisions': 0, 'initiations': 0, 'commands': 0, 'consequences': 0, 'line_count': 1, 'agency': 0.0, 'sentiment': 0.0, 'moral_sentiment': 0.0, 'presence_ratio': 0.5}}, 'stakes_taxonomy': {'dominant': 'Physical', 'breakdown': {}}, 'scene_purpose': {'purpose': 'Transition'}, 'payoff_density': {'label': 'Diluted Impact'}, 'on_the_nose': {'hits': 0, 'valid_flags': False}, 'shoe_leather': {'has_shoe_leather': True}, 'tell_vs_show': {'score': 0.0}, 'is_exposition': False, 'reader_frustration': {'name_crowding': False, 'unique_char_count': 2, 'similar_name_pairs': [], 'internal_state_hits': []}, 'narrative_closure': False, 'research_telemetry': {}, 'location_data': {'location': 'OFFICE', 'interior': 'INT', 'raw_heading': 'INT. OFFICE - DAY'}, 'scene_turn': {'turn_label': 'Flat', 'sentiment_delta': 1}}], 'perceptual_features': [{'scene_index': 0, 'linguistic_load': {'mean_sentence_length': 2.67, 'sentence_length_variance': 2.89, 'sentence_count': 3, 'word_count': 8, 'idea_density': 1.0, 'clarity_score': 0.8}, 'dialogue_dynamics': {'dialogue_line_count': 2, 'turn_velocity': 0.4, 'speaker_switches': 1}, 'visual_abstraction': {'action_lines': 0, 'visual_intensity': 0.0, 'continuous_action_runs': 2}, 'referential_load': {'active_character_count': 2, 'entity_churn': 1.0}, 'structural_change': {'event_boundary_score': 0.0}, 'entropy_score': 2.807, 'affective_load': {'pos': 0.0, 'neg': 0.0, 'neu': 1.0, 'compound': 0.0}, 'ambient_signals': {'ambient_score': 0.8, 'component_scores': {'stillness': 1.0}}, 'micro_structure': [{'tag': 'S', 'word_count': 4}, {'tag': 'A', 'word_count': 0}, {'tag': 'C', 'word_count': 1}, {'tag': 'D', 'word_count': 1}, {'tag': 'A', 'word_count': 0}, {'tag': 'C', 'word_count': 1}, {'tag': 'D', 'word_count': 1}], 'runtime_contribution': {'estimated_seconds': 2}, 'character_scene_vectors': {'JOHN': {'decisions': 0, 'initiations': 1, 'commands': 0, 'consequences': 0, 'line_count': 1, 'agency': 0.0, 'sentiment': 0.0, 'moral_sentiment': 0.0, 'presence_ratio': 0.5}, 'MARY': {'decisions': 0, 'initiations': 0, 'commands': 0, 'consequences': 0, 'line_count': 1, 'agency': 0.0, 'sentiment': 0.0, 'moral_sentiment': 0.0, 'presence_ratio': 0.5}}, 'stakes_taxonomy': {'dominant': 'Physical', 'breakdown': {}}, 'scene_purpose': {'purpose': 'Transition'}, 'payoff_density': {'label': 'Diluted Impact'}, 'on_the_nose': {'hits': 0, 'valid_flags': False}, 'shoe_leather': {'has_shoe_leather': True}, 'tell_vs_show': {'score': 0.0}, 'is_exposition': False, 'scene_vocabulary': ['day', 'mary', 'john', 'office', 'int', 'goodbye', 'hello'], 'reader_frustration': {'name_crowding': False, 'unique_char_count': 2, 'similar_name_pairs': [], 'internal_state_hits': []}, 'narrative_closure': False, 'research_telemetry': {}}], 'structure_map': {'acts': [], 'beats': []}, 'narrative_diagnosis': [], 'suggestions': [], 'semantic_beats': [{'scene_index': 0, 'primary_label': 'Quiet Moment', 'composite_beat': 'Quiet Moment'}], 'total_scenes': 1, 'segmented': [{'scene_index': 0, 'start_line': 0, 'end_line': 6, 'boundary_confidence': 1.0, 'heading': 'INT. OFFICE - DAY', 'preview': 'JOHN | Hello.', 'lines': [{'line_index': 0, 'text': 'INT. OFFICE - DAY', 'tag': 'S', 'model': 'consolidated-parser-v1', 'confidence': 0.95}, {'line_index': 1, 'text': '', 'tag': 'A', 'model': 'consolidated-parser-v1', 'confidence': 0.95}, {'line_index': 2, 'text': 'JOHN', 'tag': 'C', 'model': 'consolidated-parser-v1', 'confidence': 0.95}, {'line_index': 3, 'text': 'Hello.', 'tag': 'D', 'model': 'consolidated-parser-v1', 'confidence': 0.95}, {'line_index': 4, 'text': '', 'tag': 'A', 'model': 'consolidated-parser-v1', 'confidence': 0.95}, {'line_index': 5, 'text': 'MARY', 'tag': 'C', 'model': 'consolidated-parser-v1', 'confidence': 0.95}, {'line_index': 6, 'text': 'Goodbye.', 'tag': 'D', 'model': 'consolidated-parser-v1', 'confidence': 0.95}]}], 'scene_info': [{'scene_index': 0, 'heading': 'INT. OFFICE - DAY', 'preview': 'JOHN | Hello.'}], 'semantic_flux': [2.807], 'voice_fingerprints': {'JOHN': {'agency': 0.7, 'sentiment': 0.0, 'line_count': 1, 'words_per_turn': 0.0, 'centrality': 1.0, 'register': 'neutral'}, 'MARY': {'agency': 0.6, 'sentiment': 0.0, 'line_count': 1, 'words_per_turn': 0.0, 'centrality': 1.0, 'register': 'neutral'}}, 'fairness_audit': {'stereotyping_risks': [], 'representation_stats': {}}, 'subtext_audit': [], 'writer_intelligence': {'narrative_diagnosis': ['⚠️ **Stakes Concentration (Physical)**: 100% of the narrative relies on Physical stakes. This pattern limits layered jeopardy across Physical, Emotional, Social, and Moral domains.', '✂️ **Shoe-Leather Detected (Scene 0 (INT. OFFICE) [p. 1])**: Filler dialogue at the start or end of the scene. Arrive late, leave early — cut the pleasantries.', '🔵 **Diluted Impact (Scene 0)**: Long scenes with low emotional density. Trim or escalate — every line should earn its keep.', '🟢 **Good Flow**: The story moves well.'], 'structural_dashboard': {'midpoint_energy': 0.05, 'midpoint_status': 'Sagging', 'act1_energy': 0.05, 'total_scenes': 1, 'production_risk_score': 33, 'budget_impact': 'Lean / Indie', 'character_arcs': {}, 'scene_purpose_map': {'map': [{'scene': 0, 'purpose': 'Transition'}], 'transition_warnings': []}, 'stakes_profile': {'Physical': 1, 'Emotional': 0, 'Social': 0, 'Moral': 0, 'Existential': 0, 'None': 0}, 'scene_turn_map': [{'scene': 0, 'turn': 'Flat', 'sentiment_delta': 1}], 'dialogue_action_ratio': {'global_dialogue_ratio': 1.0, 'genre_benchmark': 0.6, 'assessment': 'Script is 40% more dialogue-heavy than genre expectations for drama.'}, 'runtime_estimate': {'estimated_minutes': 0.0, 'avg_scene_length_seconds': 2.0, 'scene_count': 1, 'calculation': '(1 scenes × 2.0s avg)', 'benchmark': '90–150 min', 'status': 'Under — 0.0 min (target: 90–150 min for drama).'}, 'location_profile': {'unique_locations': 1, 'top_location': 'OFFICE', 'top_location_ratio': 1.0, 'int_scenes': 1, 'ext_scenes': 0, 'int_ext_ratio': 1.0, 'location_warning': "1 locations — consistent with lean scope. Note: 100% of scenes are set in 'OFFICE'. Consider physical variety.", 'all_locations': {'OFFICE': 1}}, 'structural_turning_points': {'note': 'Script too short for structural analysis'}, 'scene_economy_map': {'map': [{'scene': 0, 'label': 'Unknown', 'score': 0}], 'low_economy_scenes': [], 'high_economy_scenes': [], 'low_economy_count': 0, 'cut_candidates': []}, 'page_turner_index': 30, 'tension_signature': 'Episodic (Baseline: Medium, Spikes: Regular, Valleys: Regular) ⏱️', 'tension_metrics': {'baseline': 0.05, 'spike_frequency': 0.0, 'valley_depth': 1.0}, 'market_readiness': 60, 'scriptpulse_score': 54}, 'narrative_summary': {'summary': 'The opening takes its time to establish character stakes, which fits the genre rhythm. The narrative reaches an intense cognitive peak around Scene 1, a moment of critical audience payoff.  Ultimately, the story concludes in a A conclusion reached with moderate narrative closure.'}, 'creative_provocations': ['Is there a secondary conflict that could mirror the internal struggle of the lead?', "Could the antagonist's motive be framed as a 'twisted virtue' to add complexity?"], 'thematic_intelligence': {'status': 'Thematic density too low for high-fidelity extraction.'}, 'genre_context': 'drama', 'script_era': 'contemporary', 'intended_format': 'spec', 'is_reference': False}, 'story_editor_coverage': 'PREMIUM FEATURE: Narrative logic audit and scene-by-scene structural proofing are currently being calculated in the Background Agent.'} : Output missing required key: 'agency_analysis'
+
+----------------------------------------------------------------------
+Ran 18 tests in 4.471s
+
+FAILED (failures=2, errors=2)
+═══════════════════════════════════════════════════════
+QA SUITE 3: Edge Case Tests
+═══════════════════════════════════════════════════════

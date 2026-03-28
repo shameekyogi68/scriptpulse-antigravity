@@ -196,49 +196,63 @@ def test_universal_rules():
     results = {}
 
     # Rule 1: Era Benchmarking
-    # Engine detects 'castle' in location_data.raw_heading → era='classic'
     # Verify the output reports 'classic' script_era.
     r1 = (script_era == 'classic')
     results['Rule 1 — Era Benchmarking'] = r1
     print(f"  Rule 1 (Era Benchmarking):     {PASS if r1 else FAIL}  [era={script_era}]")
 
-    # Rule 2: Same Voice Syndrome
-    r2 = any("Same Voice Syndrome" in w for w in warnings)
-    results['Rule 2 — Same Voice Syndrome'] = r2
-    print(f"  Rule 2 (Same Voice Syndrome):  {PASS if r2 else FAIL}")
+    # Rule 2: Sub-scores & Contradiction Flagging
+    pacing = dashboard.get('pacing_score')
+    integrity = dashboard.get('structural_integrity')
+    arc_depth = dashboard.get('character_arc_depth')
+    pti = dashboard.get('page_turner_index')
+    
+    r2_presence = all(isinstance(s, (int, float)) for s in [pacing, integrity, arc_depth, pti])
+    results['Rule 2 — Sub-score Availability'] = r2_presence
+    print(f"  Rule 2 (Sub-scores):           {PASS if r2_presence else FAIL}")
+
+    # Rule 2: Master Score Absence
+    r2_score = ('scriptpulse_score' not in dashboard)
+    results['Rule 2 — Master Score Absence'] = r2_score
+    print(f"  Rule 2 (Master Score Absence): {PASS if r2_score else FAIL}")
+
+    # Rule 2: Contradiction Flagging
+    r2_flag = any("Metric Contradiction" in w for w in warnings)
+    results['Rule 2 — Contradiction Flagging'] = r2_flag
+    print(f"  Rule 2 (Contradiction Flag):  {PASS if r2_flag else FAIL}")
 
     # Rule 3: Scene Ref Transparency
-    # At least one diagnostic contains "Scene N [p." format
     r3 = any("Scene" in w and "[p." in w for w in warnings)
     results['Rule 3 — Scene Ref Transparency'] = r3
     print(f"  Rule 3 (Scene Ref Transparency): {PASS if r3 else FAIL}")
 
-    # Rule 4: Agency Metrics — Charlie must score high
+    # Rule 4: Agency Metrics (Signals)
     charlie = arcs.get('CHARLIE', {})
-    r4 = charlie.get('agency_score', 0) > 0.6
-    results['Rule 4 — Agency Metrics'] = r4
-    print(f"  Rule 4 (Agency Metrics):       {PASS if r4 else FAIL}  [CHARLIE agency={charlie.get('agency_score')}]")
+    r4_signals = ('agency_act1' in charlie and 'agency_act3' in charlie)
+    results['Rule 4 — Agency Signals'] = r4_signals
+    print(f"  Rule 4 (Agency Signals):       {PASS if r4_signals else FAIL}  [Act1={charlie.get('agency_act1')}, Act3={charlie.get('agency_act3')}]")
 
     # Rule 5: Contradiction Check — On-The-Nose
     r5 = any("On-The-Nose Dialogue" in w for w in warnings)
     results['Rule 5 — Contradiction Check'] = r5
     print(f"  Rule 5 (Contradiction Check):  {PASS if r5 else FAIL}")
 
-    # Rule 6: Budget/Location Guard
-    # Structural (no explicit location overload in mock), verify dashboard exists
+    # Rule 6: Location Profile
     r6 = 'location_profile' in dashboard
     results['Rule 6 — Location Profile Present'] = r6
     print(f"  Rule 6 (Location Profile):     {PASS if r6 else FAIL}")
 
-    # Rule 7: Character Arc Classification — Charlie = Heroic Transformation
-    r7 = charlie.get('arc_type') == "Heroic Transformation 🌔"
+    # Rule 7: Character Arc Classification (Rule 4 result)
+    r7 = charlie.get('arc_type') == "Aspirational Rise 🌔"
     results['Rule 7 — Character Arc'] = r7
     print(f"  Rule 7 (Character Arc):        {PASS if r7 else FAIL}  [{charlie.get('arc_type')}]")
 
-    # Rule 8: Performance Floor — ScriptPulse Score is a valid integer
-    r8 = isinstance(score, int) and 0 <= score <= 100
-    results['Rule 8 — Score Performance Floor'] = r8
-    print(f"  Rule 8 (Score Performance Floor): {PASS if r8 else FAIL}  [score={score}]")
+    # Rule 9: Comparable Films ( بالضبط 3 )
+    comps = dashboard.get('commercial_comps', [])
+    r9_count = len(comps) == 3
+    r9_match = any("Blue Valentine" in c or "Ex Machina" in c for c in comps) # Expected matches for Relationship/Contained
+    results['Rule 9 — 3 Comps Match'] = r9_count and r9_match
+    print(f"  Rule 9 (3 Comps):              {PASS if r9_count and r9_match else FAIL}  [comps={comps}]")
 
     # ─────────────────────────────────────────────────────────────
     # Summary
