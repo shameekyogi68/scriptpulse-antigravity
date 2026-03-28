@@ -681,7 +681,7 @@ class WriterAgent:
         
         # 2. THEMATIC CONSISTENCY SCORE (0-100)
         # avg_coherence (act distribution) + frequency density
-        avg_coh = statistics.mean([m['coherence'] for m in motif_results.values()])
+        avg_coh = statistics.mean([m['coherence_score'] for m in motif_results.values()])
         density = min(1.0, sum(sum(m['act_frequency']) for m in motif_results.values()) / (len(trace) * 2.5))
         consistency_score = int((avg_coh * 75) + (density * 25))
         
@@ -763,7 +763,7 @@ class WriterAgent:
             
             results[t_name] = {
                 'act_frequency': act_counts,
-                'coherence': coherence,
+                'coherence_score': coherence,
                 'migration_delta': migration_delta,
                 'thematic_arc': migration_label
             }
