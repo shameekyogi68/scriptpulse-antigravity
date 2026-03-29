@@ -168,3 +168,28 @@ def render_ai_consultant_box(insight_text: str, persona: str = "Script Consultan
         f'</div>'
     )
     st.markdown(html, unsafe_allow_html=True)
+
+def render_metric_card(label: str, value: str, help_text: str = None):
+    """Renders a premium, non-truncating metric card for the Story Dashboard."""
+    from app.components.theme import Theme
+    
+    # Tooltip logic
+    tooltip_html = f'<span title="{help_text}" style="cursor:help; margin-left:4px; opacity:0.6; font-size:0.8rem;">ⓘ</span>' if help_text else ""
+    
+    # Value auto-downsizing for long strings
+    val_size = "1.8rem"
+    if len(str(value)) > 10: val_size = "1.4rem"
+    if len(str(value)) > 15: val_size = "1.1rem"
+
+    html = (
+        f'<div style="background: linear-gradient(135deg, rgba(32, 29, 48, 0.6) 0%, rgba(26, 23, 41, 0.8) 100%); '
+        f'border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 15px; '
+        f'text-align: left; height: 110px; display: flex; flex-direction: column; justify-content: space-between; '
+        f'box-shadow: 0 4px 15px rgba(0,0,0,0.2); backdrop-filter: blur(8px); overflow: visible;">'
+        f'<div style="font-size: 0.7rem; color: rgba(255,255,255,0.6); font-weight: 700; text-transform: uppercase; '
+        f'letter-spacing: 0.1em; line-height: 1.2; white-space: normal; overflow: visible;">{label} {tooltip_html}</div>'
+        f'<div style="font-size: {val_size}; font-weight: 800; color: white; margin-top: 5px; '
+        f'font-family: \'Outfit\', sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{value}</div>'
+        f'</div>'
+    )
+    st.markdown(html, unsafe_allow_html=True)

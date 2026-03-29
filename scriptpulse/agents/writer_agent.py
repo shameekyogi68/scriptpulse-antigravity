@@ -83,12 +83,16 @@ class WriterAgent:
         # Composite ScriptPulse Score (0-100) using the truly sorted diagnostics
         dashboard['scriptpulse_score'] = self._calculate_scriptpulse_score(dashboard, all_diagnostics, trace, genre)
         
-        # Inject into output (Removing prescriptive 'rewrite_priorities')
+        # 3. Rewrite Priorities (Top 3 Critical Diagnostics)
+        rewrite_priorities = [d for d in all_diagnostics if "🔴" in d][:3]
+        
+        # Inject into output
         final_output['writer_intelligence'] = {
             'narrative_diagnosis': all_diagnostics[:15],
             'structural_dashboard': dashboard,
             'narrative_summary': self._build_narrative_summary(trace, genre, all_diagnostics),
             'creative_provocations': self._generate_creative_provocations(all_diagnostics, genre),
+            'rewrite_priorities': rewrite_priorities,
             'genre_context': genre
         }
         

@@ -119,34 +119,33 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
 
         if lens == "Studio Executive":
             c1, c2, c3, c4, c5, c6 = st.columns(6)
-            c1.metric("Market Readiness", f"{readiness}/100", help="Commercial viability score.")
-            c2.metric("Budget Tier", dashboard.get('budget_impact', 'Indie'), help="Estimated production scale.")
-            c3.metric("Prod. Risk", f"{dashboard.get('production_risk_score', 50)}/100", help="Complexity vs payoff.")
-            c4.metric("📍 Locations", loc_profile.get('unique_locations', '—'), help="More locations = higher production cost.")
-            c5.metric("🎭 Cast Size", cast_size if cast_size else '—', help="Total speaking roles identified.")
-            c6.metric("Runtime", rt_label)
+            with c1: uikit.render_metric_card("Market Readiness", f"{readiness}/100", help_text="Commercial viability score.")
+            with c2: uikit.render_metric_card("Budget Tier", dashboard.get('budget_impact', 'Indie'), help_text="Estimated production scale.")
+            with c3: uikit.render_metric_card("Prod. Risk", f"{dashboard.get('production_risk_score', 50)}/100", help_text="Complexity vs payoff.")
+            with c4: uikit.render_metric_card("Locations", str(loc_profile.get('unique_locations', '—')), help_text="Total locations.")
+            with c5: uikit.render_metric_card("Cast Size", str(cast_size if cast_size else '—'), help_text="Total speaking roles.")
+            with c6: uikit.render_metric_card("Runtime", rt_label)
 
         elif lens == "Script Coordinator":
             c1, c2, c3, c4, c5 = st.columns(5)
-            c1.metric("Writing Texture", texture, help="Cinematic = lean. Novelistic = dense.")
-            c2.metric("Pacing", pacing)
-            c3.metric("Page-Turner", f"{pti}/100", help="Scene cliffhanger momentum.")
-            c4.metric("Scenes", total_scenes)
-            c5.metric("Runtime", rt_label)
+            with c1: uikit.render_metric_card("Writing Texture", texture, help_text="Cinematic = lean. Novelistic = dense.")
+            with c2: uikit.render_metric_card("Pacing", pacing)
+            with c3: uikit.render_metric_card("Page-Turner", f"{pti}/100", help_text="Scene cliffhanger momentum.")
+            with c4: uikit.render_metric_card("Scenes", str(total_scenes))
+            with c5: uikit.render_metric_card("Runtime", rt_label)
 
         else:  # Story Editor
             c1, c2, c3, c4, c5 = st.columns(5)
-            c1.metric("Page-Turner", f"{pti}/100", help="Scene cliffhanger momentum.")
-            c2.metric("Pacing", pacing)
-            c3.metric("Midpoint", dashboard.get('midpoint_status', 'N/A'), help="Structural midpoint health.")
-            c4.metric("Scenes", total_scenes)
+            with c1: uikit.render_metric_card("Page-Turner", f"{pti}/100", help_text="Scene cliffhanger momentum.")
+            with c2: uikit.render_metric_card("Pacing", pacing)
+            with c3: uikit.render_metric_card("Midpoint", dashboard.get('midpoint_status', 'N/A'), help_text="Structural health.")
+            with c4: uikit.render_metric_card("Scenes", str(total_scenes))
             
             # Runtime with context
             rt_min = runtime_data.get('estimated_minutes', 0)
             rt_context = f"{rt_min} min"
-            # Add subtle context help for prestige/streaming
             rt_help = f"Streaming standard: 90–120m. Feature drama avg: 110–140m. Your script: {rt_min}m."
-            c5.metric("Runtime", rt_context, help=rt_help)
+            with c5: uikit.render_metric_card("Runtime", rt_context, help_text=rt_help)
 
         # --- Act Structure & Dialogue Ratio (side by side) ---
         act = dashboard.get('act_structure', {})
