@@ -436,10 +436,6 @@ class WriterAgent:
         return assessments[:2]
 
     def _build_character_arcs(self, trace):
-        """
-        Build per-character arc vector by comparing their sentiment/agency at start vs end.
-        Returns a summary dict for the structural dashboard.
-        """
         char_timeline = {}
         for s in trace:
             for char, data in s.get('character_scene_vectors', {}).items():
@@ -447,79 +443,83 @@ class WriterAgent:
                     char_timeline[char] = []
                 char_timeline[char].append({
                     'scene': s['scene_index'],
-                    'sentiment': data.get('sentiment', 0.0),
+                    # Use scene-level compound sentiment — much more meaningful than
+                    # the per-character ±0.1 word-count proxy
+                    'sentiment': s.get('sentiment', data.get('sentiment', 0.0)),
                     'agency': data.get('agency', 0.0),
                     'lines': data.get('line_count', 0),
-                    'resolved': s.get('narrative_closure', False) # Track if the scene resolved them
+                    'resolved': s.get('narrative_closure', False)
                 })
 
         arc_summary = {}
         total_scenes = max([s.get('scene_index', 0) for s in trace]) if trace else 100
-        
+
         for char, timeline in sorted(char_timeline.items()):
             if len(timeline) < 3:
-                continue  # Need at least 3 appearances to track an arc
-
+                continue
             total_lines = sum(t['lines'] for t in timeline)
             if total_lines < 8:
-                continue  # Ignore minor characters
+                continue
 
-            start = timeline[0]
-            end = timeline[-1]
-            sentiment_delta = round(end['sentiment'] - start['sentiment'], 3)
-            agency_delta = round(end['agency'] - start['agency'], 3)
+            # Use 3-scene windows at start and end for stability
+            window = max(1, min(3, len(timeline) // 4))
+            start_sentiment = sum(t['sentiment'] for t in timeline[:window]) / window
+            end_sentiment   = sum(t['sentiment'] for t in timeline[-window:]) / window
+            start_agency    = sum(t['agency']    for t in timeline[:window]) / window
+            end_agency      = sum(t['agency']    for t in timeline[-window:]) / window
 
-            # High Fidelity Resolution Logic
-            # (New logic: must be before final 10% of script to be an 'Exit')
-            is_near_end = end.get('scene', 0) > (total_scenes * 0.9)
-            has_resolved_signal = timeline[-1].get('resolved', False) or (len(timeline) > 1 and timeline[-2].get('resolved', False))
+            sentiment_delta = round(end_sentiment - start_sentiment, 3)
+            agency_delta    = round(end_agency    - start_agency,    3)
 
-            # Arc classification: Emotional & Agency Journey
-            # Calculate emotional arcs first; 'Resolution' is a structural state, not an emotional one.
-            if sentiment_delta < -0.3 and agency_delta > 0.05:
+            is_near_end = timeline[-1].get('scene', 0) > (total_scenes * 0.9)
+            has_resolved_signal = (
+                timeline[-1].get('resolved', False) or
+                (len(timeline) > 1 and timeline[-2].get('resolved', False))
+            )
+
+            # Arc classification
+            if sentiment_delta < -0.2 and agency_delta > 0.05:
                 arc_label = "Classic Tragedy 🎭"
-                arc_note = "Character gains agency but loses emotional hope/soul. A dominant storytelling arc."
-            elif sentiment_delta < -0.5:  # pure tragic descent regardless of agency delta
+                arc_note  = "Gains agency but loses emotional soul — the dominant dramatic arc."
+            elif sentiment_delta < -0.35:
+                # Strong negative journey even without agency gain (e.g. pure descent)
                 arc_label = "Classic Tragedy 🎭"
-                arc_note = "Strong negative emotional arc — character's moral or emotional world collapses."
-                arc_note = "Character gains agency but loses emotional hope/soul. A dominant storytelling arc."
-            elif sentiment_delta > 0.3 and agency_delta > 0.15:
+                arc_note  = "Significant negative emotional arc — character's moral world collapses."
+            elif sentiment_delta > 0.2 and agency_delta > 0.05:
                 arc_label = "Hero's Journey ⭐"
-                arc_note = "Strong positive transformation in both sentiment and agency over the narrative."
+                arc_note  = "Positive transformation in both sentiment and agency."
             elif agency_delta < -0.2:
                 if sentiment_delta > -0.1:
                     arc_label = "Steadfast / Supportive 🛡️"
-                    arc_note = "Character loses agency but maintains emotional core. Often seen in loyal advisors."
+                    arc_note  = "Loses agency but maintains emotional core. Loyal advisor archetype."
                 else:
                     arc_label = "Descent 📉"
-                    arc_note = "Negative movement in both power/agency and emotional outlook."
-            elif abs(sentiment_delta) < 0.1 and abs(agency_delta) < 0.1:
-                # Only call it 'Flat' if it wasn't a Narrative Exit
+                    arc_note  = "Negative movement in both power and emotional outlook."
+            elif abs(sentiment_delta) < 0.08 and abs(agency_delta) < 0.08:
                 if has_resolved_signal and not is_near_end:
                     arc_label = "Resolved (Narrative Exit) 💀"
-                    arc_note = "Character's narrative thread reached a definitive conclusion or exit."
+                    arc_note  = "Character's thread reached a definitive conclusion."
                 else:
                     arc_label = "Flat Arc ⚠️"
-                    arc_note = "No measurable emotional or agency change. Is this intentional?"
+                    arc_note  = "No measurable emotional or agency change. Intentional?"
             else:
-                # Fallback for structural resolution
                 if has_resolved_signal:
                     arc_label = "Resolved / Conclusive 🏁" if is_near_end else "Resolved (Narrative Exit) 💀"
-                    arc_note = "Character's narrative purpose reached a structural conclusion."
+                    arc_note  = "Character's narrative purpose reached a structural conclusion."
                 else:
                     arc_label = "Developing Arc 📈"
-                    arc_note = "The character shows consistent development across the story beats."
+                    arc_note  = "Consistent development across story beats."
 
             arc_summary[char] = {
-                'arc_type': arc_label,
-                'note': arc_note,
-                'sentiment_start': start['sentiment'],
-                'sentiment_end': end['sentiment'],
+                'arc_type':        arc_label,
+                'note':            arc_note,
+                'sentiment_start': round(start_sentiment, 3),
+                'sentiment_end':   round(end_sentiment, 3),
                 'sentiment_delta': sentiment_delta,
-                'agency_start': start['agency'],
-                'agency_end': end['agency'],
-                'agency_delta': agency_delta,
-                'scenes_present': len(timeline)
+                'agency_start':    round(start_agency, 3),
+                'agency_end':      round(end_agency, 3),
+                'agency_delta':    agency_delta,
+                'scenes_present':  len(timeline)
             }
 
         return arc_summary
@@ -1068,8 +1068,16 @@ class WriterAgent:
         top_loc, top_count = sorted_locs[0] if sorted_locs else ('UNKNOWN', 0)
         top_ratio = top_count / total
 
+        loc_per_scene_ratio = len(sorted_locs) / total
         warning = None
-        if top_ratio > 0.6 and len(sorted_locs) < 5:
+        if loc_per_scene_ratio > 0.6:
+            warning = (
+                f"{len(sorted_locs)} unique location headings detected across {total} scenes "
+                f"({round(loc_per_scene_ratio * 100)}% scene-location churn). "
+                f"Note: sub-locations of the same building count separately. "
+                f"High location variety increases production costs — consider consolidating."
+            )
+        elif top_ratio > 0.6 and len(sorted_locs) < 5:
             warning = (
                 f"{round(top_ratio * 100)}% of scenes are set in '{top_loc}'. "
                 f"Only {len(sorted_locs)} unique location(s) total. "
@@ -1614,31 +1622,34 @@ class WriterAgent:
 
     def _calculate_market_readiness(self, d):
         """
-        Market Readiness (Task 5): Anchored to Stable metrics only.
-        Metrics: Stakes Diversity, Cast Consistency, Location Churn, Act Balance, Dialogue Ratio.
+        Market Readiness: Stakes Diversity (25%), Structural Stability (30%),
+        Dialogue Rhythm (25%), Production Polish (20%).
+        No base floor — score must be earned.
         """
-        # 1. Stakes Diversity (20%)
+        # 1. Stakes Diversity (25%)
         stakes = d.get('stakes_profile', {})
-        unique_stakes = len([v for k, v in stakes.items() if (isinstance(v, (int, float)) and v > 0)])
-        stakes_score = min(1.0, unique_stakes / 4.0) * 20
-        
-        # 2. Production Polish (20%): Manageable Cast/Location count for genre
+        unique_stakes = len([v for k, v in stakes.items() if isinstance(v, (int, float)) and v > 0])
+        stakes_score = min(1.0, unique_stakes / 4.0) * 25
+
+        # 2. Production Polish (20%): penalise extreme cast/location counts
         cast_count = d.get('cast_count_deterministic', 10)
-        loc_count = d.get('location_profile', {}).get('unique_locations', 0)
-        prod_score = (max(0, 100 - abs(cast_count - 15)) * 0.1) + (max(0, 100 - abs(loc_count - 25)) * 0.1)
-        
-        # 3. Structural Stability (30%): Act Balance
+        loc_count  = d.get('location_profile', {}).get('unique_locations', 0)
+        # Ideal: cast 8–25, locations 5–40. Penalise outside those ranges.
+        cast_penalty = max(0, (cast_count - 25) * 0.3) if cast_count > 25 else 0
+        loc_penalty  = max(0, (loc_count  - 40) * 0.2) if loc_count  > 40 else 0
+        polish_score = max(0, 20 - cast_penalty - loc_penalty)
+
+        # 3. Structural Stability (30%): act balance
         balance = d.get('act_structure', {}).get('balance', 'Unknown')
         structure_score = 30 if balance == 'Balanced' else 15
-        
-        # 4. Dialogue Rhythm (30%)
-        dr = d.get('dialogue_action_ratio', {})
+
+        # 4. Dialogue Rhythm (25%): on-genre benchmark
+        dr      = d.get('dialogue_action_ratio', {})
         d_ratio = dr.get('global_dialogue_ratio', 0.55)
         d_bench = dr.get('genre_benchmark', 0.55)
-        d_score = max(0, 30 - abs(d_ratio - d_bench) * 100)
-        
-        # Base floor of 20
-        final = 20 + stakes_score + prod_score + structure_score + d_score
+        d_score = max(0, 25 - abs(d_ratio - d_bench) * 100)
+
+        final = stakes_score + polish_score + structure_score + d_score
         return min(100, round(final))
 
     def _diagnose_representation_risks(self, fairness_audit):
@@ -1706,43 +1717,52 @@ class WriterAgent:
 
     def _calculate_scriptpulse_score(self, dashboard, diagnostics):
         """
-        Weighs: Page-Turner (25%), Market Readiness (20%), Low Risk (15%),
-                Pacing Balance (15%), Dialogue Harmony (15%), Stakes Diversity (10%).
+        Weighs NARRATIVE CRAFT only — not production budget.
+        Page-Turner (30%), Pacing Balance (20%), Dialogue Harmony (20%),
+        Stakes Diversity (15%), Health Penalty (15%).
+        Production Risk lives in the Producer panel only.
         """
         pti = dashboard.get('page_turner_index', 50)
-        mr = dashboard.get('market_readiness', 50)
-        risk = dashboard.get('production_risk_score', 50)
-        
-        # Dialogue Harmony (15%): Reward hitting genre benchmarks
+
+        # Dialogue Harmony (20%): reward hitting genre benchmarks
         dr = dashboard.get('dialogue_action_ratio', {})
         d_ratio = dr.get('global_dialogue_ratio', 0.55)
         d_bench = dr.get('genre_benchmark', 0.55)
-        d_harmony = max(0, 100 - abs(d_ratio - d_bench) * 200) # Loss of 2 pts per 1% dev
-        
-        # Pacing balance: penalize extreme values
+        d_harmony = max(0, 100 - abs(d_ratio - d_bench) * 200)
+
+        # Pacing balance (20%): penalise extreme act imbalance
         act_struct = dashboard.get('act_structure', {})
         balance_label = act_struct.get('balance', 'Unknown')
-        pacing_score = 80 if balance_label == 'Balanced' else 50
-        
-        # Stakes diversity bonus
+        pacing_score = 85 if balance_label == 'Balanced' else 50
+
+        # Stakes diversity (15%): multi-layered jeopardy
         stakes = dashboard.get('stakes_profile', {})
-        # Sort keys to ensure deterministic count (though dicts are ordered in 3.7+, this is safer)
-        unique_stakes = len([v for k in sorted(stakes.keys()) if (v := stakes[k]) and isinstance(v, (int, float)) and v > 0])
+        unique_stakes = len([
+            v for k in sorted(stakes.keys())
+            if (v := stakes[k]) and isinstance(v, (int, float)) and v > 0
+        ])
         stakes_score = min(100, unique_stakes * 20)
-        
-        # Diagnostic health: fewer critical issues = higher score
-        critical_count = sum(1 for d in diagnostics if isinstance(d, str) and any(x in d for x in ['🔴', '🚫']))
-        warning_count = sum(1 for d in diagnostics if isinstance(d, str) and any(x in d for x in ['🟠', '🟡', '⬜']))
-        health_penalty = min(30, (critical_count * 8) + (warning_count * 3))
-        
-        raw = (
-            (pti * 0.25) +
-            (mr * 0.20) +
-            ((100 - risk) * 0.15) +
-            (pacing_score * 0.15) +
-            (d_harmony * 0.15) +
-            (stakes_score * 0.10)
+
+        # Market readiness (15%): structural viability signal
+        mr = dashboard.get('market_readiness', 50)
+
+        # Diagnostic health penalty (up to -30): fewer critical issues = higher score
+        critical_count = sum(
+            1 for d in diagnostics
+            if isinstance(d, str) and any(x in d for x in ['🔴', '🚫'])
         )
-        
-        final = max(0, min(100, round(raw - health_penalty)))
-        return final
+        warning_count = sum(
+            1 for d in diagnostics
+            if isinstance(d, str) and any(x in d for x in ['🟠', '🟡', '⬜'])
+        )
+        health_penalty = min(30, (critical_count * 8) + (warning_count * 3))
+
+        raw = (
+            (pti * 0.30) +
+            (pacing_score * 0.20) +
+            (d_harmony * 0.20) +
+            (stakes_score * 0.15) +
+            (mr * 0.15)
+        )
+
+        return max(0, min(100, round(raw - health_penalty)))
