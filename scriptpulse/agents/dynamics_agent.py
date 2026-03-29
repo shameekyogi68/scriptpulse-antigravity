@@ -19,13 +19,16 @@ class DynamicsAgent:
     def __init__(self):
         # Priors as per PAPER_METHODS.md v1.3
         self.GENRE_PRIORS = {
-            'drama':         {'lambda': 0.75, 'beta': 0.45}, # Higher recovery, lower retention for valleys
-            'crime drama':   {'lambda': 0.80, 'beta': 0.40}, 
-            'thriller':      {'lambda': 0.75, 'beta': 0.45},
-            'action':        {'lambda': 0.78, 'beta': 0.50},
-            'comedy':        {'lambda': 0.80, 'beta': 0.60},
-            'horror':        {'lambda': 0.70, 'beta': 0.25},
-            'sci-fi':        {'lambda': 0.82, 'beta': 0.35},
+            'drama':         {'lambda': 0.70, 'beta': 0.40}, 
+            'crime drama':   {'lambda': 0.75, 'beta': 0.35}, 
+            'thriller':      {'lambda': 0.78, 'beta': 0.50},
+            'action':        {'lambda': 0.85, 'beta': 0.65}, # Fast paced, high retention
+            'comedy':        {'lambda': 0.90, 'beta': 0.70}, # High volume, high recovery
+            'horror':        {'lambda': 0.65, 'beta': 0.20}, # Low recovery, high peaks
+            'sci-fi':        {'lambda': 0.80, 'beta': 0.30},
+            'fantasy':       {'lambda': 0.78, 'beta': 0.35},
+            'western':       {'lambda': 0.72, 'beta': 0.45},
+            'romance':       {'lambda': 0.82, 'beta': 0.60},
         }
 
     def run_simulation(self, input_data, genre=None, **kwargs):

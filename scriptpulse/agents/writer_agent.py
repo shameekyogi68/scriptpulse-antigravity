@@ -745,10 +745,10 @@ class WriterAgent:
         Compare against genre benchmarks and surface an insight.
         """
         benchmarks = {
-            'action':      0.40, 'thriller':    0.45, 'horror':      0.42,
-            'drama':       0.60, 'crime drama': 0.58, 'comedy':      0.65, 
-            'romance':     0.65, 'sci-fi':      0.50, 'avant-garde': 0.55, 
-            'general':     0.55
+            'action':      0.40, 'thriller':    0.48, 'horror':      0.40,
+            'drama':       0.55, 'crime drama': 0.54, 'comedy':      0.72, 
+            'romance':     0.68, 'sci-fi':      0.50, 'fantasy':     0.48,
+            'western':     0.45, 'avant-garde': 0.55, 'general':     0.55
         }
         total_d = sum(s.get('dialogue_action_ratio', {}).get('dialogue_lines', 0) for s in trace)
         total_a = sum(s.get('dialogue_action_ratio', {}).get('action_lines', 0) for s in trace)
@@ -1763,7 +1763,7 @@ class WriterAgent:
         dr      = dashboard.get('dialogue_action_ratio', {})
         d_ratio = dr.get('global_dialogue_ratio', 0.55)
         d_bench = dr.get('genre_benchmark', 0.55)
-        d_harmony = max(0, 100 - abs(d_ratio - d_bench) * 200)
+        d_harmony = max(0, 100 - abs(d_ratio - d_bench) * 450) # Doubled strictness for genre-fit
 
         # Pacing balance
         balance_label = dashboard.get('act_structure', {}).get('balance', 'Unknown')
