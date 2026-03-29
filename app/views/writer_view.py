@@ -421,18 +421,12 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
         cast_size = len(report.get('voice_fingerprints', {}))
 
         c1, c2, c3, c4, c5, c6 = st.columns(6)
-        c1.metric("Production Risk", f"{dashboard.get('production_risk_score', 50)}/100",
-                  help="Complexity vs narrative payoff.")
-        c2.metric("Market Readiness", f"{dashboard.get('market_readiness', 50)}/100",
-                  help="Combined commercial viability.")
-        c3.metric("Budget Tier", dashboard.get('budget_impact', 'Standard'),
-                  help="Indie → Studio → Blockbuster.")
-        c4.metric("📍 Locations", loc_profile.get('unique_locations', '—'),
-                  help="Unique shooting locations. More = higher budget.")
-        c5.metric("🎭 Cast", cast_size if cast_size else '—',
-                  help="Total speaking roles identified.")
-        c6.metric("Midpoint", dashboard.get('midpoint_status', 'N/A'),
-                  help="Structural midpoint health.")
+        with c1: uikit.render_metric_card("Production Risk", f"{dashboard.get('production_risk_score', 50)}/100", help_text="Complexity vs narrative payoff.")
+        with c2: uikit.render_metric_card("Market Readiness", f"{dashboard.get('market_readiness', 50)}/100", help_text="Combined commercial viability.")
+        with c3: uikit.render_metric_card("Budget Tier", dashboard.get('budget_impact', 'Standard'), help_text="Indie → Studio → Blockbuster.")
+        with c4: uikit.render_metric_card("Locations", str(loc_profile.get('unique_locations', '—')), help_text="Unique locations. More = higher budget.")
+        with c5: uikit.render_metric_card("Cast", str(cast_size if cast_size else '—'), help_text="Total speaking roles.")
+        with c6: uikit.render_metric_card("Midpoint", dashboard.get('midpoint_status', 'N/A'), help_text="Structural health.")
 
         # Location Insight
         if loc_profile.get('unique_locations', 0) > 0:
