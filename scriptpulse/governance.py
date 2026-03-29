@@ -4,6 +4,8 @@ Provides hard bounds on input parameters to protect NLP models from Out-Of-Memor
 crashes, binary injection, and malformed encoding attacks.
 """
 
+MAX_CHARS = 5 * 1024 * 1024  # 5 MB threshold
+
 class PolicyViolationError(Exception):
     """Raised when an input violates the system's philosophical constraints."""
     pass

@@ -16,9 +16,9 @@ logger = logging.getLogger('scriptpulse.experimental')
 class SiliconStanislavskiAgent:
     """Methods for Believability & Actor Theory (Method Acting Simulation)"""
     
-    def __init__(self, model_name="valhalla/distilbart-mnli-12-3"):
+    def __init__(self):
         self.belief_state = {'safety': 0.8, 'trust': 0.8, 'agency': 0.5}
-        self.classifier = manager.get_pipeline("zero-shot-classification", model_name)
+        self.classifier = manager.get_zero_shot()
         self.labels = ["danger", "safety", "deception", "trust", "helplessness", "control"]
         self.is_ml = self.classifier is not None
         
@@ -257,8 +257,8 @@ class MultiLabelEmotionAgent:
         'anticipation': {'wait', 'hope', 'plan', 'ready', 'soon', 'look forward'}
     }
     
-    def __init__(self, model_name="valhalla/distilbart-mnli-12-3"):
-        self.classifier = manager.get_pipeline("zero-shot-classification", model_name)
+    def __init__(self):
+        self.classifier = manager.get_zero_shot()
         self.is_ml = self.classifier is not None
         if not self.is_ml:
             logger.warning("MultiLabelEmotionAgent: ML unavailable — using keyword fallback")

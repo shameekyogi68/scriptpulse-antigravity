@@ -144,11 +144,12 @@ class EncodingAgent:
         dialogue_words = sum([len(l['text'].split()) for l in lines if l['tag'] == 'D'])
         
         # Calculate seconds (60 seconds per minute)
-        # Assuming ~180-200 words per minute contextually
-        action_seconds = action_words * 0.3
+        # Industry standard: ~200 WPM spoken dialogue, but action descriptions
+        # represent screen time at roughly 2-3x the reading rate
+        action_seconds = action_words * 0.7   # ~85 words/min of screen time
         
         # Dialogue is spoken quickly
-        dialogue_seconds = dialogue_words * 0.35
+        dialogue_seconds = dialogue_words * 0.33  # ~180 WPM spoken
         
         total_seconds = action_seconds + dialogue_seconds
         
@@ -364,7 +365,7 @@ class EncodingAgent:
                 rep_action = txt
         arcs = {}
         curr = None
-        proactive_lexicon = {'go', 'do', 'will', 'must', 'shall', 'stop', 'done', 'kill', 'give', 'take', 'enough', 'order', 'clear', 'business', 'family', 'offer', 'refuse', 'respect', 'decide', 'arrange', 'settle', 'deal'}
+        proactive_lexicon = {'go', 'do', 'will', 'must', 'shall', 'stop', 'done', 'kill', 'give', 'take', 'enough', 'order', 'clear', 'business', 'family', 'offer', 'refuse', 'respect', 'decide', 'arrange', 'settle', 'deal', 'demand', 'insist', 'command', 'forbid', 'allow', 'never', 'always', 'swear'}
         
         # Diagnostics for scene-level features
         monologues = []
@@ -435,7 +436,7 @@ class EncodingAgent:
                 proactive_count = len(set(dial_words).intersection(proactive_lexicon))
                 
                 agency_inc = 0.1 # Base participation
-                if is_command: agency_inc += 0.5
+                if is_command: agency_inc += 0.7
                 elif is_question: agency_inc += 0.1 # Reduced bonus for asking questions
                 agency_inc += (proactive_count * 0.6)
                 

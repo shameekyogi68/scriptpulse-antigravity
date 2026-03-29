@@ -174,28 +174,36 @@ class WriterAgent:
     def _diagnose_voice(self, voice_fingerprints):
         import statistics
         assessments = []
-        if not voice_fingerprints or len(voice_fingerprints) < 2: return []
-        
-        # Get top speakers by line count
-        top_chars = sorted(voice_fingerprints.items(), key=lambda x: x[1].get('line_count', 0), reverse=True)[:5]
-        if len(top_chars) < 2: return []
-        
-        # We need at least 10 lines to reliably judge a voice
+        if not voice_fingerprints or len(voice_fingerprints) < 2:
+            return []
+
+        top_chars = sorted(
+            voice_fingerprints.items(),
+            key=lambda x: x[1].get('line_count', 0),
+            reverse=True
+        )[:5]
+
         valid_chars = [c for c in top_chars if c[1].get('line_count', 0) >= 10]
-        if len(valid_chars) < 2: return []
-        
-        complexities = [c[1].get('complexity', 0) for c in valid_chars]
-        positivities = [c[1].get('positivity', 0) for c in valid_chars]
-        puncts = [c[1].get('punctuation_rate', 0) for c in valid_chars]
-        
-        std_comp = statistics.stdev(complexities) if len(complexities) > 1 else 0.0
-        std_pos = statistics.stdev(positivities) if len(positivities) > 1 else 0.0
-        std_punct = statistics.stdev(puncts) if len(puncts) > 1 else 0.0
-        
-        if std_comp < 0.1 and std_pos < 0.1 and std_punct < 0.05:
+        if len(valid_chars) < 2:
+            return []
+
+        # Only use fields that are actually populated in voice_fingerprints
+        sentiments = [c[1].get('sentiment', 0) for c in valid_chars]
+        agencies   = [c[1].get('agency', 0)    for c in valid_chars]
+
+        std_sent   = statistics.stdev(sentiments) if len(sentiments) > 1 else 1.0
+        std_agency = statistics.stdev(agencies)   if len(agencies)   > 1 else 1.0
+
+        # Only flag if both sentiment AND agency distributions are nearly identical
+        # (i.e. all characters feel the same AND exert the same power level)
+        if std_sent < 0.08 and std_agency < 0.08:
             names = [c[0] for c in valid_chars[:3]]
-            assessments.append(f"🔴 **Same Voice Syndrome**: The primary characters ({', '.join(names)}) share nearly identical dialogue textures. Consider varying sentence structures or punctuation habits to distinguish them.")
-            
+            assessments.append(
+                f"🔴 **Same Voice Syndrome**: The primary characters ({', '.join(names)}) "
+                f"share nearly identical dialogue textures. Consider varying sentence "
+                f"structures or punctuation habits to distinguish them."
+            )
+
         return assessments
 
     def _diagnose_motifs(self, trace):
@@ -803,7 +811,7 @@ class WriterAgent:
 
         flagged = set()
         for i in range(len(scene_data)):
-            for j in range(i + 1, len(scene_data)):
+            for j in range(i + 1, min(i + 40, len(scene_data))):
                 idx_a, purpose_a, vocab_a = scene_data[i]
                 idx_b, purpose_b, vocab_b = scene_data[j]
 
@@ -1284,6 +1292,7 @@ class WriterAgent:
         # Characters with significant Act 1 presence (>15 lines) but no Act 3 presence
         # Threshold increased from 5 to 15 to exclude minor thematic characters
         neglected = []
+        trace_index_map = {id(s): i for i, s in enumerate(trace)}
         for char, count in act1_counts.items():
             if count > 15 and act3_counts.get(char, 0) == 0:
                 # Blacklist generic roles that are often mis-parsed or one-off
@@ -1297,7 +1306,7 @@ class WriterAgent:
                 char_timeline = [s for s in trace if char in s.get('character_scene_vectors', {})]
                 if len(char_timeline) < 45:
                     # Check if all appearances are in the first 40% of the script
-                    last_appearance_idx = max([trace.index(s) for s in char_timeline]) if char_timeline else 0
+                    last_appearance_idx = max([trace_index_map[id(s)] for s in char_timeline]) if char_timeline else 0
                     if last_appearance_idx < len(trace) * 0.4:
                         continue # Intentional thematic setup
                 
@@ -1581,7 +1590,7 @@ class WriterAgent:
         
         # 2. Production Polish (20%): Manageable Cast/Location count for genre
         cast_count = d.get('cast_count_deterministic', 10)
-        loc_count = len(d.get('location_profile', []))
+        loc_count = d.get('location_profile', {}).get('unique_locations', 0)
         prod_score = (max(0, 100 - abs(cast_count - 15)) * 0.1) + (max(0, 100 - abs(loc_count - 25)) * 0.1)
         
         # 3. Structural Stability (30%): Act Balance

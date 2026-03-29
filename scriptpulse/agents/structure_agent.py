@@ -129,13 +129,13 @@ class ParsingAgent:
     Structural Parsing Agent - Classifies screenplay lines.
     Combines Heuristic (parsing.py) and ML (bert_parser.py) approaches.
     """
-    def __init__(self, use_ml=True, model_name="valhalla/distilbart-mnli-12-3"):
+    def __init__(self, use_ml=True):
         self.use_ml = use_ml
         self.classifier = None
         self.is_mock = True
         
         if use_ml:
-            self.classifier = manager.get_pipeline("zero-shot-classification", model_name)
+            self.classifier = manager.get_zero_shot()
             self.is_mock = self.classifier is None
             if self.is_mock:
                 print(f"[Warning] Failed to load ML model. Falling back to Heuristics.")
@@ -192,7 +192,10 @@ class ParsingAgent:
         # Metadata/transitions
         transitions = ['FADE IN', 'FADE OUT', 'FADE TO', 'CUT TO', 'DISSOLVE TO', 'MATCH CUT', 'SMASH CUT', 'THE END', 'CONTINUED']
         if any(t in line_upper or line_upper.startswith(t) for t in transitions): return 'M'
-        if line_upper.endswith(':'): return 'M' # Broad transition check
+        # Only treat as transition if the WHOLE line is uppercase and short
+        # (true transitions like "CUT TO:" are all-caps and brief)
+        if line_upper.endswith(':') and line_upper == line and len(line) < 20:
+            return 'M'
 
         # 2. Contextual Heuristics
         prev_tag = context_window[-1] if context_window else "A"
@@ -279,7 +282,7 @@ class SegmentationAgent:
             tag = line_data['tag']
             confidence = 0.0
             if tag == 'S': confidence = 0.9
-            elif tag == 'M': confidence = 0.4
+            # Removed: M-tag boundary — transitions belong to the preceding scene
             
             if confidence > 0.3:
                 boundaries.append((i, confidence))
