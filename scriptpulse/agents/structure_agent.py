@@ -117,10 +117,7 @@ def is_scene_heading(line_text):
     for pattern in fallback_patterns:
         if re.match(pattern, line, re.IGNORECASE): return True
         
-    # Removed: 3. Time of Day suffix pattern (Implicit heading)
-    # This was causing massive scene count inflation (e.g., 180 -> 226) because
-    # lines like "KITCHEN - DAY" in action blocks were matching as complete scenes.
-    # We now strictly trust the INT/EXT exact patterns established above.
+
     
     return False
 

@@ -471,7 +471,7 @@ class WriterAgent:
             sentiment_delta = round(end_sentiment - start_sentiment, 3)
             agency_delta    = round(end_agency    - start_agency,    3)
 
-            is_near_end = timeline[-1].get('scene', 0) > (total_scenes * 0.9)
+            is_near_end = timeline[-1].get('scene', 0) > (total_scenes * 0.95)
             has_resolved_signal = (
                 timeline[-1].get('resolved', False) or
                 (len(timeline) > 1 and timeline[-2].get('resolved', False))
@@ -1731,36 +1731,34 @@ class WriterAgent:
 
     def _calculate_scriptpulse_score(self, dashboard, diagnostics):
         """
-        Weighs NARRATIVE CRAFT only — not production budget.
-        Page-Turner (30%), Pacing Balance (20%), Dialogue Harmony (20%),
-        Stakes Diversity (15%), Health Penalty (15%).
-        Production Risk lives in the Producer panel only.
+        Narrative craft score only. Producer metrics (risk, locations, cast)
+        are excluded — they live in the Producer panel.
+        Weights: PTI 30% | Pacing 25% | Dialogue 20% | Stakes 15% | Market 10%
         """
         pti = dashboard.get('page_turner_index', 50)
 
-        # Dialogue Harmony (20%): reward hitting genre benchmarks
-        dr = dashboard.get('dialogue_action_ratio', {})
+        # Dialogue harmony — fix: use correct key 'dialogue_action_ratio'
+        dr      = dashboard.get('dialogue_action_ratio', {})
         d_ratio = dr.get('global_dialogue_ratio', 0.55)
         d_bench = dr.get('genre_benchmark', 0.55)
         d_harmony = max(0, 100 - abs(d_ratio - d_bench) * 200)
 
-        # Pacing balance (20%): penalise extreme act imbalance
-        act_struct = dashboard.get('act_structure', {})
-        balance_label = act_struct.get('balance', 'Unknown')
-        pacing_score = 85 if balance_label == 'Balanced' else 50
+        # Pacing balance
+        balance_label = dashboard.get('act_structure', {}).get('balance', 'Unknown')
+        pacing_score  = 85 if balance_label == 'Balanced' else 50
 
-        # Stakes diversity (15%): multi-layered jeopardy
+        # Stakes diversity
         stakes = dashboard.get('stakes_profile', {})
         unique_stakes = len([
             v for k in sorted(stakes.keys())
-            if (v := stakes[k]) and isinstance(v, (int, float)) and v > 0
+            if (v := stakes.get(k)) and isinstance(v, (int, float)) and v > 0
         ])
         stakes_score = min(100, unique_stakes * 20)
 
-        # Market readiness (15%): structural viability signal
+        # Market readiness (already bounded 0-100 by its own method)
         mr = dashboard.get('market_readiness', 50)
 
-        # Diagnostic health penalty (up to -30): fewer critical issues = higher score
+        # Diagnostic health penalty (max -25)
         critical_count = sum(
             1 for d in diagnostics
             if isinstance(d, str) and any(x in d for x in ['🔴', '🚫'])
@@ -1769,14 +1767,14 @@ class WriterAgent:
             1 for d in diagnostics
             if isinstance(d, str) and any(x in d for x in ['🟠', '🟡', '⬜'])
         )
-        health_penalty = min(30, (critical_count * 8) + (warning_count * 3))
+        health_penalty = min(25, (critical_count * 7) + (warning_count * 2))
 
         raw = (
-            (pti * 0.30) +
-            (pacing_score * 0.20) +
-            (d_harmony * 0.20) +
+            (pti          * 0.30) +
+            (pacing_score * 0.25) +
+            (d_harmony    * 0.20) +
             (stakes_score * 0.15) +
-            (mr * 0.15)
+            (mr           * 0.10)
         )
 
         return max(0, min(100, round(raw - health_penalty)))
