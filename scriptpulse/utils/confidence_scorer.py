@@ -40,6 +40,10 @@ class ConfidenceScorer:
             else:
                 score *= 0.8
                 reasons.append("Short Script (<30 scenes)")
+                
+        # Long-form bonus: 100+ scene scripts have sufficient data for high confidence
+        if scene_count >= 100:
+            score = min(1.0, score * 1.1)  # 10% uplift for data-rich scripts
             
         # 2. Variance Penalty (Flatline detection)
         # Low variance is the real killer of confidence.

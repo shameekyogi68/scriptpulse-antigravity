@@ -36,7 +36,7 @@ class WriterAgent:
         new_diagnostics.extend(self._diagnose_payoff_density(trace))
         new_diagnostics.extend(self._diagnose_opening_hook(trace))
         new_diagnostics.extend(self._diagnose_generic_dialogue(trace))
-        new_diagnostics.extend(self._diagnose_flat_scene_turns(trace))
+        new_diagnostics.extend(self._diagnose_flat_scene_turns(trace, genre))
         new_diagnostics.extend(self._diagnose_passive_voice(trace))
         new_diagnostics.extend(self._diagnose_tonal_whiplash(trace))
         new_diagnostics.extend(self._diagnose_redundant_scenes(trace))
@@ -479,6 +479,10 @@ class WriterAgent:
             if sentiment_delta < -0.3 and agency_delta > 0.05:
                 arc_label = "Classic Tragedy 🎭"
                 arc_note = "Character gains agency but loses emotional hope/soul. A dominant storytelling arc."
+            elif sentiment_delta < -0.5:  # pure tragic descent regardless of agency delta
+                arc_label = "Classic Tragedy 🎭"
+                arc_note = "Strong negative emotional arc — character's moral or emotional world collapses."
+                arc_note = "Character gains agency but loses emotional hope/soul. A dominant storytelling arc."
             elif sentiment_delta > 0.3 and agency_delta > 0.15:
                 arc_label = "Hero's Journey ⭐"
                 arc_note = "Strong positive transformation in both sentiment and agency over the narrative."
@@ -679,14 +683,16 @@ class WriterAgent:
             )
         return assessments[:2]
 
-    def _diagnose_flat_scene_turns(self, trace):
+    def _diagnose_flat_scene_turns(self, trace, genre='Drama'):
         """Flag consecutive scenes where the scene turn is flat — no dramatic movement."""
         assessments = []
         flat_ranges = self._find_ranges(trace, lambda s: s.get('scene_turn', {}).get('turn_label') == 'Flat')
+        min_flat = 4 if genre.lower() in ['drama', 'crime drama'] else 2
         for start, end in flat_ranges:
-            if (end - start + 1) >= 2:
+            if (end - start + 1) >= min_flat:
                 assessments.append(
-                    f"⬜ **Flat Scene Turns (Scenes {start}–{end})**: Emotional trajectory remains stagnant. These scenes end in the same relative position they began."
+                    f"⬜ **Flat Scene Turns (Scenes {start}–{end})**: Emotional trajectory remains stagnant. "
+                    f"These scenes end in the same relative position they began."
                 )
         return assessments[:1]
 
@@ -911,14 +917,24 @@ class WriterAgent:
         assessments = []
         if len(trace) < 6: return []
 
-        # Aggregate line counts per character across the full trace
+        # Aggregate line counts AND scene appearances per character across the full trace
         char_lines = {}
+        char_scenes = {}
         for s in trace:
             for char, data in s.get('character_scene_vectors', {}).items():
                 char_lines[char] = char_lines.get(char, 0) + data.get('line_count', 0)
+                char_scenes[char] = char_scenes.get(char, 0) + 1
 
         if not char_lines: return []
-        protagonist = max(char_lines, key=char_lines.get)
+
+        # Normalise both metrics then combine (60% lines, 40% scene presence)
+        max_lines = max(char_lines.values()) or 1
+        max_scenes = max(char_scenes.values()) or 1
+        char_score = {
+            c: (char_lines[c] / max_lines * 0.6) + (char_scenes.get(c, 0) / max_scenes * 0.4)
+            for c in char_lines
+        }
+        protagonist = max(char_score, key=char_score.get)
 
         # Build protagonist's agency through each act
         third = len(trace) // 3
@@ -999,7 +1015,7 @@ class WriterAgent:
 
         benchmarks = {
             'feature': (85, 130), 
-            'drama': (90, 150),       # Expanded for prestige drama
+            'drama': (90, 120),       # restore standard benchmark
             'crime drama': (100, 180), # Epic crime dramas like The Godfather
             'comedy': (85, 110),
             'thriller': (90, 130), 
@@ -1304,7 +1320,7 @@ class WriterAgent:
                 # they are likely intentional thematic furniture (like Bonasera).
                 # (Threshold increased from 25 to 45 specifically for long opening monologues)
                 char_timeline = [s for s in trace if char in s.get('character_scene_vectors', {})]
-                if len(char_timeline) < 45:
+                if len(char_timeline) < max(15, len(trace) // 6):
                     # Check if all appearances are in the first 40% of the script
                     last_appearance_idx = max([trace_index_map[id(s)] for s in char_timeline]) if char_timeline else 0
                     if last_appearance_idx < len(trace) * 0.4:
@@ -1321,6 +1337,14 @@ class WriterAgent:
                 search_range = trace[max(0, last_idx-3):min(len(trace), last_idx+4)]
                 if any(s.get('narrative_closure', False) for s in search_range):
                     continue # This character's thread reached a resolution (death/exit)
+                    
+                # Secondary check: scan character_scene_vectors context for death-adjacent vocab
+                last_scene = trace[last_idx] if last_idx >= 0 else {}
+                scene_text = str(last_scene).lower()
+                death_words = {'shot', 'killed', 'dead', 'murder', 'ambush', 'funeral',
+                               'corpse', 'dies', 'body', 'slain', 'assassin', 'gunfire'}
+                if any(w in scene_text for w in death_words):
+                    continue  # Character was killed — not neglected
 
                 neglected.append(char)
         
@@ -1475,7 +1499,9 @@ class WriterAgent:
         # 2. Hook Density: Use Cognitive Resonance (Impact vs just Volume)
         # Average resonance of 0.35 is quite high for a script with breathers.
         resonance = sum(s.get('cognitive_resonance', 0) for s in trace) / len(trace)
-        resonance_score = min(1.0, resonance / 0.35) * 45 # 45 pts for impact
+        res_vals = [s.get('cognitive_resonance', 0) for s in trace]
+        res_threshold = statistics.quantiles(res_vals, n=4)[2] if len(res_vals) > 3 else 0.35
+        resonance_score = min(1.0, resonance / max(res_threshold, 0.1)) * 45 # 45 pts for impact
         
         # 3. Cliffhangers: Scenes ending on high-intensity signals
         cliff_count = sum(1 for s in trace if s.get('attentional_signal', 0) > 0.82)
