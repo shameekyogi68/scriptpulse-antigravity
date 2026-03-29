@@ -1,3 +1,6 @@
+# MODULE: interpretation_agent.py
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 """
 Interpretation Agent - Text-Grounded Cognitive Version
 Translates mathematical signals into true human "First Reader" experiences.
@@ -126,6 +129,7 @@ class InterpretationAgent:
         for i in range(len(temporal_trace)):
             feat = features[i]
             att_sig = temporal_trace[i]['attentional_signal']
+            churn = feat.get('referential_load', {}).get('character_churn', 0.0)
             if churn >= 3.5 and att_sig < 0.5:
                 snippet = self._get_snippet(scenes[i])
                 diagnosis.append(
@@ -163,6 +167,9 @@ class InterpretationAgent:
                 
         # 4. Exposition Heavy
         for i in range(len(temporal_trace)):
+            feat = features[i]
+            att_sig = temporal_trace[i]['attentional_signal']
+            entropy = feat.get('entropy_score', 0)
             if entropy > 4.5 and att_sig < 0.4:  # Raised significantly to filter anything but pure data-dumps
                 snippet = self._get_snippet(scenes[i])
                 diagnosis.append(
@@ -278,3 +285,6 @@ class InterpretationAgent:
     def audit_timeline_continuity(self, scenes): return []
     def audit_narrative_causality(self, encoded, scenes): return []
     def calculate_dialogue_authenticity(self, encoded): return []
+
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

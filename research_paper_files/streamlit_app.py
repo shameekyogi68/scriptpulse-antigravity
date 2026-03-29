@@ -1,3 +1,6 @@
+# MODULE: streamlit_app.py
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 #!/usr/bin/env python3
 """
 ScriptPulse — AI Story Intelligence
@@ -220,4 +223,5 @@ if report and current_input:
             use_container_width=True)
 
 # Application end
+
 

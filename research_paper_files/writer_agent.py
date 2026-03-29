@@ -1,3 +1,6 @@
+# MODULE: writer_agent.py
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 import random
 import re
 import statistics
@@ -78,14 +81,18 @@ class WriterAgent:
         dashboard['market_readiness'] = self._calculate_market_readiness(dashboard)
 
         # Composite ScriptPulse Score (0-100) using the truly sorted diagnostics
-        dashboard['scriptpulse_score'] = self._calculate_scriptpulse_score(dashboard, all_diagnostics)
+        dashboard['scriptpulse_score'] = self._calculate_scriptpulse_score(dashboard, all_diagnostics, trace, genre)
         
-        # Inject into output (Removing prescriptive 'rewrite_priorities')
+        # 3. Rewrite Priorities (Top 3 Critical Diagnostics)
+        rewrite_priorities = [d for d in all_diagnostics if "🔴" in d][:3]
+        
+        # Inject into output
         final_output['writer_intelligence'] = {
             'narrative_diagnosis': all_diagnostics[:15],
             'structural_dashboard': dashboard,
             'narrative_summary': self._build_narrative_summary(trace, genre, all_diagnostics),
             'creative_provocations': self._generate_creative_provocations(all_diagnostics, genre),
+            'rewrite_priorities': rewrite_priorities,
             'genre_context': genre
         }
         
@@ -742,10 +749,10 @@ class WriterAgent:
         Compare against genre benchmarks and surface an insight.
         """
         benchmarks = {
-            'action':      0.40, 'thriller':    0.45, 'horror':      0.42,
-            'drama':       0.60, 'crime drama': 0.58, 'comedy':      0.65, 
-            'romance':     0.65, 'sci-fi':      0.50, 'avant-garde': 0.55, 
-            'general':     0.55
+            'action':      0.40, 'thriller':    0.45, 'horror':      0.38,
+            'drama':       0.56, 'crime drama': 0.54, 'comedy':      0.69, 
+            'romance':     0.70, 'sci-fi':      0.50, 'fantasy':     0.48,
+            'western':     0.45, 'avant-garde': 0.55, 'general':     0.55
         }
         total_d = sum(s.get('dialogue_action_ratio', {}).get('dialogue_lines', 0) for s in trace)
         total_a = sum(s.get('dialogue_action_ratio', {}).get('action_lines', 0) for s in trace)
@@ -1748,7 +1755,7 @@ class WriterAgent:
             'pacing_benchmark': pacing
         }
 
-    def _calculate_scriptpulse_score(self, dashboard, diagnostics):
+    def _calculate_scriptpulse_score(self, dashboard, diagnostics, trace, genre):
         """
         Narrative craft score only. Producer metrics (risk, locations, cast)
         are excluded — they live in the Producer panel.
@@ -1760,7 +1767,16 @@ class WriterAgent:
         dr      = dashboard.get('dialogue_action_ratio', {})
         d_ratio = dr.get('global_dialogue_ratio', 0.55)
         d_bench = dr.get('genre_benchmark', 0.55)
-        d_harmony = max(0, 100 - abs(d_ratio - d_bench) * 200)
+        d_harmony = max(0, 100 - abs(d_ratio - d_bench) * 750) # Proportional Strictness
+        
+        # 4. Intensity Mismatch Penalty (Task: Genre Incongruity)
+        # If Action/Horror, expect peaks (> 0.7). If Drama/Comedy, expect breaths.
+        peaks = sum(1 for s in trace if s.get('attentional_signal', 0) > 0.7)
+        intensity_mismatch = 0
+        if genre.lower() in ['action', 'horror', 'thriller'] and peaks < 5:
+            intensity_mismatch = 15 # Severe penalty for 'Boring' action
+        elif genre.lower() in ['comedy', 'romance'] and peaks > 15:
+            intensity_mismatch = 10 # Fatigue penalty for 'Aggressive' comedy
 
         # Pacing balance
         balance_label = dashboard.get('act_structure', {}).get('balance', 'Unknown')
@@ -1796,4 +1812,7 @@ class WriterAgent:
             (mr           * 0.10)
         )
 
-        return max(0, min(100, round(raw - health_penalty)))
+        return max(0, min(100, round(raw - health_penalty - intensity_mismatch)))
+
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

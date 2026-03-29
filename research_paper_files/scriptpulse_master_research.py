@@ -1,462 +1,3 @@
-# =========================================================================
-# SCRIPTPULSE: COMPREHENSIVE RESEARCH REPOSITORY
-# Unified Deterministic Analysis Engine v1.0
-# =========================================================================
-
-
-# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# MODULE: model_manager.py
-# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-"""
-ScriptPulse Model Manager (MLOps Layer)
-Centralizes model loading, caching, and hardware acceleration.
-
-Active model stack:
-  - spaCy en_core_web_sm  (~12 MB)  — always local, no download
-  - Jina v2 Small          (~66 MB)  — remote first-run, cached in ~/.scriptpulse/models (8k context)
-  - DeBERTa-v3-xsmall      (~140 MB) — remote first-run, cached in ~/.scriptpulse/models (Zero-Shot)
-
-NO BERT Large or GPT-2 in this stack by design (saves ~1.8 GB).
-"""
-
-import os
-import sys
-import json
-import hashlib
-import logging
-
-logger = logging.getLogger('scriptpulse.mlops')
-
-# =============================================================================
-# PERFORMANCE: Environment-driven heuristics-only mode.
-# Set SCRIPTPULSE_HEURISTICS_ONLY=1 to skip ALL transformer models entirely.
-# This drops Jina SBERT (~66 MB) and DeBERTa Zero-Shot (~140 MB).
-# spaCy en_core_web_sm is always local and lightweight — it stays ON regardless.
-# All agents fall through to their existing fast heuristic fallbacks.
-# Analytical output structure is identical; embedding subfields are approximated.
-# =============================================================================
-_HEURISTICS_ONLY = os.environ.get("SCRIPTPULSE_HEURISTICS_ONLY", "0") == "1"
-
-# Centralized Imports
-try:
-    import torch
-    from transformers import pipeline
-    from sentence_transformers import SentenceTransformer
-    import spacy
-except ImportError:
-    torch = None
-    pipeline = None
-    SentenceTransformer = None
-    spacy = None
-
-REQUIRED_VERSIONS_PATH = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), '..', '..', 'config', 'required_model_versions.json'
-)
-
-class ModelManager:
-    _instance = None
-    
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(ModelManager, cls).__new__(cls)
-            cls._instance._initialized = False
-            cls._instance.init_config()
-        return cls._instance
-        
-    def init_config(self, force=False):
-        if self._initialized and not force:
-            return
-
-        self.cache_dir = os.path.abspath('.scriptpulse_cache')
-        os.makedirs(self.cache_dir, exist_ok=True)
-        
-        # Device Selection
-        self.device = -1
-        if torch and torch.cuda.is_available():
-            self.device = 0
-            
-        # v13.1: Load required model versions
-        self._required_versions = self._load_required_versions()
-        self._loaded_models = {}
-            
-        logger.info("Model Cache: %s", self.cache_dir)
-        logger.info("Acceleration: %s", 'CUDA' if self.device == 0 else 'CPU')
-        if self._required_versions:
-            logger.info("Version enforcement: %d models registered", len(self._required_versions))
-    
-    def _load_required_versions(self):
-        """Load required model versions from spec file."""
-        try:
-            if os.path.exists(REQUIRED_VERSIONS_PATH):
-                with open(REQUIRED_VERSIONS_PATH, 'r') as f:
-                    data = json.load(f)
-                return data.get('models', {})
-        except Exception as e:
-            logger.warning("Could not load required_model_versions.json: %s", e)
-        return {}
-    
-    def _verify_model(self, task, model_name):
-        """
-        v13.1: Strict version check.
-        Verifies that the requested model matches the registered spec.
-        Mismatch → hard fail with error code.
-        """
-        if not self._required_versions:
-            return  # No enforcement file found, skip
-        
-        spec = self._required_versions.get(task)
-        if spec is None:
-            # Task not registered — warn but allow
-            logger.warning("MODEL_NOT_REGISTERED — task '%s' not in required_model_versions.json", task)
-            return
-        
-        required_name = spec.get('name', '')
-        if model_name != required_name:
-            error_msg = (
-                f"MODEL_NAME_MISMATCH: Requested '{model_name}' but required '{required_name}' "
-                f"for task '{task}'. Update required_model_versions.json to change models."
-            )
-            raise RuntimeError(f"HARD FAIL — {error_msg}")
-        
-    def get_pipeline(self, task, model_name):
-        """
-        Get a HuggingFace pipeline with caching and version enforcement.
-        Returns None immediately if SCRIPTPULSE_HEURISTICS_ONLY=1.
-        """
-        if _HEURISTICS_ONLY:
-            logger.debug("Heuristics-only mode: skipping pipeline %s", model_name)
-            return None
-        if not pipeline:
-            return None
-        
-        # v13.1: Strict version check
-        self._verify_model(task, model_name)
-            
-        try:
-            logger.info("Loading Pipeline: %s...", model_name)
-            pipe = pipeline(
-                task, 
-                model=model_name, 
-                device=self.device,
-                model_kwargs={"cache_dir": self.cache_dir} 
-            )
-            self._loaded_models[task] = {
-                'name': model_name,
-                'type': 'pipeline',
-                'loaded_at': __import__('time').time(),
-            }
-            return pipe
-        except RuntimeError:
-            raise  # Re-raise version check failures
-        except Exception as e:
-            logger.error("Failed to load pipeline %s: %s", model_name, e)
-            return None
-
-    def get_sentence_transformer(self, model_name="jinaai/jina-embeddings-v2-small-en"):
-        """
-        Get a SentenceTransformer model (Jina v2 Small).
-        Loaded from HuggingFace Hub on first use, then cached locally.
-        """
-        if _HEURISTICS_ONLY:
-            return None
-        if not SentenceTransformer:
-            return None
-        
-        self._verify_model('sentence-transformer', model_name)
-            
-        try:
-            if model_name not in self._loaded_models:
-                logger.info("Loading SBERT (Jina v2-Small): %s...", model_name)
-                self._loaded_models[model_name] = SentenceTransformer(model_name, cache_folder=self.cache_dir)
-            return self._loaded_models[model_name]
-        except Exception as e:
-            logger.error("Failed to load SBERT %s: %s", model_name, e)
-            return None
-
-    def get_zero_shot(self):
-        """
-        Get a Zero-Shot Classifier (DeBERTa-v3).
-        Uses DeBERTa-v3-xsmall (~140MB) for superior research accuracy vs size ratio.
-        """
-        if _HEURISTICS_ONLY:
-            return None
-        
-        # Consistent with required_model_versions.json
-        spec = self._required_versions.get('zero-shot-classification', {})
-        model_name = spec.get('name', "MoritzLaurer/DeBERTa-v3-xsmall-mnli-alnli")
-        
-        return self.get_pipeline("zero-shot-classification", model_name)
-
-    def get_spacy(self, model_name="en_core_web_sm"):
-        """
-        Get a spaCy model (small).
-        Requires 'spacy' and 'en_core_web_sm' to be installed locally.
-        Does NOT download automatically by default to remain local.
-        """
-        if _HEURISTICS_ONLY or not spacy:
-            return None
-            
-        try:
-            if model_name not in self._loaded_models:
-                logger.info("Loading spaCy model: %s...", model_name)
-                self._loaded_models[model_name] = spacy.load(model_name)
-            return self._loaded_models[model_name]
-        except Exception as e:
-            logger.warning("spaCy model %s not found locally. Instructions: 'python -m spacy download %s'", model_name, model_name)
-            return None
-    
-    def get_loaded_models(self):
-        """Return dict of currently loaded model info for telemetry."""
-        return dict(self._loaded_models)
-
-    def release_models(self):
-        """
-        Explicitly release all loaded model references and suggest GC.
-        Call this after analysis completes on memory-constrained machines
-        to return SBERT/DeBERTa heap to the OS before the next UI render.
-        """
-        import gc
-        self._loaded_models.clear()
-        gc.collect()
-        if torch and torch.cuda.is_available():
-            torch.cuda.empty_cache()
-        logger.info("ModelManager: model references released, GC triggered.")
-
-
-# Singleton Access
-manager = ModelManager()
-
-
-
-# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# MODULE: models.py
-# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-"""
-ScriptPulse Pydantic Schemas - Research-Grade Type Safety
-
-Defines strict data contracts for all data flowing through the pipeline.
-Replaces the loose dict-based contracts with validated, documented models.
-"""
-
-from typing import Optional, List, Dict, Any
-try:
-    from pydantic import BaseModel, ConfigDict, Field
-except ImportError:
-    # Graceful degradation if pydantic is not installed
-    import logging
-    logging.getLogger('scriptpulse.schemas').warning(
-        "Pydantic not installed — schemas will not enforce runtime validation. "
-        "Install with: pip install pydantic>=2.0"
-    )
-    # Provide no-op base class
-    class BaseModel:
-        model_config = {}
-        def __init__(self, **kwargs):
-            for k, v in kwargs.items():
-                setattr(self, k, v)
-        def model_dump(self):
-            return self.__dict__
-    class ConfigDict:
-        def __init__(self, **kwargs): pass
-    def Field(default=None, **kwargs): return default
-
-
-# =============================================================================
-# FEATURE SCHEMAS
-# =============================================================================
-
-class LinguisticLoad(BaseModel):
-    """Features from syntactic/linguistic analysis of scene lines."""
-    model_config = ConfigDict(extra='allow')
-
-    sentence_count: int = 0
-    mean_sentence_length: float = 0.0
-    readability_grade: float = 0.0
-    idea_density: float = 0.0
-    syllable_complexity: float = 0.0
-
-
-class DialogueDynamics(BaseModel):
-    """Features from dialogue pattern analysis."""
-    model_config = ConfigDict(extra='allow')
-
-    dialogue_turns: int = 0
-    speaker_switches: int = 0
-    dialogue_density: float = 0.0
-    unique_speakers: int = 0
-    avg_speech_length: float = 0.0
-
-
-class VisualAbstraction(BaseModel):
-    """Features from visual/action line analysis."""
-    model_config = ConfigDict(extra='allow')
-
-    action_line_count: int = 0
-    visual_density: float = 0.0
-    kinetic_verb_count: int = 0
-    color_mentions: int = 0
-
-
-class ReferentialMemory(BaseModel):
-    """Features from character reference tracking."""
-    model_config = ConfigDict(extra='allow')
-
-    active_character_count: int = 0
-    new_character_count: int = 0
-    pronoun_density: float = 0.0
-    referential_load: float = 0.0
-
-
-class StructuralChange(BaseModel):
-    """Features from scene boundary/transition analysis."""
-    model_config = ConfigDict(extra='allow')
-
-    event_boundary_score: float = 0.0
-    location_change: bool = False
-    time_change: bool = False
-
-
-class SceneFeatures(BaseModel):
-    """Complete feature vector for a single scene.
-    
-    This is the output of the PerceptionAgent (EncodingAgent) and the input
-    to the DynamicsAgent for temporal simulation.
-    """
-    model_config = ConfigDict(extra='allow')
-
-    scene_index: int = 0
-    scene_heading: str = ""
-    line_count: int = 0
-    word_count: int = 0
-
-    # Core feature groups
-    linguistic_load: Optional[LinguisticLoad] = None
-    dialogue_dynamics: Optional[DialogueDynamics] = None
-    visual_abstraction: Optional[VisualAbstraction] = None
-    referential_memory: Optional[ReferentialMemory] = None
-    structural_change: Optional[StructuralChange] = None
-
-    # Derived scalars (from various extractors)
-    information_entropy: float = 0.0
-    ambient_tension: float = 0.0
-    tell_vs_show_ratio: float = 0.0
-    on_the_nose_ratio: float = 0.0
-    shoe_leather_score: float = 0.0
-    payoff_density: float = 0.0
-    stichomythia_detected: bool = False
-
-    # Optional advanced features
-    stakes_taxonomy: Optional[Dict[str, Any]] = None
-    scene_purpose: Optional[str] = None
-    character_scene_vectors: Optional[Dict[str, Any]] = None
-    opening_hook_score: Optional[float] = None
-    passive_voice_ratio: float = 0.0
-    cliche_ratio: float = 0.0
-    scene_turn_type: Optional[str] = None
-
-
-# =============================================================================
-# TEMPORAL SIGNAL SCHEMAS
-# =============================================================================
-
-class TemporalSignal(BaseModel):
-    """Output of the DynamicsAgent for a single scene timestep.
-    
-    Represents the simulated reader's cognitive/emotional state at time t.
-    """
-    model_config = ConfigDict(extra='allow')
-
-    scene_index: int = 0
-    instantaneous_effort: float = 0.0
-    recovery_credit: float = 0.0
-    attentional_signal: float = 0.5
-    fatigue_state: float = 0.0
-    confidence_score: float = 0.8
-
-    # ACD state
-    acd_state: str = "stable"  # stable | drift | collapse
-
-    # TAM output
-    tam_adjustment: float = 0.0
-
-    # Pattern flags
-    is_risk_zone: bool = False
-
-
-class DetectedPattern(BaseModel):
-    """A pattern detected in the temporal trace (e.g., sustained demand)."""
-    model_config = ConfigDict(extra='allow')
-
-    pattern_type: str = ""
-    scene_range: List[int] = []
-    confidence_band: str = "medium"
-    severity: float = 0.0
-    description: str = ""
-
-
-# =============================================================================
-# PIPELINE OUTPUT SCHEMA
-# =============================================================================
-
-class WriterIntelligence(BaseModel):
-    """Output of the WriterAgent's analysis."""
-    model_config = ConfigDict(extra='allow')
-
-    health_report: List[Dict[str, Any]] = []
-    ranked_edits: List[Dict[str, Any]] = []
-    dashboard: Dict[str, Any] = {}
-    character_arcs: Dict[str, Any] = {}
-
-
-class PipelineOutput(BaseModel):
-    """Top-level output of the ScriptPulse pipeline (run_pipeline).
-    
-    This is the complete analysis result returned to the user.
-    """
-    model_config = ConfigDict(extra='allow')
-
-    # Structural
-    scenes: List[Dict[str, Any]] = []
-    parsed_lines: List[Dict[str, Any]] = []
-
-    # Feature extraction
-    features: List[Dict[str, Any]] = []
-
-    # Temporal simulation
-    trace: List[Dict[str, Any]] = []
-    patterns: List[Dict[str, Any]] = []
-
-    # Interpretation
-    mediation: Optional[Dict[str, Any]] = None
-    explanations: List[Dict[str, Any]] = []
-    scene_notes: List[Dict[str, Any]] = []
-    suggestions: List[Dict[str, Any]] = []
-
-    # Writer intelligence
-    writer_intelligence: Optional[Dict[str, Any]] = None
-
-    # Ethics
-    agency_analysis: Optional[Dict[str, Any]] = None
-    fairness_audit: Optional[Dict[str, Any]] = None
-
-    # Experimental
-    stanislavski_trace: List[Dict[str, Any]] = []
-    resonance_scores: List[Dict[str, Any]] = []
-
-    # Metadata
-    fingerprint: str = ""
-    genre: str = "drama"
-    lens: str = "viewer"
-    pipeline_version: str = "14.0"
-    wall_time_seconds: float = 0.0
-
-
-# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# MODULE: normalizer.py
-# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 """
 ScriptPulse Universal Format Normalizer
 Preprocessing middleware to standardize messy or creative script formats.
@@ -591,447 +132,6 @@ def normalize_script(text):
         output_lines.append(stripped)
         
     return "\n".join(output_lines)
-
-
-# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# MODULE: structure_agent.py
-# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-"""
-Structure Agent - Handling Parsing, Segmentation, and Importing.
-Consolidates: parsing.py, bert_parser.py, segmentation.py, beat.py, importers.py
-"""
-
-import re
-import math
-import xml.etree.ElementTree as ET
-from ..utils.model_manager import manager
-
-# =============================================================================
-# IMPORTER LOGIC (formerly importers.py)
-# =============================================================================
-
-class ImporterAgent:
-    """
-    Parses Final Draft (.fdx) XML files and converts them 
-    into the standardized Fountain-like format expected by the pipeline.
-    """
-    def run(self, file_content):
-        """
-        Entry point for the agent.
-        file_content: bytes or string of the .fdx file
-        """
-        return self.parse_fdx(file_content)
-
-    def parse_fdx(self, xml_content):
-        """
-        Parse FDX XML string into standardized line dictionaries.
-        Returns: list of dicts [{'text': '...', 'tag': 'S/A/C/D', 'line_index': i}]
-        """
-        try:
-            # Mitigation for basic XXE/Billion Laughs attacks if defusedxml is unavailable.
-            if "<!DOCTYPE" in xml_content or "<!ENTITY" in xml_content:
-                print("[Security] XML Injection Attempt Detected. Halting parse.")
-                return []
-            root = ET.fromstring(xml_content)
-        except ET.ParseError:
-            return []
-            
-        parsed_lines = []
-        line_idx = 0
-        
-        # FDX Structure: <FinalDraft> -> <Content> -> <Paragraph>
-        content = root.find('Content')
-        if content is None:
-            return []
-            
-        for paragraph in content.findall('Paragraph'):
-            p_type = paragraph.get('Type', 'Action')
-            
-            # Extract Text
-            text_elem = paragraph.find('Text')
-            raw_text = ""
-            if text_elem is not None:
-                raw_text = "".join(text_elem.itertext())
-            else:
-                raw_text = "".join(paragraph.itertext())
-                
-            clean_text = raw_text.strip()
-            
-            if not clean_text:
-                continue
-                
-            # Map FDX Types to ScriptPulse Tags
-            tag = 'A' # Default
-            
-            if p_type == 'Scene Heading':
-                tag = 'S'
-                clean_text = clean_text.upper()
-            elif p_type == 'Character':
-                tag = 'C'
-                clean_text = clean_text.upper()
-            elif p_type == 'Dialogue':
-                tag = 'D'
-            elif p_type == 'Parenthetical':
-                tag = 'P'
-            elif p_type == 'Transition':
-                tag = 'T'
-            elif p_type == 'Shot':
-                tag = 'S' 
-            
-            parsed_lines.append({
-                'text': clean_text,
-                'tag': tag,
-                'line_index': line_idx,
-                'original_line': clean_text
-            })
-            line_idx += 1
-            
-        return parsed_lines
-
-
-# =============================================================================
-# PARSING LOGIC (formerly parsing.py & bert_parser.py)
-# =============================================================================
-
-def is_scene_heading(line_text):
-    """
-    Detect if a line is a scene heading.
-    Extracted for testability and reuse.
-    """
-    line = line_text.strip()
-    if not line: return False
-    
-    # 1. Standard Int/Ext prefixes
-    line_upper = line.upper()
-    if line_upper.startswith(("INT.", "EXT.", "INT ", "EXT ", "I/E.", "INT/", "EXT/")): return True
-
-    # 'SCENE' only qualifies when followed by a digit, INT, or EXT (not 'SCENE OF THE CRIME', etc.)
-    if re.match(r'^SCENE\s*(\d+|INT|EXT)', line_upper): return True
-
-    # 2. Fallback Patterns (Full words)
-    fallback_patterns = [
-        r'^INTERIOR\s+', r'^EXTERIOR\s+',
-        r'^\d+\s*(INT|EXT)'
-    ]
-    for pattern in fallback_patterns:
-        if re.match(pattern, line, re.IGNORECASE): return True
-
-    return False
-
-class ParsingAgent:
-    """
-    Structural Parsing Agent - Classifies screenplay lines.
-    Combines Heuristic (parsing.py) and ML (bert_parser.py) approaches.
-    """
-    def __init__(self, use_ml=True):
-        self.use_ml = use_ml
-        self.classifier = None
-        self.is_mock = True
-        
-        if use_ml:
-            self.classifier = manager.get_zero_shot()
-            self.is_mock = self.classifier is None
-            if self.is_mock:
-                print(f"[Warning] Failed to load ML model. Falling back to Heuristics.")
-
-        self.tag_map = {
-            "Dialogue": "D",
-            "Action": "A",
-            "Scene Heading": "S",
-            "Character Name": "C",
-            "Transition": "T",
-            "Parenthetical": "M" 
-        }
-
-    def run(self, script_text):
-        """
-        Parses the entire script.
-        """
-        # Dash Normalization
-        script_text = script_text.replace('—', '-').replace('–', '-')
-        
-        lines = script_text.split('\n')
-        results = []
-        context = []
-        
-        for i, line in enumerate(lines):
-            tag = self.predict_line(line, context_window=context, index=i, all_lines=lines)
-            context.append(tag)
-            
-            confidence = 0.95 if self.is_mock else 0.85 
-            
-            results.append({
-                'line_index': i,
-                'text': line,
-                'tag': tag,
-                'model': 'consolidated-parser-v1',
-                'confidence': confidence
-            })
-            
-        return {'lines': results}
-
-    def predict_line(self, line_text, context_window=None, index=0, all_lines=None):
-        """
-        Predicts the structural tag for a single line.
-        """
-        line = line_text.strip()
-        if not line: return "A"
-        
-        # 1. Hard Rules (Performance Optimization & Sanity)
-        if is_scene_heading(line): return "S"
-        
-        line_upper = line.upper()
-        if line_upper.endswith(" TO:"): return "T"
-
-        # Metadata/transitions
-        transitions = ['FADE IN', 'FADE OUT', 'FADE TO', 'CUT TO', 'DISSOLVE TO', 'MATCH CUT', 'SMASH CUT', 'THE END', 'CONTINUED']
-        if any(t in line_upper or line_upper.startswith(t) for t in transitions): return 'M'
-        # Only treat as transition if the WHOLE line is uppercase and short
-        # (true transitions like "CUT TO:" are all-caps and brief)
-        if line_upper.endswith(':') and line_upper == line and len(line) < 20:
-            return 'M'
-
-        # 2. Contextual Heuristics
-        prev_tag = context_window[-1] if context_window else "A"
-        
-        if prev_tag == "C": 
-            if line.startswith("("): return "M" # Parenthetical
-            return "D"
-            
-        if prev_tag == "M":
-            return "D" # The line immediately after a parenthetical under a character is dialogue
-            
-        if prev_tag == "D":
-            # If the previous line was dialogue, and this line isn't empty (empty lines become A)
-            # and it isn't a new character cue, it's a continuation of dialogue.
-            # Relaxed character rule: allow periods for short names (for typographical typos)
-            is_char_candidate = line.isupper() and len(line) < 40
-            is_hypothetical_character = is_char_candidate and (not line.endswith((".", "?", "!")) or (line.endswith(".") and len(line) < 12))
-            
-            if is_hypothetical_character:
-                # Likely a new character or a transition/action
-                pass
-            else:
-                return "D"
-            
-        if line.isupper() and len(line) < 40 and (not line.endswith((".", "?", "!")) or (line.endswith(".") and len(line) < 12)):
-            # Character cue blacklist (Refined: Only block non-character structural/action cues)
-            # We allow generic roles (MOM, DAD) again to ensure their dialogue is captured.
-            blacklist = ["EXT", "INT", "O.S.", "V.O.", "OFF-SCREEN", "CONTINUED", "TITLE", "CREDITS"]
-            if any(b == line_upper for b in blacklist):
-                return "A"
-            
-            # Action fragments misparsed as characters
-            if any(term in line_upper for term in ["HIS HAND", "HIS FACE", "HER HAND", "HER FACE", "THE DOOR", "THE GUN", "CLOSE ON", "CLOSE-UP"]):
-                return "A"
-
-            # Look ahead for dialogue
-            if all_lines and index + 1 < len(all_lines):
-                 next_line = all_lines[index + 1].strip()
-                 if next_line and not next_line.isupper():
-                     return "C"
-            # Fallback if no lookahead
-            return "C"
-
-        # 3. ML Inference (Skipped if mock or high confidence in heuristic)
-        # Note: In consolidation, preserving the heuristic path as primary for speed/reliability unless ambiguous
-        
-        # 4. Fallback Heuristics
-        if prev_tag == "C": return "D"
-        if line.startswith("(") and line.endswith(")"): return "D" 
-        if line.isupper() and len(line) < 30: return "C"
-        
-        return "A"
-
-
-# =============================================================================
-# SEGMENTATION LOGIC (formerly segmentation.py)
-# =============================================================================
-
-class SegmentationAgent:
-    """Scene Segmentation Agent - Conservative Boundary Detection"""
-    
-    MIN_SCENE_LENGTH = 12
-    LOW_CONFIDENCE_THRESHOLD = 0.6
-
-    def run(self, input_data):
-        """Segment parsed lines into scenes."""
-        if not input_data: return []
-        parsed_lines = input_data if isinstance(input_data, list) else input_data.get('lines', [])
-        
-        boundaries = self.detect_boundaries(parsed_lines)
-        scenes = self.create_scenes(parsed_lines, boundaries)
-        scenes = self.enforce_minimum_length(scenes)
-        scenes = self.merge_headless_fragments(scenes, parsed_lines)
-        scenes = self.merge_low_confidence(scenes)
-        scenes = self.reindex_scenes(scenes)
-        scenes = self.extract_scene_info(scenes, parsed_lines)
-        
-        return scenes
-
-    def detect_boundaries(self, parsed_lines):
-        boundaries = [(0, 1.0)]
-        for i, line_data in enumerate(parsed_lines):
-            if i == 0: continue
-            tag = line_data['tag']
-            confidence = 0.0
-            if tag == 'S': confidence = 0.9
-            # Removed: M-tag boundary — transitions belong to the preceding scene
-            
-            if confidence > 0.3:
-                boundaries.append((i, confidence))
-        return boundaries
-
-    def create_scenes(self, parsed_lines, boundaries):
-        scenes = []
-        for i in range(len(boundaries)):
-            start_line = boundaries[i][0]
-            start_confidence = boundaries[i][1]
-            end_line = boundaries[i + 1][0] - 1 if i + 1 < len(boundaries) else len(parsed_lines) - 1
-            scenes.append({
-                'scene_index': i,
-                'start_line': start_line,
-                'end_line': end_line,
-                'boundary_confidence': start_confidence
-            })
-        return scenes
-
-    def enforce_minimum_length(self, scenes):
-        if not scenes: return scenes
-        merged = []
-        skip_next = False
-        for i in range(len(scenes)):
-            if skip_next:
-                skip_next = False
-                continue
-            scene = scenes[i]
-            length = scene['end_line'] - scene['start_line'] + 1
-            if length < self.MIN_SCENE_LENGTH and i + 1 < len(scenes):
-                next_scene = scenes[i + 1]
-                merged_scene = {
-                    'scene_index': scene['scene_index'],
-                    'start_line': scene['start_line'],
-                    'end_line': next_scene['end_line'],
-                    'boundary_confidence': min(scene['boundary_confidence'], next_scene['boundary_confidence'])
-                }
-                merged.append(merged_scene)
-                skip_next = True
-            else:
-                merged.append(scene)
-        return merged
-
-    def merge_headless_fragments(self, scenes, parsed_lines, max_orphan_lines=15):
-        if len(scenes) <= 1: return scenes
-        merged = [scenes[0]]
-        for scene in scenes[1:]:
-            has_heading = any(parsed_lines[i]['tag'] == 'S' for i in range(scene['start_line'], min(scene['end_line'] + 1, len(parsed_lines))))
-            length = scene['end_line'] - scene['start_line'] + 1
-            if not has_heading and length <= max_orphan_lines and merged:
-                merged[-1]['end_line'] = scene['end_line']
-            else:
-                merged.append(scene)
-        return merged
-
-    def merge_low_confidence(self, scenes):
-        if len(scenes) <= 1: return scenes
-        merged = []
-        current = scenes[0]
-        for i in range(1, len(scenes)):
-            next_scene = scenes[i]
-            if current['boundary_confidence'] < self.LOW_CONFIDENCE_THRESHOLD:
-                current = {
-                    'scene_index': current['scene_index'],
-                    'start_line': current['start_line'],
-                    'end_line': next_scene['end_line'],
-                    'boundary_confidence': max(current['boundary_confidence'], next_scene['boundary_confidence'])
-                }
-            else:
-                merged.append(current)
-                current = next_scene
-        merged.append(current)
-        return merged
-
-    def reindex_scenes(self, scenes):
-        for i, scene in enumerate(scenes):
-            scene['scene_index'] = i
-        return scenes
-
-    def extract_scene_info(self, scenes, parsed_lines):
-        for scene in scenes:
-            start = scene['start_line']
-            end = scene['end_line']
-            heading = ""
-            preview_lines = []
-            for i in range(start, min(end + 1, len(parsed_lines))):
-                line_data = parsed_lines[i]
-                text = line_data['text'].strip()
-                tag = line_data['tag']
-                if not text: continue
-                if tag == 'S' and not heading:
-                    heading = text
-                elif len(preview_lines) < 2:
-                    if text and text != heading:
-                        preview_lines.append(text[:60] + ('...' if len(text) > 60 else ''))
-            scene['heading'] = heading if heading else f"Scene {scene['scene_index'] + 1}"
-            scene['preview'] = ' | '.join(preview_lines) if preview_lines else ""
-        return scenes
-
-
-# =============================================================================
-# BEAT LOGIC (formerly beat.py)
-# =============================================================================
-
-class BeatAgent:
-    """Sub-segments scenes into Beats based on Dramatic Shifts (Action interruptions, Entrances/Exits)."""
-    
-    def subdivide_into_beats(self, scenes):
-        beats = []
-        for scene in scenes:
-            lines = scene.get('lines', [])
-            current_beat_lines = []
-            beat_idx = 1
-            
-            for i, line in enumerate(lines):
-                text = line.get('text', "")
-                tag = line.get('tag', "")
-                current_beat_lines.append(line)
-                
-                # A beat shift happens on:
-                # 1. A transition tag
-                # 2. A major action line that interrupts a block of dialogue
-                is_transition = tag == 'T'
-                is_heavy_action = tag == 'A' and len(text.split()) > 15 and i > 0 and lines[i-1].get('tag') == 'D'
-                
-                if (is_transition or is_heavy_action) and len(current_beat_lines) > 2:
-                    beat_obj = self.create_beat(scene, current_beat_lines, beat_idx)
-                    beats.append(beat_obj)
-                    current_beat_lines = []
-                    beat_idx += 1
-                    
-            if current_beat_lines:
-                 beat_obj = self.create_beat(scene, current_beat_lines, beat_idx)
-                 beats.append(beat_obj)
-                 
-        return beats
-
-    def create_beat(self, parent_scene, lines, beat_idx):
-        return {
-            'scene_index': parent_scene['scene_index'],
-            'beat_index': beat_idx,
-            'heading': f"{parent_scene['heading']} (Beat {beat_idx})",
-            'lines': lines,
-            'start_line': lines[0]['line_index'] if lines else 0,
-            'end_line': lines[-1]['line_index'] if lines else 0,
-            'location': parent_scene.get('location', 'UNKNOWN'),
-            'time': parent_scene.get('time', 'UNKNOWN')
-        }
-
-
-# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# MODULE: perception_agent.py
-# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 """
 Perception Agent - Simplified & MCA-Defensible Version
 Focuses on 5 Core Cognitive Pillars:
@@ -1584,6 +684,908 @@ class EncodingAgent:
                 'heuristic_fallback': confidence < 0.8
             }
         }
+"""
+ScriptPulse Model Manager (MLOps Layer)
+Centralizes model loading, caching, and hardware acceleration.
+
+Active model stack:
+  - spaCy en_core_web_sm  (~12 MB)  — always local, no download
+  - Jina v2 Small          (~66 MB)  — remote first-run, cached in ~/.scriptpulse/models (8k context)
+  - DeBERTa-v3-xsmall      (~140 MB) — remote first-run, cached in ~/.scriptpulse/models (Zero-Shot)
+
+NO BERT Large or GPT-2 in this stack by design (saves ~1.8 GB).
+"""
+
+import os
+import sys
+import json
+import hashlib
+import logging
+
+logger = logging.getLogger('scriptpulse.mlops')
+
+# =============================================================================
+# PERFORMANCE: Environment-driven heuristics-only mode.
+# Set SCRIPTPULSE_HEURISTICS_ONLY=1 to skip ALL transformer models entirely.
+# This drops Jina SBERT (~66 MB) and DeBERTa Zero-Shot (~140 MB).
+# spaCy en_core_web_sm is always local and lightweight — it stays ON regardless.
+# All agents fall through to their existing fast heuristic fallbacks.
+# Analytical output structure is identical; embedding subfields are approximated.
+# =============================================================================
+_HEURISTICS_ONLY = os.environ.get("SCRIPTPULSE_HEURISTICS_ONLY", "0") == "1"
+
+# Centralized Imports
+try:
+    import torch
+    from transformers import pipeline
+    from sentence_transformers import SentenceTransformer
+    import spacy
+except ImportError:
+    torch = None
+    pipeline = None
+    SentenceTransformer = None
+    spacy = None
+
+REQUIRED_VERSIONS_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), '..', '..', 'config', 'required_model_versions.json'
+)
+
+class ModelManager:
+    _instance = None
+    
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(ModelManager, cls).__new__(cls)
+            cls._instance._initialized = False
+            cls._instance.init_config()
+        return cls._instance
+        
+    def init_config(self, force=False):
+        if self._initialized and not force:
+            return
+
+        self.cache_dir = os.path.abspath('.scriptpulse_cache')
+        os.makedirs(self.cache_dir, exist_ok=True)
+        
+        # Device Selection
+        self.device = -1
+        if torch and torch.cuda.is_available():
+            self.device = 0
+            
+        # v13.1: Load required model versions
+        self._required_versions = self._load_required_versions()
+        self._loaded_models = {}
+            
+        logger.info("Model Cache: %s", self.cache_dir)
+        logger.info("Acceleration: %s", 'CUDA' if self.device == 0 else 'CPU')
+        if self._required_versions:
+            logger.info("Version enforcement: %d models registered", len(self._required_versions))
+    
+    def _load_required_versions(self):
+        """Load required model versions from spec file."""
+        try:
+            if os.path.exists(REQUIRED_VERSIONS_PATH):
+                with open(REQUIRED_VERSIONS_PATH, 'r') as f:
+                    data = json.load(f)
+                return data.get('models', {})
+        except Exception as e:
+            logger.warning("Could not load required_model_versions.json: %s", e)
+        return {}
+    
+    def _verify_model(self, task, model_name):
+        """
+        v13.1: Strict version check.
+        Verifies that the requested model matches the registered spec.
+        Mismatch → hard fail with error code.
+        """
+        if not self._required_versions:
+            return  # No enforcement file found, skip
+        
+        spec = self._required_versions.get(task)
+        if spec is None:
+            # Task not registered — warn but allow
+            logger.warning("MODEL_NOT_REGISTERED — task '%s' not in required_model_versions.json", task)
+            return
+        
+        required_name = spec.get('name', '')
+        if model_name != required_name:
+            error_msg = (
+                f"MODEL_NAME_MISMATCH: Requested '{model_name}' but required '{required_name}' "
+                f"for task '{task}'. Update required_model_versions.json to change models."
+            )
+            raise RuntimeError(f"HARD FAIL — {error_msg}")
+        
+    def get_pipeline(self, task, model_name):
+        """
+        Get a HuggingFace pipeline with caching and version enforcement.
+        Returns None immediately if SCRIPTPULSE_HEURISTICS_ONLY=1.
+        """
+        if _HEURISTICS_ONLY:
+            logger.debug("Heuristics-only mode: skipping pipeline %s", model_name)
+            return None
+        if not pipeline:
+            return None
+        
+        # v13.1: Strict version check
+        self._verify_model(task, model_name)
+            
+        try:
+            logger.info("Loading Pipeline: %s...", model_name)
+            pipe = pipeline(
+                task, 
+                model=model_name, 
+                device=self.device,
+                model_kwargs={"cache_dir": self.cache_dir} 
+            )
+            self._loaded_models[task] = {
+                'name': model_name,
+                'type': 'pipeline',
+                'loaded_at': __import__('time').time(),
+            }
+            return pipe
+        except RuntimeError:
+            raise  # Re-raise version check failures
+        except Exception as e:
+            logger.error("Failed to load pipeline %s: %s", model_name, e)
+            return None
+
+    def get_sentence_transformer(self, model_name="jinaai/jina-embeddings-v2-small-en"):
+        """
+        Get a SentenceTransformer model (Jina v2 Small).
+        Loaded from HuggingFace Hub on first use, then cached locally.
+        """
+        if _HEURISTICS_ONLY:
+            return None
+        if not SentenceTransformer:
+            return None
+        
+        self._verify_model('sentence-transformer', model_name)
+            
+        try:
+            if model_name not in self._loaded_models:
+                logger.info("Loading SBERT (Jina v2-Small): %s...", model_name)
+                self._loaded_models[model_name] = SentenceTransformer(model_name, cache_folder=self.cache_dir)
+            return self._loaded_models[model_name]
+        except Exception as e:
+            logger.error("Failed to load SBERT %s: %s", model_name, e)
+            return None
+
+    def get_zero_shot(self):
+        """
+        Get a Zero-Shot Classifier (DeBERTa-v3).
+        Uses DeBERTa-v3-xsmall (~140MB) for superior research accuracy vs size ratio.
+        """
+        if _HEURISTICS_ONLY:
+            return None
+        
+        # Consistent with required_model_versions.json
+        spec = self._required_versions.get('zero-shot-classification', {})
+        model_name = spec.get('name', "MoritzLaurer/DeBERTa-v3-xsmall-mnli-alnli")
+        
+        return self.get_pipeline("zero-shot-classification", model_name)
+
+    def get_spacy(self, model_name="en_core_web_sm"):
+        """
+        Get a spaCy model (small).
+        Requires 'spacy' and 'en_core_web_sm' to be installed locally.
+        Does NOT download automatically by default to remain local.
+        """
+        if _HEURISTICS_ONLY or not spacy:
+            return None
+            
+        try:
+            if model_name not in self._loaded_models:
+                logger.info("Loading spaCy model: %s...", model_name)
+                self._loaded_models[model_name] = spacy.load(model_name)
+            return self._loaded_models[model_name]
+        except Exception as e:
+            logger.warning("spaCy model %s not found locally. Instructions: 'python -m spacy download %s'", model_name, model_name)
+            return None
+    
+    def get_loaded_models(self):
+        """Return dict of currently loaded model info for telemetry."""
+        return dict(self._loaded_models)
+
+    def release_models(self):
+        """
+        Explicitly release all loaded model references and suggest GC.
+        Call this after analysis completes on memory-constrained machines
+        to return SBERT/DeBERTa heap to the OS before the next UI render.
+        """
+        import gc
+        self._loaded_models.clear()
+        gc.collect()
+        if torch and torch.cuda.is_available():
+            torch.cuda.empty_cache()
+        logger.info("ModelManager: model references released, GC triggered.")
+
+
+# Singleton Access
+manager = ModelManager()
+
+import statistics
+
+class ConfidenceScorer:
+    """
+    Computes confidence bands for ScriptPulse v1.3 metrics.
+    Prevent overclaiming on short or flat scripts.
+    """
+    
+    def calculate(self, dynamics_trace):
+        """
+        Returns {'level': 'HIGH'|'MEDIUM'|'LOW', 'score': 0.0-1.0, 'reasons': []}
+        """
+        if not dynamics_trace:
+            return {'level': 'LOW', 'score': 0.0, 'reasons': ['No trace data']}
+            
+        scene_count = len(dynamics_trace)
+        att_signals = [s['attentional_signal'] for s in dynamics_trace]
+        if scene_count > 1:
+            variance = statistics.variance(att_signals) 
+        else:
+            variance = 0.0
+        
+        reasons = []
+        score = 1.0
+        
+        # 1. Length Penalty (Refined for Chamber Dramas)
+        # If scene count is low but average effort is high, it might be a dense play adaptation.
+        avg_effort = statistics.mean(att_signals) if att_signals else 0
+        
+        if scene_count < 10:
+            if avg_effort > 0.6:
+                score *= 0.8 # Less severe penalty for dense short format
+                reasons.append("Low Scene Count (Dense)")
+            else:
+                score *= 0.5
+                reasons.append("Insufficient Length (<10 scenes)")
+        elif scene_count < 30:
+            if avg_effort > 0.5:
+                score *= 0.95 # Minimal penalty
+            else:
+                score *= 0.8
+                reasons.append("Short Script (<30 scenes)")
+            
+        # 2. Variance Penalty (Flatline detection)
+        # Low variance is the real killer of confidence.
+        if variance < 0.005:
+            score *= 0.6
+            reasons.append("Signal Flatline (low_signal_variance)")
+        elif variance < 0.02:
+            score *= 0.9
+            reasons.append("Low Dynamic Range")
+            
+        # 3. Overload Penalty
+        fatigue_ratio = sum(1 for s in dynamics_trace if s.get('fatigue_state', 0) > 0) / scene_count
+        if fatigue_ratio > 0.8:
+            score *= 0.7
+            reasons.append("Sustained Overload (high_entropy_instability)")
+            
+        # Level
+        if score >= 0.85: level = 'HIGH'
+        elif score >= 0.6: level = 'MEDIUM'
+        else: level = 'LOW'
+        
+        return {
+            'level': level,
+            'score': round(score, 2),
+            'reasons': reasons
+        }
+"""
+Structure Agent - Handling Parsing, Segmentation, and Importing.
+Consolidates: parsing.py, bert_parser.py, segmentation.py, beat.py, importers.py
+"""
+
+import re
+import math
+import xml.etree.ElementTree as ET
+from ..utils.model_manager import manager
+
+# =============================================================================
+# IMPORTER LOGIC (formerly importers.py)
+# =============================================================================
+
+class ImporterAgent:
+    """
+    Parses Final Draft (.fdx) XML files and converts them 
+    into the standardized Fountain-like format expected by the pipeline.
+    """
+    def run(self, file_content):
+        """
+        Entry point for the agent.
+        file_content: bytes or string of the .fdx file
+        """
+        return self.parse_fdx(file_content)
+
+    def parse_fdx(self, xml_content):
+        """
+        Parse FDX XML string into standardized line dictionaries.
+        Returns: list of dicts [{'text': '...', 'tag': 'S/A/C/D', 'line_index': i}]
+        """
+        try:
+            # Mitigation for basic XXE/Billion Laughs attacks if defusedxml is unavailable.
+            if "<!DOCTYPE" in xml_content or "<!ENTITY" in xml_content:
+                print("[Security] XML Injection Attempt Detected. Halting parse.")
+                return []
+            root = ET.fromstring(xml_content)
+        except ET.ParseError:
+            return []
+            
+        parsed_lines = []
+        line_idx = 0
+        
+        # FDX Structure: <FinalDraft> -> <Content> -> <Paragraph>
+        content = root.find('Content')
+        if content is None:
+            return []
+            
+        for paragraph in content.findall('Paragraph'):
+            p_type = paragraph.get('Type', 'Action')
+            
+            # Extract Text
+            text_elem = paragraph.find('Text')
+            raw_text = ""
+            if text_elem is not None:
+                raw_text = "".join(text_elem.itertext())
+            else:
+                raw_text = "".join(paragraph.itertext())
+                
+            clean_text = raw_text.strip()
+            
+            if not clean_text:
+                continue
+                
+            # Map FDX Types to ScriptPulse Tags
+            tag = 'A' # Default
+            
+            if p_type == 'Scene Heading':
+                tag = 'S'
+                clean_text = clean_text.upper()
+            elif p_type == 'Character':
+                tag = 'C'
+                clean_text = clean_text.upper()
+            elif p_type == 'Dialogue':
+                tag = 'D'
+            elif p_type == 'Parenthetical':
+                tag = 'P'
+            elif p_type == 'Transition':
+                tag = 'T'
+            elif p_type == 'Shot':
+                tag = 'S' 
+            
+            parsed_lines.append({
+                'text': clean_text,
+                'tag': tag,
+                'line_index': line_idx,
+                'original_line': clean_text
+            })
+            line_idx += 1
+            
+        return parsed_lines
+
+
+# =============================================================================
+# PARSING LOGIC (formerly parsing.py & bert_parser.py)
+# =============================================================================
+
+def is_scene_heading(line_text):
+    """
+    Detect if a line is a scene heading.
+    Extracted for testability and reuse.
+    """
+    line = line_text.strip()
+    if not line: return False
+    
+    # 1. Standard Int/Ext prefixes
+    line_upper = line.upper()
+    if line_upper.startswith(("INT.", "EXT.", "INT ", "EXT ", "I/E.", "INT/", "EXT/")): return True
+
+    # 'SCENE' only qualifies when followed by a digit, INT, or EXT (not 'SCENE OF THE CRIME', etc.)
+    if re.match(r'^SCENE\s*(\d+|INT|EXT)', line_upper): return True
+
+    # 2. Fallback Patterns (Full words)
+    fallback_patterns = [
+        r'^INTERIOR\s+', r'^EXTERIOR\s+',
+        r'^\d+\s*(INT|EXT)'
+    ]
+    for pattern in fallback_patterns:
+        if re.match(pattern, line, re.IGNORECASE): return True
+
+    return False
+
+class ParsingAgent:
+    """
+    Structural Parsing Agent - Classifies screenplay lines.
+    Combines Heuristic (parsing.py) and ML (bert_parser.py) approaches.
+    """
+    def __init__(self, use_ml=True):
+        self.use_ml = use_ml
+        self.classifier = None
+        self.is_mock = True
+        
+        if use_ml:
+            self.classifier = manager.get_zero_shot()
+            self.is_mock = self.classifier is None
+            if self.is_mock:
+                print(f"[Warning] Failed to load ML model. Falling back to Heuristics.")
+
+        self.tag_map = {
+            "Dialogue": "D",
+            "Action": "A",
+            "Scene Heading": "S",
+            "Character Name": "C",
+            "Transition": "T",
+            "Parenthetical": "M" 
+        }
+
+    def run(self, script_text):
+        """
+        Parses the entire script.
+        """
+        # Dash Normalization
+        script_text = script_text.replace('—', '-').replace('–', '-')
+        
+        lines = script_text.split('\n')
+        results = []
+        context = []
+        
+        for i, line in enumerate(lines):
+            tag = self.predict_line(line, context_window=context, index=i, all_lines=lines)
+            context.append(tag)
+            
+            confidence = 0.95 if self.is_mock else 0.85 
+            
+            results.append({
+                'line_index': i,
+                'text': line,
+                'tag': tag,
+                'model': 'consolidated-parser-v1',
+                'confidence': confidence
+            })
+            
+        return {'lines': results}
+
+    def predict_line(self, line_text, context_window=None, index=0, all_lines=None):
+        """
+        Predicts the structural tag for a single line.
+        """
+        line = line_text.strip()
+        if not line: return "A"
+        
+        # 1. Hard Rules (Performance Optimization & Sanity)
+        if is_scene_heading(line): return "S"
+        
+        line_upper = line.upper()
+        if line_upper.endswith(" TO:"): return "T"
+
+        # Metadata/transitions
+        transitions = ['FADE IN', 'FADE OUT', 'FADE TO', 'CUT TO', 'DISSOLVE TO', 'MATCH CUT', 'SMASH CUT', 'THE END', 'CONTINUED']
+        if any(t in line_upper or line_upper.startswith(t) for t in transitions): return 'M'
+        # Only treat as transition if the WHOLE line is uppercase and short
+        # (true transitions like "CUT TO:" are all-caps and brief)
+        if line_upper.endswith(':') and line_upper == line and len(line) < 20:
+            return 'M'
+
+        # 2. Contextual Heuristics
+        prev_tag = context_window[-1] if context_window else "A"
+        
+        if prev_tag == "C": 
+            if line.startswith("("): return "M" # Parenthetical
+            return "D"
+            
+        if prev_tag == "M":
+            return "D" # The line immediately after a parenthetical under a character is dialogue
+            
+        if prev_tag == "D":
+            # If the previous line was dialogue, and this line isn't empty (empty lines become A)
+            # and it isn't a new character cue, it's a continuation of dialogue.
+            # Relaxed character rule: allow periods for short names (for typographical typos)
+            is_char_candidate = line.isupper() and len(line) < 40
+            is_hypothetical_character = is_char_candidate and (not line.endswith((".", "?", "!")) or (line.endswith(".") and len(line) < 12))
+            
+            if is_hypothetical_character:
+                # Likely a new character or a transition/action
+                pass
+            else:
+                return "D"
+            
+        if line.isupper() and len(line) < 40 and (not line.endswith((".", "?", "!")) or (line.endswith(".") and len(line) < 12)):
+            # Character cue blacklist (Refined: Only block non-character structural/action cues)
+            # We allow generic roles (MOM, DAD) again to ensure their dialogue is captured.
+            blacklist = ["EXT", "INT", "O.S.", "V.O.", "OFF-SCREEN", "CONTINUED", "TITLE", "CREDITS"]
+            if any(b == line_upper for b in blacklist):
+                return "A"
+            
+            # Action fragments misparsed as characters
+            if any(term in line_upper for term in ["HIS HAND", "HIS FACE", "HER HAND", "HER FACE", "THE DOOR", "THE GUN", "CLOSE ON", "CLOSE-UP"]):
+                return "A"
+
+            # Look ahead for dialogue
+            if all_lines and index + 1 < len(all_lines):
+                 next_line = all_lines[index + 1].strip()
+                 if next_line and not next_line.isupper():
+                     return "C"
+            # Fallback if no lookahead
+            return "C"
+
+        # 3. ML Inference (Skipped if mock or high confidence in heuristic)
+        # Note: In consolidation, preserving the heuristic path as primary for speed/reliability unless ambiguous
+        
+        # 4. Fallback Heuristics
+        if prev_tag == "C": return "D"
+        if line.startswith("(") and line.endswith(")"): return "D" 
+        if line.isupper() and len(line) < 30: return "C"
+        
+        return "A"
+
+
+# =============================================================================
+# SEGMENTATION LOGIC (formerly segmentation.py)
+# =============================================================================
+
+class SegmentationAgent:
+    """Scene Segmentation Agent - Conservative Boundary Detection"""
+    
+    MIN_SCENE_LENGTH = 12
+    LOW_CONFIDENCE_THRESHOLD = 0.6
+
+    def run(self, input_data):
+        """Segment parsed lines into scenes."""
+        if not input_data: return []
+        parsed_lines = input_data if isinstance(input_data, list) else input_data.get('lines', [])
+        
+        boundaries = self.detect_boundaries(parsed_lines)
+        scenes = self.create_scenes(parsed_lines, boundaries)
+        scenes = self.enforce_minimum_length(scenes)
+        scenes = self.merge_headless_fragments(scenes, parsed_lines)
+        scenes = self.merge_low_confidence(scenes)
+        scenes = self.reindex_scenes(scenes)
+        scenes = self.extract_scene_info(scenes, parsed_lines)
+        
+        return scenes
+
+    def detect_boundaries(self, parsed_lines):
+        boundaries = [(0, 1.0)]
+        for i, line_data in enumerate(parsed_lines):
+            if i == 0: continue
+            tag = line_data['tag']
+            confidence = 0.0
+            if tag == 'S': confidence = 0.9
+            # Removed: M-tag boundary — transitions belong to the preceding scene
+            
+            if confidence > 0.3:
+                boundaries.append((i, confidence))
+        return boundaries
+
+    def create_scenes(self, parsed_lines, boundaries):
+        scenes = []
+        for i in range(len(boundaries)):
+            start_line = boundaries[i][0]
+            start_confidence = boundaries[i][1]
+            end_line = boundaries[i + 1][0] - 1 if i + 1 < len(boundaries) else len(parsed_lines) - 1
+            scenes.append({
+                'scene_index': i,
+                'start_line': start_line,
+                'end_line': end_line,
+                'boundary_confidence': start_confidence
+            })
+        return scenes
+
+    def enforce_minimum_length(self, scenes):
+        if not scenes: return scenes
+        merged = []
+        skip_next = False
+        for i in range(len(scenes)):
+            if skip_next:
+                skip_next = False
+                continue
+            scene = scenes[i]
+            length = scene['end_line'] - scene['start_line'] + 1
+            if length < self.MIN_SCENE_LENGTH and i + 1 < len(scenes):
+                next_scene = scenes[i + 1]
+                merged_scene = {
+                    'scene_index': scene['scene_index'],
+                    'start_line': scene['start_line'],
+                    'end_line': next_scene['end_line'],
+                    'boundary_confidence': min(scene['boundary_confidence'], next_scene['boundary_confidence'])
+                }
+                merged.append(merged_scene)
+                skip_next = True
+            else:
+                merged.append(scene)
+        return merged
+
+    def merge_headless_fragments(self, scenes, parsed_lines, max_orphan_lines=15):
+        if len(scenes) <= 1: return scenes
+        merged = [scenes[0]]
+        for scene in scenes[1:]:
+            has_heading = any(parsed_lines[i]['tag'] == 'S' for i in range(scene['start_line'], min(scene['end_line'] + 1, len(parsed_lines))))
+            length = scene['end_line'] - scene['start_line'] + 1
+            if not has_heading and length <= max_orphan_lines and merged:
+                merged[-1]['end_line'] = scene['end_line']
+            else:
+                merged.append(scene)
+        return merged
+
+    def merge_low_confidence(self, scenes):
+        if len(scenes) <= 1: return scenes
+        merged = []
+        current = scenes[0]
+        for i in range(1, len(scenes)):
+            next_scene = scenes[i]
+            if current['boundary_confidence'] < self.LOW_CONFIDENCE_THRESHOLD:
+                current = {
+                    'scene_index': current['scene_index'],
+                    'start_line': current['start_line'],
+                    'end_line': next_scene['end_line'],
+                    'boundary_confidence': max(current['boundary_confidence'], next_scene['boundary_confidence'])
+                }
+            else:
+                merged.append(current)
+                current = next_scene
+        merged.append(current)
+        return merged
+
+    def reindex_scenes(self, scenes):
+        for i, scene in enumerate(scenes):
+            scene['scene_index'] = i
+        return scenes
+
+    def extract_scene_info(self, scenes, parsed_lines):
+        for scene in scenes:
+            start = scene['start_line']
+            end = scene['end_line']
+            heading = ""
+            preview_lines = []
+            for i in range(start, min(end + 1, len(parsed_lines))):
+                line_data = parsed_lines[i]
+                text = line_data['text'].strip()
+                tag = line_data['tag']
+                if not text: continue
+                if tag == 'S' and not heading:
+                    heading = text
+                elif len(preview_lines) < 2:
+                    if text and text != heading:
+                        preview_lines.append(text[:60] + ('...' if len(text) > 60 else ''))
+            scene['heading'] = heading if heading else f"Scene {scene['scene_index'] + 1}"
+            scene['preview'] = ' | '.join(preview_lines) if preview_lines else ""
+        return scenes
+
+
+# =============================================================================
+# BEAT LOGIC (formerly beat.py)
+# =============================================================================
+
+class BeatAgent:
+    """Sub-segments scenes into Beats based on Dramatic Shifts (Action interruptions, Entrances/Exits)."""
+    
+    def subdivide_into_beats(self, scenes):
+        beats = []
+        for scene in scenes:
+            lines = scene.get('lines', [])
+            current_beat_lines = []
+            beat_idx = 1
+            
+            for i, line in enumerate(lines):
+                text = line.get('text', "")
+                tag = line.get('tag', "")
+                current_beat_lines.append(line)
+                
+                # A beat shift happens on:
+                # 1. A transition tag
+                # 2. A major action line that interrupts a block of dialogue
+                is_transition = tag == 'T'
+                is_heavy_action = tag == 'A' and len(text.split()) > 15 and i > 0 and lines[i-1].get('tag') == 'D'
+                
+                if (is_transition or is_heavy_action) and len(current_beat_lines) > 2:
+                    beat_obj = self.create_beat(scene, current_beat_lines, beat_idx)
+                    beats.append(beat_obj)
+                    current_beat_lines = []
+                    beat_idx += 1
+                    
+            if current_beat_lines:
+                 beat_obj = self.create_beat(scene, current_beat_lines, beat_idx)
+                 beats.append(beat_obj)
+                 
+        return beats
+
+    def create_beat(self, parent_scene, lines, beat_idx):
+        return {
+            'scene_index': parent_scene['scene_index'],
+            'beat_index': beat_idx,
+            'heading': f"{parent_scene['heading']} (Beat {beat_idx})",
+            'lines': lines,
+            'start_line': lines[0]['line_index'] if lines else 0,
+            'end_line': lines[-1]['line_index'] if lines else 0,
+            'location': parent_scene.get('location', 'UNKNOWN'),
+            'time': parent_scene.get('time', 'UNKNOWN')
+        }
+# MODULE: dynamics_agent.py
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+"""
+Dynamics Agent - Simplified & MCA-Defensible Version
+The Core Simulation Engine (The "Heart" of ScriptPulse)
+Calculates: Attentional Signal (S) based on Effort (E) and Recovery (R)
+Equation: S[t] = Effort[t] + (Lambda * S[t-1]) - Recovery[t]
+"""
+
+import math
+import statistics
+import json
+import os
+
+class DynamicsAgent:
+    """Core Mathematical Simulation Engine - High Fidelity, Low Complexity"""
+    
+    def __init__(self):
+        # Priors as per PAPER_METHODS.md v1.3
+        self.GENRE_PRIORS = {
+            'drama':         {'lambda': 0.70, 'beta': 0.40}, 
+            'crime drama':   {'lambda': 0.75, 'beta': 0.35}, 
+            'thriller':      {'lambda': 0.78, 'beta': 0.50},
+            'action':        {'lambda': 0.85, 'beta': 0.65}, # Fast paced, high retention
+            'comedy':        {'lambda': 0.90, 'beta': 0.70}, # High volume, high recovery
+            'horror':        {'lambda': 0.65, 'beta': 0.20}, # Low recovery, high peaks
+            'sci-fi':        {'lambda': 0.80, 'beta': 0.30},
+            'fantasy':       {'lambda': 0.78, 'beta': 0.35},
+            'western':       {'lambda': 0.72, 'beta': 0.45},
+            'romance':       {'lambda': 0.82, 'beta': 0.60},
+        }
+
+    def run_simulation(self, input_data, genre=None, **kwargs):
+        features = input_data.get('features', [])
+        # Fix: Extract genre from input_data if not provided as positional arg
+        g_key = (genre or input_data.get('genre', 'drama')).lower()
+        priors = self.GENRE_PRIORS.get(g_key, self.GENRE_PRIORS['drama']).copy()
+        
+        # Override with kwargs for hyperparameter tuning / research ablation
+        if 'lambda' in kwargs: priors['lambda'] = kwargs['lambda']
+        if 'beta' in kwargs: priors['beta'] = kwargs['beta']
+        
+        if not features: return []
+        
+        signals = []
+        prev_signal = 0.25  # Neutral-low starting point for establishing tone
+        
+        for i, feat in enumerate(features):
+            # 1. Extraction & Feature Normalization
+            norm_velocity = feat.get('dialogue_dynamics', {}).get('turn_velocity', 0)
+            switches = feat.get('dialogue_dynamics', {}).get('speaker_switches', 0)
+            norm_action = feat.get('visual_abstraction', {}).get('visual_intensity', 0)
+            
+            # Conflict & Stakes (The primary drivers of Drama)
+            # Switches normalized by expected conversational density (8 switches per scene is active)
+            norm_switches = min(1.0, switches / 8.0)
+            dialogue_momentum = (norm_velocity * 0.3 + norm_switches * 0.7)
+            
+            affective = feat.get('affective_load', {})
+            comp_sentiment = abs(affective.get('compound', 0)) if isinstance(affective, dict) else 0
+            
+            # Real conflict and stakes calculations used for both Effort and Output
+            actual_conflict = (dialogue_momentum * 0.6) + (max(0, -affective.get('compound', 0)) * 0.4)
+            
+            stakes_breakdown = feat.get('stakes_taxonomy', {}).get('breakdown', {})
+            dominant_stakes_value = max(stakes_breakdown.values()) if stakes_breakdown else norm_action
+            actual_stakes = (norm_action * 0.5) + (dominant_stakes_value * 0.5)
+
+            # 2. Effort (Tension Contribution)
+            # Narrative Drive now weights Conflict and Stakes much heavier than raw dialogue volume
+            narrative_drive = (actual_conflict * 0.5 + actual_stakes * 0.4 + comp_sentiment * 0.1)
+            
+            # Scene Density (Cognitive Load): Moderate contribution
+            norm_chars = min(1.0, feat.get('referential_load', {}).get('active_character_count', 0) / 8.0)
+            norm_entropy = min(1.0, feat.get('entropy_score', 0) / 12.0)
+            scene_density = (norm_chars * 0.4 + norm_entropy * 0.6)
+            
+            # Lower base effort (0.05) allows for deep valleys
+            raw_effort = (narrative_drive * 0.85 + scene_density * 0.15)
+            effort = 0.05 + (raw_effort * 0.9)
+            
+            # 3. Update Attentional Signal (S)
+            decay = priors['lambda']
+            beta = priors['beta']
+            
+            # Recovery Credit (R_t)
+            # Prestige dramas need "The Valley" — if effort is low, recovery is boosted
+            recovery = (1.0 - effort) * beta
+            if effort < 0.25:
+                recovery *= 1.5 # Extra recovery for quiet/domestic scenes
+            
+            # Update state with decay (The "Memory" of the simulation)
+            signal = (prev_signal * decay) + effort - recovery
+            
+            # Micro-spikes for visceral visual peaks (Action sequences)
+            if norm_action > 0.7:
+                signal += 0.15
+                
+            signal = min(0.98, max(0.05, signal)) 
+            
+            # 4. Contextual Nuance (For UI/Interpretation)
+            action_count = feat.get('visual_abstraction', {}).get('action_lines', 0)
+            dial_count = feat.get('dialogue_dynamics', {}).get('dialogue_line_count', 0)
+            sentiment_val = affective.get('compound', 0)
+            
+            # Resonance occurs when high conflict meets strong emotional valence
+            cognitive_resonance = min(1.0, (actual_conflict * 0.4) + (effort * 0.4) + (0.3 if abs(sentiment_val) > 0.6 else 0.0))
+            
+            # Extract aggregate agency from character scene vectors
+            scene_agency = 0.0
+            arcs = feat.get('character_scene_vectors', {})
+            if arcs:
+                scene_agency = sum(v.get('agency', 0) for v in arcs.values()) / len(arcs)
+                
+            out_sig = {
+                'scene_index': feat['scene_index'],
+                'instantaneous_effort': round(effort, 3),
+                'attentional_signal': round(signal, 3),
+                'recovery_credit': round(recovery, 3),
+                'fatigue_state': round(max(0.0, signal - 0.7), 3),
+                'cognitive_resonance': round(cognitive_resonance, 3),
+                'conflict': round(min(1.0, actual_conflict), 3),
+                'stakes': round(min(1.0, actual_stakes), 3),
+                'agency': round(scene_agency, 3),
+                'action_density': round(action_count / max(1, action_count + dial_count), 2),
+                'sentiment': round(sentiment_val, 3),
+                'narrative_position': round(i / max(1, len(features)), 3),
+                # Explicit dialogue/action counts for writer_agent's global ratio calculation
+                'dialogue_action_ratio': {
+                    'dialogue_lines': dial_count,
+                    'action_lines': action_count
+                }
+            }
+            
+            # Forward feed all relevant features to temporal trace needed for interpretation
+            for k,v in feat.items():
+                if k not in out_sig and k not in ['linguistic_load', 'dialogue_dynamics', 'visual_abstraction', 'referential_load', 'entropy_score', 'scene_vocabulary']:
+                    out_sig[k] = v
+                    
+            signals.append(out_sig)
+            prev_signal = signal
+            
+        return signals
+
+    def calculate_acd_states(self, input_data):
+        """Simplified Attention Collapse/Drift Logic"""
+        signals = input_data.get('temporal_signals', [])
+        states = []
+        for s in signals:
+            signal = s['attentional_signal']
+            effort = s['instantaneous_effort']
+            
+            state = 'stable'
+            if signal > 0.8: state = 'collapse' # Too much to handle
+            elif signal < 0.2: state = 'drift'   # Boring/Bland
+            
+            states.append({
+                'scene_index': s['scene_index'],
+                'primary_state': state,
+                'collapse_likelihood': round(max(0.0, signal - 0.7), 3),
+                'drift_likelihood': round(max(0.0, 0.3 - signal), 3)
+            })
+        return states
+
+    def apply_long_range_fatigue(self, input_data):
+        """Simple Fatigue Modifier"""
+        signals = input_data.get('temporal_signals', [])
+        return signals
+
+    def detect_patterns(self, input_data):
+        """Standard experiential patterns based on signal windows"""
+        signals = input_data.get('temporal_signals', [])
+        patterns = []
+        if len(signals) < 3: return []
+        
+        for i in range(len(signals) - 2):
+            window = signals[i:i+3]
+            sigs = [w['attentional_signal'] for w in window]
+            
+            # Fatigue Detection
+            if all(s > 0.7 for s in sigs):
+                patterns.append({'pattern_type': 'sustained_attentional_demand', 'scene_range': [i, i+2], 'confidence': 'medium'})
+                break # only one
+        
+        return patterns
 
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1718,6 +1720,7 @@ class InterpretationAgent:
         for i in range(len(temporal_trace)):
             feat = features[i]
             att_sig = temporal_trace[i]['attentional_signal']
+            churn = feat.get('referential_load', {}).get('character_churn', 0.0)
             if churn >= 3.5 and att_sig < 0.5:
                 snippet = self._get_snippet(scenes[i])
                 diagnosis.append(
@@ -1755,6 +1758,9 @@ class InterpretationAgent:
                 
         # 4. Exposition Heavy
         for i in range(len(temporal_trace)):
+            feat = features[i]
+            att_sig = temporal_trace[i]['attentional_signal']
+            entropy = feat.get('entropy_score', 0)
             if entropy > 4.5 and att_sig < 0.4:  # Raised significantly to filter anything but pure data-dumps
                 snippet = self._get_snippet(scenes[i])
                 diagnosis.append(
@@ -1956,14 +1962,18 @@ class WriterAgent:
         dashboard['market_readiness'] = self._calculate_market_readiness(dashboard)
 
         # Composite ScriptPulse Score (0-100) using the truly sorted diagnostics
-        dashboard['scriptpulse_score'] = self._calculate_scriptpulse_score(dashboard, all_diagnostics)
+        dashboard['scriptpulse_score'] = self._calculate_scriptpulse_score(dashboard, all_diagnostics, trace, genre)
         
-        # Inject into output (Removing prescriptive 'rewrite_priorities')
+        # 3. Rewrite Priorities (Top 3 Critical Diagnostics)
+        rewrite_priorities = [d for d in all_diagnostics if "🔴" in d][:3]
+        
+        # Inject into output
         final_output['writer_intelligence'] = {
             'narrative_diagnosis': all_diagnostics[:15],
             'structural_dashboard': dashboard,
             'narrative_summary': self._build_narrative_summary(trace, genre, all_diagnostics),
             'creative_provocations': self._generate_creative_provocations(all_diagnostics, genre),
+            'rewrite_priorities': rewrite_priorities,
             'genre_context': genre
         }
         
@@ -2620,10 +2630,10 @@ class WriterAgent:
         Compare against genre benchmarks and surface an insight.
         """
         benchmarks = {
-            'action':      0.40, 'thriller':    0.45, 'horror':      0.42,
-            'drama':       0.60, 'crime drama': 0.58, 'comedy':      0.65, 
-            'romance':     0.65, 'sci-fi':      0.50, 'avant-garde': 0.55, 
-            'general':     0.55
+            'action':      0.40, 'thriller':    0.45, 'horror':      0.38,
+            'drama':       0.56, 'crime drama': 0.54, 'comedy':      0.69, 
+            'romance':     0.70, 'sci-fi':      0.50, 'fantasy':     0.48,
+            'western':     0.45, 'avant-garde': 0.55, 'general':     0.55
         }
         total_d = sum(s.get('dialogue_action_ratio', {}).get('dialogue_lines', 0) for s in trace)
         total_a = sum(s.get('dialogue_action_ratio', {}).get('action_lines', 0) for s in trace)
@@ -3626,7 +3636,7 @@ class WriterAgent:
             'pacing_benchmark': pacing
         }
 
-    def _calculate_scriptpulse_score(self, dashboard, diagnostics):
+    def _calculate_scriptpulse_score(self, dashboard, diagnostics, trace, genre):
         """
         Narrative craft score only. Producer metrics (risk, locations, cast)
         are excluded — they live in the Producer panel.
@@ -3638,7 +3648,16 @@ class WriterAgent:
         dr      = dashboard.get('dialogue_action_ratio', {})
         d_ratio = dr.get('global_dialogue_ratio', 0.55)
         d_bench = dr.get('genre_benchmark', 0.55)
-        d_harmony = max(0, 100 - abs(d_ratio - d_bench) * 200)
+        d_harmony = max(0, 100 - abs(d_ratio - d_bench) * 750) # Proportional Strictness
+        
+        # 4. Intensity Mismatch Penalty (Task: Genre Incongruity)
+        # If Action/Horror, expect peaks (> 0.7). If Drama/Comedy, expect breaths.
+        peaks = sum(1 for s in trace if s.get('attentional_signal', 0) > 0.7)
+        intensity_mismatch = 0
+        if genre.lower() in ['action', 'horror', 'thriller'] and peaks < 5:
+            intensity_mismatch = 15 # Severe penalty for 'Boring' action
+        elif genre.lower() in ['comedy', 'romance'] and peaks > 15:
+            intensity_mismatch = 10 # Fatigue penalty for 'Aggressive' comedy
 
         # Pacing balance
         balance_label = dashboard.get('act_structure', {}).get('balance', 'Unknown')
@@ -3674,502 +3693,10 @@ class WriterAgent:
             (mr           * 0.10)
         )
 
-        return max(0, min(100, round(raw - health_penalty)))
+        return max(0, min(100, round(raw - health_penalty - intensity_mismatch)))
 
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# MODULE: llm_translator.py
-# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-import os
-import json
-import logging
-import streamlit as st
-from openai import OpenAI
-try:
-    from groq import Groq
-    GROQ_AVAILABLE = True
-except ImportError:
-    GROQ_AVAILABLE = False
-
-try:
-    from google import genai
-    GEMINI_AVAILABLE = True
-except ImportError:
-    GEMINI_AVAILABLE = False
-
-_log = logging.getLogger(__name__)
-
-def get_token(key, fallback=None):
-    try: 
-        val = st.secrets.get(key)
-        if val: return val
-    except: pass
-    return os.environ.get(key, fallback)
-
-def _get_api_config():
-    """Returns a unified dict of available keys."""
-    return {
-        "groq": get_token("GROQ_API_KEY"),
-        "gemini": get_token("GOOGLE_API_KEY") or get_token("GEMINI_API_KEY"),
-        "hf": get_token("HF_TOKEN") or get_token("HUGGINGFACE_API_KEY")
-    }
-
-def generate_ai_summary(script_data, lens='viewer', api_key=None):
-    """
-    Translates ScriptPulse data into an emotional audience reaction.
-    Rotates through providers to ensure high uptime and quality.
-    """
-    keys = _get_api_config()
-    if api_key: keys["groq"] = api_key # Manual override usually for groq
-    
-    if not any(keys.values()):
-        return None, "All AI providers are offline. Please check your API Keys."
-        
-    dashboard = script_data.get("writer_intelligence", {}).get("structural_dashboard", {})
-    
-    # CRITICAL: Slim down the dashboard payload to avoid Groq's 12,000 TPM free tier limit
-    # Do NOT send full scene-by-scene arrays like scene_turn_map or scene_economy_map
-    slim_dashboard = {
-        "scriptpulse_score": dashboard.get("scriptpulse_score"),
-        "page_turner_index": dashboard.get("page_turner_index"),
-        "market_readiness": dashboard.get("market_readiness"),
-        "act_structure": dashboard.get("act_structure"),
-        "budget_impact": dashboard.get("budget_impact"),
-        "commercial_comps": dashboard.get("commercial_comps")
-    }
-    
-    data_payload = {
-        "pacing_issues": script_data.get("writer_intelligence", {}).get("narrative_diagnosis", []),
-        "priorities": script_data.get("writer_intelligence", {}).get("rewrite_priorities", []),
-        "structural_dashboard": slim_dashboard
-    }
-    
-    # Customize the persona based on the lens
-    persona_map = {
-        "Studio Executive": "a sharp-eyed Development Executive at a major studio. Focus on commercial viability, audience demographic expansion, budget risks, and market positioning.",
-        "Story Editor": "a master Story Editor for major film and television productions. Focus on internal character logic, causality, emotional stakes, and structural beats.",
-        "Script Coordinator": "a technical Script Analyst and Pacing Consultant. Focus on dialogue economy, visual description energy, scene-to-scene transitions, and stylistic consistency."
-    }
-    persona_desc = persona_map.get(lens, "a professional Script Consultant.")
-
-    system_prompt = (
-        f"You are {persona_desc} "
-        "Provide a comprehensive, actionable narrative analysis based on the structural and emotional data provided. "
-        "CRITICAL RULES: \n"
-        "1. Strictly maintain this specific professional persona. Use role-appropriate vocabulary (e.g., Executive uses 'ROI', 'Comp', 'Demographic'; Editor uses 'Beat', 'Arc', 'Causality'; Coordinator uses 'White Space', 'Rhythm', 'Flow').\n"
-        "2. Prioritize your specific areas of expertise in the report.\n"
-        "3. ALWAYS provide 3 concrete 'Fix Suggestions' at the end of the report to elevate the script for production.\n"
-        "4. If you mention 'ScriptPulse', ALWAYS format it EXACTLY like this: Script<span style='color: #0052FF; font-weight: bold;'>Pulse</span>\n"
-        "5. Avoid archaic or overly rigid length rules. Prestige features often exceed 120 minutes; only flag length if it meaningfully drags the pacing or structural integrity."
-    )
-    user_content = f"Experience Data: {json.dumps(data_payload)}"
-    errors = []
-
-    # 1. Try GEMINI (Best for long-form reasoning and "Story Soul")
-    if keys["gemini"] and GEMINI_AVAILABLE:
-        try:
-            genai.configure(api_key=keys["gemini"])
-            model = genai.GenerativeModel('gemini-1.5-flash')
-            response = model.generate_content(f"SYSTEM: {system_prompt}\n\nUSER: {user_content}")
-            return response.text, None
-        except Exception as e:
-            errors.append(f"Gemini: {str(e)}")
-
-    # 2. Try GROQ (Blazing Fast)
-    if keys["groq"] and GROQ_AVAILABLE:
-        try:
-            client = Groq(api_key=keys["groq"])
-            completion = client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
-                messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_content}],
-                temperature=0.6,
-                max_tokens=1200
-            )
-            return completion.choices[0].message.content, None
-        except Exception as e:
-            errors.append(f"Groq: {str(e)}")
-
-    # 3. Fallback to Hugging Face
-    if keys["hf"]:
-        try:
-            client = OpenAI(base_url="https://router.huggingface.co/v1", api_key=keys["hf"])
-            completion = client.chat.completions.create(
-                model="moonshotai/Kimi-K2-Instruct-0905",
-                messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_content}],
-                max_tokens=1200
-            )
-            return completion.choices[0].message.content, None
-        except Exception as e:
-            errors.append(f"HF: {str(e)}")
-            
-    return None, f"All AI APIs failed. Details: {' | '.join(errors)}"
-
-def generate_section_insight(script_data, section_type, lens='viewer', api_key=None):
-    """
-    Generates a high-impact visceral reaction that bridges the gap between 'math' and 'human feeling'.
-    """
-    keys = _get_api_config()
-    if api_key: keys["groq"] = api_key
-    
-    if not any(keys.values()):
-        return "Connect an API key (Groq, Gemini, or HF) to hear audience reactions."
-
-    # Persona definitions for sections
-    persona_map = {
-        "Studio Executive": "a Development Executive focused on commercial pacing and audience retention.",
-        "Story Editor": "a Story Editor focused on structural beats and emotional momentum.",
-        "Script Coordinator": "a Script Coordinator focused on the physical read and visual energy."
-    }
-    p_desc = persona_map.get(lens, "a professional Script Consultant.")
-
-    if section_type == 'pulse':
-        tp = script_data.get('writer_intelligence', {}).get('structural_dashboard', {}).get('structural_turning_points', {})
-        payload = {"peaks": tp}
-        system_msg = (
-            f"You are {p_desc} Analyze the story's structural pacing graph. "
-            "Explain how this sequence affects the audience's attention from your professional perspective. "
-            "Identify the most significant pacing trend observed. One precise sentence. "
-            "CRITICAL: Do not use phrases like 'Based on the provided data' or 'Raw Experience Math'. Speak directly and naturally to the writer. "
-            "If referring to the engine, format it as: Script<span style='color: #0052FF; font-weight: bold;'>Pulse</span>"
-        )
-    elif section_type == 'dna':
-        payload = {"distribution": "Speed vs Detail balance"}
-        system_msg = (
-            f"You are {p_desc} Evaluate the balance of narrative action vs world-building. "
-            "Evaluate the impact of this balance on reader immersion for the current story goals. One clear sentence. "
-            "CRITICAL: Do not use phrases like 'Based on the provided data' or 'Raw Experience Math'. Speak directly and naturally to the writer. "
-            "If referring to the engine, format it as: Script<span style='color: #0052FF; font-weight: bold;'>Pulse</span>"
-        )
-    else: # habits
-        perceptual = script_data.get('perceptual_features', [])[:10]
-        payload = {"samples": perceptual}
-        system_msg = (
-            f"You are {p_desc} Evaluate the rhythm and subtext of the characters' dialogue. "
-            "Identify what the current dialogue texture reveals about the character dynamics. One professional sentence. "
-            "If referring to the engine, format it as: Script<span style='color: #0052FF; font-weight: bold;'>Pulse</span>"
-        )
-
-    user_content = f"Raw Experience Math: {json.dumps(payload)}\nAudience Reaction:"
-
-    # PURPOSE-BASED DISTRIBUTION (To avoid free-tier rate limits)
-    # Gemini: 'pulse' (Story/Emotion) | Groq: 'dna' and 'habits' (Structure/Pattern)
-    
-    order = []
-    if section_type == 'pulse':
-        order = ['gemini', 'groq', 'hf']
-    else:
-        order = ['groq', 'gemini', 'hf']
-        
-    errors = []
-
-    for provider in order:
-        if provider == 'gemini' and keys["gemini"] and GEMINI_AVAILABLE:
-            try:
-                client = genai.Client(api_key=keys["gemini"])
-                response = client.models.generate_content(
-                    model='gemini-1.5-flash',
-                    contents=f"SYSTEM: {system_msg}\n\nUSER: {user_content}"
-                )
-                return response.text
-            except Exception as e:
-                errors.append(f"Gemini: {str(e)}")
-                continue
-            
-        if provider == 'groq' and keys["groq"] and GROQ_AVAILABLE:
-            try:
-                client = Groq(api_key=keys["groq"])
-                completion = client.chat.completions.create(
-                    model="llama-3.1-8b-instant",
-                    messages=[{"role": "system", "content": system_msg}, {"role": "user", "content": user_content}],
-                    max_tokens=300,
-                    temperature=0.8
-                )
-                return completion.choices[0].message.content
-            except Exception as e:
-                errors.append(f"Groq: {str(e)}")
-                continue
-
-        if provider == 'hf' and keys["hf"]:
-            try:
-                client = OpenAI(base_url="https://router.huggingface.co/v1", api_key=keys["hf"])
-                completion = client.chat.completions.create(
-                    model="moonshotai/Kimi-K2-Instruct-0905",
-                    messages=[{"role": "system", "content": system_msg}, {"role": "user", "content": user_content}],
-                    max_tokens=300
-                )
-                return completion.choices[0].message.content
-            except Exception as e:
-                errors.append(f"HF: {str(e)}")
-                continue
-
-    return f"AI Error: API failure. Details: {' | '.join(errors)}"
-
-
-# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# MODULE: confidence_scorer.py
-# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-import statistics
-
-class ConfidenceScorer:
-    """
-    Computes confidence bands for ScriptPulse v1.3 metrics.
-    Prevent overclaiming on short or flat scripts.
-    """
-    
-    def calculate(self, dynamics_trace):
-        """
-        Returns {'level': 'HIGH'|'MEDIUM'|'LOW', 'score': 0.0-1.0, 'reasons': []}
-        """
-        if not dynamics_trace:
-            return {'level': 'LOW', 'score': 0.0, 'reasons': ['No trace data']}
-            
-        scene_count = len(dynamics_trace)
-        att_signals = [s['attentional_signal'] for s in dynamics_trace]
-        if scene_count > 1:
-            variance = statistics.variance(att_signals) 
-        else:
-            variance = 0.0
-        
-        reasons = []
-        score = 1.0
-        
-        # 1. Length Penalty (Refined for Chamber Dramas)
-        # If scene count is low but average effort is high, it might be a dense play adaptation.
-        avg_effort = statistics.mean(att_signals) if att_signals else 0
-        
-        if scene_count < 10:
-            if avg_effort > 0.6:
-                score *= 0.8 # Less severe penalty for dense short format
-                reasons.append("Low Scene Count (Dense)")
-            else:
-                score *= 0.5
-                reasons.append("Insufficient Length (<10 scenes)")
-        elif scene_count < 30:
-            if avg_effort > 0.5:
-                score *= 0.95 # Minimal penalty
-            else:
-                score *= 0.8
-                reasons.append("Short Script (<30 scenes)")
-            
-        # 2. Variance Penalty (Flatline detection)
-        # Low variance is the real killer of confidence.
-        if variance < 0.005:
-            score *= 0.6
-            reasons.append("Signal Flatline (low_signal_variance)")
-        elif variance < 0.02:
-            score *= 0.9
-            reasons.append("Low Dynamic Range")
-            
-        # 3. Overload Penalty
-        fatigue_ratio = sum(1 for s in dynamics_trace if s.get('fatigue_state', 0) > 0) / scene_count
-        if fatigue_ratio > 0.8:
-            score *= 0.7
-            reasons.append("Sustained Overload (high_entropy_instability)")
-            
-        # Level
-        if score >= 0.85: level = 'HIGH'
-        elif score >= 0.6: level = 'MEDIUM'
-        else: level = 'LOW'
-        
-        return {
-            'level': level,
-            'score': round(score, 2),
-            'reasons': reasons
-        }
-
-
-# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# MODULE: dynamics_agent.py
-# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-"""
-Dynamics Agent - Simplified & MCA-Defensible Version
-The Core Simulation Engine (The "Heart" of ScriptPulse)
-Calculates: Attentional Signal (S) based on Effort (E) and Recovery (R)
-Equation: S[t] = Effort[t] + (Lambda * S[t-1]) - Recovery[t]
-"""
-
-import math
-import statistics
-import json
-import os
-
-class DynamicsAgent:
-    """Core Mathematical Simulation Engine - High Fidelity, Low Complexity"""
-    
-    def __init__(self):
-        # Priors as per PAPER_METHODS.md v1.3
-        self.GENRE_PRIORS = {
-            'drama':         {'lambda': 0.75, 'beta': 0.45}, # Higher recovery, lower retention for valleys
-            'crime drama':   {'lambda': 0.80, 'beta': 0.40}, 
-            'thriller':      {'lambda': 0.75, 'beta': 0.45},
-            'action':        {'lambda': 0.78, 'beta': 0.50},
-            'comedy':        {'lambda': 0.80, 'beta': 0.60},
-            'horror':        {'lambda': 0.70, 'beta': 0.25},
-            'sci-fi':        {'lambda': 0.82, 'beta': 0.35},
-        }
-
-    def run_simulation(self, input_data, genre=None, **kwargs):
-        features = input_data.get('features', [])
-        # Fix: Extract genre from input_data if not provided as positional arg
-        g_key = (genre or input_data.get('genre', 'drama')).lower()
-        priors = self.GENRE_PRIORS.get(g_key, self.GENRE_PRIORS['drama']).copy()
-        
-        # Override with kwargs for hyperparameter tuning / research ablation
-        if 'lambda' in kwargs: priors['lambda'] = kwargs['lambda']
-        if 'beta' in kwargs: priors['beta'] = kwargs['beta']
-        
-        if not features: return []
-        
-        signals = []
-        prev_signal = 0.25  # Neutral-low starting point for establishing tone
-        
-        for i, feat in enumerate(features):
-            # 1. Extraction & Feature Normalization
-            norm_velocity = feat.get('dialogue_dynamics', {}).get('turn_velocity', 0)
-            switches = feat.get('dialogue_dynamics', {}).get('speaker_switches', 0)
-            norm_action = feat.get('visual_abstraction', {}).get('visual_intensity', 0)
-            
-            # Conflict & Stakes (The primary drivers of Drama)
-            # Switches normalized by expected conversational density (8 switches per scene is active)
-            norm_switches = min(1.0, switches / 8.0)
-            dialogue_momentum = (norm_velocity * 0.3 + norm_switches * 0.7)
-            
-            affective = feat.get('affective_load', {})
-            comp_sentiment = abs(affective.get('compound', 0)) if isinstance(affective, dict) else 0
-            
-            # Real conflict and stakes calculations used for both Effort and Output
-            actual_conflict = (dialogue_momentum * 0.6) + (max(0, -affective.get('compound', 0)) * 0.4)
-            
-            stakes_breakdown = feat.get('stakes_taxonomy', {}).get('breakdown', {})
-            dominant_stakes_value = max(stakes_breakdown.values()) if stakes_breakdown else norm_action
-            actual_stakes = (norm_action * 0.5) + (dominant_stakes_value * 0.5)
-
-            # 2. Effort (Tension Contribution)
-            # Narrative Drive now weights Conflict and Stakes much heavier than raw dialogue volume
-            narrative_drive = (actual_conflict * 0.5 + actual_stakes * 0.4 + comp_sentiment * 0.1)
-            
-            # Scene Density (Cognitive Load): Moderate contribution
-            norm_chars = min(1.0, feat.get('referential_load', {}).get('active_character_count', 0) / 8.0)
-            norm_entropy = min(1.0, feat.get('entropy_score', 0) / 12.0)
-            scene_density = (norm_chars * 0.4 + norm_entropy * 0.6)
-            
-            # Lower base effort (0.05) allows for deep valleys
-            raw_effort = (narrative_drive * 0.85 + scene_density * 0.15)
-            effort = 0.05 + (raw_effort * 0.9)
-            
-            # 3. Update Attentional Signal (S)
-            decay = priors['lambda']
-            beta = priors['beta']
-            
-            # Recovery Credit (R_t)
-            # Prestige dramas need "The Valley" — if effort is low, recovery is boosted
-            recovery = (1.0 - effort) * beta
-            if effort < 0.25:
-                recovery *= 1.5 # Extra recovery for quiet/domestic scenes
-            
-            # Update state with decay (The "Memory" of the simulation)
-            signal = (prev_signal * decay) + effort - recovery
-            
-            # Micro-spikes for visceral visual peaks (Action sequences)
-            if norm_action > 0.7:
-                signal += 0.15
-                
-            signal = min(0.98, max(0.05, signal)) 
-            
-            # 4. Contextual Nuance (For UI/Interpretation)
-            action_count = feat.get('visual_abstraction', {}).get('action_lines', 0)
-            dial_count = feat.get('dialogue_dynamics', {}).get('dialogue_line_count', 0)
-            sentiment_val = affective.get('compound', 0)
-            
-            # Resonance occurs when high conflict meets strong emotional valence
-            cognitive_resonance = min(1.0, (actual_conflict * 0.4) + (effort * 0.4) + (0.3 if abs(sentiment_val) > 0.6 else 0.0))
-            
-            # Extract aggregate agency from character scene vectors
-            scene_agency = 0.0
-            arcs = feat.get('character_scene_vectors', {})
-            if arcs:
-                scene_agency = sum(v.get('agency', 0) for v in arcs.values()) / len(arcs)
-                
-            out_sig = {
-                'scene_index': feat['scene_index'],
-                'instantaneous_effort': round(effort, 3),
-                'attentional_signal': round(signal, 3),
-                'recovery_credit': round(recovery, 3),
-                'fatigue_state': round(max(0.0, signal - 0.7), 3),
-                'cognitive_resonance': round(cognitive_resonance, 3),
-                'conflict': round(min(1.0, actual_conflict), 3),
-                'stakes': round(min(1.0, actual_stakes), 3),
-                'agency': round(scene_agency, 3),
-                'action_density': round(action_count / max(1, action_count + dial_count), 2),
-                'sentiment': round(sentiment_val, 3),
-                'narrative_position': round(i / max(1, len(features)), 3),
-                # Explicit dialogue/action counts for writer_agent's global ratio calculation
-                'dialogue_action_ratio': {
-                    'dialogue_lines': dial_count,
-                    'action_lines': action_count
-                }
-            }
-            
-            # Forward feed all relevant features to temporal trace needed for interpretation
-            for k,v in feat.items():
-                if k not in out_sig and k not in ['linguistic_load', 'dialogue_dynamics', 'visual_abstraction', 'referential_load', 'entropy_score', 'scene_vocabulary']:
-                    out_sig[k] = v
-                    
-            signals.append(out_sig)
-            prev_signal = signal
-            
-        return signals
-
-    def calculate_acd_states(self, input_data):
-        """Simplified Attention Collapse/Drift Logic"""
-        signals = input_data.get('temporal_signals', [])
-        states = []
-        for s in signals:
-            signal = s['attentional_signal']
-            effort = s['instantaneous_effort']
-            
-            state = 'stable'
-            if signal > 0.8: state = 'collapse' # Too much to handle
-            elif signal < 0.2: state = 'drift'   # Boring/Bland
-            
-            states.append({
-                'scene_index': s['scene_index'],
-                'primary_state': state,
-                'collapse_likelihood': round(max(0.0, signal - 0.7), 3),
-                'drift_likelihood': round(max(0.0, 0.3 - signal), 3)
-            })
-        return states
-
-    def apply_long_range_fatigue(self, input_data):
-        """Simple Fatigue Modifier"""
-        signals = input_data.get('temporal_signals', [])
-        return signals
-
-    def detect_patterns(self, input_data):
-        """Standard experiential patterns based on signal windows"""
-        signals = input_data.get('temporal_signals', [])
-        patterns = []
-        if len(signals) < 3: return []
-        
-        for i in range(len(signals) - 2):
-            window = signals[i:i+3]
-            sigs = [w['attentional_signal'] for w in window]
-            
-            # Fatigue Detection
-            if all(s > 0.7 for s in sigs):
-                patterns.append({'pattern_type': 'sustained_attentional_demand', 'scene_range': [i, i+2], 'confidence': 'medium'})
-                break # only one
-        
-        return patterns
-
-
-# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# MODULE: ethics_agent.py
-# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 """
 Ethics Agent - Analyzing Bias, Agency, and Fairness
 Consolidates: agency.py, fairness.py
@@ -4390,12 +3917,6 @@ class EthicsAgent:
             }
             
         return report
-
-
-# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# MODULE: experimental_agent.py
-# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 """
 Experimental Agent - Advanced Research & Experimental Modules
 Consolidates: silicon_stanislavski.py, resonance.py, insight.py, polyglot_validator.py, multimodal.py
@@ -4835,12 +4356,6 @@ class MultimodalFusionAgent:
             'acoustic_proxy': round(dialogue_velocity, 3),
             'source': 'Multimodal Fusion (Action/Dialogue Proxy Extrapolation)'
         }
-
-
-# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# MODULE: governance.py
-# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 """
 ScriptPulse Governance & Sanitization
 Provides hard bounds on input parameters to protect NLP models from Out-Of-Memory (OOM) 
@@ -4865,114 +4380,520 @@ def validate_request(text_data: str):
         raise ValueError("Governance Audit Failed: Binary payload or null-bytes detected.")
         
     return True
-
-
-# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# MODULE: trust_lock.py
-# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-"""
-ScriptPulse Trust Lock (LHTL)
-Philosophical Checksum & Invariant Enforcement
-"""
-
 import os
-import hashlib
-from . import governance
+import json
+import logging
+import streamlit as st
+from openai import OpenAI
+try:
+    from groq import Groq
+    GROQ_AVAILABLE = True
+except ImportError:
+    GROQ_AVAILABLE = False
 
-# Immutable Constitution Hash (Simulated)
-# In a real build system, this would be cryptographically signed.
-REQUIRED_REFUSAL_TERMS = {
-    "rank 1 to 10",
-    "grade this",
-    "score",
-    "hiring recommendation"
+try:
+    from google import genai
+    GEMINI_AVAILABLE = True
+except ImportError:
+    GEMINI_AVAILABLE = False
+
+_log = logging.getLogger(__name__)
+
+def get_token(key, fallback=None):
+    try: 
+        val = st.secrets.get(key)
+        if val: return val
+    except: pass
+    return os.environ.get(key, fallback)
+
+def _get_api_config():
+    """Returns a unified dict of available keys."""
+    return {
+        "groq": get_token("GROQ_API_KEY"),
+        "gemini": get_token("GOOGLE_API_KEY") or get_token("GEMINI_API_KEY"),
+        "hf": get_token("HF_TOKEN") or get_token("HUGGINGFACE_API_KEY")
+    }
+
+def generate_ai_summary(script_data, lens='viewer', api_key=None):
+    """
+    Translates ScriptPulse data into an emotional audience reaction.
+    Rotates through providers to ensure high uptime and quality.
+    """
+    keys = _get_api_config()
+    if api_key: keys["groq"] = api_key # Manual override usually for groq
+    
+    if not any(keys.values()):
+        return None, "All AI providers are offline. Please check your API Keys."
+        
+    dashboard = script_data.get("writer_intelligence", {}).get("structural_dashboard", {})
+    
+    # CRITICAL: Slim down the dashboard payload to avoid Groq's 12,000 TPM free tier limit
+    # Do NOT send full scene-by-scene arrays like scene_turn_map or scene_economy_map
+    slim_dashboard = {
+        "scriptpulse_score": dashboard.get("scriptpulse_score"),
+        "page_turner_index": dashboard.get("page_turner_index"),
+        "market_readiness": dashboard.get("market_readiness"),
+        "act_structure": dashboard.get("act_structure"),
+        "budget_impact": dashboard.get("budget_impact"),
+        "commercial_comps": dashboard.get("commercial_comps")
+    }
+    
+    data_payload = {
+        "pacing_issues": script_data.get("writer_intelligence", {}).get("narrative_diagnosis", []),
+        "priorities": script_data.get("writer_intelligence", {}).get("rewrite_priorities", []),
+        "structural_dashboard": slim_dashboard
+    }
+    
+    # Customize the persona based on the lens
+    persona_map = {
+        "Studio Executive": "a sharp-eyed Development Executive at a major studio. Focus on commercial viability, audience demographic expansion, budget risks, and market positioning.",
+        "Story Editor": "a master Story Editor for major film and television productions. Focus on internal character logic, causality, emotional stakes, and structural beats.",
+        "Script Coordinator": "a technical Script Analyst and Pacing Consultant. Focus on dialogue economy, visual description energy, scene-to-scene transitions, and stylistic consistency."
+    }
+    persona_desc = persona_map.get(lens, "a professional Script Consultant.")
+
+    system_prompt = (
+        f"You are {persona_desc} "
+        "Provide a comprehensive, actionable narrative analysis based on the structural and emotional data provided. "
+        "CRITICAL RULES: \n"
+        "1. Strictly maintain this specific professional persona. Use role-appropriate vocabulary (e.g., Executive uses 'ROI', 'Comp', 'Demographic'; Editor uses 'Beat', 'Arc', 'Causality'; Coordinator uses 'White Space', 'Rhythm', 'Flow').\n"
+        "2. Prioritize your specific areas of expertise in the report.\n"
+        "3. ALWAYS provide 3 concrete 'Fix Suggestions' at the end of the report to elevate the script for production.\n"
+        "4. If you mention 'ScriptPulse', ALWAYS format it EXACTLY like this: Script<span style='color: #0052FF; font-weight: bold;'>Pulse</span>\n"
+        "5. Avoid archaic or overly rigid length rules. Prestige features often exceed 120 minutes; only flag length if it meaningfully drags the pacing or structural integrity."
+    )
+    user_content = f"Experience Data: {json.dumps(data_payload)}"
+    errors = []
+
+    # 1. Try GEMINI (Best for long-form reasoning and "Story Soul")
+    if keys["gemini"] and GEMINI_AVAILABLE:
+        try:
+            genai.configure(api_key=keys["gemini"])
+            model = genai.GenerativeModel('gemini-1.5-flash')
+            response = model.generate_content(f"SYSTEM: {system_prompt}\n\nUSER: {user_content}")
+            return response.text, None
+        except Exception as e:
+            errors.append(f"Gemini: {str(e)}")
+
+    # 2. Try GROQ (Blazing Fast)
+    if keys["groq"] and GROQ_AVAILABLE:
+        try:
+            client = Groq(api_key=keys["groq"])
+            completion = client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_content}],
+                temperature=0.6,
+                max_tokens=1200
+            )
+            return completion.choices[0].message.content, None
+        except Exception as e:
+            errors.append(f"Groq: {str(e)}")
+
+    # 3. Fallback to Hugging Face
+    if keys["hf"]:
+        try:
+            client = OpenAI(base_url="https://router.huggingface.co/v1", api_key=keys["hf"])
+            completion = client.chat.completions.create(
+                model="moonshotai/Kimi-K2-Instruct-0905",
+                messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_content}],
+                max_tokens=1200
+            )
+            return completion.choices[0].message.content, None
+        except Exception as e:
+            errors.append(f"HF: {str(e)}")
+            
+    return None, f"All AI APIs failed. Details: {' | '.join(errors)}"
+
+def generate_section_insight(script_data, section_type, lens='viewer', api_key=None):
+    """
+    Generates a high-impact visceral reaction that bridges the gap between 'math' and 'human feeling'.
+    """
+    keys = _get_api_config()
+    if api_key: keys["groq"] = api_key
+    
+    if not any(keys.values()):
+        return "Connect an API key (Groq, Gemini, or HF) to hear audience reactions."
+
+    # Persona definitions for sections
+    persona_map = {
+        "Studio Executive": "a Development Executive focused on commercial pacing and audience retention.",
+        "Story Editor": "a Story Editor focused on structural beats and emotional momentum.",
+        "Script Coordinator": "a Script Coordinator focused on the physical read and visual energy."
+    }
+    p_desc = persona_map.get(lens, "a professional Script Consultant.")
+
+    if section_type == 'pulse':
+        tp = script_data.get('writer_intelligence', {}).get('structural_dashboard', {}).get('structural_turning_points', {})
+        payload = {"peaks": tp}
+        system_msg = (
+            f"You are {p_desc} Analyze the story's structural pacing graph. "
+            "Explain how this sequence affects the audience's attention from your professional perspective. "
+            "Identify the most significant pacing trend observed. One precise sentence. "
+            "CRITICAL: Do not use phrases like 'Based on the provided data' or 'Raw Experience Math'. Speak directly and naturally to the writer. "
+            "If referring to the engine, format it as: Script<span style='color: #0052FF; font-weight: bold;'>Pulse</span>"
+        )
+    elif section_type == 'dna':
+        payload = {"distribution": "Speed vs Detail balance"}
+        system_msg = (
+            f"You are {p_desc} Evaluate the balance of narrative action vs world-building. "
+            "Evaluate the impact of this balance on reader immersion for the current story goals. One clear sentence. "
+            "CRITICAL: Do not use phrases like 'Based on the provided data' or 'Raw Experience Math'. Speak directly and naturally to the writer. "
+            "If referring to the engine, format it as: Script<span style='color: #0052FF; font-weight: bold;'>Pulse</span>"
+        )
+    else: # habits
+        perceptual = script_data.get('perceptual_features', [])[:10]
+        payload = {"samples": perceptual}
+        system_msg = (
+            f"You are {p_desc} Evaluate the rhythm and subtext of the characters' dialogue. "
+            "Identify what the current dialogue texture reveals about the character dynamics. One professional sentence. "
+            "If referring to the engine, format it as: Script<span style='color: #0052FF; font-weight: bold;'>Pulse</span>"
+        )
+
+    user_content = f"Raw Experience Math: {json.dumps(payload)}\nAudience Reaction:"
+
+    # PURPOSE-BASED DISTRIBUTION (To avoid free-tier rate limits)
+    # Gemini: 'pulse' (Story/Emotion) | Groq: 'dna' and 'habits' (Structure/Pattern)
+    
+    order = []
+    if section_type == 'pulse':
+        order = ['gemini', 'groq', 'hf']
+    else:
+        order = ['groq', 'gemini', 'hf']
+        
+    errors = []
+
+    for provider in order:
+        if provider == 'gemini' and keys["gemini"] and GEMINI_AVAILABLE:
+            try:
+                client = genai.Client(api_key=keys["gemini"])
+                response = client.models.generate_content(
+                    model='gemini-1.5-flash',
+                    contents=f"SYSTEM: {system_msg}\n\nUSER: {user_content}"
+                )
+                return response.text
+            except Exception as e:
+                errors.append(f"Gemini: {str(e)}")
+                continue
+            
+        if provider == 'groq' and keys["groq"] and GROQ_AVAILABLE:
+            try:
+                client = Groq(api_key=keys["groq"])
+                completion = client.chat.completions.create(
+                    model="llama-3.1-8b-instant",
+                    messages=[{"role": "system", "content": system_msg}, {"role": "user", "content": user_content}],
+                    max_tokens=300,
+                    temperature=0.8
+                )
+                return completion.choices[0].message.content
+            except Exception as e:
+                errors.append(f"Groq: {str(e)}")
+                continue
+
+        if provider == 'hf' and keys["hf"]:
+            try:
+                client = OpenAI(base_url="https://router.huggingface.co/v1", api_key=keys["hf"])
+                completion = client.chat.completions.create(
+                    model="moonshotai/Kimi-K2-Instruct-0905",
+                    messages=[{"role": "system", "content": system_msg}, {"role": "user", "content": user_content}],
+                    max_tokens=300
+                )
+                return completion.choices[0].message.content
+            except Exception as e:
+                errors.append(f"HF: {str(e)}")
+                continue
+
+    return f"AI Error: API failure. Details: {' | '.join(errors)}"
+"""
+ScriptPulse Writer Report Generator
+====================================
+Converts the full writer_intelligence output into a clean, human-readable
+Markdown report that a screenwriter can print, annotate, and work from.
+
+Usage:
+    from scriptpulse.reporters.writer_report import generate_writer_report
+    md = generate_writer_report(pipeline_output, title="MY SCRIPT")
+    with open("my_script_report.md", "w") as f:
+        f.write(md)
+"""
+
+from datetime import datetime
+
+
+# ---------------------------------------------------------------------------
+# Genre benchmark table for all core signals
+# ---------------------------------------------------------------------------
+GENRE_BENCHMARKS = {
+    'drama':    {'conflict': (0.35, 0.70), 'energy': (0.40, 0.75), 'entropy': (0.30, 0.60), 'payoff_density': (0.25, 0.65)},
+    'thriller': {'conflict': (0.55, 0.85), 'energy': (0.55, 0.85), 'entropy': (0.40, 0.75), 'payoff_density': (0.45, 0.80)},
+    'comedy':   {'conflict': (0.20, 0.55), 'energy': (0.35, 0.70), 'entropy': (0.25, 0.55), 'payoff_density': (0.20, 0.55)},
+    'horror':   {'conflict': (0.50, 0.85), 'energy': (0.45, 0.80), 'entropy': (0.45, 0.80), 'payoff_density': (0.40, 0.80)},
+    'action':   {'conflict': (0.60, 0.90), 'energy': (0.60, 0.90), 'entropy': (0.40, 0.75), 'payoff_density': (0.45, 0.85)},
+    'romance':  {'conflict': (0.20, 0.55), 'energy': (0.30, 0.65), 'entropy': (0.20, 0.50), 'payoff_density': (0.20, 0.55)},
+    'sci-fi':   {'conflict': (0.40, 0.80), 'energy': (0.45, 0.80), 'entropy': (0.45, 0.80), 'payoff_density': (0.35, 0.75)},
+    'avant-garde': {'conflict': (0.10, 0.90), 'energy': (0.10, 0.90), 'entropy': (0.60, 0.95), 'payoff_density': (0.10, 0.90)},
+    'crime drama': {'conflict': (0.45, 0.80), 'energy': (0.45, 0.80), 'entropy': (0.35, 0.70), 'payoff_density': (0.35, 0.75)},
+    'feature':  {'conflict': (0.35, 0.75), 'energy': (0.40, 0.75), 'entropy': (0.30, 0.65), 'payoff_density': (0.30, 0.70)},
+    'general':  {'conflict': (0.30, 0.75), 'energy': (0.35, 0.75), 'entropy': (0.30, 0.70), 'payoff_density': (0.25, 0.70)},
 }
 
-def verify_system_integrity():
-    """
-    LHTL: Long-Horizon Trust Lock
-    Verifies that the system's philosophical constraints are active.
-    Raises SystemError if constraints are disabled or tampered with.
-    """
-    
-    # 1. Verify Governance Layer is Active
-    # Check if forbidden terms are actually forbidden in the loaded module
-    try:
-        # We can't inspect the local scope easily, but we can test the function
-        # Test a forbidden term (expecting PolicyViolationError)
-        governance.validate_request("Please rank 1 to 10")
-        # If no error, the guardrails are down!
-        raise SystemError("CRITICAL: Governance layer inactive. Refusal logic failed.")
-    except governance.PolicyViolationError:
-        # Good, it refused.
-        pass
-    except Exception as e:
-        # Unexpected error
-        raise SystemError(f"CRITICAL: Governance check failed with unexpected error: {e}")
 
-    # 2. Verify Negative Roadmap Exists
-    # This document is the system's constitution.
-    roadmap_path = os.path.join(os.path.dirname(__file__), '..', 'docs', 'Negative_Roadmap.md')
-    if not os.path.exists(roadmap_path):
-        raise SystemError("CRITICAL: Negative Roadmap (Constitution) missing. Deployment unsafe.")
+def _benchmark_tag(value, genre, signal):
+    """Return a tag string showing value vs genre benchmark."""
+    benchmarks = GENRE_BENCHMARKS.get(genre.lower(), GENRE_BENCHMARKS['general'])
+    if signal not in benchmarks:
+        return f"{value:.2f}"
+    
+    low, high = benchmarks[signal]
+    
+    if value < low:
+        return f"🔴 **{value:.2f}** *(below {genre} target: {low:.2f}-{high:.2f})*"
+    elif value > high:
+        return f"🟡 **{value:.2f}** *(above {genre} target: {low:.2f}-{high:.2f})*"
+    else:
+        return f"🟢 **{value:.2f}** *(on target: {low:.2f}-{high:.2f} for {genre})*"
+
+
+def _stars(value, max_val=1.0, n=5):
+    """Return a visual star bar for a 0..max_val value."""
+    filled = round((value / max_val) * n)
+    filled = max(0, min(n, filled))
+    return "*" * filled + "-" * (n - filled)
+
+
+def _section(title):
+    return f"\n---\n\n## {title}\n"
+
+
+def generate_writer_report(pipeline_output, title="Untitled Script", genre=None):
+    """
+    Generate a complete Markdown writer's report from ScriptPulse pipeline output.
+
+    Args:
+        pipeline_output: dict — full output from scriptpulse.runner.run_pipeline()
+        title: str — script title for the report header
+        genre: str — override genre (defaults to what the pipeline detected)
+
+    Returns:
+        str — formatted Markdown report
+    """
+    wi = pipeline_output.get('writer_intelligence', {})
+    trace = pipeline_output.get('temporal_trace', [])
+    genre = (genre or wi.get('genre_context', 'general')).lower()
+    dashboard = wi.get('structural_dashboard', {})
+    diagnosis = wi.get('narrative_diagnosis', [])
+    priorities = wi.get('rewrite_priorities', [])
+    summary_data = wi.get('narrative_summary', {})
+
+    lines = []
+
+    # -------------------------------------------------------------------------
+    # HEADER
+    # -------------------------------------------------------------------------
+    analysis_date = pipeline_output.get('meta', {}).get('timestamp')
+    if not analysis_date:
+        analysis_date = datetime.now().strftime('%B %d, %Y (%H:%M)')
         
-    return True
+    lines.append(f"# 🖋️ Script<span style='color: #0052FF;'>Pulse</span> Intelligence Report")
+    lines.append(f"**PROJECT:** `{title.upper()}`  ")
+    lines.append(f"**GENRE PROFILE:** `{genre.upper()}`  ")
+    lines.append(f"**ANALYSIS DATE:** {analysis_date}  ")
+    lines.append(f"**ENGINE VERSION:** `v15.0 Gold`  ")
+    lines.append("\n" + "---" * 10 + "\n")
 
+    # -------------------------------------------------------------------------
+    # EXECUTIVE SUMMARY
+    # -------------------------------------------------------------------------
+    lines.append("## 📌 Executive Summary")
+    if isinstance(summary_data, dict):
+        summary_text = summary_data.get('summary', '')
+    else:
+        summary_text = str(summary_data)
 
-# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# MODULE: xai_highlighter.py
-# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    if summary_text:
+        lines.append(f"{summary_text}")
+    else:
+        lines.append("*No narrative summary available for this analysis.*")
 
-import re
+    # -------------------------------------------------------------------------
+    # RUNTIME & FORMAT SNAPSHOT
+    # -------------------------------------------------------------------------
+    lines.append("\n## 📊 Script Snapshot")
+    runtime = dashboard.get('runtime_estimate', {})
+    loc_profile = dashboard.get('location_profile', {})
+    total_scenes = dashboard.get('total_scenes', len(trace))
 
-def generate_xai_html(text: str) -> str:
-    """
-    Simulates an Explainable AI (XAI) feature attribution map.
-    Highlights Action/Density verbs in light red, and dialogue/character focus in light blue.
-    """
-    if not text:
-        return ""
+    lines.append(f"| Metric | Assessment |")
+    lines.append(f"|:-------|:-----------|")
+    lines.append(f"| **Total Scenes** | {total_scenes} |")
+    lines.append(f"| **Est. Runtime** | {runtime.get('estimated_minutes', '?')} minutes |")
+    lines.append(f"| **Runtime Status** | {runtime.get('status', 'N/A')} |")
+    lines.append(f"| **Locations** | {loc_profile.get('unique_locations', '?')} unique |")
+    lines.append(f"| **INT/EXT Split** | {loc_profile.get('int_scenes', 0)} INT / {loc_profile.get('ext_scenes', 0)} EXT |")
 
-    # Simple heuristics to demonstrate the concept without heavy NLP parsing limits
-    # Red flags for tension/density (action verbs, sudden motions)
-    tension_triggers = [r'\b(runs|run|sprints|grabs|shoots|screams|yells|slams|hits|punches|gasps|suddenly|fast|quick|blood|gun|knife|attacks)\b']
+    if loc_profile.get('location_warning'):
+        lines.append(f"\n> [!CAUTION]\n> **Location Concentration:** {loc_profile['location_warning']}")
+
+    # -------------------------------------------------------------------------
+    # SIGNAL DASHBOARD (Genre-benchmarked)
+    # -------------------------------------------------------------------------
+    lines.append("\n## 📈 Signal Dashboard")
+    lines.append("*Biological engagement signals calibrated against **" + genre.title() + "** standards.*\n")
+
+    if trace:
+        import statistics as _stats
+
+        def avg_signal(key, sub=None):
+            vals = []
+            for s in trace:
+                v = s.get(key, 0.0)
+                if sub:
+                    v = s.get(key, {}).get(sub, 0.0) if isinstance(s.get(key), dict) else 0.0
+                if isinstance(v, (int, float)):
+                    vals.append(v)
+            return _stats.mean(vals) if vals else 0.0
+
+        conflict_avg = avg_signal('conflict')
+        energy_avg = avg_signal('attentional_signal')
+        entropy_avg = avg_signal('entropy_score')
+        payoff_avg = avg_signal('payoff_density', 'payoff_density')
+        sentiment_avg = avg_signal('sentiment')
+
+        lines.append(f"| Core Signal | Intensity | Benchmark Status |")
+        lines.append(f"|:------------|:----------|:-----------------|")
+        lines.append(f"| **Conflict** | `{_stars(conflict_avg)}` | {_benchmark_tag(conflict_avg, genre, 'conflict')} |")
+        lines.append(f"| **Energy** | `{_stars(energy_avg)}` | {_benchmark_tag(energy_avg, genre, 'energy')} |")
+        lines.append(f"| **Entropy** | `{_stars(entropy_avg)}` | {_benchmark_tag(entropy_avg, genre, 'entropy')} |")
+        lines.append(f"| **Payoff** | `{_stars(payoff_avg)}` | {_benchmark_tag(payoff_avg, genre, 'payoff_density')} |")
+        lines.append(f"| **Sentiment** | `{_stars((sentiment_avg + 1) / 2)}` | {sentiment_avg:+.2f} *(Dark → Bright)* |")
+    else:
+        lines.append("*[!] No temporal data found.*")
+
+    # -------------------------------------------------------------------------
+    # STRUCTURAL TURNING POINTS
+    # -------------------------------------------------------------------------
+    lines.append("\n## ⏳ Structural Turning Points")
+    turning = dashboard.get('structural_turning_points', {})
+    if turning.get('note'):
+        lines.append(f"*{turning['note']}*")
+    else:
+        for beat_name, beat_data in turning.items():
+            if not isinstance(beat_data, dict):
+                continue
+            label = beat_name.replace('_', ' ').title()
+            scene = beat_data.get('scene', '?')
+            strength = beat_data.get('strength', 0)
+            warning = beat_data.get('warning', '')
+            bar = _stars(min(strength, 1.0))
+            lines.append(f"- **{label}**: Scene {scene} ` {bar} ` ({strength:.2f})")
+            if warning:
+                lines.append(f"  > [!WARNING] {warning}")
+
+    # -------------------------------------------------------------------------
+    # SCENE HEATMAP
+    # -------------------------------------------------------------------------
+    if trace:
+        lines.append("\n## 🌡️ Narrative Heatmap")
+        lines.append("*Visual intensity flow (░ = lower, ▓ = higher):*\n")
+        heatmap = ""
+        for i, s in enumerate(trace):
+            val = s.get('attentional_signal', 0.5)
+            if val < 0.2: char = "░"
+            elif val < 0.4: char = "▒"
+            elif val < 0.7: char = "▓"
+            else: char = "█"
+            heatmap += char
+            if (i + 1) % 50 == 0: heatmap += "\n"
+        lines.append(f"```\n{heatmap}\n```")
+
+    # -------------------------------------------------------------------------
+    # NARRATIVE DIAGNOSIS
+    # -------------------------------------------------------------------------
+    lines.append("\n## 🩺 Narrative Diagnosis")
+    lines.append("*Multi-dimensional structural health check:*\n")
+    if diagnosis:
+        for item in diagnosis:
+            lines.append(f" - {item}")
+    else:
+        lines.append("*Status: Clear. No structural anomalies detected.*")
+
+    # -------------------------------------------------------------------------
+    # CREATIVE PROVOCATIONS
+    # -------------------------------------------------------------------------
+    provocations = wi.get('creative_provocations', [])
+    if provocations:
+        lines.append("\n## 💡 Creative Provocations")
+        lines.append("*Inquiry-based perspectives on the current draft:*\n")
+        for p in provocations:
+            lines.append(f"> **{p}**")
+
+    # -------------------------------------------------------------------------
+    # CHARACTER ARCS
+    # -------------------------------------------------------------------------
+    lines.append("\n## 🎭 Character Arc Map")
+    char_arcs = dashboard.get('character_arcs', {})
+    if char_arcs:
+        lines.append(f"| Character | Arc Type | Agency Trajectory |")
+        lines.append(f"|:----------|:---------|:------------------|")
+        for char, arc_data in list(char_arcs.items())[:8]:
+            arc_label = arc_data.get('arc_type', arc_data.get('arc', 'Unknown'))
+            start = arc_data.get('agency_start', arc_data.get('start_agency', 0))
+            end = arc_data.get('agency_end', arc_data.get('end_agency', 0))
+            delta = arc_data.get('agency_delta', end - start)
+            traj = f"`{start:+.2f}` → `{end:+.2f}` ({delta:+.2f})"
+            lines.append(f"| **{char}** | {arc_label} | {traj} |")
+    else:
+        lines.append("*Character dynamics analysis unavailable.*")
+
+    # -------------------------------------------------------------------------
+    # SCENE ECONOMY MAP
+    # -------------------------------------------------------------------------
+    lines.append("\n## ✂️ Scene Efficiency")
+    econ_map = dashboard.get('scene_economy_map', {})
+    cut_candidates = econ_map.get('cut_candidates', [])
+    low_count = econ_map.get('low_economy_count', 0)
+    high_scenes = econ_map.get('high_economy_scenes', [])
+
+    if cut_candidates:
+        lines.append(f"> [!IMPORTANT]\n> Found **{low_count} Efficiency Gaps**. Narrative flow shows signs of potential deceleration in: Scenes {', '.join(str(s) for s in cut_candidates)}")
     
-    # Blue flags for characters interacting/speaking (dialogue density)
-    dialogue_triggers = [r'^[A-Z\s]+$'] # ALL CAPS names before dialogue
-    
-    html_text = text
+    if high_scenes:
+        lines.append(f"🌟 **Load-Bearing Scenes:** {', '.join(str(s) for s in high_scenes[:5])}")
 
-    # Apply HTML spans
-    for pattern in tension_triggers:
-        html_text = re.sub(
-            pattern, 
-            r'<span style="background-color: rgba(255, 99, 132, 0.4); border-radius: 3px; padding: 0 2px;" title="Tension/Action Trigger">\1</span>', 
-            html_text, 
-            flags=re.IGNORECASE
-        )
-        
-    for pattern in dialogue_triggers:
-        # Match lines that are purely uppercase formatting (standard script names)
-        html_text = re.sub(
-            r'^([A-Z\s\(\)]+)$', 
-            r'<span style="background-color: rgba(54, 162, 235, 0.4); border-radius: 3px; padding: 0 2px;" title="Character Focus/Dialogue">\1</span>', 
-            html_text, 
-            flags=re.MULTILINE
-        )
+    econ_table = econ_map.get('map', [])
+    if econ_table:
+        lines.append(f"\n| Scene | Efficiency | Delta |")
+        lines.append(f"|:------|:-----------|:------|")
+        for e in econ_table[:10]:
+            icon = "🟢" if e['label'] == 'High Economy' else ("🟡" if e['label'] == 'Moderate Economy' else "🔴")
+            lines.append(f"| {e['scene']} | {icon} {e['label']} | `{e['score']}` |")
+        if len(econ_table) > 10:
+            lines.append(f"| ... | *({len(econ_table) - 10} more)* | |")
 
-    # Wrap in a scrolling div for the UI
-    return f"""
-    <div style="font-family: monospace; white-space: pre-wrap; padding: 15px; border-radius: 5px; background-color: #f8f9fa; color: #333; height: 300px; overflow-y: scroll; border: 1px solid #ddd; font-size: 14px; line-height: 1.5;">
-        {html_text}
-    </div>
-    """
+    # -------------------------------------------------------------------------
+    # FORMAT COMPLIANCE
+    # -------------------------------------------------------------------------
+    lines.append("\n## 📋 Industry Format Audit")
+    fmt = dashboard.get('format_compliance', {})
+    if fmt:
+        issues = fmt.get('issues', [])
+        score = fmt.get('compliance_score', 100)
+        bar = _stars(score / 100)
+        lines.append(f"**Structural Integrity:** `{score}/100` &nbsp; `{bar}`\n")
+        if issues:
+            for issue in issues:
+                lines.append(f"- [!] {issue}")
+        else:
+            lines.append("✅ Professional industry standards met.")
+    else:
+        lines.append("*Format audit not performed.*")
 
+    # -------------------------------------------------------------------------
+    # FOOTER
+    # -------------------------------------------------------------------------
+    lines.append("\n" + "---" * 10 + "\n")
+    lines.append("*Created with Script<span style='color: #0052FF;'>Pulse</span> v15.0 · Private Intellectual Property · Confidential*")
 
-# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# MODULE: studio_report.py
-# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
+    return "\n".join(lines)
 """
 ScriptPulse Studio Reporter (Market Professional Layer)
 Gap Solved: "The Screenshot Problem"
@@ -5322,563 +5243,96 @@ def generate_report(report_data, script_title="Untitled Script", user_notes="", 
     """
     
     return html
+import re
 
+def generate_xai_html(text: str) -> str:
+    """
+    Simulates an Explainable AI (XAI) feature attribution map.
+    Highlights Action/Density verbs in light red, and dialogue/character focus in light blue.
+    """
+    if not text:
+        return ""
 
-# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# MODULE: writer_report.py
-# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Simple heuristics to demonstrate the concept without heavy NLP parsing limits
+    # Red flags for tension/density (action verbs, sudden motions)
+    tension_triggers = [r'\b(runs|run|sprints|grabs|shoots|screams|yells|slams|hits|punches|gasps|suddenly|fast|quick|blood|gun|knife|attacks)\b']
+    
+    # Blue flags for characters interacting/speaking (dialogue density)
+    dialogue_triggers = [r'^[A-Z\s]+$'] # ALL CAPS names before dialogue
+    
+    html_text = text
 
+    # Apply HTML spans
+    for pattern in tension_triggers:
+        html_text = re.sub(
+            pattern, 
+            r'<span style="background-color: rgba(255, 99, 132, 0.4); border-radius: 3px; padding: 0 2px;" title="Tension/Action Trigger">\1</span>', 
+            html_text, 
+            flags=re.IGNORECASE
+        )
+        
+    for pattern in dialogue_triggers:
+        # Match lines that are purely uppercase formatting (standard script names)
+        html_text = re.sub(
+            r'^([A-Z\s\(\)]+)$', 
+            r'<span style="background-color: rgba(54, 162, 235, 0.4); border-radius: 3px; padding: 0 2px;" title="Character Focus/Dialogue">\1</span>', 
+            html_text, 
+            flags=re.MULTILINE
+        )
+
+    # Wrap in a scrolling div for the UI
+    return f"""
+    <div style="font-family: monospace; white-space: pre-wrap; padding: 15px; border-radius: 5px; background-color: #f8f9fa; color: #333; height: 300px; overflow-y: scroll; border: 1px solid #ddd; font-size: 14px; line-height: 1.5;">
+        {html_text}
+    </div>
+    """
 """
-ScriptPulse Writer Report Generator
-====================================
-Converts the full writer_intelligence output into a clean, human-readable
-Markdown report that a screenwriter can print, annotate, and work from.
-
-Usage:
-    from scriptpulse.reporters.writer_report import generate_writer_report
-    md = generate_writer_report(pipeline_output, title="MY SCRIPT")
-    with open("my_script_report.md", "w") as f:
-        f.write(md)
+ScriptPulse Trust Lock (LHTL)
+Philosophical Checksum & Invariant Enforcement
 """
 
-from datetime import datetime
+import os
+import hashlib
+from . import governance
 
-
-# ---------------------------------------------------------------------------
-# Genre benchmark table for all core signals
-# ---------------------------------------------------------------------------
-GENRE_BENCHMARKS = {
-    'drama':    {'conflict': (0.35, 0.70), 'energy': (0.40, 0.75), 'entropy': (0.30, 0.60), 'payoff_density': (0.25, 0.65)},
-    'thriller': {'conflict': (0.55, 0.85), 'energy': (0.55, 0.85), 'entropy': (0.40, 0.75), 'payoff_density': (0.45, 0.80)},
-    'comedy':   {'conflict': (0.20, 0.55), 'energy': (0.35, 0.70), 'entropy': (0.25, 0.55), 'payoff_density': (0.20, 0.55)},
-    'horror':   {'conflict': (0.50, 0.85), 'energy': (0.45, 0.80), 'entropy': (0.45, 0.80), 'payoff_density': (0.40, 0.80)},
-    'action':   {'conflict': (0.60, 0.90), 'energy': (0.60, 0.90), 'entropy': (0.40, 0.75), 'payoff_density': (0.45, 0.85)},
-    'romance':  {'conflict': (0.20, 0.55), 'energy': (0.30, 0.65), 'entropy': (0.20, 0.50), 'payoff_density': (0.20, 0.55)},
-    'sci-fi':   {'conflict': (0.40, 0.80), 'energy': (0.45, 0.80), 'entropy': (0.45, 0.80), 'payoff_density': (0.35, 0.75)},
-    'avant-garde': {'conflict': (0.10, 0.90), 'energy': (0.10, 0.90), 'entropy': (0.60, 0.95), 'payoff_density': (0.10, 0.90)},
-    'crime drama': {'conflict': (0.45, 0.80), 'energy': (0.45, 0.80), 'entropy': (0.35, 0.70), 'payoff_density': (0.35, 0.75)},
-    'feature':  {'conflict': (0.35, 0.75), 'energy': (0.40, 0.75), 'entropy': (0.30, 0.65), 'payoff_density': (0.30, 0.70)},
-    'general':  {'conflict': (0.30, 0.75), 'energy': (0.35, 0.75), 'entropy': (0.30, 0.70), 'payoff_density': (0.25, 0.70)},
+# Immutable Constitution Hash (Simulated)
+# In a real build system, this would be cryptographically signed.
+REQUIRED_REFUSAL_TERMS = {
+    "rank 1 to 10",
+    "grade this",
+    "score",
+    "hiring recommendation"
 }
 
-
-def _benchmark_tag(value, genre, signal):
-    """Return a tag string showing value vs genre benchmark."""
-    benchmarks = GENRE_BENCHMARKS.get(genre.lower(), GENRE_BENCHMARKS['general'])
-    if signal not in benchmarks:
-        return f"{value:.2f}"
-    
-    low, high = benchmarks[signal]
-    
-    if value < low:
-        return f"🔴 **{value:.2f}** *(below {genre} target: {low:.2f}-{high:.2f})*"
-    elif value > high:
-        return f"🟡 **{value:.2f}** *(above {genre} target: {low:.2f}-{high:.2f})*"
-    else:
-        return f"🟢 **{value:.2f}** *(on target: {low:.2f}-{high:.2f} for {genre})*"
-
-
-def _stars(value, max_val=1.0, n=5):
-    """Return a visual star bar for a 0..max_val value."""
-    filled = round((value / max_val) * n)
-    filled = max(0, min(n, filled))
-    return "*" * filled + "-" * (n - filled)
-
-
-def _section(title):
-    return f"\n---\n\n## {title}\n"
-
-
-def generate_writer_report(pipeline_output, title="Untitled Script", genre=None):
+def verify_system_integrity():
     """
-    Generate a complete Markdown writer's report from ScriptPulse pipeline output.
-
-    Args:
-        pipeline_output: dict — full output from scriptpulse.runner.run_pipeline()
-        title: str — script title for the report header
-        genre: str — override genre (defaults to what the pipeline detected)
-
-    Returns:
-        str — formatted Markdown report
-    """
-    wi = pipeline_output.get('writer_intelligence', {})
-    trace = pipeline_output.get('temporal_trace', [])
-    genre = (genre or wi.get('genre_context', 'general')).lower()
-    dashboard = wi.get('structural_dashboard', {})
-    diagnosis = wi.get('narrative_diagnosis', [])
-    priorities = wi.get('rewrite_priorities', [])
-    summary_data = wi.get('narrative_summary', {})
-
-    lines = []
-
-    # -------------------------------------------------------------------------
-    # HEADER
-    # -------------------------------------------------------------------------
-    analysis_date = pipeline_output.get('meta', {}).get('timestamp')
-    if not analysis_date:
-        analysis_date = datetime.now().strftime('%B %d, %Y (%H:%M)')
-        
-    lines.append(f"# 🖋️ Script<span style='color: #0052FF;'>Pulse</span> Intelligence Report")
-    lines.append(f"**PROJECT:** `{title.upper()}`  ")
-    lines.append(f"**GENRE PROFILE:** `{genre.upper()}`  ")
-    lines.append(f"**ANALYSIS DATE:** {analysis_date}  ")
-    lines.append(f"**ENGINE VERSION:** `v15.0 Gold`  ")
-    lines.append("\n" + "---" * 10 + "\n")
-
-    # -------------------------------------------------------------------------
-    # EXECUTIVE SUMMARY
-    # -------------------------------------------------------------------------
-    lines.append("## 📌 Executive Summary")
-    if isinstance(summary_data, dict):
-        summary_text = summary_data.get('summary', '')
-    else:
-        summary_text = str(summary_data)
-
-    if summary_text:
-        lines.append(f"{summary_text}")
-    else:
-        lines.append("*No narrative summary available for this analysis.*")
-
-    # -------------------------------------------------------------------------
-    # RUNTIME & FORMAT SNAPSHOT
-    # -------------------------------------------------------------------------
-    lines.append("\n## 📊 Script Snapshot")
-    runtime = dashboard.get('runtime_estimate', {})
-    loc_profile = dashboard.get('location_profile', {})
-    total_scenes = dashboard.get('total_scenes', len(trace))
-
-    lines.append(f"| Metric | Assessment |")
-    lines.append(f"|:-------|:-----------|")
-    lines.append(f"| **Total Scenes** | {total_scenes} |")
-    lines.append(f"| **Est. Runtime** | {runtime.get('estimated_minutes', '?')} minutes |")
-    lines.append(f"| **Runtime Status** | {runtime.get('status', 'N/A')} |")
-    lines.append(f"| **Locations** | {loc_profile.get('unique_locations', '?')} unique |")
-    lines.append(f"| **INT/EXT Split** | {loc_profile.get('int_scenes', 0)} INT / {loc_profile.get('ext_scenes', 0)} EXT |")
-
-    if loc_profile.get('location_warning'):
-        lines.append(f"\n> [!CAUTION]\n> **Location Concentration:** {loc_profile['location_warning']}")
-
-    # -------------------------------------------------------------------------
-    # SIGNAL DASHBOARD (Genre-benchmarked)
-    # -------------------------------------------------------------------------
-    lines.append("\n## 📈 Signal Dashboard")
-    lines.append("*Biological engagement signals calibrated against **" + genre.title() + "** standards.*\n")
-
-    if trace:
-        import statistics as _stats
-
-        def avg_signal(key, sub=None):
-            vals = []
-            for s in trace:
-                v = s.get(key, 0.0)
-                if sub:
-                    v = s.get(key, {}).get(sub, 0.0) if isinstance(s.get(key), dict) else 0.0
-                if isinstance(v, (int, float)):
-                    vals.append(v)
-            return _stats.mean(vals) if vals else 0.0
-
-        conflict_avg = avg_signal('conflict')
-        energy_avg = avg_signal('attentional_signal')
-        entropy_avg = avg_signal('entropy_score')
-        payoff_avg = avg_signal('payoff_density', 'payoff_density')
-        sentiment_avg = avg_signal('sentiment')
-
-        lines.append(f"| Core Signal | Intensity | Benchmark Status |")
-        lines.append(f"|:------------|:----------|:-----------------|")
-        lines.append(f"| **Conflict** | `{_stars(conflict_avg)}` | {_benchmark_tag(conflict_avg, genre, 'conflict')} |")
-        lines.append(f"| **Energy** | `{_stars(energy_avg)}` | {_benchmark_tag(energy_avg, genre, 'energy')} |")
-        lines.append(f"| **Entropy** | `{_stars(entropy_avg)}` | {_benchmark_tag(entropy_avg, genre, 'entropy')} |")
-        lines.append(f"| **Payoff** | `{_stars(payoff_avg)}` | {_benchmark_tag(payoff_avg, genre, 'payoff_density')} |")
-        lines.append(f"| **Sentiment** | `{_stars((sentiment_avg + 1) / 2)}` | {sentiment_avg:+.2f} *(Dark → Bright)* |")
-    else:
-        lines.append("*[!] No temporal data found.*")
-
-    # -------------------------------------------------------------------------
-    # STRUCTURAL TURNING POINTS
-    # -------------------------------------------------------------------------
-    lines.append("\n## ⏳ Structural Turning Points")
-    turning = dashboard.get('structural_turning_points', {})
-    if turning.get('note'):
-        lines.append(f"*{turning['note']}*")
-    else:
-        for beat_name, beat_data in turning.items():
-            if not isinstance(beat_data, dict):
-                continue
-            label = beat_name.replace('_', ' ').title()
-            scene = beat_data.get('scene', '?')
-            strength = beat_data.get('strength', 0)
-            warning = beat_data.get('warning', '')
-            bar = _stars(min(strength, 1.0))
-            lines.append(f"- **{label}**: Scene {scene} ` {bar} ` ({strength:.2f})")
-            if warning:
-                lines.append(f"  > [!WARNING] {warning}")
-
-    # -------------------------------------------------------------------------
-    # SCENE HEATMAP
-    # -------------------------------------------------------------------------
-    if trace:
-        lines.append("\n## 🌡️ Narrative Heatmap")
-        lines.append("*Visual intensity flow (░ = lower, ▓ = higher):*\n")
-        heatmap = ""
-        for i, s in enumerate(trace):
-            val = s.get('attentional_signal', 0.5)
-            if val < 0.2: char = "░"
-            elif val < 0.4: char = "▒"
-            elif val < 0.7: char = "▓"
-            else: char = "█"
-            heatmap += char
-            if (i + 1) % 50 == 0: heatmap += "\n"
-        lines.append(f"```\n{heatmap}\n```")
-
-    # -------------------------------------------------------------------------
-    # NARRATIVE DIAGNOSIS
-    # -------------------------------------------------------------------------
-    lines.append("\n## 🩺 Narrative Diagnosis")
-    lines.append("*Multi-dimensional structural health check:*\n")
-    if diagnosis:
-        for item in diagnosis:
-            lines.append(f" - {item}")
-    else:
-        lines.append("*Status: Clear. No structural anomalies detected.*")
-
-    # -------------------------------------------------------------------------
-    # CREATIVE PROVOCATIONS
-    # -------------------------------------------------------------------------
-    provocations = wi.get('creative_provocations', [])
-    if provocations:
-        lines.append("\n## 💡 Creative Provocations")
-        lines.append("*Inquiry-based perspectives on the current draft:*\n")
-        for p in provocations:
-            lines.append(f"> **{p}**")
-
-    # -------------------------------------------------------------------------
-    # CHARACTER ARCS
-    # -------------------------------------------------------------------------
-    lines.append("\n## 🎭 Character Arc Map")
-    char_arcs = dashboard.get('character_arcs', {})
-    if char_arcs:
-        lines.append(f"| Character | Arc Type | Agency Trajectory |")
-        lines.append(f"|:----------|:---------|:------------------|")
-        for char, arc_data in list(char_arcs.items())[:8]:
-            arc_label = arc_data.get('arc_type', arc_data.get('arc', 'Unknown'))
-            start = arc_data.get('agency_start', arc_data.get('start_agency', 0))
-            end = arc_data.get('agency_end', arc_data.get('end_agency', 0))
-            delta = arc_data.get('agency_delta', end - start)
-            traj = f"`{start:+.2f}` → `{end:+.2f}` ({delta:+.2f})"
-            lines.append(f"| **{char}** | {arc_label} | {traj} |")
-    else:
-        lines.append("*Character dynamics analysis unavailable.*")
-
-    # -------------------------------------------------------------------------
-    # SCENE ECONOMY MAP
-    # -------------------------------------------------------------------------
-    lines.append("\n## ✂️ Scene Efficiency")
-    econ_map = dashboard.get('scene_economy_map', {})
-    cut_candidates = econ_map.get('cut_candidates', [])
-    low_count = econ_map.get('low_economy_count', 0)
-    high_scenes = econ_map.get('high_economy_scenes', [])
-
-    if cut_candidates:
-        lines.append(f"> [!IMPORTANT]\n> Found **{low_count} Efficiency Gaps**. Narrative flow shows signs of potential deceleration in: Scenes {', '.join(str(s) for s in cut_candidates)}")
-    
-    if high_scenes:
-        lines.append(f"🌟 **Load-Bearing Scenes:** {', '.join(str(s) for s in high_scenes[:5])}")
-
-    econ_table = econ_map.get('map', [])
-    if econ_table:
-        lines.append(f"\n| Scene | Efficiency | Delta |")
-        lines.append(f"|:------|:-----------|:------|")
-        for e in econ_table[:10]:
-            icon = "🟢" if e['label'] == 'High Economy' else ("🟡" if e['label'] == 'Moderate Economy' else "🔴")
-            lines.append(f"| {e['scene']} | {icon} {e['label']} | `{e['score']}` |")
-        if len(econ_table) > 10:
-            lines.append(f"| ... | *({len(econ_table) - 10} more)* | |")
-
-    # -------------------------------------------------------------------------
-    # FORMAT COMPLIANCE
-    # -------------------------------------------------------------------------
-    lines.append("\n## 📋 Industry Format Audit")
-    fmt = dashboard.get('format_compliance', {})
-    if fmt:
-        issues = fmt.get('issues', [])
-        score = fmt.get('compliance_score', 100)
-        bar = _stars(score / 100)
-        lines.append(f"**Structural Integrity:** `{score}/100` &nbsp; `{bar}`\n")
-        if issues:
-            for issue in issues:
-                lines.append(f"- [!] {issue}")
-        else:
-            lines.append("✅ Professional industry standards met.")
-    else:
-        lines.append("*Format audit not performed.*")
-
-    # -------------------------------------------------------------------------
-    # FOOTER
-    # -------------------------------------------------------------------------
-    lines.append("\n" + "---" * 10 + "\n")
-    lines.append("*Created with Script<span style='color: #0052FF;'>Pulse</span> v15.0 · Private Intellectual Property · Confidential*")
-
-    return "\n".join(lines)
-
-
-# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# MODULE: runner.py
-# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-#!/usr/bin/env python3
-"""
-Simplified ScriptPulse Runner - High Performance, Linear Pipeline
-Designed for MCA Research Defense: Clear, Logical, and Deterministic
-"""
-
-import time
-import json
-from scriptpulse.agents.structure_agent import ParsingAgent, SegmentationAgent
-from scriptpulse.agents.perception_agent import EncodingAgent
-from scriptpulse.agents.dynamics_agent import DynamicsAgent
-from scriptpulse.agents.interpretation_agent import InterpretationAgent
-from scriptpulse.agents.ethics_agent import EthicsAgent
-from scriptpulse.agents.writer_agent import WriterAgent
-from scriptpulse.utils import normalizer, runtime
-
-def run_pipeline(script_content, genre='drama', story_framework='3_act', **kwargs):
-    """
-    Executes the 4-Stage ScriptPulse Research Pipeline.
-    1. Structure (Parsing)
-    2. Perception (Feature Extraction)
-    3. Dynamics (Cognitive Simulation)
-    4. Interpretation (Narrative Analysis)
+    LHTL: Long-Horizon Trust Lock
+    Verifies that the system's philosophical constraints are active.
+    Raises SystemError if constraints are disabled or tampered with.
     """
     
-    _t_start = time.time()
-    telemetry = {'status': 'active', 'stages': {}}
-    
-    # --- STAGE 0: Normalize & Prepare ---
-    if not script_content or len(script_content.strip()) < 50:
-        raise ValueError("Script<span style='color: #0052FF; font-weight: bold;'>Pulse</span> requires more text to analyze. Please upload a full script or a longer scene.")
-    script_content = normalizer.normalize_script(script_content)
-    telemetry['stages']['normalization_ms'] = round((time.time() - _t_start) * 1000, 2)
-    
-    # --- STAGE 1: Structure (Parsing) ---
-    _t_stage = time.time()
-    parser = ParsingAgent()
-    segmenter = SegmentationAgent()
-    
-    parsed_output = parser.run(script_content)
-    parsed_lines = parsed_output['lines']
-    segmented_scenes = segmenter.run(parsed_lines)
-    
-    if not segmented_scenes:
-        raise ValueError("ScriptPulse could not detect any scenes. Ensure your script uses standard industry formatting (e.g., INT., EXT., or SCENE headings).")
-    
-    # Hydrate scenes with their lines
-    for scene in segmented_scenes:
-        scene['lines'] = parsed_lines[scene['start_line']:scene['end_line']+1]
-    telemetry['stages']['structural_parsing_ms'] = round((time.time() - _t_stage) * 1000, 2)
+    # 1. Verify Governance Layer is Active
+    # Check if forbidden terms are actually forbidden in the loaded module
+    try:
+        # We can't inspect the local scope easily, but we can test the function
+        # Test a forbidden term (expecting PolicyViolationError)
+        governance.validate_request("Please rank 1 to 10")
+        # If no error, the guardrails are down!
+        raise SystemError("CRITICAL: Governance layer inactive. Refusal logic failed.")
+    except governance.PolicyViolationError:
+        # Good, it refused.
+        pass
+    except Exception as e:
+        # Unexpected error
+        raise SystemError(f"CRITICAL: Governance check failed with unexpected error: {e}")
+
+    # 2. Verify Negative Roadmap Exists
+    # This document is the system's constitution.
+    roadmap_path = os.path.join(os.path.dirname(__file__), '..', 'docs', 'Negative_Roadmap.md')
+    if not os.path.exists(roadmap_path):
+        raise SystemError("CRITICAL: Negative Roadmap (Constitution) missing. Deployment unsafe.")
         
-    # --- STAGE 2: Perception (Feature Extraction) ---
-    _t_stage = time.time()
-    perceptor = EncodingAgent()
-    perceptual_features = perceptor.run({'scenes': segmented_scenes, 'lines': parsed_lines})
-    telemetry['stages']['feature_extraction_ms'] = round((time.time() - _t_stage) * 1000, 2)
-    
-    # --- STAGE 3: Dynamics (Temporal Simulation) ---
-    dynamics = DynamicsAgent()
-    temporal_trace = dynamics.run_simulation({
-        'features': perceptual_features,
-        'genre': genre
-    })
-    telemetry['stages']['cognitive_simulation_ms'] = round((time.time() - _t_stage) * 1000, 2)
-    
-    # --- STAGE 3b: Inject Location Data from Scene Headings ---
-    import re as _re
-    for i, t_entry in enumerate(temporal_trace):
-        if i < len(segmented_scenes):
-            heading = segmented_scenes[i].get('heading', '')
-            # Extract INT/EXT
-            interior = None
-            if heading.upper().startswith(('INT.', 'INT ', 'INT/')):
-                interior = 'INT'
-            elif heading.upper().startswith(('EXT.', 'EXT ', 'EXT/')):
-                interior = 'EXT'
-            elif heading.upper().startswith('I/E'):
-                interior = 'I/E'
-            
-            # Extract location: strip INT./EXT. prefix, then take text before time-of-day dash
-            loc = heading
-            loc = _re.sub(r'^(INT\.|EXT\.|INT/EXT\.|EXT/INT\.|I/E\.?)\s*', '', loc, flags=_re.IGNORECASE).strip()
-            # Remove time-of-day suffix (e.g. " - DAY", " - NIGHT")
-            loc = _re.sub(r'\s*[-–—]\s*(DAY|NIGHT|DAWN|DUSK|MORNING|EVENING|CONTINUOUS|LATER|SAME|MOMENTS?\s+LATER).*$', '', loc, flags=_re.IGNORECASE).strip()
-            if not loc:
-                loc = 'UNKNOWN'
-            
-            t_entry['location_data'] = {
-                'location': loc,
-                'interior': interior,
-                'raw_heading': heading
-            }
-
-    
-    # --- STAGE 4: Interpretation (Narrative Analysis) ---
-    _t_stage = time.time()
-    interpreter = InterpretationAgent()
-    ethics = EthicsAgent()
-    
-    # Analysis outputs
-    # Update InterpretationAgent to accept genre for dynamic thresholds
-    ai_interpretation = interpreter.run(temporal_trace, perceptual_features, segmented_scenes, genre=genre)
-    structure_map = ai_interpretation['structure']
-    diagnosis = ai_interpretation['diagnosis']
-    suggestions = ai_interpretation.get('suggestions', [])
-    semantic_beats = interpreter.apply_semantic_labels(temporal_trace)
-    telemetry['stages']['interpretation_ms'] = round((time.time() - _t_stage) * 1000, 2)
-    
-    # --- STAGE 5: Ethics & Fairness (The 'True' Audit) ---
-    _t_stage = time.time()
-    # Construct input for EthicsAgent
-    valence_scores = [pt.get('sentiment', 0) for pt in temporal_trace]
-    fairness_audit = ethics.audit_fairness({'scenes': segmented_scenes, 'valence_scores': valence_scores}, genre=genre)
-    agency_results = ethics.analyze_agency({'scenes': segmented_scenes})
-    
-    # Update voice fingerprints with agency metrics
-    agency_map = {item['character']: item for item in agency_results.get('agency_metrics', [])}
-    telemetry['stages']['ethics_audit_ms'] = round((time.time() - _t_stage) * 1000, 2)
-    
-    # Stage 5: Scene Turns (Intra-scene Movement)
-    _t_stage = time.time()
-    for i, s in enumerate(temporal_trace):
-        # Look for a shift in sentiment within the scene
-        # Use segmented_scenes to get lines for the current scene
-        scene_lines = segmented_scenes[i]['lines'] if i < len(segmented_scenes) else []
-        if not scene_lines: continue
-        
-        mid = len(scene_lines) // 2
-        f_half = " ".join([l['text'] for l in scene_lines[:mid]]).lower()
-        s_half = " ".join([l['text'] for l in scene_lines[mid:]]).lower()
-        
-        pos = ['yes', 'love', 'safe', 'good', 'happy', 'success', 'win', 'together', 'saved']
-        neg = ['no', 'hate', 'die', 'danger', 'bad', 'fail', 'loss', 'quit', 'dead', 'body', 'kill']
-        violence_vibe = ['shot', 'ambush', 'massacre', 'gunfire', 'murder', 'blood', 'blast', 'assassin', 'corpse']
-        
-        s1 = sum(1 for w in pos if w in f_half) - sum(1 for w in neg if w in f_half) - (sum(1 for w in violence_vibe if w in f_half) * 3)
-        s2 = sum(1 for w in pos if w in s_half) - sum(1 for w in neg if w in s_half) - (sum(1 for w in violence_vibe if w in s_half) * 3)
-        
-        # Core Scene Turn Mapping
-        label = "Flat"
-        if s1 < 0 and s2 > 0: label = "Negative to Positive"
-        elif s1 > 0 and s2 < 0: label = "Positive to Negative"
-        elif s1 > 6 or s2 > 6: label = "High Energy" 
-        elif s1 < 0 and s2 < 0: label = "Negative Progression"
-        elif s1 > 0 and s2 > 0: label = "Positive Progression"
-        
-        # Task 2: Sentiment Post-processing pass for Violence/Death (Rule-based)
-        viol_keywords = ['shot', 'killed', 'trap', 'ambush', 'gunfire', 'body', 'murder', 'blast', 'assassin', 'corpse']
-        scene_text = " ".join([l['text'] for l in scene_lines]).lower()
-        if any(w in scene_text for w in viol_keywords):
-            # Cap the sentiment at negative in the simulation trace
-            s['sentiment'] = min(s.get('sentiment', 0), -0.7)
-            # Force a negative transition label if violence is present
-            label = "Negative Progression" if s1 < 0 else "Positive to Negative"
-
-        s['scene_turn'] = {'turn_label': label, 'sentiment_delta': s2 - s1}
-
-    # --- STAGE 6: Final Assembly ---
-    _t_end = time.time()
-    
-    # Aggregate Voice Fingerprints (Cumulative)
-    voice_fingerprints = {}
-    for f in perceptual_features:
-        for char, v in f.get('character_scene_vectors', {}).items():
-            if char not in voice_fingerprints:
-                voice_fingerprints[char] = {'agency': 0, 'sentiment': 0, 'line_count': 0}
-            voice_fingerprints[char]['line_count'] += v['line_count']
-            voice_fingerprints[char]['agency'] += v['agency']
-            voice_fingerprints[char]['sentiment'] += v['sentiment']
-    
-    # Normalize averages & Meld with Agency
-    for char in voice_fingerprints:
-        count = voice_fingerprints[char]['line_count']
-        voice_fingerprints[char]['sentiment'] = round(voice_fingerprints[char]['sentiment'] / max(1, count), 2)
-        
-        # Use EthicsAgent's higher-fidelity agency calculation if available
-        if char in agency_map:
-            voice_fingerprints[char]['agency'] = agency_map[char]['agency_score']
-            voice_fingerprints[char]['centrality'] = agency_map[char]['centrality']
-        else:
-            voice_fingerprints[char]['agency'] = round(voice_fingerprints[char]['agency'] / max(1, count), 2)
-
-    telemetry['stages']['assembly_ms'] = round((time.time() - _t_stage) * 1000, 2)
-    telemetry['total_execution_ms'] = round((_t_end - _t_start) * 1000, 2)
-
-    report = {
-        'meta': {
-            'execution_time': f"{round(_t_end - _t_start, 3)}s",
-            'telemetry': telemetry,
-            'total_scenes': len(segmented_scenes),
-            'genre': genre,
-            'framework': story_framework,
-            'version': "v15.0 (Research Edition)",
-            'confidence': 0.98 if len(segmented_scenes) > 5 else 0.85
-        },
-        'temporal_trace': temporal_trace,
-        'perceptual_features': perceptual_features,
-        'structure_map': structure_map,
-        'narrative_diagnosis': diagnosis,
-
-        'suggestions': suggestions,
-        'semantic_beats': semantic_beats,
-        'total_scenes': len(segmented_scenes),
-        'segmented': segmented_scenes,
-        'scene_info': [
-            {'scene_index': s['scene_index'], 'heading': s.get('heading', ''), 'preview': s.get('preview', '')}
-            for s in segmented_scenes
-        ],
-        'semantic_flux': [f.get('entropy_score', 0) for f in perceptual_features],
-        'voice_fingerprints': voice_fingerprints,
-        'fairness_audit': fairness_audit,
-        'subtext_audit': [] # Placeholder for compatibility
-    }
-    
-    # --- STAGE 5: Writer Intelligence (Expert Layer) ---
-    writer = WriterAgent()
-    report = writer.analyze(report, genre=genre)
-    
-    return report
-
-def parse_structure(script):
-    """Simple structural parser snippet"""
-    parser = ParsingAgent()
-    segmenter = SegmentationAgent()
-    parsed = parser.run(script)['lines']
-    segmented = segmenter.run(parsed)
-    return [{'scene_index': s['scene_index'], 'heading': s.get('heading', '')} for s in segmented]
-
-def health_check():
-    """Observability endpoint for system status."""
-    return {
-        'status': 'healthy',
-        'governance': True,
-        'agents': {
-            'ParsingAgent': 'healthy',
-            'SegmentationAgent': 'healthy',
-            'DynamicsAgent': 'healthy',
-            'InterpretationAgent': 'healthy',
-            'EthicsAgent': 'healthy'
-        },
-        'config_files': {
-            'secrets.toml': True,
-            'env': True
-        }
-    }
-
-if __name__ == "__main__":
-    import sys
-    if len(sys.argv) > 1:
-        with open(sys.argv[1], 'r') as f:
-            print(json.dumps(run_pipeline(f.read()), indent=2))
-
-
-# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    return True
 # MODULE: streamlit_app.py
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
