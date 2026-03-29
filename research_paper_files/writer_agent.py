@@ -463,7 +463,7 @@ class WriterAgent:
 
             # High Fidelity Resolution Logic
             # (New logic: must be before final 10% of script to be an 'Exit')
-            is_near_end = end.get('scene', 0) > (total_scenes * 0.9)
+            is_near_end = end.get('scene', 0) > (total_scenes * 0.95)
             has_resolved_signal = timeline[-1].get('resolved', False) or (len(timeline) > 1 and timeline[-2].get('resolved', False))
 
             # Arc classification: Emotional & Agency Journey
@@ -1666,7 +1666,6 @@ class WriterAgent:
         """
         pti = dashboard.get('page_turner_index', 50)
         mr = dashboard.get('market_readiness', 50)
-        risk = dashboard.get('production_risk_score', 50)
         
         # Dialogue Harmony (15%): Reward hitting genre benchmarks
         dr = dashboard.get('dialogue_ratio', {})
@@ -1691,12 +1690,11 @@ class WriterAgent:
         health_penalty = min(30, (critical_count * 8) + (warning_count * 3))
         
         raw = (
-            (pti * 0.25) +
-            (mr * 0.20) +
-            ((100 - risk) * 0.15) +
-            (pacing_score * 0.15) +
-            (d_harmony * 0.15) +
-            (stakes_score * 0.10)
+            (pti * 0.30) +
+            (pacing_score * 0.25) +
+            (d_harmony * 0.20) +
+            (stakes_score * 0.15) +
+            (mr * 0.10)
         )
         
         final = max(0, min(100, round(raw - health_penalty)))

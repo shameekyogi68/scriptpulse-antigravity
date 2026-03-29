@@ -117,10 +117,7 @@ def is_scene_heading(line_text):
     for pattern in fallback_patterns:
         if re.match(pattern, line, re.IGNORECASE): return True
         
-    # 3. Time of Day suffix pattern (Implicit heading)
-    # e.g. "KITCHEN - DAY"
-    time_pattern = r'^[A-Z][A-Z\s]+\s*[-–—]\s*(DAY|NIGHT|DAWN|DUSK|MORNING|EVENING|CONTINUOUS|LATER|SAME)'
-    if re.match(time_pattern, line, re.IGNORECASE): return True
+
     
     return False
 
