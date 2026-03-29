@@ -105,20 +105,19 @@ def is_scene_heading(line_text):
     
     # 1. Standard Int/Ext prefixes
     line_upper = line.upper()
-    # Expanded based on tests
-    if line_upper.startswith(("INT.", "EXT.", "INT ", "EXT ", "I/E.", "I.", "E.", "INT/", "EXT/")): return True
-    if line_upper.startswith("SCENE"): return True 
-    
+    if line_upper.startswith(("INT.", "EXT.", "INT ", "EXT ", "I/E.", "INT/", "EXT/")): return True
+
+    # 'SCENE' only qualifies when followed by a digit, INT, or EXT (not 'SCENE OF THE CRIME', etc.)
+    if re.match(r'^SCENE\s*(\d+|INT|EXT)', line_upper): return True
+
     # 2. Fallback Patterns (Full words)
     fallback_patterns = [
-        r'^INTERIOR\s+', r'^EXTERIOR\s+', 
+        r'^INTERIOR\s+', r'^EXTERIOR\s+',
         r'^\d+\s*(INT|EXT)'
     ]
     for pattern in fallback_patterns:
         if re.match(pattern, line, re.IGNORECASE): return True
-        
 
-    
     return False
 
 class ParsingAgent:
@@ -126,13 +125,13 @@ class ParsingAgent:
     Structural Parsing Agent - Classifies screenplay lines.
     Combines Heuristic (parsing.py) and ML (bert_parser.py) approaches.
     """
-    def __init__(self, use_ml=True, model_name="valhalla/distilbart-mnli-12-3"):
+    def __init__(self, use_ml=True):
         self.use_ml = use_ml
         self.classifier = None
         self.is_mock = True
         
         if use_ml:
-            self.classifier = manager.get_pipeline("zero-shot-classification", model_name)
+            self.classifier = manager.get_zero_shot()
             self.is_mock = self.classifier is None
             if self.is_mock:
                 print(f"[Warning] Failed to load ML model. Falling back to Heuristics.")
@@ -189,7 +188,10 @@ class ParsingAgent:
         # Metadata/transitions
         transitions = ['FADE IN', 'FADE OUT', 'FADE TO', 'CUT TO', 'DISSOLVE TO', 'MATCH CUT', 'SMASH CUT', 'THE END', 'CONTINUED']
         if any(t in line_upper or line_upper.startswith(t) for t in transitions): return 'M'
-        if line_upper.endswith(':'): return 'M' # Broad transition check
+        # Only treat as transition if the WHOLE line is uppercase and short
+        # (true transitions like "CUT TO:" are all-caps and brief)
+        if line_upper.endswith(':') and line_upper == line and len(line) < 20:
+            return 'M'
 
         # 2. Contextual Heuristics
         prev_tag = context_window[-1] if context_window else "A"
@@ -204,7 +206,7 @@ class ParsingAgent:
         if prev_tag == "D":
             # If the previous line was dialogue, and this line isn't empty (empty lines become A)
             # and it isn't a new character cue, it's a continuation of dialogue.
-            # Relaxed character rule: allow periods for short names (typography typos like HAGEN.)
+            # Relaxed character rule: allow periods for short names (for typographical typos)
             is_char_candidate = line.isupper() and len(line) < 40
             is_hypothetical_character = is_char_candidate and (not line.endswith((".", "?", "!")) or (line.endswith(".") and len(line) < 12))
             
@@ -251,7 +253,7 @@ class ParsingAgent:
 class SegmentationAgent:
     """Scene Segmentation Agent - Conservative Boundary Detection"""
     
-    MIN_SCENE_LENGTH = 3
+    MIN_SCENE_LENGTH = 12
     LOW_CONFIDENCE_THRESHOLD = 0.6
 
     def run(self, input_data):
@@ -276,7 +278,7 @@ class SegmentationAgent:
             tag = line_data['tag']
             confidence = 0.0
             if tag == 'S': confidence = 0.9
-            elif tag == 'M': confidence = 0.4
+            # Removed: M-tag boundary — transitions belong to the preceding scene
             
             if confidence > 0.3:
                 boundaries.append((i, confidence))
@@ -320,7 +322,7 @@ class SegmentationAgent:
                 merged.append(scene)
         return merged
 
-    def merge_headless_fragments(self, scenes, parsed_lines, max_orphan_lines=5):
+    def merge_headless_fragments(self, scenes, parsed_lines, max_orphan_lines=15):
         if len(scenes) <= 1: return scenes
         merged = [scenes[0]]
         for scene in scenes[1:]:

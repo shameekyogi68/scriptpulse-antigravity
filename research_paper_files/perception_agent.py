@@ -19,7 +19,7 @@ def normalize_character_name(name):
     if not name: return "UNKNOWN"
     # Stem names: Remove (O.S.), (V.O.), (CONT'D) etc. 
     stemmed = re.sub(r'\(.*?\)', '', name).upper()
-    # Handle suffixes without parentheses (e.g. MICHAEL-O.S.)
+    # Handle suffixes without parentheses (e.g. CHARACTER-O.S.)
     stemmed = re.sub(r'[-\s](O\.?S\.?|V\.?O\.?|ALT|OFF-SCREEN|DASHES|FILTERED)$', '', stemmed)
     
     # Upper, strip punctuation but keep internal spaces/hashes
@@ -101,6 +101,11 @@ class EncodingAgent:
                 'is_exposition': metadata['purpose']['purpose'] == 'Exposition',
                 'scene_vocabulary': metadata['scene_vocabulary'],
                 'reader_frustration': self._extract_reader_frustration(scene_lines, referential['active_character_count']),
+                'stichomythia': metadata['stichomythia'],
+                'monologue_data': metadata['monologue_data'],
+                'passive_voice': metadata['passive_voice'],
+                'scene_economy': metadata['scene_economy'],
+                'opening_hook': metadata['opening_hook'],
                 'narrative_closure': metadata['narrative_closure'],
                 'research_telemetry': metadata.get('research_telemetry', {})
             }
@@ -139,11 +144,12 @@ class EncodingAgent:
         dialogue_words = sum([len(l['text'].split()) for l in lines if l['tag'] == 'D'])
         
         # Calculate seconds (60 seconds per minute)
-        # Assuming ~180-200 words per minute contextually
-        action_seconds = action_words * 0.3
+        # Industry standard: ~200 WPM spoken dialogue, but action descriptions
+        # represent screen time at roughly 2-3x the reading rate
+        action_seconds = action_words * 0.38   # ~158 words/min of screen time
         
         # Dialogue is spoken quickly
-        dialogue_seconds = dialogue_words * 0.35
+        dialogue_seconds = dialogue_words * 0.33  # ~180 WPM spoken
         
         total_seconds = action_seconds + dialogue_seconds
         
@@ -357,63 +363,124 @@ class EncodingAgent:
             elif tag == 'A' and len(txt) > max_a_len:
                 max_a_len = len(txt)
                 rep_action = txt
-
         arcs = {}
         curr = None
-        proactive_lexicon = {'go', 'do', 'will', 'must', 'shall', 'stop', 'done', 'kill', 'give', 'take', 'enough', 'order', 'clear', 'business', 'family'}
+        proactive_lexicon = {'go', 'do', 'will', 'must', 'shall', 'stop', 'done', 'kill', 'give', 'take', 'enough', 'order', 'clear', 'business', 'family', 'offer', 'refuse', 'respect', 'decide', 'arrange', 'settle', 'deal', 'demand', 'insist', 'command', 'forbid', 'allow', 'never', 'always', 'swear'}
         
-        # Check for narrative closure signals in action lines (Strict death/exit detection)
-        # Removed 'leaves', 'gone', 'shot', 'fires' etc. as they cause false positives for living characters
-        death_lexicon = {
-            'dies', 'dead', 'killed', 'murdered', 'body', 'corpse', 'funeral', 
-            'passing', 'expiring', 'deathbed', 'fatal', 'slain', 'slumps', 'falls', 'collapses',
-            'no longer with us', 'rest in peace'
-        }
-        all_action_text = " ".join([l['text'].lower() for l in lines if l['tag'] == 'A'])
-        scene_has_death = any(w in all_action_text for w in death_lexicon)
-
+        # Diagnostics for scene-level features
+        monologues = []
+        current_mono_len = 0
+        
+        sticho_count = 0
+        prev_tag = None
+        
+        passive_count = 0
+        passive_examples = []
+        
         for i, l in enumerate(lines):
-            if l['tag'] == 'C': 
-                name = normalize_character_name(l['text'])
+            txt = l.get('text', '').strip()
+            tag = l.get('tag', '')
+            
+            # 1. Monologue & Stichomythia Tracking
+            if tag == 'D':
+                # Stichomythia: Rapid-fire single-line exchanges
+                if prev_tag == 'D' and len(txt.split()) < 10:
+                    sticho_count += 1
+                
+                # Monologue: Long uninterrupted speech
+                current_mono_len += 1
+            elif tag == 'C':
+                # End of a monologue?
+                if current_mono_len >= 8:
+                    monologues.append({'character': curr, 'length': current_mono_len})
+                current_mono_len = 0 # Character tag breaks the monologue (unless it's the same char, but we follow the change of tag)
+            else:
+                current_mono_len = 0
+
+            # 2. Passive Voice Detection in Action lines
+            if tag == 'A':
+                passive_markers = [
+                    r'\bis being\b', r'\bwas being\b', r'\bhas been\b', r'\bhad been\b',
+                    r'\bis seen\b', r'\bare seen\b', r'\bwas seen\b', r'\bi?s heard\b',
+                    r'\bi?s felt\b', r'\bi?s watched\b'
+                ]
+                for p in passive_markers:
+                    if re.search(p, txt, re.I):
+                        passive_count += 1
+                        if len(passive_examples) < 2: passive_examples.append(txt)
+
+            # 3. Character-level Arcs & Voice Texture
+            if tag == 'C': 
+                name = normalize_character_name(txt)
                 if name: curr = name
                 else: curr = None
-            elif l['tag'] == 'D' and curr:
-                if curr not in arcs: arcs[curr] = {'sentiment': 0.0, 'agency': 0.1, 'line_count': 0}
+            elif tag == 'D' and curr:
+                if curr not in arcs: 
+                    arcs[curr] = {
+                        'sentiment': 0.0, 'agency': 0.1, 'line_count': 0,
+                        'complexity': 0.0, 'positivity': 0.0, 'punctuation_rate': 0.0
+                    }
                 arcs[curr]['line_count'] += 1
-                dial_text = l['text'].lower()
-                dial_words = set(re.findall(r'\b\w+\b', dial_text))
+                dial_text = txt.lower()
+                dial_words = re.findall(r'\b\w+\b', dial_text)
                 
-                # Agency: Balanced between syntax (questions/commands) and proactivity
-                is_question = '?' in dial_text
-                is_command = ('!' in dial_text or dial_text.isupper()) and len(dial_text.split()) < 8
-                
-                proactive_count = len(dial_words.intersection(proactive_lexicon))
-                
-                # Characters who speak more in a scene generally have higher agency (control)
-                # But they must also use decisive language
-                agency_inc = 0.1 # Base participation
-                if is_command: agency_inc += 0.5
-                elif is_question: agency_inc += 0.3 # Asking questions is often investigative control
-                
-                agency_inc += (proactive_count * 0.6) # Boosted from 0.4
+                # Voice Texture Fix (Fix 4):
+                word_lens = [len(w) for w in dial_words]
+                arcs[curr]['complexity'] += statistics.mean(word_lens) if word_lens else 0
+                arcs[curr]['positivity'] += sum(1 for w in dial_words if w in ['yes', 'love', 'good', 'happy', 'safe']) / max(1, len(dial_words))
+                arcs[curr]['punctuation_rate'] += (txt.count('.') + txt.count(',') + txt.count('!') + txt.count('?')) / max(1, len(txt))
 
+                # Agency Logic
+                is_question = '?' in dial_text
+                is_command = ('!' in dial_text or txt.isupper()) and len(dial_words) < 8
+                proactive_count = len(set(dial_words).intersection(proactive_lexicon))
                 
-                # Passive markers
+                agency_inc = 0.1 # Base participation
+                if is_command: agency_inc += 0.7
+                elif is_question: agency_inc += 0.1 # Reduced bonus for asking questions
+                agency_inc += (proactive_count * 0.6)
+                
                 if any(w in dial_text for w in ['maybe', 'sorry', 'i think', 'perhaps', 'suppose']):
                     agency_inc -= 0.2
                 
                 arcs[curr]['agency'] += agency_inc
                 arcs[curr]['sentiment'] += 0.1 if 'yes' in dial_text else (-0.1 if 'no' in dial_text else 0)
+            
+            prev_tag = tag
+
+        # Finalize Monologue at end of scene
+        if current_mono_len >= 8:
+            monologues.append({'character': curr, 'length': current_mono_len})
         
-        # Normalize Agency by participation density so quiet but decisive leaders aren't penalized
+        # Normalize Agency & Voice Texture
         for c in arcs:
-            # Agency cap - Dampened divisor to allow growth without hitting 100% too easily
-            arcs[c]['agency'] = round(min(1.0, arcs[c]['agency'] / (1.0 + arcs[c]['line_count'] * 0.15)), 3)
-            arcs[c]['sentiment'] = round(max(-1.0, min(1.0, arcs[c]['sentiment'] / max(1, arcs[c]['line_count']))), 3)
+            n = max(1, arcs[c]['line_count'])
+            arcs[c]['agency'] = round(min(1.0, arcs[c]['agency'] / (1.0 + n * 0.15)), 3)
+            arcs[c]['sentiment'] = round(max(-1.0, min(1.0, arcs[c]['sentiment'] / n)), 3)
+            # Normalize voice features
+            arcs[c]['complexity'] = round(arcs[c]['complexity'] / n, 2)
+            arcs[c]['positivity'] = round(arcs[c]['positivity'] / n, 2)
+            arcs[c]['punctuation_rate'] = round(arcs[c]['punctuation_rate'] / n, 3)
+
+        # 4. Scene-level Efficiency/Diagnostics
+        n_lines = len([l for l in lines if l['tag'] in ['D', 'A']])
+        economy_score = min(100, (sum(1 for l in lines if l['tag'] == 'D') * 5 + sum(1 for l in lines if l['tag'] == 'A') * 3))
+        economy_label = 'High Economy' if economy_score < 40 else 'Moderate Economy' if economy_score < 75 else 'Low Economy'
         
-        # 3. Masterclass Diagnostics (Smart Heuristics using structural context)
+        # 5. Opening Hook Detection (Rule based for Scene 0 only)
+        hook_label = 'Indeterminate'
+        lines_before = 0
+        if lines:
+            for i, l in enumerate(lines[:15]):
+                if any(w in l['text'].lower() for w in ['gun', 'blood', 'shot', 'kill', 'fight', 'scream', 'run']):
+                    hook_label = 'Strong Hook'
+                    lines_before = i
+                    break
+
+        # 6. Masterclass Diagnostics (Smart Heuristics using structural context)
         d_lines = [l['text'].lower() for l in lines if l['tag'] == 'D']
         a_lines = [l['text'].lower() for l in lines if l['tag'] == 'A']
+        all_text = " ".join([l['text'] for l in lines]).lower()
         
         # On-the-Nose: Direct emotion stating in dialogue
         otn_phrases = ['i feel', 'i am feeling', 'i am very angry', 'i am so sad', 'i am depressed', 'i hate you so much', 'i am terrified', 'i love you so much', 'i am so mad']
@@ -426,7 +493,7 @@ class EncodingAgent:
             first_few = " ".join(d_lines[:3])
             has_shoe_leather = any(p in first_few for p in shoe_leather_phrases)
             
-        # Tell vs Show: Internal emotional states described in Action lines (which can't be filmed easily)
+        # Tell vs Show: Internal emotional states described in Action lines
         emotion_adjectives = ['angry', 'sad', 'happy', 'depressed', 'terrified', 'furious', 'devastated', 'upset', 'jealous', 'nervous', 'anxious']
         tvs_hits = 0
         for a in a_lines:
@@ -438,27 +505,43 @@ class EncodingAgent:
         purpose = 'Transition'
         if len(a_lines) > len(d_lines) * 2 and len(a_lines) > 5:
             purpose = 'Escalation / Action'
-        elif any(w in text for w in ['realize', 'discover', 'reveal', 'finds', 'truth']):
+        elif any(w in all_text for w in ['realize', 'discover', 'reveal', 'finds', 'truth']):
             purpose = 'Revelation / Discovery'
         elif len(d_lines) > 10:
             purpose = 'Negotiation / Conflict'
 
+        # Check for narrative closure signals in action lines (Strict death/exit detection)
+        # Only unambiguous death words — 'falls', 'collapses', 'slumps' are excluded
+        # because they appear constantly in normal action (a man falls into a chair, etc.)
+        death_lexicon = {
+            'dies', 'dead', 'killed', 'murdered', 'corpse', 'funeral',
+            'deathbed', 'fatal', 'slain', 'no longer with us', 'rest in peace',
+            'is shot', 'is stabbed', 'shoot him', 'stabs him', 'stabs her',
+            'shoots him', 'shoots her', 'blows his brains', 'blows her brains'
+        }
+        scene_has_death = any(w in all_text for w in death_lexicon)
+
         return {
+            'character_scene_vectors': arcs,
             'stakes': {'dominant': dominant, 'breakdown': {k: round(v, 2) for k,v in scores.items()}},
             'payoff': {'payoff_density': round(sum(scores.values()) / max(1, len(lines)), 2)},
+            'stichomythia': {'has_stichomythia': sticho_count > 4, 'count': sticho_count},
+            'monologue_data': {'has_monologue': len(monologues) > 0, 'monologues': monologues},
+            'passive_voice': {'passive_ratio': passive_count / max(1, n_lines), 'passive_count': passive_count, 'examples': passive_examples},
+            'scene_economy': {'economy_label': economy_label, 'economy_score': economy_score},
+            'opening_hook': {'hook_label': hook_label, 'lines_before_conflict': lines_before},
+            'purpose': {'purpose': purpose},
             'on_the_nose': {
                 'on_the_nose_ratio': round(otn_hits / max(1, len(d_lines)), 3),
                 'hit_count': otn_hits
             },
             'shoe_leather': {
                 'has_shoe_leather': has_shoe_leather,
-                'scene_start_filler': 3 if has_shoe_leather else 0 # Placeholder for UI
+                'scene_start_filler': 3 if has_shoe_leather else 0
             },
             'tell_vs_show': {'tell_ratio': min(1.0, tvs_hits / max(1, len(a_lines))), 'literal_emotions': tvs_hits},
-            'purpose': {'purpose': purpose},
-            'character_scene_vectors': arcs,
-            'narrative_closure': scene_has_death,  # Inform the downstream agent if characters might be 'resolved' here
-            'representative_dialogue': rep_dialogue, # Used by writer agent for pulls
+            'narrative_closure': scene_has_death,
+            'representative_dialogue': rep_dialogue,
             'representative_action': rep_action,
             'scene_vocabulary': list(vocab),
             'research_telemetry': {

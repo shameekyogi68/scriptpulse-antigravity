@@ -50,13 +50,15 @@ class ModelManager:
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(ModelManager, cls).__new__(cls)
+            cls._instance._initialized = False
             cls._instance.init_config()
         return cls._instance
         
-    def init_config(self):
-        """Initialize caching and device settings."""
-        # Persistent Cache Directory
-        self.cache_dir = os.path.expanduser("~/.scriptpulse/models")
+    def init_config(self, force=False):
+        if self._initialized and not force:
+            return
+
+        self.cache_dir = os.path.abspath('.scriptpulse_cache')
         os.makedirs(self.cache_dir, exist_ok=True)
         
         # Device Selection
