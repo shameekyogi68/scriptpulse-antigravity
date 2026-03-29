@@ -476,7 +476,7 @@ class WriterAgent:
 
             # Arc classification: Emotional & Agency Journey
             # Calculate emotional arcs first; 'Resolution' is a structural state, not an emotional one.
-            if sentiment_delta < -0.3 and agency_delta > 0.15:
+            if sentiment_delta < -0.3 and agency_delta > 0.05:
                 arc_label = "Classic Tragedy 🎭"
                 arc_note = "Character gains agency but loses emotional hope/soul. A dominant storytelling arc."
             elif sentiment_delta > 0.3 and agency_delta > 0.15:
@@ -1318,7 +1318,7 @@ class WriterAgent:
                         last_idx = i
                 
                 # Check scenes near last_idx for 'narrative_closure'
-                search_range = trace[max(0, last_idx-1):min(len(trace), last_idx+2)]
+                search_range = trace[max(0, last_idx-3):min(len(trace), last_idx+4)]
                 if any(s.get('narrative_closure', False) for s in search_range):
                     continue # This character's thread reached a resolution (death/exit)
 
@@ -1538,20 +1538,28 @@ class WriterAgent:
     def _calculate_production_risks(self, trace):
         """
         Calculates Risk Radar (Complexity vs Impact).
-        Payoff is now determined by PEAK Intensity (Memorial moments) rather than average flow.
+        Weights: Locations 40%, Cast 30%, Action Complexity 30%.
         """
         if not trace: return 50
         
-        # Payoff is the top 20% of engagement moments — do the highs justify the costs?
-        sorted_signals = sorted([s.get('attentional_signal', 0) for s in trace], reverse=True)
-        top_n = max(1, len(sorted_signals) // 5)
-        peak_payoff = sum(sorted_signals[:top_n]) / top_n
+        locs = set()
+        cast = set()
+        for s in trace:
+            loc = s.get('location_data', {}).get('location') or s.get('location', 'Unknown')
+            if loc != 'Unknown': locs.add(loc)
+            for c in s.get('character_scene_vectors', {}).keys():
+                cast.add(c)
+                
+        unique_locs = len(locs)
+        cast_count = len(cast)
         
-        # Complexity is raw action density
+        loc_risk = min(100, (unique_locs / 50.0) * 100) # 50+ locs is 100% loc risk
+        cast_risk = min(100, (cast_count / 30.0) * 100) # 30+ cast is 100% cast risk
+        
         complexity = sum(s.get('visual_abstraction', {}).get('action_lines', 0) for s in trace) / len(trace)
-        
-        # Risk is high if we have expensive complexity but the 'Peaks' are underwhelming
-        risk_score = (complexity * 65) + ((1.0 - peak_payoff) * 35)
+        action_risk = min(100, (complexity / 20.0) * 100) # 20+ action lines avg is 100% risk
+
+        risk_score = (loc_risk * 0.40) + (cast_risk * 0.30) + (action_risk * 0.30)
         return round(min(100, max(0, risk_score)))
 
     def _calculate_budget_impact(self, trace, report=None):

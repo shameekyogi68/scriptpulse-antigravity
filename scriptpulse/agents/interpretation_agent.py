@@ -86,13 +86,20 @@ class InterpretationAgent:
         
         return {'acts': acts, 'beats': beats}
 
-    def _get_snippet(self, scene_dict):
+    def _get_snippet(self, scene_dict, preferred_tag=None):
         """Extracts a short text snippet from a scene using correct tags ('D', 'A')."""
         try:
             lines = scene_dict.get('lines', [])
             dialogue = [l['text'] for l in lines if l.get('tag') == 'D' and len(l['text']) > 10]
             action = [l['text'] for l in lines if l.get('tag') == 'A' and len(l['text']) > 10]
             
+            if preferred_tag == 'A' and action:
+                snip = action[len(action)//2]
+                return f'"{snip[:60]}..."'
+            if preferred_tag == 'D' and dialogue:
+                snip = dialogue[len(dialogue)//2]
+                return f'"{snip[:60]}..."'
+                
             if dialogue: 
                 snip = dialogue[len(dialogue)//2]
                 return f'"{snip[:60]}..."'
@@ -135,7 +142,7 @@ class InterpretationAgent:
             action = feat.get('visual_abstraction', {}).get('action_lines', 0)
             
             if action > 6 and att_sig > 0.8:
-                snippet = self._get_snippet(scenes[i])
+                snippet = self._get_snippet(scenes[i], preferred_tag='A')
                 diagnosis.append(
                     f"✨ **Action Peak (Scene {i+1})**: Strong integration of physical action and tension. (e.g., {snippet})"
                 )

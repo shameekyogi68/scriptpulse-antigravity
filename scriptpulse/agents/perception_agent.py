@@ -146,7 +146,7 @@ class EncodingAgent:
         # Calculate seconds (60 seconds per minute)
         # Industry standard: ~200 WPM spoken dialogue, but action descriptions
         # represent screen time at roughly 2-3x the reading rate
-        action_seconds = action_words * 0.7   # ~85 words/min of screen time
+        action_seconds = action_words * 0.45   # ~133 words/min of screen time
         
         # Dialogue is spoken quickly
         dialogue_seconds = dialogue_words * 0.33  # ~180 WPM spoken
