@@ -745,9 +745,9 @@ class WriterAgent:
         Compare against genre benchmarks and surface an insight.
         """
         benchmarks = {
-            'action':      0.40, 'thriller':    0.48, 'horror':      0.40,
-            'drama':       0.55, 'crime drama': 0.54, 'comedy':      0.72, 
-            'romance':     0.68, 'sci-fi':      0.50, 'fantasy':     0.48,
+            'action':      0.40, 'thriller':    0.45, 'horror':      0.38,
+            'drama':       0.55, 'crime drama': 0.54, 'comedy':      0.75, 
+            'romance':     0.70, 'sci-fi':      0.45, 'fantasy':     0.42,
             'western':     0.45, 'avant-garde': 0.55, 'general':     0.55
         }
         total_d = sum(s.get('dialogue_action_ratio', {}).get('dialogue_lines', 0) for s in trace)
@@ -1763,7 +1763,16 @@ class WriterAgent:
         dr      = dashboard.get('dialogue_action_ratio', {})
         d_ratio = dr.get('global_dialogue_ratio', 0.55)
         d_bench = dr.get('genre_benchmark', 0.55)
-        d_harmony = max(0, 100 - abs(d_ratio - d_bench) * 450) # Doubled strictness for genre-fit
+        d_harmony = max(0, 100 - abs(d_ratio - d_bench) * 850) # Very strict genre-fit
+        
+        # 4. Intensity Mismatch Penalty (Task: Genre Incongruity)
+        # If Action/Horror, expect peaks (> 0.7). If Drama/Comedy, expect breaths.
+        peaks = sum(1 for s in trace if s.get('attentional_signal', 0) > 0.7)
+        intensity_mismatch = 0
+        if genre.lower() in ['action', 'horror', 'thriller'] and peaks < 5:
+            intensity_mismatch = 15 # Severe penalty for 'Boring' action
+        elif genre.lower() in ['comedy', 'romance'] and peaks > 15:
+            intensity_mismatch = 10 # Fatigue penalty for 'Aggressive' comedy
 
         # Pacing balance
         balance_label = dashboard.get('act_structure', {}).get('balance', 'Unknown')
@@ -1799,7 +1808,7 @@ class WriterAgent:
             (mr           * 0.10)
         )
 
-        return max(0, min(100, round(raw - health_penalty)))
+        return max(0, min(100, round(raw - health_penalty - intensity_mismatch)))
 
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
