@@ -477,38 +477,48 @@ class WriterAgent:
                 (len(timeline) > 1 and timeline[-2].get('resolved', False))
             )
 
-            # Arc classification
-            if sentiment_delta < -0.2 and agency_delta > 0.05:
+            # Arc classification — priority order is strict. Most specific first.
+
+            # PRIORITY 0: Narrative Exit — check BEFORE any sentiment analysis.
+            # A character who dies or exits mid-story gets this label regardless of deltas.
+            # This catches Sonny (shot), Luca Brasi (killed), and similar mid-story exits.
+            if has_resolved_signal and not is_near_end:
+                arc_label = "Resolved (Narrative Exit) 💀"
+                arc_note = "Character's thread reached a definitive mid-story conclusion (death/exit)."
+
+            # PRIORITY 1: End-of-story resolution (protagonist who concludes the narrative)
+            elif has_resolved_signal and is_near_end:
+                arc_label = "Resolved / Conclusive 🏁"
+                arc_note = "Character's narrative purpose reached its structural conclusion."
+
+            # PRIORITY 2: Classic Tragedy — gains power, loses soul (strict thresholds)
+            elif sentiment_delta < -0.3 and agency_delta > 0.15:
                 arc_label = "Classic Tragedy 🎭"
-                arc_note  = "Gains agency but loses emotional soul — the dominant dramatic arc."
-            elif sentiment_delta < -0.35:
-                # Strong negative journey even without agency gain (e.g. pure descent)
-                arc_label = "Classic Tragedy 🎭"
-                arc_note  = "Significant negative emotional arc — character's moral world collapses."
-            elif sentiment_delta > 0.2 and agency_delta > 0.05:
+                arc_note = "Gains agency but loses emotional hope — the dominant dramatic arc."
+
+            # PRIORITY 3: Hero's Journey — positive on both axes
+            elif sentiment_delta > 0.3 and agency_delta > 0.15:
                 arc_label = "Hero's Journey ⭐"
-                arc_note  = "Positive transformation in both sentiment and agency."
+                arc_note = "Strong positive transformation in sentiment and agency."
+
+            # PRIORITY 4: Agency loss
             elif agency_delta < -0.2:
                 if sentiment_delta > -0.1:
                     arc_label = "Steadfast / Supportive 🛡️"
-                    arc_note  = "Loses agency but maintains emotional core. Loyal advisor archetype."
+                    arc_note = "Loses agency but holds emotional core. Loyal advisor archetype."
                 else:
                     arc_label = "Descent 📉"
-                    arc_note  = "Negative movement in both power and emotional outlook."
-            elif abs(sentiment_delta) < 0.08 and abs(agency_delta) < 0.08:
-                if has_resolved_signal and not is_near_end:
-                    arc_label = "Resolved (Narrative Exit) 💀"
-                    arc_note  = "Character's thread reached a definitive conclusion."
-                else:
-                    arc_label = "Flat Arc ⚠️"
-                    arc_note  = "No measurable emotional or agency change. Intentional?"
+                    arc_note = "Negative movement in both power and emotional outlook."
+
+            # PRIORITY 5: Flat — no meaningful movement on either axis
+            elif abs(sentiment_delta) < 0.1 and abs(agency_delta) < 0.1:
+                arc_label = "Flat Arc ⚠️"
+                arc_note = "No measurable emotional or agency change. Is this intentional?"
+
+            # PRIORITY 6: Generic developing arc (some movement, no clear pattern)
             else:
-                if has_resolved_signal:
-                    arc_label = "Resolved / Conclusive 🏁" if is_near_end else "Resolved (Narrative Exit) 💀"
-                    arc_note  = "Character's narrative purpose reached a structural conclusion."
-                else:
-                    arc_label = "Developing Arc 📈"
-                    arc_note  = "Consistent development across story beats."
+                arc_label = "Developing Arc 📈"
+                arc_note = "Character shows movement across story beats but no dominant direction."
 
             arc_summary[char] = {
                 'arc_type':        arc_label,
@@ -1068,19 +1078,22 @@ class WriterAgent:
         top_loc, top_count = sorted_locs[0] if sorted_locs else ('UNKNOWN', 0)
         top_ratio = top_count / total
 
-        loc_per_scene_ratio = len(sorted_locs) / total
         warning = None
-        if loc_per_scene_ratio > 0.6:
+        loc_per_scene = len(sorted_locs) / total
+
+        if loc_per_scene > 0.7:
+            # Nearly every scene is a brand-new location — genuine production concern
             warning = (
-                f"{len(sorted_locs)} unique location headings detected across {total} scenes "
-                f"({round(loc_per_scene_ratio * 100)}% scene-location churn). "
+                f"{len(sorted_locs)} location headings across {total} scenes "
+                f"({round(loc_per_scene * 100)}% scene-location churn). "
                 f"Note: sub-locations of the same building count separately. "
-                f"High location variety increases production costs — consider consolidating."
+                f"High location variety significantly increases production costs."
             )
         elif top_ratio > 0.6 and len(sorted_locs) < 5:
+            # Script is almost entirely one place — consider visual variety
             warning = (
-                f"{round(top_ratio * 100)}% of scenes are set in '{top_loc}'. "
-                f"Only {len(sorted_locs)} unique location(s) total. "
+                f"{round(top_ratio * 100)}% of scenes share '{top_loc}'. "
+                f"Only {len(sorted_locs)} unique location(s). "
                 f"Consider varying the physical world to add visual range."
             )
 
@@ -1313,46 +1326,45 @@ class WriterAgent:
         act1_counts = char_lines(act1)
         act3_counts = char_lines(act3)
 
-        # Characters with significant Act 1 presence (>15 lines) but no Act 3 presence
-        # Threshold increased from 5 to 15 to exclude minor thematic characters
+        # Proportional thematic-furniture threshold: scales with script length
+        # Short pilot (50 scenes) → threshold ~8. Feature (200 scenes) → threshold ~33.
+        furniture_threshold = max(10, len(trace) // 6)
+
+        # Build index map once for O(1) lookup — avoids O(n²) trace.index() calls
+        trace_idx_map = {id(s): i for i, s in enumerate(trace)}
+
         neglected = []
-        trace_index_map = {id(s): i for i, s in enumerate(trace)}
         for char, count in act1_counts.items():
             if count > 15 and act3_counts.get(char, 0) == 0:
-                # Blacklist generic roles that are often mis-parsed or one-off
-                if char in ["SON", "MOM", "DAD", "FATHER", "MOTHER", "VOICE", "GUY", "MAN", "WOMAN"]:
+                # Skip generic mis-parsed role names
+                if char in ["SON", "MOM", "DAD", "FATHER", "MOTHER", "VOICE",
+                            "GUY", "MAN", "WOMAN", "BOY", "GIRL", "OFFICER",
+                            "GUARD", "WAITER", "DOCTOR", "NURSE"]:
                     continue
-                
-                # Thematic Setup / Bookend Check:
-                # If they have fewer than 45 lines total AND only appear in Act 1,
-                # they are likely intentional thematic furniture.
-                # (Threshold increased from 25 to 45 specifically for long opening monologues)
+
                 char_timeline = [s for s in trace if char in s.get('character_scene_vectors', {})]
-                if len(char_timeline) < max(15, len(trace) // 6):
-                    # Check if all appearances are in the first 40% of the script
-                    last_appearance_idx = max([trace_index_map[id(s)] for s in char_timeline]) if char_timeline else 0
+                if not char_timeline:
+                    continue
+
+                # Thematic furniture check: proportional threshold, first 40% of script only
+                last_appearance_idx = max(trace_idx_map[id(s)] for s in char_timeline)
+                if len(char_timeline) < furniture_threshold:
                     if last_appearance_idx < len(trace) * 0.4:
-                        continue # Intentional thematic setup
-                
-                # Narrative Resolution Check: Did they die or exit functionally?
-                # Check for 'narrative_closure' signal in their last appearing scene or the one after
-                last_idx = -1
-                for i, s in enumerate(trace):
-                    if char in s.get('character_scene_vectors', {}):
-                        last_idx = i
-                
-                # Check scenes near last_idx for 'narrative_closure'
-                search_range = trace[max(0, last_idx-3):min(len(trace), last_idx+4)]
+                        continue  # Intentional setup character — not neglected
+
+                # Narrative resolution check: wider window (±4 scenes) catches
+                # deaths where the character's last line precedes the action line
+                death_words = {'shot', 'killed', 'dead', 'murder', 'ambush',
+                               'funeral', 'corpse', 'dies', 'body', 'slain',
+                               'assassin', 'gunfire', 'executed', 'strangled'}
+                search_range = trace[max(0, last_appearance_idx-3):
+                                     min(len(trace), last_appearance_idx+5)]
                 if any(s.get('narrative_closure', False) for s in search_range):
-                    continue # This character's thread reached a resolution (death/exit)
-                    
-                # Secondary check: scan character_scene_vectors context for death-adjacent vocab
-                last_scene = trace[last_idx] if last_idx >= 0 else {}
-                scene_text = str(last_scene).lower()
-                death_words = {'shot', 'killed', 'dead', 'murder', 'ambush', 'funeral',
-                               'corpse', 'dies', 'body', 'slain', 'assassin', 'gunfire'}
+                    continue
+                # Secondary: keyword scan of scene text near last appearance
+                scene_text = ' '.join(str(s) for s in search_range).lower()
                 if any(w in scene_text for w in death_words):
-                    continue  # Character was killed — not neglected
+                    continue
 
                 neglected.append(char)
         
@@ -1622,34 +1634,36 @@ class WriterAgent:
 
     def _calculate_market_readiness(self, d):
         """
-        Market Readiness: Stakes Diversity (25%), Structural Stability (30%),
-        Dialogue Rhythm (25%), Production Polish (20%).
+        Market Readiness: measures how production-viable the script is structurally.
         No base floor — score must be earned.
+        Stakes 25% | Structure 30% | Dialogue 25% | Production Polish 20%
         """
-        # 1. Stakes Diversity (25%)
+        # 1. Stakes Diversity (25%) — multi-layered jeopardy signals commercial range
         stakes = d.get('stakes_profile', {})
         unique_stakes = len([v for k, v in stakes.items() if isinstance(v, (int, float)) and v > 0])
         stakes_score = min(1.0, unique_stakes / 4.0) * 25
 
-        # 2. Production Polish (20%): penalise extreme cast/location counts
-        cast_count = d.get('cast_count_deterministic', 10)
-        loc_count  = d.get('location_profile', {}).get('unique_locations', 0)
-        # Ideal: cast 8–25, locations 5–40. Penalise outside those ranges.
-        cast_penalty = max(0, (cast_count - 25) * 0.3) if cast_count > 25 else 0
-        loc_penalty  = max(0, (loc_count  - 40) * 0.2) if loc_count  > 40 else 0
-        polish_score = max(0, 20 - cast_penalty - loc_penalty)
-
-        # 3. Structural Stability (30%): act balance
+        # 2. Structural Stability (30%) — act balance is the foundation of marketability
         balance = d.get('act_structure', {}).get('balance', 'Unknown')
         structure_score = 30 if balance == 'Balanced' else 15
 
-        # 4. Dialogue Rhythm (25%): on-genre benchmark
+        # 3. Dialogue Rhythm (25%) — on-genre dialogue ratio signals craft awareness
         dr      = d.get('dialogue_action_ratio', {})
         d_ratio = dr.get('global_dialogue_ratio', 0.55)
         d_bench = dr.get('genre_benchmark', 0.55)
         d_score = max(0, 25 - abs(d_ratio - d_bench) * 100)
 
-        final = stakes_score + polish_score + structure_score + d_score
+        # 4. Production Polish (20%) — penalise extreme cast/location counts
+        # Ideal cast: 8–30 named characters. Ideal locations: 5–50 headings.
+        # Outside these ranges signals scheduling/budget complexity.
+        cast_count = d.get('cast_count_deterministic', 10)
+        loc_count  = d.get('location_profile', {}).get('unique_locations', 0)
+
+        cast_penalty = max(0, (cast_count - 30) * 0.4) if cast_count > 30 else 0
+        loc_penalty  = max(0, (loc_count  - 50) * 0.15) if loc_count > 50 else 0
+        polish_score = max(0, 20 - cast_penalty - loc_penalty)
+
+        final = stakes_score + structure_score + d_score + polish_score
         return min(100, round(final))
 
     def _diagnose_representation_risks(self, fairness_audit):
