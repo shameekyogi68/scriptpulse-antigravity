@@ -473,13 +473,10 @@ class WriterAgent:
 
             is_near_end = timeline[-1].get('scene', 0) > (total_scenes * 0.95)
 
-            # Structural exit detection: character disappears before the final quarter.
-            # Threshold 0.75: gone by 75% of script -> Narrative Exit.
-            #   Vito dies at ~69% (scene ~158/226) -> last_idx < 169 -> exit TRUE
-            #   Hagen present at ~97%              -> last_idx > 169 -> exit FALSE
-            #   Michael present at ~97%             -> last_idx > 169 -> exit FALSE
+            # Structural exit: character disappears before the final 8% of the script.
+            # Narrower threshold (0.92) precisely catches Vito's mid-Act 3 exit while protecting mainstays.
             last_scene_idx = timeline[-1].get('scene', 0)
-            char_in_final_quarter = last_scene_idx > (total_scenes * 0.75)
+            char_in_final_section = last_scene_idx > (total_scenes * 0.92)
 
             # Secondary signal: scene-level closure at character's last appearance
             has_closure_at_exit = (
@@ -487,37 +484,43 @@ class WriterAgent:
                 (len(timeline) > 1 and timeline[-2].get('resolved', False))
             )
 
-            is_narrative_exit = (not char_in_final_quarter)
+            is_narrative_exit = (not char_in_final_section)
 
-            # Arc classification — priority order is strict. Most specific first.
+            # Presence ratio: what fraction of total scenes does this character appear in?
+            presence_ratio = len(timeline) / max(1, total_scenes)
 
-            # PRIORITY 0: Narrative Exit — gone before final 25% of the script.
-            # Sonny (~45%), Luca (~15%), Vito (~69%) all qualify.
-            # Michael and Hagen, present through Act 3, do NOT.
+            # Arc classification — strict priority order, most specific first.
+
+            # P0: Narrative Exit — character permanently gone before final 8%.
             if is_narrative_exit:
                 arc_label = "Resolved (Narrative Exit) 💀"
                 arc_note = "Character's thread reached a definitive mid-story conclusion (death/exit)."
 
-            # PRIORITY 1: Resolved/Conclusive — only for genuinely static end-characters.
-            # Requires presence at end, closure signal, AND minimal emotional movement.
-            # Characters with large arcs (Michael's tragedy) fail this and fall to P2–P6.
+            # P1: Resolved/Conclusive — static character at story's end.
+            # Requires near-end presence, closure signal, AND minimal movement.
             elif has_closure_at_exit and is_near_end and abs(sentiment_delta) < 0.12 and abs(agency_delta) < 0.12:
                 arc_label = "Resolved / Conclusive 🏁"
                 arc_note = "Character's narrative purpose reached its structural conclusion at story's end."
 
-            # PRIORITY 2: Classic Tragedy — gains power, loses soul
+            # P2: Classic Tragedy — gains power, loses soul (strict thresholds).
             elif sentiment_delta < -0.3 and agency_delta > 0.15:
                 arc_label = "Classic Tragedy 🎭"
                 arc_note = "Gains agency but loses emotional hope — the dominant dramatic arc."
 
-            # PRIORITY 3: Hero's Journey — positive on both axes
+            # P3: Hero's Journey — positive on both axes
             elif sentiment_delta > 0.3 and agency_delta > 0.15:
                 arc_label = "Hero's Journey ⭐"
                 arc_note = "Strong positive transformation in sentiment and agency."
 
-            # PRIORITY 4: Agency loss — threshold -0.10 catches gradual sidelining
-            # (e.g., Hagen systematically excluded by Michael in Act 3).
-            elif agency_delta < -0.10:
+            # P4: Steadfast/Supportive — emotionally stable, consistently present.
+            # Defined by STABILITY, not loss. Characters who appear in >10% of scenes
+            # and show minimal sentiment movement are anchoring figures.
+            elif abs(sentiment_delta) < 0.25 and presence_ratio > 0.10 and char_in_final_section:
+                arc_label = "Steadfast / Supportive 🛡️"
+                arc_note = "Emotionally stable presence throughout the story. Anchoring figure."
+
+            # P5: Descent — large negative on agency (threshold -0.20, strict).
+            elif agency_delta < -0.20:
                 if sentiment_delta > -0.1:
                     arc_label = "Steadfast / Supportive 🛡️"
                     arc_note = "Loses agency but holds emotional core. Loyal advisor archetype."
@@ -525,12 +528,12 @@ class WriterAgent:
                     arc_label = "Descent 📉"
                     arc_note = "Negative movement in both power and emotional outlook."
 
-            # PRIORITY 5: Flat — no meaningful movement on either axis
-            elif abs(sentiment_delta) < 0.1 and abs(agency_delta) < 0.1:
+            # P6: Flat — genuinely static characters only (strict threshold < 0.005)
+            elif abs(sentiment_delta) < 0.005 and abs(agency_delta) < 0.005:
                 arc_label = "Flat Arc ⚠️"
-                arc_note = "No measurable emotional or agency change. Is this intentional?"
+                arc_note = "Character remains static across both emotional and power axes. Is this intended?"
 
-            # PRIORITY 6: Generic developing arc (some movement, no clear pattern)
+            # P7: Developing — some movement, no dominant classified pattern.
             else:
                 arc_label = "Developing Arc 📈"
                 arc_note = "Character shows movement across story beats but no dominant direction."
@@ -986,7 +989,7 @@ class WriterAgent:
                 f"📈 **Protagonist Ascension ({protagonist})**: Agency spikes from "
                 f"{a1:.2f} → {a3:.2f}. A powerful transformation from reactive to total command."
             )
-        elif abs(delta) < 0.015:
+        elif abs(delta) < 0.005:
             assessments.append(
                 f"⬜ **Protagonist Flat Arc ({protagonist})**: Agency stays flat "
                 f"({a1:.2f} → {a3:.2f}) across the script."
@@ -1783,7 +1786,7 @@ class WriterAgent:
             1 for d in diagnostics
             if isinstance(d, str) and any(x in d for x in ['🟠', '🟡', '⬜'])
         )
-        health_penalty = min(25, (critical_count * 7) + (warning_count * 2))
+        health_penalty = min(20, (critical_count * 5) + (warning_count * 2))
 
         raw = (
             (pti          * 0.30) +

@@ -253,7 +253,7 @@ class ParsingAgent:
 class SegmentationAgent:
     """Scene Segmentation Agent - Conservative Boundary Detection"""
     
-    MIN_SCENE_LENGTH = 6
+    MIN_SCENE_LENGTH = 12
     LOW_CONFIDENCE_THRESHOLD = 0.6
 
     def run(self, input_data):
@@ -322,7 +322,7 @@ class SegmentationAgent:
                 merged.append(scene)
         return merged
 
-    def merge_headless_fragments(self, scenes, parsed_lines, max_orphan_lines=5):
+    def merge_headless_fragments(self, scenes, parsed_lines, max_orphan_lines=15):
         if len(scenes) <= 1: return scenes
         merged = [scenes[0]]
         for scene in scenes[1:]:

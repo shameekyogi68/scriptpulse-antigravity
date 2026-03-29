@@ -126,12 +126,10 @@ class InterpretationAgent:
         for i in range(len(temporal_trace)):
             feat = features[i]
             att_sig = temporal_trace[i]['attentional_signal']
-            churn = feat.get('referential_load', {}).get('entity_churn', 0)
-            
-            if churn >= 3.0 and att_sig < 0.5:
+            if churn >= 3.5 and att_sig < 0.5:
                 snippet = self._get_snippet(scenes[i])
                 diagnosis.append(
-                    f"🟠 **Information Churn (Scene {i+1})**: High rate of introduction for new elements or characters. (e.g., {snippet})"
+                    f"🟠 **Information Churn (Scene {i+1})**: Excessive name density. Suggest compressing introduction or embedding these details into an existing conflict. (e.g., {snippet})"
                 )
                 break
 
@@ -165,14 +163,10 @@ class InterpretationAgent:
                 
         # 4. Exposition Heavy
         for i in range(len(temporal_trace)):
-            feat = features[i]
-            att_sig = temporal_trace[i]['attentional_signal']
-            entropy = feat.get('entropy_score', 0)
-            
-            if entropy > 3.0 and att_sig < 0.4:
+            if entropy > 4.5 and att_sig < 0.4:  # Raised significantly to filter anything but pure data-dumps
                 snippet = self._get_snippet(scenes[i])
                 diagnosis.append(
-                    f"💡 **Informational Peak (Scene {i+1})**: High text density with lower immediate dramatic conflict. (e.g., {snippet})"
+                    f"💡 **Informational Peak (Scene {i+1})**: Dry exposition. Convert this block into a dramatic confrontation or high-stakes discovery to restore narrative momentum. (e.g., {snippet})"
                 )
                 break
 
@@ -183,10 +177,10 @@ class InterpretationAgent:
             dial = feat.get('dialogue_dynamics', {}).get('dialogue_line_count', 0)
             action = feat.get('visual_abstraction', {}).get('action_lines', 0)
             
-            if dial > 12 and action < 2 and 0.4 < att_sig < 0.6:
+            if dial > 15 and action < 2 and 0.4 < att_sig < 0.6:
                 snippet = self._get_snippet(scenes[i])
                 diagnosis.append(
-                    f"🗣️ **Talking Heads (Scene {i+1})**: Characters are talking extensively with minimal physical action. (e.g., {snippet})"
+                    f"🗣️ **Talking Heads (Scene {i+1})**: Physical passivity. Inject visual subtext or external environment shifts to avoid dialogue fatigue. (e.g., {snippet})"
                 )
                 break
 
@@ -201,7 +195,7 @@ class InterpretationAgent:
             is_anchor_scene = any(kw in purpose for kw in ['Revelation', 'Discovery', 'Action', 'Conflict']) or has_death
             
             delta = abs(curr_sig - prev_sig)
-            if delta > 0.5 and is_anchor_scene:
+            if delta > 0.65 and is_anchor_scene:  # Raised threshold to reduce false positive spikes
                 whiplash_candidates.append((i, delta))
 
         # 8. Cognitive Resonance (The 'Perfect' Scene)
