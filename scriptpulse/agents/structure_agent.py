@@ -105,20 +105,19 @@ def is_scene_heading(line_text):
     
     # 1. Standard Int/Ext prefixes
     line_upper = line.upper()
-    # Expanded based on tests
-    if line_upper.startswith(("INT.", "EXT.", "INT ", "EXT ", "I/E.", "I.", "E.", "INT/", "EXT/")): return True
-    if line_upper.startswith("SCENE"): return True 
-    
+    if line_upper.startswith(("INT.", "EXT.", "INT ", "EXT ", "I/E.", "INT/", "EXT/")): return True
+
+    # 'SCENE' only qualifies when followed by a digit, INT, or EXT (not 'SCENE OF THE CRIME', etc.)
+    if re.match(r'^SCENE\s*(\d+|INT|EXT)', line_upper): return True
+
     # 2. Fallback Patterns (Full words)
     fallback_patterns = [
-        r'^INTERIOR\s+', r'^EXTERIOR\s+', 
+        r'^INTERIOR\s+', r'^EXTERIOR\s+',
         r'^\d+\s*(INT|EXT)'
     ]
     for pattern in fallback_patterns:
         if re.match(pattern, line, re.IGNORECASE): return True
-        
 
-    
     return False
 
 class ParsingAgent:

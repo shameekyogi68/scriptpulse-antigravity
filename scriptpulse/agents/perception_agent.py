@@ -511,10 +511,13 @@ class EncodingAgent:
             purpose = 'Negotiation / Conflict'
 
         # Check for narrative closure signals in action lines (Strict death/exit detection)
+        # Only unambiguous death words — 'falls', 'collapses', 'slumps' are excluded
+        # because they appear constantly in normal action (a man falls into a chair, etc.)
         death_lexicon = {
-            'dies', 'dead', 'killed', 'murdered', 'body', 'corpse', 'funeral', 
-            'passing', 'expiring', 'deathbed', 'fatal', 'slain', 'slumps', 'falls', 'collapses',
-            'no longer with us', 'rest in peace'
+            'dies', 'dead', 'killed', 'murdered', 'corpse', 'funeral',
+            'deathbed', 'fatal', 'slain', 'no longer with us', 'rest in peace',
+            'is shot', 'is stabbed', 'shoot him', 'stabs him', 'stabs her',
+            'shoots him', 'shoots her', 'blows his brains', 'blows her brains'
         }
         scene_has_death = any(w in all_text for w in death_lexicon)
 

@@ -472,24 +472,37 @@ class WriterAgent:
             agency_delta    = round(end_agency    - start_agency,    3)
 
             is_near_end = timeline[-1].get('scene', 0) > (total_scenes * 0.95)
-            has_resolved_signal = (
+
+            # Structural exit detection: character disappears before the final third
+            # This is narrative-structural (not lexical), making it immune to false death words.
+            last_scene_idx = timeline[-1].get('scene', 0)
+            char_in_final_third = last_scene_idx > (total_scenes * 0.67)
+
+            # Secondary confirmation: scene-level closure signal at last appearance
+            has_closure_at_exit = (
                 timeline[-1].get('resolved', False) or
                 (len(timeline) > 1 and timeline[-2].get('resolved', False))
             )
 
+            # A true Narrative Exit requires the character to DISAPPEAR from the story
+            # (not present in final third) — optionally confirmed by a closure signal.
+            # Characters who persist till the end are NOT exits regardless of closure flags.
+            is_narrative_exit = (not char_in_final_third)
+
             # Arc classification — priority order is strict. Most specific first.
 
-            # PRIORITY 0: Narrative Exit — check BEFORE any sentiment analysis.
-            # A character who dies or exits mid-story gets this label regardless of deltas.
-            # This catches Sonny (shot), Luca Brasi (killed), and similar mid-story exits.
-            if has_resolved_signal and not is_near_end:
+            # PRIORITY 0: Narrative Exit — character disappears before final third.
+            # Catches Sonny (shot mid-story), Luca Brasi (killed early).
+            # Does NOT fire for Michael, Hagen, or Vito who remain through Act 3.
+            if is_narrative_exit:
                 arc_label = "Resolved (Narrative Exit) 💀"
                 arc_note = "Character's thread reached a definitive mid-story conclusion (death/exit)."
 
-            # PRIORITY 1: End-of-story resolution (protagonist who concludes the narrative)
-            elif has_resolved_signal and is_near_end:
+            # PRIORITY 1: End-of-story resolution — present at the end, story concludes around them.
+            # Only applies to characters whose last scene is within the final 5% of the script.
+            elif has_closure_at_exit and is_near_end:
                 arc_label = "Resolved / Conclusive 🏁"
-                arc_note = "Character's narrative purpose reached its structural conclusion."
+                arc_note = "Character's narrative purpose reached its structural conclusion at story's end."
 
             # PRIORITY 2: Classic Tragedy — gains power, loses soul (strict thresholds)
             elif sentiment_delta < -0.3 and agency_delta > 0.15:
