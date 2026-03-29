@@ -1016,7 +1016,7 @@ class WriterAgent:
         benchmarks = {
             'feature': (85, 130), 
             'drama': (90, 120),       # restore standard benchmark
-            'crime drama': (100, 180), # Epic crime dramas like The Godfather
+            'crime drama': (100, 180), # Epic crime dramas
             'comedy': (85, 110),
             'thriller': (90, 130), 
             'horror': (80, 105), 
@@ -1317,7 +1317,7 @@ class WriterAgent:
                 
                 # Thematic Setup / Bookend Check:
                 # If they have fewer than 45 lines total AND only appear in Act 1,
-                # they are likely intentional thematic furniture (like Bonasera).
+                # they are likely intentional thematic furniture.
                 # (Threshold increased from 25 to 45 specifically for long opening monologues)
                 char_timeline = [s for s in trace if char in s.get('character_scene_vectors', {})]
                 if len(char_timeline) < max(15, len(trace) // 6):

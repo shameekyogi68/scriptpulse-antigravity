@@ -210,7 +210,7 @@ class ParsingAgent:
         if prev_tag == "D":
             # If the previous line was dialogue, and this line isn't empty (empty lines become A)
             # and it isn't a new character cue, it's a continuation of dialogue.
-            # Relaxed character rule: allow periods for short names (typography typos like HAGEN.)
+            # Relaxed character rule: allow periods for short names (for typographical typos)
             is_char_candidate = line.isupper() and len(line) < 40
             is_hypothetical_character = is_char_candidate and (not line.endswith((".", "?", "!")) or (line.endswith(".") and len(line) < 12))
             

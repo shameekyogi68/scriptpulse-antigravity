@@ -19,7 +19,7 @@ def normalize_character_name(name):
     if not name: return "UNKNOWN"
     # Stem names: Remove (O.S.), (V.O.), (CONT'D) etc. 
     stemmed = re.sub(r'\(.*?\)', '', name).upper()
-    # Handle suffixes without parentheses (e.g. MICHAEL-O.S.)
+    # Handle suffixes without parentheses (e.g. CHARACTER-O.S.)
     stemmed = re.sub(r'[-\s](O\.?S\.?|V\.?O\.?|ALT|OFF-SCREEN|DASHES|FILTERED)$', '', stemmed)
     
     # Upper, strip punctuation but keep internal spaces/hashes
