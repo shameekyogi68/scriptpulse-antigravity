@@ -81,7 +81,7 @@ class WriterAgent:
         dashboard['market_readiness'] = self._calculate_market_readiness(dashboard)
 
         # Composite ScriptPulse Score (0-100) using the truly sorted diagnostics
-        dashboard['scriptpulse_score'] = self._calculate_scriptpulse_score(dashboard, all_diagnostics)
+        dashboard['scriptpulse_score'] = self._calculate_scriptpulse_score(dashboard, all_diagnostics, trace, genre)
         
         # Inject into output (Removing prescriptive 'rewrite_priorities')
         final_output['writer_intelligence'] = {
@@ -1751,7 +1751,7 @@ class WriterAgent:
             'pacing_benchmark': pacing
         }
 
-    def _calculate_scriptpulse_score(self, dashboard, diagnostics):
+    def _calculate_scriptpulse_score(self, dashboard, diagnostics, trace, genre):
         """
         Narrative craft score only. Producer metrics (risk, locations, cast)
         are excluded — they live in the Producer panel.
