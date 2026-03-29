@@ -1,3 +1,6 @@
+# MODULE: dynamics_agent.py
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 """
 Dynamics Agent - Simplified & MCA-Defensible Version
 The Core Simulation Engine (The "Heart" of ScriptPulse)
@@ -178,3 +181,6 @@ class DynamicsAgent:
                 break # only one
         
         return patterns
+
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

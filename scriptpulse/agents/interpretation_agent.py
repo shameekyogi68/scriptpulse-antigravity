@@ -1,3 +1,6 @@
+# MODULE: interpretation_agent.py
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 """
 Interpretation Agent - Text-Grounded Cognitive Version
 Translates mathematical signals into true human "First Reader" experiences.
@@ -278,3 +281,6 @@ class InterpretationAgent:
     def audit_timeline_continuity(self, scenes): return []
     def audit_narrative_causality(self, encoded, scenes): return []
     def calculate_dialogue_authenticity(self, encoded): return []
+
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

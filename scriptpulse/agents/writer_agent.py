@@ -1,3 +1,6 @@
+# MODULE: writer_agent.py
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 import random
 import re
 import statistics
@@ -1797,3 +1800,6 @@ class WriterAgent:
         )
 
         return max(0, min(100, round(raw - health_penalty)))
+
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

@@ -1,3 +1,6 @@
+# MODULE: perception_agent.py
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 """
 Perception Agent - Simplified & MCA-Defensible Version
 Focuses on 5 Core Cognitive Pillars:
@@ -550,3 +553,6 @@ class EncodingAgent:
                 'heuristic_fallback': confidence < 0.8
             }
         }
+
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

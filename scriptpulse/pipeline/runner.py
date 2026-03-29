@@ -1,3 +1,6 @@
+# MODULE: runner.py
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 #!/usr/bin/env python3
 """
 Simplified ScriptPulse Runner - High Performance, Linear Pipeline
@@ -163,27 +166,16 @@ def run_pipeline(script_content, genre='drama', story_framework='3_act', **kwarg
     for f in perceptual_features:
         for char, v in f.get('character_scene_vectors', {}).items():
             if char not in voice_fingerprints:
-                voice_fingerprints[char] = {
-                    'agency': 0, 'sentiment': 0, 'line_count': 0,
-                    'complexity': 0, 'positivity': 0, 'punctuation_rate': 0
-                }
+                voice_fingerprints[char] = {'agency': 0, 'sentiment': 0, 'line_count': 0}
             voice_fingerprints[char]['line_count'] += v['line_count']
             voice_fingerprints[char]['agency'] += v['agency']
             voice_fingerprints[char]['sentiment'] += v['sentiment']
-            # Texture metrics
-            voice_fingerprints[char]['complexity'] += v.get('complexity', 0)
-            voice_fingerprints[char]['positivity'] += v.get('positivity', 0)
-            voice_fingerprints[char]['punctuation_rate'] += v.get('punctuation_rate', 0)
     
     # Normalize averages & Meld with Agency
     for char in voice_fingerprints:
         count = voice_fingerprints[char]['line_count']
         voice_fingerprints[char]['sentiment'] = round(voice_fingerprints[char]['sentiment'] / max(1, count), 2)
-        # Texture Normalization
-        voice_fingerprints[char]['complexity'] = round(voice_fingerprints[char].get('complexity', 0) / max(1, count), 2)
-        voice_fingerprints[char]['positivity'] = round(voice_fingerprints[char].get('positivity', 0) / max(1, count), 2)
-        voice_fingerprints[char]['punctuation_rate'] = round(voice_fingerprints[char].get('punctuation_rate', 0) / max(1, count), 3)
-
+        
         # Use EthicsAgent's higher-fidelity agency calculation if available
         if char in agency_map:
             voice_fingerprints[char]['agency'] = agency_map[char]['agency_score']
@@ -260,3 +252,6 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         with open(sys.argv[1], 'r') as f:
             print(json.dumps(run_pipeline(f.read()), indent=2))
+
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

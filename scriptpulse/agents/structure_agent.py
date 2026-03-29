@@ -1,3 +1,6 @@
+# MODULE: structure_agent.py
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 """
 Structure Agent - Handling Parsing, Segmentation, and Importing.
 Consolidates: parsing.py, bert_parser.py, segmentation.py, beat.py, importers.py
@@ -427,3 +430,6 @@ class BeatAgent:
             'location': parent_scene.get('location', 'UNKNOWN'),
             'time': parent_scene.get('time', 'UNKNOWN')
         }
+
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

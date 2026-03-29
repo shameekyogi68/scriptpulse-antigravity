@@ -1,3 +1,6 @@
+# MODULE: normalizer.py
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 """
 ScriptPulse Universal Format Normalizer
 Preprocessing middleware to standardize messy or creative script formats.
@@ -132,3 +135,6 @@ def normalize_script(text):
         output_lines.append(stripped)
         
     return "\n".join(output_lines)
+
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

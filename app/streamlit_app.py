@@ -1,3 +1,6 @@
+# MODULE: streamlit_app.py
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 #!/usr/bin/env python3
 """
 ScriptPulse — AI Story Intelligence
@@ -125,7 +128,7 @@ with tab_up:
 with tab_paste:
     pasted = st.text_area("Paste text here", height=200,
                           placeholder="INT. COFFEE SHOP - DAY\n\nA young WRITER stares at a blank screen...")
-    if not script_input and pasted and len(pasted) > 100:
+    if not script_input and len(pasted) > 100:
         script_input = pasted
 
 # =============================================================================
@@ -220,4 +223,5 @@ if report and current_input:
             use_container_width=True)
 
 # Application end
+
 

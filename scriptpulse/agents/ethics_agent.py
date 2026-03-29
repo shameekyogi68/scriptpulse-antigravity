@@ -1,3 +1,6 @@
+# MODULE: ethics_agent.py
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 """
 Ethics Agent - Analyzing Bias, Agency, and Fairness
 Consolidates: agency.py, fairness.py
@@ -218,3 +221,6 @@ class EthicsAgent:
             }
             
         return report
+
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
