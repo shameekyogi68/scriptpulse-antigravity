@@ -253,7 +253,7 @@ class ParsingAgent:
 class SegmentationAgent:
     """Scene Segmentation Agent - Conservative Boundary Detection"""
     
-    MIN_SCENE_LENGTH = 3
+    MIN_SCENE_LENGTH = 6
     LOW_CONFIDENCE_THRESHOLD = 0.6
 
     def run(self, input_data):

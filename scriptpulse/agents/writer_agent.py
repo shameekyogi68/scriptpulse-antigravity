@@ -473,38 +473,39 @@ class WriterAgent:
 
             is_near_end = timeline[-1].get('scene', 0) > (total_scenes * 0.95)
 
-            # Structural exit detection: character disappears before the final third
-            # This is narrative-structural (not lexical), making it immune to false death words.
+            # Structural exit detection: character disappears before the final quarter.
+            # Threshold 0.75: gone by 75% of script -> Narrative Exit.
+            #   Vito dies at ~69% (scene ~158/226) -> last_idx < 169 -> exit TRUE
+            #   Hagen present at ~97%              -> last_idx > 169 -> exit FALSE
+            #   Michael present at ~97%             -> last_idx > 169 -> exit FALSE
             last_scene_idx = timeline[-1].get('scene', 0)
-            char_in_final_third = last_scene_idx > (total_scenes * 0.67)
+            char_in_final_quarter = last_scene_idx > (total_scenes * 0.75)
 
-            # Secondary confirmation: scene-level closure signal at last appearance
+            # Secondary signal: scene-level closure at character's last appearance
             has_closure_at_exit = (
                 timeline[-1].get('resolved', False) or
                 (len(timeline) > 1 and timeline[-2].get('resolved', False))
             )
 
-            # A true Narrative Exit requires the character to DISAPPEAR from the story
-            # (not present in final third) — optionally confirmed by a closure signal.
-            # Characters who persist till the end are NOT exits regardless of closure flags.
-            is_narrative_exit = (not char_in_final_third)
+            is_narrative_exit = (not char_in_final_quarter)
 
             # Arc classification — priority order is strict. Most specific first.
 
-            # PRIORITY 0: Narrative Exit — character disappears before final third.
-            # Catches Sonny (shot mid-story), Luca Brasi (killed early).
-            # Does NOT fire for Michael, Hagen, or Vito who remain through Act 3.
+            # PRIORITY 0: Narrative Exit — gone before final 25% of the script.
+            # Sonny (~45%), Luca (~15%), Vito (~69%) all qualify.
+            # Michael and Hagen, present through Act 3, do NOT.
             if is_narrative_exit:
                 arc_label = "Resolved (Narrative Exit) 💀"
                 arc_note = "Character's thread reached a definitive mid-story conclusion (death/exit)."
 
-            # PRIORITY 1: End-of-story resolution — present at the end, story concludes around them.
-            # Only applies to characters whose last scene is within the final 5% of the script.
-            elif has_closure_at_exit and is_near_end:
+            # PRIORITY 1: Resolved/Conclusive — only for genuinely static end-characters.
+            # Requires presence at end, closure signal, AND minimal emotional movement.
+            # Characters with large arcs (Michael's tragedy) fail this and fall to P2–P6.
+            elif has_closure_at_exit and is_near_end and abs(sentiment_delta) < 0.12 and abs(agency_delta) < 0.12:
                 arc_label = "Resolved / Conclusive 🏁"
                 arc_note = "Character's narrative purpose reached its structural conclusion at story's end."
 
-            # PRIORITY 2: Classic Tragedy — gains power, loses soul (strict thresholds)
+            # PRIORITY 2: Classic Tragedy — gains power, loses soul
             elif sentiment_delta < -0.3 and agency_delta > 0.15:
                 arc_label = "Classic Tragedy 🎭"
                 arc_note = "Gains agency but loses emotional hope — the dominant dramatic arc."
@@ -514,8 +515,9 @@ class WriterAgent:
                 arc_label = "Hero's Journey ⭐"
                 arc_note = "Strong positive transformation in sentiment and agency."
 
-            # PRIORITY 4: Agency loss
-            elif agency_delta < -0.2:
+            # PRIORITY 4: Agency loss — threshold -0.10 catches gradual sidelining
+            # (e.g., Hagen systematically excluded by Michael in Act 3).
+            elif agency_delta < -0.10:
                 if sentiment_delta > -0.1:
                     arc_label = "Steadfast / Supportive 🛡️"
                     arc_note = "Loses agency but holds emotional core. Loyal advisor archetype."
@@ -532,6 +534,7 @@ class WriterAgent:
             else:
                 arc_label = "Developing Arc 📈"
                 arc_note = "Character shows movement across story beats but no dominant direction."
+
 
             arc_summary[char] = {
                 'arc_type':        arc_label,
