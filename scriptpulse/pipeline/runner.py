@@ -176,13 +176,18 @@ def run_pipeline(script_content, genre='drama', story_framework='3_act', progres
         # Task 2: Sentiment Post-processing pass for Violence/Death (Rule-based)
         viol_keywords = ['shot', 'killed', 'trap', 'ambush', 'gunfire', 'body', 'murder', 'blast', 'assassin', 'corpse']
         scene_text = " ".join([l['text'] for l in scene_lines]).lower()
+        
+        violence_override = False
         if any(w in scene_text for w in viol_keywords):
-            # Add violence_override flag only, don't mutate sentiment
-            s['scene_turn']['violence_override'] = True
+            violence_override = True
             # Force a negative transition label if violence is present
             label = "Negative Progression" if s1 < 0 else "Positive to Negative"
 
-        s['scene_turn'] = {'turn_label': label, 'sentiment_delta': s2 - s1, 'violence_override': s['scene_turn'].get('violence_override', False)}
+        s['scene_turn'] = {
+            'turn_label': label, 
+            'sentiment_delta': s2 - s1, 
+            'violence_override': violence_override
+        }
 
     # --- STAGE 6: Final Assembly ---
     _t_end = time.time()
