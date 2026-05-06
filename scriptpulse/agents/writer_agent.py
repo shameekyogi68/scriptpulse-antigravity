@@ -1631,8 +1631,8 @@ class WriterAgent:
         cliff_count = sum(1 for s in trace if s.get('attentional_signal', 0) > 0.82)
         cliffhangers = (min(cliff_count, 4) * 5) # 20 pts for peaks
         
-        # Base completion bonus (20%) + Metrics
-        return min(100, round(20 + (contrast_score + resonance_score + cliffhangers) * 0.8))
+        # Base completion bonus (10%) + Metrics
+        return min(100, round(10 + (contrast_score + resonance_score + cliffhangers) * 0.8))
 
     def _diagnose_writing_texture(self, trace):
         """Identifies if the script is 'Cinematic' (lean) or 'Novelistic' (dense)."""
@@ -1859,10 +1859,10 @@ class WriterAgent:
             intensity_mismatch = 15 # Severe penalty for 'Boring' action
         elif genre.lower() in ['comedy', 'romance'] and peaks > 15:
             intensity_mismatch = 10 # Fatigue penalty for 'Aggressive' comedy
-        elif genre.lower() in ['crime drama'] and peaks < 3:
-            intensity_mismatch = 12 # Penalty for low-intensity crime drama
-        elif genre.lower() in ['crime drama'] and peaks > 20:
-            intensity_mismatch = 8 # Penalty for over-intense crime drama
+        elif genre.lower() in ['crime_thriller', 'crime drama'] and peaks < 3:
+            intensity_mismatch = 12 # Penalty for low-intensity crime thriller
+        elif genre.lower() in ['crime_thriller', 'crime drama'] and peaks > 20:
+            intensity_mismatch = 8 # Penalty for over-intense crime thriller
 
         # Pacing balance
         balance_label = dashboard.get('act_structure', {}).get('balance', 'Unknown')
@@ -1890,14 +1890,14 @@ class WriterAgent:
         )
         health_penalty = min(20, (critical_count * 5) + (warning_count * 2))
 
-        # More realistic base scoring - start from 40 baseline instead of generous defaults
+        # More realistic base scoring - start from 20 baseline to prevent inflated scores
         raw = (
             (pti          * 0.25) +  # Reduced from 0.30
             (pacing_score * 0.20) +  # Reduced from 0.25
             (d_harmony    * 0.15) +  # Reduced from 0.20
             (stakes_score * 0.10) +  # Reduced from 0.15
             (mr           * 0.10) +
-            40  # Base score of 40 instead of 0
+            20  # Base score of 20 instead of 40
         )
 
         return max(0, min(100, round(raw - health_penalty - intensity_mismatch)))
