@@ -1851,18 +1851,54 @@ class WriterAgent:
         d_bench = dr.get('genre_benchmark', 0.55)
         d_harmony = max(0, 100 - abs(d_ratio - d_bench) * 750) # Proportional Strictness
         
-        # 4. Intensity Mismatch Penalty (Task: Genre Incongruity)
-        # If Action/Horror, expect peaks (> 0.7). If Drama/Comedy, expect breaths.
+        # 4. Genre-Specific Intensity Analysis using configuration baselines
         peaks = sum(1 for s in trace if s.get('attentional_signal', 0) > 0.7)
+        avg_tension = sum(s.get('attentional_signal', 0) for s in trace) / len(trace) if trace else 0
         intensity_mismatch = 0
-        if genre.lower() in ['action', 'horror', 'thriller'] and peaks < 5:
-            intensity_mismatch = 15 # Severe penalty for 'Boring' action
-        elif genre.lower() in ['comedy', 'romance'] and peaks > 15:
-            intensity_mismatch = 10 # Fatigue penalty for 'Aggressive' comedy
-        elif genre.lower() in ['crime_thriller', 'crime drama'] and peaks < 3:
-            intensity_mismatch = 12 # Penalty for low-intensity crime thriller
-        elif genre.lower() in ['crime_thriller', 'crime drama'] and peaks > 20:
-            intensity_mismatch = 8 # Penalty for over-intense crime thriller
+        
+        # Load genre-specific baselines
+        try:
+            import json
+            with open('/Users/shameekyogi/My Apps/ScriptPulse Project/scriptpulse/config/genre_baselines.json', 'r') as f:
+                baselines = json.load(f)
+            genre_curve = baselines.get('genres', {}).get(genre, {}).get('curve', [0.5] * 7)
+            expected_avg = sum(genre_curve) / len(genre_curve)
+        except:
+            expected_avg = 0.5  # Fallback
+        
+        # Calculate intensity mismatch based on genre expectations
+        tension_deviation = abs(avg_tension - expected_avg)
+        
+        if genre.lower() in ['action', 'horror']:
+            # High-intensity genres: penalize low tension
+            if peaks < 5:
+                intensity_mismatch = 15 + (tension_deviation * 20)
+            elif tension_deviation > 0.3:
+                intensity_mismatch = 10 + (tension_deviation * 15)
+        elif genre.lower() in ['comedy', 'romance']:
+            # Low-intensity genres: penalize excessive tension
+            if peaks > 12:
+                intensity_mismatch = 10 + (tension_deviation * 20)
+            elif tension_deviation > 0.25:
+                intensity_mismatch = 8 + (tension_deviation * 12)
+        elif genre.lower() in ['crime_thriller', 'thriller']:
+            # Medium-high intensity with peaks
+            if peaks < 3:
+                intensity_mismatch = 12 + (tension_deviation * 18)
+            elif peaks > 18:
+                intensity_mismatch = 8 + (tension_deviation * 15)
+            elif tension_deviation > 0.2:
+                intensity_mismatch = 5 + (tension_deviation * 10)
+        elif genre.lower() in ['drama']:
+            # Balanced intensity
+            if tension_deviation > 0.25:
+                intensity_mismatch = 8 + (tension_deviation * 12)
+        elif genre.lower() in ['psychological_thriller']:
+            # Sustained tension with fewer peaks
+            if avg_tension < 0.4:
+                intensity_mismatch = 10 + (tension_deviation * 15)
+            elif peaks > 15:
+                intensity_mismatch = 7 + (tension_deviation * 10)
 
         # Pacing balance
         balance_label = dashboard.get('act_structure', {}).get('balance', 'Unknown')
@@ -1890,14 +1926,36 @@ class WriterAgent:
         )
         health_penalty = min(20, (critical_count * 5) + (warning_count * 2))
 
-        # More realistic base scoring - start from 20 baseline to prevent inflated scores
+        # Genre-specific scoring weights
+        genre_weights = {
+            'action': {'pti': 0.30, 'pacing': 0.25, 'dialogue': 0.10, 'stakes': 0.15, 'market': 0.10},
+            'horror': {'pti': 0.35, 'pacing': 0.20, 'dialogue': 0.10, 'stakes': 0.10, 'market': 0.10},
+            'comedy': {'pti': 0.20, 'pacing': 0.15, 'dialogue': 0.30, 'stakes': 0.10, 'market': 0.15},
+            'romance': {'pti': 0.20, 'pacing': 0.15, 'dialogue': 0.25, 'stakes': 0.20, 'market': 0.10},
+            'crime_thriller': {'pti': 0.30, 'pacing': 0.25, 'dialogue': 0.15, 'stakes': 0.15, 'market': 0.10},
+            'thriller': {'pti': 0.30, 'pacing': 0.25, 'dialogue': 0.15, 'stakes': 0.15, 'market': 0.10},
+            'psychological_thriller': {'pti': 0.25, 'pacing': 0.20, 'dialogue': 0.20, 'stakes': 0.20, 'market': 0.10},
+            'drama': {'pti': 0.25, 'pacing': 0.20, 'dialogue': 0.20, 'stakes': 0.20, 'market': 0.10}
+        }
+        
+        weights = genre_weights.get(genre.lower(), {
+            'pti': 0.25, 'pacing': 0.20, 'dialogue': 0.20, 'stakes': 0.15, 'market': 0.10
+        })
+        
+        # Genre-specific base score
+        genre_bases = {
+            'action': 15, 'horror': 15, 'comedy': 20, 'romance': 20,
+            'crime_thriller': 18, 'thriller': 18, 'psychological_thriller': 20, 'drama': 20
+        }
+        base_score = genre_bases.get(genre.lower(), 20)
+        
         raw = (
-            (pti          * 0.25) +  # Reduced from 0.30
-            (pacing_score * 0.20) +  # Reduced from 0.25
-            (d_harmony    * 0.15) +  # Reduced from 0.20
-            (stakes_score * 0.10) +  # Reduced from 0.15
-            (mr           * 0.10) +
-            20  # Base score of 20 instead of 40
+            (pti          * weights['pti']) +
+            (pacing_score * weights['pacing']) +
+            (d_harmony    * weights['dialogue']) +
+            (stakes_score * weights['stakes']) +
+            (mr           * weights['market']) +
+            base_score
         )
 
         return max(0, min(100, round(raw - health_penalty - intensity_mismatch)))

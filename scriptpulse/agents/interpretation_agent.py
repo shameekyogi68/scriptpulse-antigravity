@@ -456,37 +456,76 @@ class InterpretationAgent:
     def _heuristic_genre_detection(self, crime_keywords, family_themes, dialogue_heavy, 
                                 action_heavy, comedy_sentiment, horror_sentiment, temporal_trace):
         """
-        Enhanced heuristic genre detection with flexible thresholds
+        Sophisticated genre detection with weighted scoring system
         """
-        # Flexible thresholds that adapt to content characteristics
         total_scenes = len(temporal_trace)
         if total_scenes < 3:
             return 'drama'
             
-        # Calculate ratios with adaptive normalization
+        # Calculate content ratios
         dialogue_ratio = dialogue_heavy / max(1, dialogue_heavy + action_heavy)
         action_ratio = action_heavy / max(1, dialogue_heavy + action_heavy)
         
-        # Crime thriller detection
-        if crime_keywords >= 2 and family_themes >= 1:
-            return 'crime_thriller'
-        
-        # Comedy detection with flexible thresholds
-        comedy_score = comedy_sentiment + (dialogue_ratio * 2)
-        if comedy_score > 3 and crime_keywords == 0:
-            return 'comedy'
-        
-        # Horror detection with attention peak analysis
+        # Analyze tension patterns
         tension_peaks = sum(1 for s in temporal_trace if s.get('attentional_signal', 0) > 0.7)
-        horror_score = horror_sentiment + (tension_peaks * 0.3) + (action_ratio * 2)
-        if horror_score > 2.5 and crime_keywords == 0:
-            return 'horror'
+        avg_tension = sum(s.get('attentional_signal', 0) for s in temporal_trace) / total_scenes
         
-        # Action detection
-        if action_ratio > 0.6 and tension_peaks >= 3:
-            return 'action'
+        # Enhanced keyword analysis
+        romance_keywords = 0
+        psychological_keywords = 0
+        for scene in temporal_trace:
+            text_content = " ".join([str(v) for v in scene.values()]).lower()
+            if any(word in text_content for word in ['love', 'romance', 'relationship', 'dating', 'marriage']):
+                romance_keywords += 1
+            if any(word in text_content for word in ['mind', 'psychological', 'mental', 'therapy', 'trauma']):
+                psychological_keywords += 1
         
-        # Default to drama for balanced content
+        # Genre scoring system
+        genre_scores = {}
+        
+        # Crime Thriller: crime + family/drama elements
+        if crime_keywords >= 2:
+            crime_score = (crime_keywords * 2) + (family_themes * 1.5) + (tension_peaks * 0.5)
+            genre_scores['crime_thriller'] = crime_score
+        
+        # Horror: negative sentiment + high tension peaks + low dialogue
+        if horror_sentiment >= 2 or tension_peaks >= 5:
+            horror_score = (horror_sentiment * 2) + (tension_peaks * 1.2) + ((1 - dialogue_ratio) * 3)
+            genre_scores['horror'] = horror_score
+        
+        # Action: high action ratio + tension peaks
+        if action_ratio > 0.5 and tension_peaks >= 3:
+            action_score = (action_ratio * 3) + (tension_peaks * 1.5)
+            genre_scores['action'] = action_score
+        
+        # Thriller: moderate action + tension + crime elements
+        thriller_score = (action_ratio * 2) + (tension_peaks * 1) + (crime_keywords * 1.5)
+        genre_scores['thriller'] = thriller_score
+        
+        # Comedy: high positive sentiment + dialogue-heavy
+        if comedy_sentiment >= 2 or dialogue_ratio > 0.7:
+            comedy_score = (comedy_sentiment * 2) + (dialogue_ratio * 2) + (avg_tension * 0.5)
+            genre_scores['comedy'] = comedy_score
+        
+        # Romance: romance keywords + positive sentiment
+        if romance_keywords >= 2:
+            romance_score = (romance_keywords * 2) + (comedy_sentiment * 1) + (dialogue_ratio * 1.5)
+            genre_scores['romance'] = romance_score
+        
+        # Psychological: psychological keywords + complex themes
+        if psychological_keywords >= 2:
+            psych_score = (psychological_keywords * 2) + (dialogue_ratio * 1) + (avg_tension * 1)
+            genre_scores['psychological_thriller'] = psych_score
+        
+        # Drama: balanced content with dialogue/emotional elements
+        drama_score = (dialogue_ratio * 1.5) + (family_themes * 1) + (avg_tension * 0.8)
+        genre_scores['drama'] = drama_score
+        
+        # Return highest scoring genre
+        if genre_scores:
+            best_genre = max(genre_scores.items(), key=lambda x: x[1])
+            return best_genre[0] if best_genre[1] > 2.0 else 'drama'
+        
         return 'drama'
 
 
