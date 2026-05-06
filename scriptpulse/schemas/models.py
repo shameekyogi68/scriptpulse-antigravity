@@ -120,6 +120,7 @@ class SceneFeatures(BaseModel):
     passive_voice_ratio: float = 0.0
     cliche_ratio: float = 0.0
     scene_turn_type: Optional[str] = None
+    scene_turn: Optional[Dict[str, Any]] = None
 
 
 # =============================================================================
