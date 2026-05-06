@@ -1809,6 +1809,10 @@ class WriterAgent:
             intensity_mismatch = 15 # Severe penalty for 'Boring' action
         elif genre.lower() in ['comedy', 'romance'] and peaks > 15:
             intensity_mismatch = 10 # Fatigue penalty for 'Aggressive' comedy
+        elif genre.lower() in ['crime drama'] and peaks < 3:
+            intensity_mismatch = 12 # Penalty for low-intensity crime drama
+        elif genre.lower() in ['crime drama'] and peaks > 20:
+            intensity_mismatch = 8 # Penalty for over-intense crime drama
 
         # Pacing balance
         balance_label = dashboard.get('act_structure', {}).get('balance', 'Unknown')

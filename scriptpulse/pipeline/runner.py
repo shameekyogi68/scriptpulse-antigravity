@@ -119,11 +119,18 @@ def run_pipeline(script_content, genre='drama', story_framework='3_act', progres
             }
 
     
-    # --- STAGE 4: Interpretation (Narrative Analysis) ---
+    # --- STAGE 4: Interpretation (Cognitive Translation) ---
+    _t_stage = time.time()
     if progress_callback:
         progress_callback("Running interpretation...", 65)
-    _t_stage = time.time()
     interpreter = InterpretationAgent()
+    
+    # Auto-detect genre if not provided or if 'drama' (default)
+    if genre == 'drama' or not genre:
+        detected_genre = interpreter.detect_genre(temporal_trace, perceptual_features)
+        if detected_genre != 'drama':
+            genre = detected_genre
+    
     ai_interpretation = interpreter.run(temporal_trace, perceptual_features, segmented_scenes, genre=genre)
     structure_map = ai_interpretation['structure']
     diagnosis = ai_interpretation['diagnosis']

@@ -9,6 +9,7 @@ Focuses on: Confusion, Boredom, Visceral Reaction, and Textual Proof.
 
 import statistics
 import random
+import re
 
 class InterpretationAgent:
     """Cognitive Translation Layer - From Data to Human Experience"""
@@ -20,6 +21,49 @@ class InterpretationAgent:
             'Medium': "Engaging / Steady",
             'Low': "Slow / Breather"
         }
+
+    def detect_genre(self, temporal_trace, features=None):
+        """
+        Detect genre based on script content analysis.
+        Uses multiple signals: dialogue patterns, action density, themes.
+        """
+        if not temporal_trace:
+            return 'drama'  # Default fallback
+        
+        # Analyze content patterns
+        dialogue_heavy = 0
+        action_heavy = 0
+        crime_keywords = 0
+        family_themes = 0
+        
+        for scene in temporal_trace:
+            # Check dialogue vs action balance
+            dialogue_ratio = scene.get('dialogue_action_ratio', {}).get('scene_dialogue_ratio', 0.5)
+            if dialogue_ratio > 0.6:
+                dialogue_heavy += 1
+            elif dialogue_ratio < 0.4:
+                action_heavy += 1
+            
+            # Check for crime/family themes in text
+            text_content = " ".join([str(v) for v in scene.values()]).lower()
+            if any(word in text_content for word in ['mafia', 'crime', 'murder', 'investigation', 'gang', 'mob']):
+                crime_keywords += 1
+            if any(word in text_content for word in ['family', 'father', 'son', 'mother', 'corleone']):
+                family_themes += 1
+        
+        # Genre detection logic
+        if crime_keywords >= 2 and family_themes >= 1:
+            return 'crime drama'
+        elif dialogue_heavy > action_heavy * 1.5:
+            if family_themes >= 1:
+                return 'crime drama'
+            return 'drama'
+        elif action_heavy > dialogue_heavy * 1.2:
+            return 'action'
+        elif dialogue_heavy > 0.7:
+            return 'comedy'
+        else:
+            return 'drama'
 
     def run(self, temporal_trace, features=None, scenes=None, genre='drama'):
         """Main entry point for cognitive interpretation"""
