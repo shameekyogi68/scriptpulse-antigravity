@@ -5,6 +5,7 @@ import re
 import statistics
 import hashlib
 import random
+from typing import Any
 
 class WriterAgent:
     """
@@ -1233,7 +1234,7 @@ class WriterAgent:
                     )
         return assessments[:2]
 
-    def _find_structural_turning_points(self, trace):
+    def _find_structural_turning_points(self, trace) -> dict[str, Any]:
         """
         Identify the 4 load-bearing structural moments by peak-finding in the signal
         (conflict + stakes + sentiment_delta combined). Returns best candidate scenes.
@@ -1273,7 +1274,7 @@ class WriterAgent:
         a2b_signals = [(i, composite_signal(trace[i])) for i in range(max(0, a2b_start), min(n, a2b_end))]
         act2_break = max(a2b_signals, key=lambda x: x[1]) if a2b_signals else (third * 2, 0)
 
-        result = {
+        result: dict[str, dict[str, Any]] = {
             'inciting_incident': {'scene': inciting[0], 'strength': round(inciting[1], 3)},
             'act1_break': {'scene': act1_break[0], 'strength': round(act1_break[1], 3)},
             'midpoint': {'scene': midpoint[0], 'strength': round(midpoint[1], 3)},
