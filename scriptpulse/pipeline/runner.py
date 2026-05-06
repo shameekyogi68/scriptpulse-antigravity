@@ -125,8 +125,11 @@ def run_pipeline(script_content, genre='drama', story_framework='3_act', progres
         progress_callback("Running interpretation...", 65)
     interpreter = InterpretationAgent()
     
-    # Auto-detect genre if not provided or if 'drama' (default)
-    if genre == 'drama' or not genre:
+    # Auto-detect only when explicitly requested. A user-selected Drama genre is valid.
+    auto_detect_genre = kwargs.get('auto_detect_genre', False)
+    if not genre:
+        genre = 'drama'
+    if auto_detect_genre or str(genre).lower() in ['auto', 'detect', 'auto-detect']:
         detected_genre = interpreter.detect_genre(temporal_trace, perceptual_features)
         if detected_genre != 'drama':
             genre = detected_genre

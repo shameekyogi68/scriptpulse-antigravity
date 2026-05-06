@@ -462,7 +462,8 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
         # Stakes Distribution
         stakes_data = dashboard.get('stakes_profile', {})
         if stakes_data:
-            stakes = {k: v for k, v in stakes_data.items() if isinstance(v, (int, float)) and v > 0 and k != 'None'}
+            valid_stakes = {'Physical', 'Emotional', 'Social', 'Moral', 'Existential'}
+            stakes = {k: v for k, v in stakes_data.items() if k in valid_stakes and isinstance(v, (int, float)) and v > 0}
             if stakes:
                 st.markdown("<br>", unsafe_allow_html=True)
                 st.markdown("##### 🎯 Stakes Distribution")

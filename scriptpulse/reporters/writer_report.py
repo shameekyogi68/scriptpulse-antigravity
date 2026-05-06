@@ -55,6 +55,16 @@ def _stars(value, max_val=1.0, n=5):
     return "*" * filled + "-" * (n - filled)
 
 
+def _genre_key(genre):
+    key = (genre or "general").lower().replace("_", "-")
+    return {
+        "sci fi": "sci-fi",
+        "science fiction": "sci-fi",
+        "crime-thriller": "thriller",
+        "avant garde": "avant-garde",
+    }.get(key, key)
+
+
 def _section(title):
     return f"\n---\n\n## {title}\n"
 
@@ -73,11 +83,12 @@ def generate_writer_report(pipeline_output, title="Untitled Script", genre=None)
     """
     wi = pipeline_output.get('writer_intelligence', {})
     trace = pipeline_output.get('temporal_trace', [])
-    genre = (genre or wi.get('genre_context', 'general')).lower()
+    genre = _genre_key(genre or wi.get('genre_context', 'general'))
     dashboard = wi.get('structural_dashboard', {})
     diagnosis = wi.get('narrative_diagnosis', [])
     priorities = wi.get('rewrite_priorities', [])
     summary_data = wi.get('narrative_summary', {})
+    features = pipeline_output.get('perceptual_features', [])
 
     lines = []
 
@@ -137,28 +148,30 @@ def generate_writer_report(pipeline_output, title="Untitled Script", genre=None)
     if trace:
         import statistics as _stats
 
-        def avg_signal(key, sub=None):
+        def avg_signal(key, sub=None, source=None, normalizer=None):
             vals = []
-            for s in trace:
+            for s in (source or trace):
                 v = s.get(key, 0.0)
                 if sub:
                     v = s.get(key, {}).get(sub, 0.0) if isinstance(s.get(key), dict) else 0.0
                 if isinstance(v, (int, float)):
+                    if normalizer:
+                        v = normalizer(v)
                     vals.append(v)
             return _stats.mean(vals) if vals else 0.0
 
         conflict_avg = avg_signal('conflict')
         energy_avg = avg_signal('attentional_signal')
-        entropy_avg = avg_signal('entropy_score')
-        payoff_avg = avg_signal('payoff_density', 'payoff_density')
+        entropy_avg = avg_signal('entropy_score', source=features, normalizer=lambda v: min(1.0, v / 12.0))
+        payoff_avg = avg_signal('payoff_density', 'payoff_density', source=features)
         sentiment_avg = avg_signal('sentiment')
 
         lines.append(f"| Core Signal | Intensity | Benchmark Status |")
         lines.append(f"|:------------|:----------|:-----------------|")
         lines.append(f"| **Conflict** | `{_stars(conflict_avg)}` | {_benchmark_tag(conflict_avg, genre, 'conflict')} |")
         lines.append(f"| **Energy** | `{_stars(energy_avg)}` | {_benchmark_tag(energy_avg, genre, 'energy')} |")
-        lines.append(f"| **Entropy** | `{_stars(entropy_avg)}` | {_benchmark_tag(entropy_avg, genre, 'entropy')} |")
-        lines.append(f"| **Payoff** | `{_stars(payoff_avg)}` | {_benchmark_tag(payoff_avg, genre, 'payoff_density')} |")
+        lines.append(f"| **Texture Density** | `{_stars(entropy_avg)}` | {entropy_avg:.2f} *(reference signal, not a quality verdict)* |")
+        lines.append(f"| **Payoff Compression** | `{_stars(payoff_avg)}` | {payoff_avg:.2f} *(reference signal, not a quality verdict)* |")
         lines.append(f"| **Sentiment** | `{_stars((sentiment_avg + 1) / 2)}` | {sentiment_avg:+.2f} *(Dark → Bright)* |")
     else:
         lines.append("*[!] No temporal data found.*")
@@ -177,9 +190,10 @@ def generate_writer_report(pipeline_output, title="Untitled Script", genre=None)
             label = beat_name.replace('_', ' ').title()
             scene = beat_data.get('scene', '?')
             strength = beat_data.get('strength', 0)
+            normalized_strength = min(1.0, strength / 12.0) if strength > 1 else strength
             warning = beat_data.get('warning', '')
-            bar = _stars(min(strength, 1.0))
-            lines.append(f"- **{label}**: Scene {scene} ` {bar} ` ({strength:.2f})")
+            bar = _stars(normalized_strength)
+            lines.append(f"- **{label}**: Scene {scene} ` {bar} ` (relative strength {normalized_strength:.2f})")
             if warning:
                 lines.append(f"  > [!WARNING] {warning}")
 

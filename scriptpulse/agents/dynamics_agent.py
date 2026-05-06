@@ -39,7 +39,16 @@ class DynamicsAgent:
     def run_simulation(self, input_data, genre=None, **kwargs):
         features = input_data.get('features', [])
         # Fix: Extract genre from input_data if not provided as positional arg
-        g_key = (genre or input_data.get('genre', 'drama')).lower()
+        g_key = (genre or input_data.get('genre', 'drama')).lower().replace('_', '-')
+        aliases = {
+            'sci fi': 'sci-fi',
+            'science fiction': 'sci-fi',
+            'crime-drama': 'crime drama',
+            'crime-thriller': 'thriller',
+            'crime thriller': 'thriller',
+            'avant garde': 'avant-garde',
+        }
+        g_key = aliases.get(g_key, g_key)
         priors = self.GENRE_PRIORS.get(g_key, self.GENRE_PRIORS['drama']).copy()
         
         # AI-driven parameter adaptation based on content analysis
@@ -229,10 +238,6 @@ class DynamicsAgent:
             beta_adapted = beta_range[0] + 0.03  # Higher recovery for action sequences
         else:
             beta_adapted = (beta_range[0] + beta_range[1]) / 2
-        
-        # Add small randomization for natural variation (reduces rigidity)
-        lambda_adapted += random.uniform(-0.02, 0.02)
-        beta_adapted += random.uniform(-0.02, 0.02)
         
         # Ensure values stay within bounds
         lambda_adapted = max(lambda_range[0], min(lambda_range[1], lambda_adapted))

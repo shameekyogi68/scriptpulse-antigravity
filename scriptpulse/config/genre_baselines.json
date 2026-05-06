@@ -5,7 +5,7 @@
         "citation": "ScriptPulse Heuristic Anchor Guidelines (2026)"
     },
     "genres": {
-        "Thriller / Action": {
+        "thriller": {
             "description": "Steadily rising tension with a sharp act 3 climax.",
             "curve": [
                 0.20,
@@ -17,7 +17,19 @@
                 0.40
             ]
         },
-        "Drama": {
+        "action": {
+            "description": "High kinetic pressure with frequent peaks and short recovery windows.",
+            "curve": [
+                0.30,
+                0.55,
+                0.65,
+                0.75,
+                0.85,
+                0.95,
+                0.55
+            ]
+        },
+        "drama": {
             "description": "Slow burn, moderate oscillatory tension, character-driven peaks.",
             "curve": [
                 0.15,
@@ -29,7 +41,7 @@
                 0.35
             ]
         },
-        "Comedy": {
+        "comedy": {
             "description": "Frequent oscillation representing joke setup/punchline rhythms.",
             "curve": [
                 0.20,
@@ -41,7 +53,7 @@
                 0.15
             ]
         },
-        "Horror": {
+        "horror": {
             "description": "Low baseline punctuated by extreme, sudden high tension spikes.",
             "curve": [
                 0.10,
@@ -53,7 +65,19 @@
                 0.10
             ]
         },
-        "crime_thriller": {
+        "crime drama": {
+            "description": "Patient character tension with crime and family pressure steadily accumulating.",
+            "curve": [
+                0.20,
+                0.32,
+                0.38,
+                0.50,
+                0.58,
+                0.75,
+                0.42
+            ]
+        },
+        "crime thriller": {
             "description": "Steady rising tension with crime elements, moderate peaks throughout.",
             "curve": [
                 0.25,
@@ -63,6 +87,54 @@
                 0.75,
                 0.90,
                 0.45
+            ]
+        },
+        "sci-fi": {
+            "description": "Moderate tension with intellectual peaks, world-building exposition.",
+            "curve": [
+                0.30,
+                0.45,
+                0.50,
+                0.60,
+                0.70,
+                0.85,
+                0.40
+            ]
+        },
+        "fantasy": {
+            "description": "Quest and wonder structure with escalating mythic stakes.",
+            "curve": [
+                0.25,
+                0.40,
+                0.50,
+                0.58,
+                0.72,
+                0.88,
+                0.45
+            ]
+        },
+        "romance": {
+            "description": "Character intimacy with emotional peaks rather than constant danger.",
+            "curve": [
+                0.18,
+                0.30,
+                0.35,
+                0.45,
+                0.38,
+                0.65,
+                0.32
+            ]
+        },
+        "avant-garde": {
+            "description": "Non-standard rhythm with tolerated discontinuity and uneven pressure.",
+            "curve": [
+                0.25,
+                0.55,
+                0.20,
+                0.65,
+                0.30,
+                0.70,
+                0.25
             ]
         }
     }

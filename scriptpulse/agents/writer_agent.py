@@ -5,6 +5,8 @@ import re
 import statistics
 import hashlib
 import random
+import json
+import os
 from typing import Any
 
 class WriterAgent:
@@ -18,6 +20,20 @@ class WriterAgent:
         """Create a deterministic random number generator seeded from script content."""
         seed = int(hashlib.md5(script_content[:100].encode()).hexdigest(), 16) % (2**32)
         return random.Random(seed)  # Seeded, deterministic
+
+    def _normalize_genre_key(self, genre):
+        """Return the canonical key used by genre benchmarks and scoring."""
+        key = (genre or "general").strip().lower().replace("_", "-")
+        aliases = {
+            "sci fi": "sci-fi",
+            "science fiction": "sci-fi",
+            "crime-drama": "crime drama",
+            "crime thriller": "crime-thriller",
+            "crime-thriller": "crime thriller",
+            "psychological-thriller": "psychological thriller",
+            "avant garde": "avant-garde",
+        }
+        return aliases.get(key, key)
     
     def analyze(self, final_output, genre="General"):
         """
@@ -95,7 +111,13 @@ class WriterAgent:
         dashboard['market_readiness'] = self._calculate_market_readiness(dashboard)
 
         # Composite ScriptPulse Score (0-100) using the truly sorted diagnostics
-        dashboard['scriptpulse_score'] = self._calculate_scriptpulse_score(dashboard, all_diagnostics_sorted, trace, genre)
+        dashboard['scriptpulse_score'] = self._calculate_scriptpulse_score(dashboard, all_diagnostics_sorted, trace, genre, final_output)
+        if dashboard.get('genre_fit', 1.0) < 0.35:
+            all_diagnostics_sorted.insert(
+                0,
+                f"🔴 **Genre Mismatch**: This script shows weak {genre} evidence. "
+                "The score has been capped by genre-fit penalties instead of rewarding generic craft signals."
+            )
         
         # 3. Rewrite Priorities (Top 3 Critical Diagnostics)
         rewrite_priorities = [d for d in all_diagnostics_sorted if "🔴" in d][:3]
@@ -137,11 +159,12 @@ class WriterAgent:
                 action_heavy += 1
         
         # Check for strong genre indicators
-        if genre.lower() == 'crime drama':
+        g_key = self._normalize_genre_key(genre)
+        if g_key in ['crime drama', 'crime thriller']:
             crime_count = sum(1 for scene in trace if 'mafia' in str(scene.values()).lower() or 'family' in str(scene.values()).lower())
             if crime_count >= 3:
                 genre_signals += 2
-        elif genre.lower() in ['comedy', 'horror', 'action']:
+        elif g_key in ['comedy', 'horror', 'action']:
             if (dialogue_heavy > action_heavy * 1.5) or (action_heavy > dialogue_heavy * 1.2):
                 genre_signals += 1
         
@@ -171,14 +194,15 @@ class WriterAgent:
         
         # Genre Thresholds
         boredom_thresh = 0.2
-        if genre in ["Horror", "Drama", "Art House", "Avant-Garde", "Non-Linear"]:
+        g_key = self._normalize_genre_key(genre)
+        if g_key in ["horror", "drama", "art house", "avant-garde", "non-linear"]:
             boredom_thresh = 0.1 # Tolerate slower pacing
             
         fatigue_thresh = 0.8
-        if genre in ["Action", "Thriller"]:
+        if g_key in ["action", "thriller"]:
             fatigue_thresh = 0.85 # Tolerate higher intensity
             
-        is_avant_garde = genre in ["Avant-Garde", "Non-Linear"]
+        is_avant_garde = g_key in ["avant-garde", "non-linear"]
         
         # 1. Fatigue Clustering (Skipped for Avant-Garde which intentionally fatigues/overwhelms)
         if not is_avant_garde:
@@ -733,6 +757,10 @@ class WriterAgent:
                 profile[dominant] += 1
             else:
                 profile['None'] += 1
+        profile['dominant'] = max(
+            ['Physical', 'Emotional', 'Social', 'Moral', 'Existential'],
+            key=lambda k: profile.get(k, 0)
+        )
         return profile
 
     # =========================================================================
@@ -790,7 +818,7 @@ class WriterAgent:
         """Flag consecutive scenes where the scene turn is flat — no dramatic movement."""
         assessments = []
         flat_ranges = self._find_ranges(trace, lambda s: s.get('scene_turn', {}).get('turn_label') == 'Flat')
-        min_flat = 4 if genre.lower() in ['drama', 'crime drama'] else 2
+        min_flat = 4 if self._normalize_genre_key(genre) in ['drama', 'crime drama'] else 2
         for start, end in flat_ranges:
             if (end - start + 1) >= min_flat:
                 assessments.append(
@@ -816,23 +844,27 @@ class WriterAgent:
         Compare against genre benchmarks and surface an insight.
         """
         benchmarks = {
-            'Drama':     0.60,  # Dialogue-heavy
-            'Comedy':    0.65,  # Heavy dialogue, fast exchanges
-            'Thriller':  0.45,  # Balanced — tension through action too
-            'Horror':    0.35,  # Action-description dominant
-            'Action':    0.30,  # Mostly action lines
-            'Sci-Fi':    0.50,  # Balanced world-building
-            'Romance':   0.65,  # Character-driven, dialogue-heavy
-            'Fantasy':   0.45,  # World-building action + dialogue
-            'Avant-Garde': 0.40,
-            'Crime Drama': 0.54, 'Western': 0.45, 'General': 0.55
+            'drama': 0.60,        # Dialogue-heavy
+            'comedy': 0.65,       # Heavy dialogue, fast exchanges
+            'thriller': 0.45,     # Balanced: tension through action too
+            'horror': 0.35,       # Action-description dominant
+            'action': 0.30,       # Mostly action lines
+            'sci-fi': 0.50,       # Balanced world-building
+            'romance': 0.65,      # Character-driven, dialogue-heavy
+            'fantasy': 0.45,      # World-building action + dialogue
+            'avant-garde': 0.40,
+            'crime drama': 0.54,
+            'crime thriller': 0.48,
+            'western': 0.45,
+            'general': 0.55
         }
         total_d = sum(s.get('dialogue_action_ratio', {}).get('dialogue_lines', 0) for s in trace)
         total_a = sum(s.get('dialogue_action_ratio', {}).get('action_lines', 0) for s in trace)
         total = max(1, total_d + total_a)
         global_ratio = round(total_d / total, 3)
 
-        benchmark = benchmarks.get(genre.lower(), 0.55)
+        g_key = self._normalize_genre_key(genre)
+        benchmark = benchmarks.get(g_key, 0.55)
         diff = global_ratio - benchmark
 
         if diff > 0.12:
@@ -1130,16 +1162,21 @@ class WriterAgent:
             'feature': (85, 130), 
             'drama': (90, 120),       # restore standard benchmark
             'crime drama': (100, 180), # Epic crime dramas
+            'crime thriller': (95, 135),
             'comedy': (85, 110),
             'thriller': (90, 130), 
             'horror': (80, 105), 
             'action': (95, 140),
+            'sci-fi': (95, 130),
+            'fantasy': (100, 140),
+            'romance': (85, 120),
             'short': (5, 30), 
             'pilot': (22, 65), 
             'general': (85, 130),
             'avant-garde': (70, 100) 
         }
-        low, high = benchmarks.get(genre.lower(), (85, 125))
+        g_key = self._normalize_genre_key(genre)
+        low, high = benchmarks.get(g_key, (85, 125))
 
         if total_minutes < low:
             status = f"Under — {total_minutes} min (target: {low}–{high} min for {genre}). Script may be too short."
@@ -1323,10 +1360,17 @@ class WriterAgent:
         
         # 1. Opening Intelligence
         hook = trace[0].get('opening_hook', {})
+        g_key = self._normalize_genre_key(genre)
         if hook.get('hook_label') == 'Strong Hook':
             opening = "Your opening establishes immediate dominance — the audience is engaged from the first beat."
         elif "slow" in diag_str.lower():
             opening = "The script opens with a measured, intentional focus on atmosphere before the primary conflict ignites."
+        elif g_key == "comedy":
+            opening = "The opening sets up a fast, talk-driven comic engine rather than a prestige-drama slow burn."
+        elif g_key == "action":
+            opening = "The opening establishes the external problem and physical stakes expected from an action script."
+        elif g_key in ["thriller", "crime thriller"]:
+            opening = "The opening builds pressure through threat, secrecy, and crime-world consequences."
         else:
             opening = "The opening takes its time to establish character stakes, which fits the genre rhythm."
 
@@ -1352,6 +1396,12 @@ class WriterAgent:
             closing = "The journey concludes with a definitive tragic descent, delivering a soul-crushing emotional payoff."
         elif s3 > 0.3:
             closing = "The story resolves with a hard-earned sense of triumph and narrative closure."
+        elif g_key == "comedy":
+            closing = "The ending keeps the emotional tone loose and unresolved enough for an action-comedy aftertaste."
+        elif g_key == "action":
+            closing = "The resolution is best read through external momentum and payoff rather than prestige-drama ambiguity."
+        elif g_key in ["thriller", "crime thriller"]:
+            closing = "The resolution preserves moral unease, which fits crime and thriller expectations."
         else:
             closing = "The resolution maintains an ambiguous emotional tone, consistent with complex prestige dramas."
 
@@ -1659,15 +1709,17 @@ class WriterAgent:
             ('Crime', 'Political/Mob/Society'): ["The Godfather", "The Departed", "The Irishman"],
             ('Crime', 'Psychological/Moral'): ["Chinatown", "No Country for Old Men", "Heat"],
             ('Drama', 'Personal/Relational'): ["Marriage Story", "Ordinary People", "Lady Bird"],
-            ('Drama', 'Political/Mob/Society'): ["The Social Network", "Parasite", "The Big Short"],
-            ('Action', 'Visceral/Action'): ["Mad Max: Fury Road", "Die Hard", "John Wick"],
+            ('Drama', 'Political/Mob/Society'): ["The Godfather", "The Irishman", "A Bronx Tale"],
+            ('Action', 'Visceral/Action'): ["48 Hrs.", "Lethal Weapon", "Die Hard"],
             ('Action', 'Personal/Relational'): ["Logan", "The Dark Knight", "Gladiator"],
+            ('Action', 'Political/Mob/Society'): ["48 Hrs.", "Lethal Weapon", "Beverly Hills Cop"],
             ('Horror', 'Philosophical/Surreal'): ["Hereditary", "The Shining", "Midsommar"],
             ('Horror', 'Visceral/Action'): ["Halloween", "A Quiet Place", "The Conjuring"],
             ('Sci-Fi', 'Philosophical/Surreal'): ["2001: A Space Odyssey", "Arrival", "Blade Runner 2049"],
             ('Sci-Fi', 'Psychological/Moral'): ["Gattaca", "Children of Men", "Ex Machina"],
-            ('Thriller', 'Political/Mob/Society'): ["Gone Girl", "Seven", "Prisoners"],
-            ('Comedy', 'Political/Mob/Society'): ["Knives Out", "Glass Onion", "The Favorite"],
+            ('Thriller', 'Political/Mob/Society'): ["The Godfather", "The Departed", "Heat"],
+            ('Comedy', 'Political/Mob/Society'): ["48 Hrs.", "Beverly Hills Cop", "Midnight Run"],
+            ('Comedy', 'Visceral/Action'): ["48 Hrs.", "Rush Hour", "The Nice Guys"],
             ('Comedy', 'Personal/Relational'): ["Little Miss Sunshine", "The Holdovers", "Planes, Trains and Automobiles"],
             ('Romance', 'Personal/Relational'): ["Before Sunrise", "Normal People", "The Notebook"]
         }
@@ -1785,6 +1837,97 @@ class WriterAgent:
     # SCRIPTPULSE SCORE & ACT STRUCTURE
     # =========================================================================
 
+    def _calculate_genre_fit(self, genre, trace, d_ratio, avg_tension, peaks, evidence_text=""):
+        """
+        Scores how strongly the script's observed signals fit the selected genre.
+        This prevents generic craft quality from inflating off-genre analyses.
+        """
+        if not trace:
+            return 0.5
+
+        g_key = self._normalize_genre_key(genre)
+        text = (evidence_text or " ".join(str(scene) for scene in trace)).lower()
+        n = len(trace)
+
+        def count_terms(terms):
+            total = 0
+            for term in terms:
+                if term.strip().isalpha():
+                    total += len(re.findall(r'\b' + re.escape(term.strip()) + r'\b', text))
+                else:
+                    total += text.count(term)
+            return total
+
+        action_terms = count_terms(['chase', 'shoot', 'shot', 'gun', 'fight', 'punch', 'hit', 'kick', 'explosion', 'crash', 'cop', 'police', 'weapon', 'blood'])
+        profanity_terms = count_terms(['asshole', 'shit', 'damn', 'smartass', 'bastard', 'son of a bitch'])
+        crime_terms = count_terms(['mafia', 'mob', 'gang', 'crime', 'criminal', 'murder', 'don ', 'corleone', 'gun', 'family', 'cop', 'police', 'prison', 'jail', 'detective'])
+        horror_terms = count_terms(['ghost', 'demon', 'haunt', 'monster', 'possess', 'curse', 'scream', 'nightmare', 'corpse'])
+        comedy_terms = count_terms(['joke', 'laugh', 'funny', 'comic', 'punchline', 'bit ', 'awkward', 'ridiculous', 'wisecrack', 'smartass'])
+        banter_terms = comedy_terms + profanity_terms
+        sci_fi_terms = count_terms(['space', 'alien', 'robot', 'android', 'planet', 'galaxy', 'future', 'quantum', 'computer', 'digital', 'ai ', 'simulation'])
+        fantasy_terms = count_terms(['magic', 'wizard', 'witch', 'dragon', 'kingdom', 'spell', 'sword', 'prophecy', 'elf', 'demon king'])
+        romance_terms = count_terms(['love', 'romance', 'kiss', 'date', 'marriage', 'wedding', 'relationship', 'girlfriend', 'boyfriend'])
+
+        peak_ratio = peaks / max(1, n)
+        action_density = statistics.mean([s.get('action_density', 0.5) for s in trace]) if trace else 0.5
+        violent_or_crime = crime_terms > 0 or count_terms(['shot', 'killed', 'blood', 'dead', 'body', 'assassin']) > 0
+
+        if g_key in ['drama', 'crime drama']:
+            dialogue_fit = max(0.0, 1.0 - abs(d_ratio - 0.60) / 0.35)
+            tension_fit = max(0.0, 1.0 - abs(avg_tension - 0.38) / 0.45)
+            crime_bonus = 0.15 if crime_terms >= max(2, n * 0.08) else 0.0
+            banter_penalty = 0.38 if profanity_terms >= max(8, n * 0.50) and action_terms >= max(8, n * 0.50) else 0.0
+            return max(0.0, min(1.0, (dialogue_fit * 0.45) + (tension_fit * 0.40) + 0.10 + crime_bonus - banter_penalty))
+
+        if g_key in ['thriller', 'crime thriller']:
+            crime_fit = min(1.0, crime_terms / max(3.0, n * 0.20))
+            tension_fit = min(1.0, (avg_tension / 0.55) * 0.6 + (peak_ratio / 0.25) * 0.4)
+            banter_penalty = min(0.25, banter_terms / max(20.0, n * 1.0)) if banter_terms > romance_terms else 0.0
+            return max(0.0, min(1.0, (crime_fit * 0.45) + (tension_fit * 0.45) + (0.10 if violent_or_crime else 0.0) - banter_penalty))
+
+        if g_key == 'horror':
+            horror_fit = min(1.0, horror_terms / max(4.0, n * 0.28))
+            dread_fit = min(1.0, (peak_ratio / 0.30) * 0.55 + (action_density / 0.65) * 0.25 + (avg_tension / 0.60) * 0.20)
+            crime_penalty = 0.20 if crime_terms > horror_terms * 4 else 0.0
+            return max(0.0, min(1.0, (horror_fit * 0.70) + (dread_fit * 0.30) - crime_penalty))
+
+        if g_key == 'comedy':
+            comedy_fit = min(1.0, banter_terms / max(8.0, n * 0.70))
+            rhythm_fit = max(0.0, 1.0 - abs(d_ratio - 0.65) / 0.30)
+            action_comedy_bonus = 0.20 if action_terms >= max(8, n * 0.50) and banter_terms >= max(8, n * 0.60) else 0.0
+            violence_penalty = 0.35 if violent_or_crime and banter_terms < max(8, n * 0.60) else 0.0
+            return max(0.0, min(1.0, (comedy_fit * 0.60) + (rhythm_fit * 0.30) + action_comedy_bonus - violence_penalty))
+
+        if g_key == 'sci-fi':
+            keyword_fit = min(1.0, sci_fi_terms / max(4.0, n * 0.20))
+            crime_penalty = 0.15 if crime_terms > sci_fi_terms * 4 else 0.0
+            return max(0.0, min(1.0, (keyword_fit * 0.80) + (max(0.0, 1.0 - abs(d_ratio - 0.50) / 0.35) * 0.20) - crime_penalty))
+
+        if g_key == 'fantasy':
+            keyword_fit = min(1.0, fantasy_terms / max(4.0, n * 0.20))
+            crime_penalty = 0.15 if crime_terms > fantasy_terms * 4 else 0.0
+            return max(0.0, min(1.0, (keyword_fit * 0.80) + (max(0.0, 1.0 - abs(d_ratio - 0.45) / 0.35) * 0.20) - crime_penalty))
+
+        if g_key == 'romance':
+            keyword_fit = min(1.0, romance_terms / max(5.0, n * 0.45))
+            conflict_penalty = 0.55 if (crime_terms + action_terms) > romance_terms * 4 else 0.0
+            return max(0.0, min(1.0, (keyword_fit * 0.65) + (max(0.0, 1.0 - abs(d_ratio - 0.65) / 0.30) * 0.35) - conflict_penalty))
+
+        if g_key == 'action':
+            action_fit = max(min(1.0, action_density / 0.65), min(1.0, action_terms / max(8.0, n * 0.60)))
+            tension_fit = min(1.0, peak_ratio / 0.30)
+            comedy_buddy_bonus = 0.10 if banter_terms >= max(8, n * 0.50) else 0.0
+            return min(1.0, (action_fit * 0.40) + (tension_fit * 0.40) + (0.10 if violent_or_crime else 0.0) + comedy_buddy_bonus)
+
+        if g_key == 'avant-garde':
+            experimental_terms = count_terms(['nonlinear', 'fragment', 'surreal', 'abstract', 'montage', 'dream', 'void', 'ritual'])
+            volatility = statistics.pstdev([s.get('attentional_signal', 0.0) for s in trace]) if len(trace) > 1 else 0.0
+            marker_fit = min(1.0, experimental_terms / max(3.0, n * 0.12))
+            volatility_fit = min(1.0, volatility / 0.28)
+            return min(1.0, (marker_fit * 0.65) + (volatility_fit * 0.35))
+
+        return 0.65
+
     def _build_act_structure(self, trace):
         """Calculates act-by-act distribution and Violence Weighting (Task 4)."""
         n = len(trace)
@@ -1800,7 +1943,12 @@ class WriterAgent:
         violence = [0, 0, 0]
         
         for i, s in enumerate(trace):
-            is_violent = s.get('sentiment', 0) < -0.8 and any(w in str(s).lower() for w in v_triggers)
+            text_blob = str(s).lower()
+            is_violent = (
+                s.get('scene_turn', {}).get('violence_override', False)
+                or any(w in text_blob for w in v_triggers)
+                or (s.get('action_density', 0) > 0.65 and max(s.get('conflict', 0), s.get('stakes', 0)) > 0.45)
+            )
             if i < act1_end: violence[0] += 1 if is_violent else 0
             elif i < act3_start: violence[1] += 1 if is_violent else 0
             else: violence[2] += 1 if is_violent else 0
@@ -1833,13 +1981,14 @@ class WriterAgent:
             'pacing_benchmark': pacing
         }
 
-    def _calculate_scriptpulse_score(self, dashboard, diagnostics, trace, genre):
+    def _calculate_scriptpulse_score(self, dashboard, diagnostics, trace, genre, report=None):
         """
         Narrative craft score only. Producer metrics (risk, locations, cast)
         are excluded — they live in the Producer panel.
         Weights: PTI 30% | Pacing 25% | Dialogue 20% | Stakes 15% | Market 10%
         """
         pti = dashboard.get('page_turner_index', 50)
+        g_key = self._normalize_genre_key(genre)
 
         # Dialogue harmony — fix: use correct key 'dialogue_action_ratio'
         dr      = dashboard.get('dialogue_action_ratio', {})
@@ -1849,7 +1998,13 @@ class WriterAgent:
             logging.warning("dialogue_action_ratio is empty - using defaults")
         d_ratio = dr.get('global_dialogue_ratio', 0.55)
         d_bench = dr.get('genre_benchmark', 0.55)
-        d_harmony = max(0, 100 - abs(d_ratio - d_bench) * 750) # Proportional Strictness
+        harmony_strictness = {
+            'action': 350,
+            'comedy': 450,
+            'romance': 500,
+            'avant-garde': 450,
+        }.get(g_key, 750)
+        d_harmony = max(0, 100 - abs(d_ratio - d_bench) * harmony_strictness)
         
         # 4. Genre-Specific Intensity Analysis using configuration baselines
         peaks = sum(1 for s in trace if s.get('attentional_signal', 0) > 0.7)
@@ -1858,10 +2013,10 @@ class WriterAgent:
         
         # Load genre-specific baselines
         try:
-            import json
-            with open('/Users/shameekyogi/My Apps/ScriptPulse Project/scriptpulse/config/genre_baselines.json', 'r') as f:
+            config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config', 'genre_baselines.json')
+            with open(config_path, 'r') as f:
                 baselines = json.load(f)
-            genre_curve = baselines.get('genres', {}).get(genre, {}).get('curve', [0.5] * 7)
+            genre_curve = baselines.get('genres', {}).get(g_key, {}).get('curve', [0.5] * 7)
             expected_avg = sum(genre_curve) / len(genre_curve)
         except:
             expected_avg = 0.5  # Fallback
@@ -1869,19 +2024,21 @@ class WriterAgent:
         # Calculate intensity mismatch based on genre expectations
         tension_deviation = abs(avg_tension - expected_avg)
         
-        if genre.lower() in ['action', 'horror']:
+        n_scenes = len(trace)
+        if g_key in ['action', 'horror']:
             # High-intensity genres: penalize low tension
-            if peaks < 5:
+            required_peaks = max(3, int(n_scenes * 0.12))
+            if peaks < required_peaks:
                 intensity_mismatch = 15 + (tension_deviation * 20)
             elif tension_deviation > 0.3:
                 intensity_mismatch = 10 + (tension_deviation * 15)
-        elif genre.lower() in ['comedy', 'romance']:
+        elif g_key in ['comedy', 'romance']:
             # Low-intensity genres: penalize excessive tension
             if peaks > 12:
                 intensity_mismatch = 10 + (tension_deviation * 20)
             elif tension_deviation > 0.25:
                 intensity_mismatch = 8 + (tension_deviation * 12)
-        elif genre.lower() in ['crime_thriller', 'thriller']:
+        elif g_key in ['crime thriller', 'thriller']:
             # Medium-high intensity with peaks
             if peaks < 3:
                 intensity_mismatch = 12 + (tension_deviation * 18)
@@ -1889,16 +2046,40 @@ class WriterAgent:
                 intensity_mismatch = 8 + (tension_deviation * 15)
             elif tension_deviation > 0.2:
                 intensity_mismatch = 5 + (tension_deviation * 10)
-        elif genre.lower() in ['drama']:
+        elif g_key in ['drama', 'crime drama']:
             # Balanced intensity
             if tension_deviation > 0.25:
                 intensity_mismatch = 8 + (tension_deviation * 12)
-        elif genre.lower() in ['psychological_thriller']:
+        elif g_key in ['psychological thriller']:
             # Sustained tension with fewer peaks
             if avg_tension < 0.4:
                 intensity_mismatch = 10 + (tension_deviation * 15)
             elif peaks > 15:
                 intensity_mismatch = 7 + (tension_deviation * 10)
+        elif g_key in ['sci-fi']:
+            # Moderate intensity with intellectual peaks
+            if avg_tension < 0.35:
+                intensity_mismatch = 8 + (tension_deviation * 12)
+            elif peaks > 16:
+                intensity_mismatch = 6 + (tension_deviation * 10)
+            elif tension_deviation > 0.25:
+                intensity_mismatch = 5 + (tension_deviation * 8)
+        elif g_key in ['fantasy']:
+            if avg_tension < 0.35:
+                intensity_mismatch = 8 + (tension_deviation * 12)
+            elif tension_deviation > 0.25:
+                intensity_mismatch = 5 + (tension_deviation * 8)
+
+        evidence_text = ""
+        if report:
+            for scene in report.get('segmented', []):
+                for line in scene.get('lines', []):
+                    evidence_text += " " + line.get('text', '')
+
+        genre_fit = self._calculate_genre_fit(g_key, trace, d_ratio, avg_tension, peaks, evidence_text)
+        genre_fit_penalty = (1.0 - genre_fit) * 35
+        if g_key == 'action' and genre_fit >= 0.70 and d_ratio >= 0.50:
+            d_harmony = max(d_harmony, 65)
 
         # Pacing balance
         balance_label = dashboard.get('act_structure', {}).get('balance', 'Unknown')
@@ -1932,22 +2113,25 @@ class WriterAgent:
             'horror': {'pti': 0.35, 'pacing': 0.20, 'dialogue': 0.10, 'stakes': 0.10, 'market': 0.10},
             'comedy': {'pti': 0.20, 'pacing': 0.15, 'dialogue': 0.30, 'stakes': 0.10, 'market': 0.15},
             'romance': {'pti': 0.20, 'pacing': 0.15, 'dialogue': 0.25, 'stakes': 0.20, 'market': 0.10},
-            'crime_thriller': {'pti': 0.30, 'pacing': 0.25, 'dialogue': 0.15, 'stakes': 0.15, 'market': 0.10},
+            'crime thriller': {'pti': 0.30, 'pacing': 0.25, 'dialogue': 0.15, 'stakes': 0.15, 'market': 0.10},
             'thriller': {'pti': 0.30, 'pacing': 0.25, 'dialogue': 0.15, 'stakes': 0.15, 'market': 0.10},
-            'psychological_thriller': {'pti': 0.25, 'pacing': 0.20, 'dialogue': 0.20, 'stakes': 0.20, 'market': 0.10},
-            'drama': {'pti': 0.25, 'pacing': 0.20, 'dialogue': 0.20, 'stakes': 0.20, 'market': 0.10}
+            'psychological thriller': {'pti': 0.25, 'pacing': 0.20, 'dialogue': 0.20, 'stakes': 0.20, 'market': 0.10},
+            'drama': {'pti': 0.25, 'pacing': 0.20, 'dialogue': 0.20, 'stakes': 0.20, 'market': 0.10},
+            'sci-fi': {'pti': 0.25, 'pacing': 0.20, 'dialogue': 0.15, 'stakes': 0.20, 'market': 0.10},
+            'fantasy': {'pti': 0.25, 'pacing': 0.20, 'dialogue': 0.15, 'stakes': 0.20, 'market': 0.10}
         }
         
-        weights = genre_weights.get(genre.lower(), {
+        weights = genre_weights.get(g_key, {
             'pti': 0.25, 'pacing': 0.20, 'dialogue': 0.20, 'stakes': 0.15, 'market': 0.10
         })
         
         # Genre-specific base score
         genre_bases = {
             'action': 15, 'horror': 15, 'comedy': 20, 'romance': 20,
-            'crime_thriller': 18, 'thriller': 18, 'psychological_thriller': 20, 'drama': 20
+            'crime thriller': 18, 'thriller': 18, 'psychological thriller': 20, 'drama': 20, 'crime drama': 20,
+            'sci-fi': 18, 'fantasy': 18
         }
-        base_score = genre_bases.get(genre.lower(), 20)
+        base_score = genre_bases.get(g_key, 20)
         
         raw = (
             (pti          * weights['pti']) +
@@ -1958,7 +2142,13 @@ class WriterAgent:
             base_score
         )
 
-        return max(0, min(100, round(raw - health_penalty - intensity_mismatch)))
+        if g_key == 'action' and genre_fit >= 0.70 and d_ratio >= 0.50:
+            raw += 20
+
+        dashboard['genre_fit'] = round(genre_fit, 2)
+        dashboard['genre_fit_penalty'] = round(genre_fit_penalty, 1)
+
+        return max(0, min(100, round(raw - health_penalty - intensity_mismatch - genre_fit_penalty)))
 
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
