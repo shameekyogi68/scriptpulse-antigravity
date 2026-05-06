@@ -52,6 +52,18 @@
                 0.95,
                 0.10
             ]
+        },
+        "crime_thriller": {
+            "description": "Steady rising tension with crime elements, moderate peaks throughout.",
+            "curve": [
+                0.25,
+                0.40,
+                0.55,
+                0.65,
+                0.75,
+                0.90,
+                0.45
+            ]
         }
     }
 }

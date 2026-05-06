@@ -467,9 +467,9 @@ class InterpretationAgent:
         dialogue_ratio = dialogue_heavy / max(1, dialogue_heavy + action_heavy)
         action_ratio = action_heavy / max(1, dialogue_heavy + action_heavy)
         
-        # Crime drama detection
+        # Crime thriller detection
         if crime_keywords >= 2 and family_themes >= 1:
-            return 'crime drama'
+            return 'crime_thriller'
         
         # Comedy detection with flexible thresholds
         comedy_score = comedy_sentiment + (dialogue_ratio * 2)
