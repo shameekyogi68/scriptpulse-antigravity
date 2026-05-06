@@ -51,6 +51,8 @@ from scriptpulse.reporters import writer_report, studio_report, print_summary
 # =============================================================================
 # INITIALIZATION
 # =============================================================================
+APP_BUILD = "genre-output-fix-004a61b"
+
 @st.cache_resource
 def init_application():
     apply_custom_styles()
@@ -72,6 +74,7 @@ sidebar_state = render_sidebar(
     stu=stu
 )
 st.session_state['ui_mode'] = sidebar_state['ui_mode']
+st.sidebar.caption(f"Build: {APP_BUILD}")
 
 # =============================================================================
 # HERO
@@ -270,5 +273,4 @@ if report and current_input:
             use_container_width=True)
 
 # Application end
-
 
