@@ -10,9 +10,10 @@ Focuses on: Confusion, Boredom, Visceral Reaction, and Textual Proof.
 import statistics
 import random
 import re
+from ..utils.model_manager import manager
 
 class InterpretationAgent:
-    """Cognitive Translation Layer - From Data to Human Experience"""
+    """AI-Enhanced Cognitive Translation Layer - From Data to Human Experience"""
 
     def __init__(self):
         # Human Experience Labels for UI
@@ -21,20 +22,38 @@ class InterpretationAgent:
             'Medium': "Engaging / Steady",
             'Low': "Slow / Breather"
         }
+        self.model_manager = manager
+        self.zero_shot_classifier = None
+        self._init_ai_models()
+
+    def _init_ai_models(self):
+        """Initialize AI models for enhanced analysis"""
+        try:
+            self.zero_shot_classifier = self.model_manager.get_zero_shot()
+        except:
+            self.zero_shot_classifier = None
 
     def detect_genre(self, temporal_trace, features=None):
         """
-        Detect genre based on script content analysis.
-        Uses multiple signals: dialogue patterns, action density, themes.
+        Advanced genre detection using ALL available signals:
+        - Content analysis (themes, dialogue patterns)
+        - Sentiment analysis (emotional tone)
+        - Semantic patterns (scene types, transitions)
+        - Structural analysis (pacing, tension)
+        - AI-powered classification when available
         """
         if not temporal_trace:
             return 'drama'  # Default fallback
         
-        # Analyze content patterns
+        # Initialize enhanced analysis variables
         dialogue_heavy = 0
         action_heavy = 0
         crime_keywords = 0
         family_themes = 0
+        horror_sentiment = 0  # Track negative sentiment for horror
+        comedy_sentiment = 0  # Track positive sentiment for comedy
+        semantic_patterns = 0  # Track genre-specific patterns
+        structural_signals = 0  # Track pacing/tension patterns
         
         for scene in temporal_trace:
             # Check dialogue vs action balance
@@ -50,20 +69,43 @@ class InterpretationAgent:
                 crime_keywords += 1
             if any(word in text_content for word in ['family', 'father', 'son', 'mother', 'corleone']):
                 family_themes += 1
+            
+            # Analyze sentiment patterns for genre detection
+            sentiment = scene.get('sentiment', 0)
+            if sentiment < -0.3:  # Negative sentiment
+                horror_sentiment += 1
+            elif sentiment > 0.2:  # Positive sentiment
+                comedy_sentiment += 1
+            
+            # Enhanced semantic pattern analysis
+            scene_type = scene.get('scene_type', '').lower()
+            if 'investigation' in scene_type or 'interrogation' in scene_type:
+                crime_keywords += 1
+            if 'romantic' in scene_type or 'date' in scene_type:
+                family_themes += 1
+            if 'chase' in scene_type or 'explosion' in scene_type:
+                action_heavy += 1
+            if 'laugh' in scene_type or 'joke' in scene_type:
+                comedy_sentiment += 1
+            
+            # Structural signal analysis
+            attention = scene.get('attentional_signal', 0)
+            if attention > 0.8:  # High tension
+                structural_signals += 1
+            elif attention < 0.3:  # Low tension
+                structural_signals += 1
         
-        # Genre detection logic
-        if crime_keywords >= 2 and family_themes >= 1:
-            return 'crime drama'
-        elif dialogue_heavy > action_heavy * 1.5:
-            if family_themes >= 1:
-                return 'crime drama'
-            return 'drama'
-        elif action_heavy > dialogue_heavy * 1.2:
-            return 'action'
-        elif dialogue_heavy > 0.7:
-            return 'comedy'
-        else:
-            return 'drama'
+        # AI-enhanced genre detection
+        ai_genre = self._ai_genre_detection(temporal_trace, features)
+        if ai_genre:
+            return ai_genre
+            
+        # Enhanced heuristic detection as fallback
+        heuristic_genre = self._heuristic_genre_detection(
+            crime_keywords, family_themes, dialogue_heavy, action_heavy,
+            comedy_sentiment, horror_sentiment, temporal_trace
+        )
+        return heuristic_genre or 'drama'  # Default fallback
 
     def run(self, temporal_trace, features=None, scenes=None, genre='drama'):
         """Main entry point for cognitive interpretation"""
@@ -349,6 +391,103 @@ class InterpretationAgent:
     def audit_timeline_continuity(self, scenes): return []
     def audit_narrative_causality(self, encoded, scenes): return []
     def calculate_dialogue_authenticity(self, encoded): return []
+
+    def _ai_genre_detection(self, temporal_trace, features):
+        """
+        AI-powered genre detection using zero-shot classification
+        Falls back gracefully if models are unavailable
+        """
+        if not self.zero_shot_classifier or not temporal_trace:
+            return None
+            
+        try:
+            # Extract representative text samples from scenes
+            text_samples = []
+            for i, scene in enumerate(temporal_trace[:5]):  # Sample first 5 scenes
+                if features and i < len(features):
+                    feat = features[i]
+                    # Get representative dialogue and action text
+                    dialogue_text = " ".join([
+                        l.get('text', '') for l in feat.get('micro_structure', [])
+                        if l.get('tag') == 'D'
+                    ])
+                    action_text = " ".join([
+                        l.get('text', '') for l in feat.get('micro_structure', [])
+                        if l.get('tag') == 'A'
+                    ])
+                    combined = f"{dialogue_text} {action_text}".strip()
+                    if len(combined) > 50:
+                        text_samples.append(combined[:500])  # Limit length
+            
+            if not text_samples:
+                return None
+                
+            # Use zero-shot classification for genre detection
+            candidate_labels = [
+                'drama', 'comedy', 'action', 'horror', 'thriller', 
+                'crime drama', 'sci-fi', 'fantasy', 'romance', 'western'
+            ]
+            
+            # Combine samples for analysis
+            combined_text = " ".join(text_samples)
+            if len(combined_text) < 100:
+                return None
+                
+            result = self.zero_shot_classifier(
+                combined_text[:1024],  # Limit to model's context window
+                candidate_labels,
+                multi_label=False
+            )
+            
+            if result and result.get('labels'):
+                top_genre = result['labels'][0]
+                confidence = result['scores'][0] if result.get('scores') else 0
+                
+                # Only use AI prediction if confidence is reasonable
+                if confidence > 0.4:
+                    return top_genre
+                    
+        except Exception as e:
+            # Graceful fallback to heuristics
+            pass
+            
+        return None
+
+    def _heuristic_genre_detection(self, crime_keywords, family_themes, dialogue_heavy, 
+                                action_heavy, comedy_sentiment, horror_sentiment, temporal_trace):
+        """
+        Enhanced heuristic genre detection with flexible thresholds
+        """
+        # Flexible thresholds that adapt to content characteristics
+        total_scenes = len(temporal_trace)
+        if total_scenes < 3:
+            return 'drama'
+            
+        # Calculate ratios with adaptive normalization
+        dialogue_ratio = dialogue_heavy / max(1, dialogue_heavy + action_heavy)
+        action_ratio = action_heavy / max(1, dialogue_heavy + action_heavy)
+        
+        # Crime drama detection
+        if crime_keywords >= 2 and family_themes >= 1:
+            return 'crime drama'
+        
+        # Comedy detection with flexible thresholds
+        comedy_score = comedy_sentiment + (dialogue_ratio * 2)
+        if comedy_score > 3 and crime_keywords == 0:
+            return 'comedy'
+        
+        # Horror detection with attention peak analysis
+        tension_peaks = sum(1 for s in temporal_trace if s.get('attentional_signal', 0) > 0.7)
+        horror_score = horror_sentiment + (tension_peaks * 0.3) + (action_ratio * 2)
+        if horror_score > 2.5 and crime_keywords == 0:
+            return 'horror'
+        
+        # Action detection
+        if action_ratio > 0.6 and tension_peaks >= 3:
+            return 'action'
+        
+        # Default to drama for balanced content
+        return 'drama'
 
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

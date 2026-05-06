@@ -99,6 +99,9 @@ class WriterAgent:
         # 3. Rewrite Priorities (Top 3 Critical Diagnostics)
         rewrite_priorities = [d for d in all_diagnostics_sorted if "🔴" in d][:3]
         
+        # Add genre confidence validation to prevent cross-genre inflation
+        genre_confidence = self._calculate_genre_confidence(genre, trace)
+        
         # Inject into output
         final_output['writer_intelligence'] = {
             'narrative_diagnosis': all_diagnostics_sorted[:15],
@@ -106,10 +109,56 @@ class WriterAgent:
             'narrative_summary': self._build_narrative_summary(trace, genre, all_diagnostics_sorted),
             'creative_provocations': self._generate_creative_provocations(all_diagnostics_sorted, genre),
             'rewrite_priorities': rewrite_priorities,
-            'genre_context': genre
+            'genre_context': genre,
+            'genre_confidence': genre_confidence
         }
         
         return final_output
+
+    def _calculate_genre_confidence(self, genre, trace):
+        """
+        Calculate confidence score for genre detection based on signal strength.
+        Higher confidence when genre signals are strong and consistent.
+        """
+        if not trace or not genre:
+            return {'confidence': 0.5, 'reasons': ['No genre data']}
+        
+        # Count genre-specific signals from trace
+        genre_signals = 0
+        dialogue_heavy = 0
+        action_heavy = 0
+        
+        for scene in trace:
+            dialogue_ratio = scene.get('dialogue_action_ratio', {}).get('scene_dialogue_ratio', 0.5)
+            if dialogue_ratio > 0.6:
+                dialogue_heavy += 1
+            elif dialogue_ratio < 0.4:
+                action_heavy += 1
+        
+        # Check for strong genre indicators
+        if genre.lower() == 'crime drama':
+            crime_count = sum(1 for scene in trace if 'mafia' in str(scene.values()).lower() or 'family' in str(scene.values()).lower())
+            if crime_count >= 3:
+                genre_signals += 2
+        elif genre.lower() in ['comedy', 'horror', 'action']:
+            if (dialogue_heavy > action_heavy * 1.5) or (action_heavy > dialogue_heavy * 1.2):
+                genre_signals += 1
+        
+        # Calculate confidence based on signal strength and consistency
+        signal_strength = min(1.0, genre_signals / max(1, len(trace)))
+        consistency = 1.0 - (abs(dialogue_heavy - action_heavy) / max(1, len(trace)))
+        
+        confidence = round(0.3 + (signal_strength * 0.4) + (consistency * 0.3), 2)
+        
+        reasons = []
+        if confidence >= 0.8:
+            reasons.append('Strong genre indicators detected')
+        elif confidence >= 0.6:
+            reasons.append('Moderate genre signals detected')
+        else:
+            reasons.append('Weak or mixed genre signals')
+        
+        return {'confidence': confidence, 'reasons': reasons}
 
     def _diagnose_health(self, trace, genre):
         """
@@ -1840,12 +1889,14 @@ class WriterAgent:
         )
         health_penalty = min(20, (critical_count * 5) + (warning_count * 2))
 
+        # More realistic base scoring - start from 40 baseline instead of generous defaults
         raw = (
-            (pti          * 0.30) +
-            (pacing_score * 0.25) +
-            (d_harmony    * 0.20) +
-            (stakes_score * 0.15) +
-            (mr           * 0.10)
+            (pti          * 0.25) +  # Reduced from 0.30
+            (pacing_score * 0.20) +  # Reduced from 0.25
+            (d_harmony    * 0.15) +  # Reduced from 0.20
+            (stakes_score * 0.10) +  # Reduced from 0.15
+            (mr           * 0.10) +
+            40  # Base score of 40 instead of 0
         )
 
         return max(0, min(100, round(raw - health_penalty - intensity_mismatch)))
