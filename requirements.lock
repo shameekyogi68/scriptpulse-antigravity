@@ -1,0 +1,34 @@
+# ScriptPulse Pinned Requirements - Reproducibility Lock File
+# Generated for exact reproducibility across deployments
+# Use: pip install -r requirements.lock
+# Python 3.9+ required
+
+# Core Framework
+streamlit==1.28.1
+pandas==2.0.3
+numpy==1.25.2
+scipy==1.11.1
+networkx==3.1
+matplotlib==3.7.2
+plotly==5.17.0
+scikit-learn==1.3.0
+regex==2023.6.3
+pydantic==2.0.3
+
+# File Processing
+PyPDF2==3.0.1
+python-dotenv==1.0.0
+
+# AI/ML APIs (lightweight - no heavy ML models)
+google-generativeai==0.8.1
+openai==1.0.1
+groq==1.0.2
+
+# Security
+defusedxml>=0.7.1
+
+# Development/Optional (uncomment if needed)
+# torch>=2.0.0
+# transformers>=4.30.0
+# sentence-transformers>=2.2.0
+# spacy>=3.6.0

@@ -106,15 +106,22 @@ with tab_up:
                     script_input = "\n".join([
                         p.extract_text() or "" for p in PyPDF2.PdfReader(BytesIO(uploaded_file.read())).pages
                     ])
+                    # PDF validation: check that extracted text has at least 300 words
+                    if script_input and len(script_input.strip().split()) < 300:
+                        st.error("This PDF appears to be image-based (scanned). Please convert to text-based PDF or paste text manually.")
+                        script_input = None
                 except Exception as e:
                     st.error("Could not read PDF. The file may be corrupted or protected. Please try a TXT or FDX file.")
                     script_input = None
             elif ext == 'fdx':
                 try:
-                    from scriptpulse.agents import importers
-                    script_input = importers.run(uploaded_file.getvalue().decode("utf-8"))
-                    if isinstance(script_input, list):
-                        script_input = "\n".join([l['text'] for l in script_input])
+                    from scriptpulse.agents.structure_agent import ImporterAgent
+                    importer = ImporterAgent()
+                    parsed_lines = importer.run(uploaded_file.getvalue().decode("utf-8"))
+                    if isinstance(parsed_lines, list):
+                        script_input = "\n".join([l['text'] for l in parsed_lines])
+                    else:
+                        script_input = parsed_lines
                 except Exception as e:
                     st.error("Could not parse FDX formatting. Please ensure it's a valid Final Draft XML file.")
                     script_input = None
@@ -128,7 +135,17 @@ with tab_up:
 with tab_paste:
     pasted = st.text_area("Paste text here", height=200,
                           placeholder="INT. COFFEE SHOP - DAY\n\nA young WRITER stares at a blank screen...")
-    if not script_input and len(pasted) > 100:
+    
+    # Word count indicator
+    word_count = len(pasted.split()) if pasted else 0
+    if pasted:
+        st.caption(f"📝 {word_count} words detected")
+    
+    # Minimum validation: 300 words OR at least 1 scene heading
+    has_scene_heading = any(line.strip().startswith(('INT.', 'EXT.', 'INT ', 'EXT ')) 
+                           for line in pasted.split('\n') if line.strip()) if pasted else False
+    
+    if not script_input and pasted and (word_count >= 300 or has_scene_heading):
         script_input = pasted
 
 # =============================================================================
@@ -138,8 +155,9 @@ render_section_header("⚙️", "Configure Analysis",
     "Select the genre so the engine knows what benchmarks to apply.")
 
 col1, col2 = st.columns(2)
-genre = col1.selectbox("Genre", ["Drama", "Action", "Thriller", "Horror", "Comedy", "Sci-Fi", "Romance", "Fantasy", "Avant-Garde"],
+genre_raw = col1.selectbox("Genre", ["Drama", "Action", "Thriller", "Horror", "Comedy", "Sci-Fi", "Romance", "Fantasy", "Avant-Garde"],
                       help="The engine adjusts its benchmarks to match the expectations of your genre.")
+genre = genre_raw.lower().replace("-", "-")  # Preserve hyphens, force lowercase
 lens = col2.selectbox("Perspective", ["Story Editor", "Studio Executive", "Script Coordinator"],
                       help="🕵️ Story Editor = Plot & Logic | 🏢 Studio Executive = Market & Budget | ✍️ Script Coordinator = Craft & Flow")
 
@@ -148,18 +166,22 @@ if script_input:
     if st.button("🎬 Analyze My Script", type="primary", use_container_width=True):
         bar = st.progress(0, text="Initializing engine...")
         try:
-            bar.progress(20, text="Parsing screenplay structure...")
+            def progress_callback(stage_name, pct):
+                bar.progress(pct, text=f"Analyzing: {stage_name}...")
+            
             report = runner.run_pipeline(
                 script_input, genre=genre, lens=lens,
+                progress_callback=progress_callback,
                 ablation_config=sidebar_state['ablation_config'],
                 cpu_safe_mode=sidebar_state['force_cloud']
             )
-            bar.progress(70, text="Generating intelligence report...")
 
             st.session_state['last_report'] = report
             st.session_state['current_input'] = script_input
             st.session_state['current_genre'] = genre
             st.session_state['current_lens'] = lens
+            # Store filename for export consistency
+            st.session_state['last_filename'] = uploaded_file.name if uploaded_file else "PastedScript"
             st.session_state.pop('ai_summary_cache', None)
             # Clear all lens-specific caches so fresh analysis is generated
             for k in list(st.session_state.keys()):
@@ -177,8 +199,33 @@ if script_input:
             time.sleep(0.5)
             bar.empty()
         except Exception as e:
-            bar.empty()
-            st.error(f"Analysis failed: {e}")
+            # User-friendly error mapping
+            USER_FRIENDLY_ERRORS = {
+                "could not detect any scenes": (
+                    "ScriptPulse couldn't find scene headings in your script. "
+                    "Make sure scenes start with INT. or EXT. (e.g., 'INT. COFFEE SHOP - DAY'). "
+                    "You can also try pasting just one scene to test."
+                ),
+                "requires more text": (
+                    "Your script is too short for analysis. "
+                    "Please upload at least 2-3 scenes for meaningful results."
+                ),
+            }
+            
+            error_msg = str(e).lower()
+            friendly_msg = None
+            for key, msg in USER_FRIENDLY_ERRORS.items():
+                if key in error_msg:
+                    friendly_msg = msg
+                    break
+            
+            if friendly_msg:
+                st.error(friendly_msg)
+                with st.expander("Technical Details"):
+                    st.code(str(e))
+            else:
+                st.error(f"Analysis failed: {e}")
+            st.stop()
 else:
     from app.components import uikit
     uikit.render_tooltip_card("👆 <b style='color: white;'>Upload or paste your screenplay</b> above to begin the intelligence analysis.")
@@ -204,7 +251,7 @@ if report and current_input:
         "Download professional reports to share with collaborators, agents, or studio executives.")
 
     c1, c2, c3 = st.columns(3)
-    title = uploaded_file.name if 'uploaded_file' in locals() and uploaded_file else "Script"
+    title = st.session_state.get('last_filename', 'Script')
 
     with c1:
         st.download_button("📄 Writer Report", 

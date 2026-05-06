@@ -102,6 +102,14 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
         </div>
         """, unsafe_allow_html=True)
 
+        # --- Confidence Badge ---
+        confidence = report.get('meta', {}).get('confidence_level', 'MEDIUM')
+        reasons = report.get('meta', {}).get('confidence_reasons', [])
+        confidence_colors = {'HIGH': '#22C55E', 'MEDIUM': '#F59E0B', 'LOW': '#EF4444'}
+        st.markdown(f"<span style='color:{confidence_colors[confidence]}'>● {confidence} Confidence</span>", unsafe_allow_html=True)
+        if reasons:
+            st.caption(f"Why: {', '.join(reasons)}")
+
         # --- Pacing ---
         pacing = "Balanced"
         if avg_tension < 0.35: pacing = "Slow Burn 🐢"
@@ -480,7 +488,7 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
         except Exception:
             pass
 
-        cache_key = f'ai_summary_{lens.lower().replace(" ", "_")}'
+        cache_key = f"ai_summary_{lens}_{hash(str(report.get('meta', {}).get('run_id', '')))}"
 
         if st.button(f"🪄 Generate {lens} Memo", type="primary", use_container_width=True, key=f"memo_btn_{lens}"):
             if not has_api:

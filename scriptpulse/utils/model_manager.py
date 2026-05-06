@@ -15,6 +15,7 @@ import sys
 import json
 import hashlib
 import logging
+import threading
 
 logger = logging.getLogger('scriptpulse.mlops')
 
@@ -46,13 +47,19 @@ REQUIRED_VERSIONS_PATH = os.path.join(
 
 class ModelManager:
     _instance = None
+    _lock = threading.Lock()
     
     def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(ModelManager, cls).__new__(cls)
-            cls._instance._initialized = False
-            cls._instance.init_config()
-        return cls._instance
+        with cls._lock:
+            if cls._instance is None:
+                cls._instance = super(ModelManager, cls).__new__(cls)
+                cls._instance._initialized = False
+                cls._instance.init_config()
+            return cls._instance
+    
+    def __init__(self):
+        if not hasattr(self, '_initialized'):
+            self._initialized = False
         
     def init_config(self, force=False):
         if self._initialized and not force:

@@ -8,7 +8,11 @@ Consolidates: parsing.py, bert_parser.py, segmentation.py, beat.py, importers.py
 
 import re
 import math
-import xml.etree.ElementTree as ET
+try:
+    import defusedxml.ElementTree as ET
+except ImportError:
+    import xml.etree.ElementTree as ET
+    # Log warning: defusedxml not installed, FDX parsing may be vulnerable
 from ..utils.model_manager import manager
 
 # =============================================================================
@@ -126,19 +130,11 @@ def is_scene_heading(line_text):
 class ParsingAgent:
     """
     Structural Parsing Agent - Classifies screenplay lines.
-    Combines Heuristic (parsing.py) and ML (bert_parser.py) approaches.
+    Uses heuristic parsing for reliable, fast classification.
     """
-    def __init__(self, use_ml=True):
-        self.use_ml = use_ml
-        self.classifier = None
-        self.is_mock = True
-        
-        if use_ml:
-            self.classifier = manager.get_zero_shot()
-            self.is_mock = self.classifier is None
-            if self.is_mock:
-                print(f"[Warning] Failed to load ML model. Falling back to Heuristics.")
-
+    def __init__(self):
+        # Removed ML loading - ML path was dead code and never reached
+        # All parsing is now done via deterministic heuristics
         self.tag_map = {
             "Dialogue": "D",
             "Action": "A",
@@ -163,7 +159,7 @@ class ParsingAgent:
             tag = self.predict_line(line, context_window=context, index=i, all_lines=lines)
             context.append(tag)
             
-            confidence = 0.95 if self.is_mock else 0.85 
+            confidence = 0.90  # Fixed confidence for heuristic parsing 
             
             results.append({
                 'line_index': i,

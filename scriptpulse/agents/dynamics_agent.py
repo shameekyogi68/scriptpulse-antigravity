@@ -26,9 +26,11 @@ class DynamicsAgent:
             'comedy':        {'lambda': 0.90, 'beta': 0.70}, # High volume, high recovery
             'horror':        {'lambda': 0.65, 'beta': 0.20}, # Low recovery, high peaks
             'sci-fi':        {'lambda': 0.80, 'beta': 0.30},
+            'science fiction': {'lambda': 0.80, 'beta': 0.30}, # Alias for sci-fi
             'fantasy':       {'lambda': 0.78, 'beta': 0.35},
             'western':       {'lambda': 0.72, 'beta': 0.45},
             'romance':       {'lambda': 0.82, 'beta': 0.60},
+            'avant-garde':   {'lambda': 0.60, 'beta': 0.15}, # Low decay, minimal recovery — intentional
         }
 
     def run_simulation(self, input_data, genre=None, **kwargs):

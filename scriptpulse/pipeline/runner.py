@@ -9,6 +9,7 @@ Designed for MCA Research Defense: Clear, Logical, and Deterministic
 
 import time
 import json
+import uuid
 from scriptpulse.agents.structure_agent import ParsingAgent, SegmentationAgent
 from scriptpulse.agents.perception_agent import EncodingAgent
 from scriptpulse.agents.dynamics_agent import DynamicsAgent
@@ -16,8 +17,9 @@ from scriptpulse.agents.interpretation_agent import InterpretationAgent
 from scriptpulse.agents.ethics_agent import EthicsAgent
 from scriptpulse.agents.writer_agent import WriterAgent
 from scriptpulse.utils import normalizer, runtime
+from scriptpulse.utils.confidence_scorer import ConfidenceScorer
 
-def run_pipeline(script_content, genre='drama', story_framework='3_act', **kwargs):
+def run_pipeline(script_content, genre='drama', story_framework='3_act', progress_callback=None, **kwargs):
     """
     Executes the 4-Stage ScriptPulse Research Pipeline.
     1. Structure (Parsing)
@@ -31,11 +33,28 @@ def run_pipeline(script_content, genre='drama', story_framework='3_act', **kwarg
     
     # --- STAGE 0: Normalize & Prepare ---
     if not script_content or len(script_content.strip()) < 50:
-        raise ValueError("Script<span style='color: #0052FF; font-weight: bold;'>Pulse</span> requires more text to analyze. Please upload a full script or a longer scene.")
+        raise ValueError(
+            "ScriptPulse requires more text to analyze. "
+            "Please upload a full script or a longer scene (minimum ~50 words)."
+        )
+    
+    # Security: Input size limits and sanitization
+    MAX_CHARS = 500_000  # ~500KB, approx 400-page script
+    if len(script_content) > MAX_CHARS:
+        raise ValueError(
+            f"Script too large ({len(script_content):,} chars). "
+            f"Maximum is {MAX_CHARS:,} characters (~400 pages)."
+        )
+    
+    # Sanitize input: strip null bytes and control characters
+    script_content = ''.join(char for char in script_content if ord(char) >= 32 or char in '\n\r\t')
+    
     script_content = normalizer.normalize_script(script_content)
     telemetry['stages']['normalization_ms'] = round((time.time() - _t_start) * 1000, 2)
     
     # --- STAGE 1: Structure (Parsing) ---
+    if progress_callback:
+        progress_callback("Parsing structure...", 25)
     _t_stage = time.time()
     parser = ParsingAgent()
     segmenter = SegmentationAgent()
@@ -53,12 +72,17 @@ def run_pipeline(script_content, genre='drama', story_framework='3_act', **kwarg
     telemetry['stages']['structural_parsing_ms'] = round((time.time() - _t_stage) * 1000, 2)
         
     # --- STAGE 2: Perception (Feature Extraction) ---
+    if progress_callback:
+        progress_callback("Extracting features...", 45)
     _t_stage = time.time()
-    perceptor = EncodingAgent()
-    perceptual_features = perceptor.run({'scenes': segmented_scenes, 'lines': parsed_lines})
+    encoder = EncodingAgent()
+    perceptual_features = encoder.run({'scenes': segmented_scenes, 'lines': parsed_lines})
     telemetry['stages']['feature_extraction_ms'] = round((time.time() - _t_stage) * 1000, 2)
     
     # --- STAGE 3: Dynamics (Temporal Simulation) ---
+    if progress_callback:
+        progress_callback("Simulating dynamics...", 55)
+    _t_stage = time.time()
     dynamics = DynamicsAgent()
     temporal_trace = dynamics.run_simulation({
         'features': perceptual_features,
@@ -96,12 +120,10 @@ def run_pipeline(script_content, genre='drama', story_framework='3_act', **kwarg
 
     
     # --- STAGE 4: Interpretation (Narrative Analysis) ---
+    if progress_callback:
+        progress_callback("Running interpretation...", 65)
     _t_stage = time.time()
     interpreter = InterpretationAgent()
-    ethics = EthicsAgent()
-    
-    # Analysis outputs
-    # Update InterpretationAgent to accept genre for dynamic thresholds
     ai_interpretation = interpreter.run(temporal_trace, perceptual_features, segmented_scenes, genre=genre)
     structure_map = ai_interpretation['structure']
     diagnosis = ai_interpretation['diagnosis']
@@ -112,12 +134,16 @@ def run_pipeline(script_content, genre='drama', story_framework='3_act', **kwarg
     # --- STAGE 5: Ethics & Fairness (The 'True' Audit) ---
     _t_stage = time.time()
     # Construct input for EthicsAgent
+    ethics = EthicsAgent()
     valence_scores = [pt.get('sentiment', 0) for pt in temporal_trace]
     fairness_audit = ethics.audit_fairness({'scenes': segmented_scenes, 'valence_scores': valence_scores}, genre=genre)
     agency_results = ethics.analyze_agency({'scenes': segmented_scenes})
     
     # Update voice fingerprints with agency metrics
-    agency_map = {item['character']: item for item in agency_results.get('agency_metrics', [])}
+    agency_map = {}
+    for item in agency_results.get('agency_metrics', []):
+        if isinstance(item, dict) and 'character' in item:
+            agency_map[item['character']] = item
     telemetry['stages']['ethics_audit_ms'] = round((time.time() - _t_stage) * 1000, 2)
     
     # Stage 5: Scene Turns (Intra-scene Movement)
@@ -151,12 +177,12 @@ def run_pipeline(script_content, genre='drama', story_framework='3_act', **kwarg
         viol_keywords = ['shot', 'killed', 'trap', 'ambush', 'gunfire', 'body', 'murder', 'blast', 'assassin', 'corpse']
         scene_text = " ".join([l['text'] for l in scene_lines]).lower()
         if any(w in scene_text for w in viol_keywords):
-            # Cap the sentiment at negative in the simulation trace
-            s['sentiment'] = min(s.get('sentiment', 0), -0.7)
+            # Add violence_override flag only, don't mutate sentiment
+            s['scene_turn']['violence_override'] = True
             # Force a negative transition label if violence is present
             label = "Negative Progression" if s1 < 0 else "Positive to Negative"
 
-        s['scene_turn'] = {'turn_label': label, 'sentiment_delta': s2 - s1}
+        s['scene_turn'] = {'turn_label': label, 'sentiment_delta': s2 - s1, 'violence_override': s['scene_turn'].get('violence_override', False)}
 
     # --- STAGE 6: Final Assembly ---
     _t_end = time.time()
@@ -177,9 +203,10 @@ def run_pipeline(script_content, genre='drama', story_framework='3_act', **kwarg
         voice_fingerprints[char]['sentiment'] = round(voice_fingerprints[char]['sentiment'] / max(1, count), 2)
         
         # Use EthicsAgent's higher-fidelity agency calculation if available
-        if char in agency_map:
-            voice_fingerprints[char]['agency'] = agency_map[char]['agency_score']
-            voice_fingerprints[char]['centrality'] = agency_map[char]['centrality']
+        if char in agency_map and isinstance(agency_map[char], dict):
+            agency_data = agency_map[char]
+            voice_fingerprints[char]['agency'] = agency_data.get('agency_score', voice_fingerprints[char]['agency'])
+            voice_fingerprints[char]['centrality'] = agency_data.get('centrality', 0)
         else:
             voice_fingerprints[char]['agency'] = round(voice_fingerprints[char]['agency'] / max(1, count), 2)
 
@@ -194,7 +221,9 @@ def run_pipeline(script_content, genre='drama', story_framework='3_act', **kwarg
             'genre': genre,
             'framework': story_framework,
             'version': "v15.0 (Research Edition)",
-            'confidence': 0.98 if len(segmented_scenes) > 5 else 0.85
+            'confidence': 0.85,  # Will be updated below with proper calculation
+            'run_id': str(uuid.uuid4()),
+            'agent_timings': telemetry['stages']
         },
         'temporal_trace': temporal_trace,
         'perceptual_features': perceptual_features,
@@ -212,14 +241,37 @@ def run_pipeline(script_content, genre='drama', story_framework='3_act', **kwarg
         'semantic_flux': [f.get('entropy_score', 0) for f in perceptual_features],
         'voice_fingerprints': voice_fingerprints,
         'fairness_audit': fairness_audit,
-        'subtext_audit': [] # Placeholder for compatibility
+        'subtext_audit': [], # Placeholder for compatibility
+        # Ensure standard output keys are always present
+        'parsed_lines': parsed_lines,
+        'patterns': [],
+        'features': perceptual_features,
+        'trace': temporal_trace,
+        'agency_analysis': agency_results
     }
     
     # --- STAGE 5: Writer Intelligence (Expert Layer) ---
+    if progress_callback:
+        progress_callback("Generating insights...", 75)
     writer = WriterAgent()
     report = writer.analyze(report, genre=genre)
     
-    return report
+    # --- STAGE 6: Calculate Confidence Score ---
+    scorer = ConfidenceScorer()
+    confidence_result = scorer.calculate(temporal_trace)
+    report['meta']['confidence'] = confidence_result['score']
+    report['meta']['confidence_level'] = confidence_result['level']
+    report['meta']['confidence_reasons'] = confidence_result['reasons']
+    
+    # Validate against Pydantic schema for type safety
+    try:
+        from scriptpulse.schemas.models import PipelineOutput
+        validated = PipelineOutput(**report)
+        return validated.model_dump()
+    except Exception as e:
+        import logging
+        logging.warning(f"Schema validation warning: {e}")
+        return report  # Graceful degradation
 
 def parse_structure(script):
     """Simple structural parser snippet"""
@@ -231,21 +283,40 @@ def parse_structure(script):
 
 def health_check():
     """Observability endpoint for system status."""
-    return {
-        'status': 'healthy',
-        'governance': True,
-        'agents': {
-            'ParsingAgent': 'healthy',
-            'SegmentationAgent': 'healthy',
-            'DynamicsAgent': 'healthy',
-            'InterpretationAgent': 'healthy',
-            'EthicsAgent': 'healthy'
-        },
-        'config_files': {
-            'secrets.toml': True,
-            'env': True
-        }
-    }
+    import os
+    status = {'status': 'healthy', 'agents': {}, 'config_files': {}}
+    
+    # Test agent imports
+    agents_to_test = [
+        ('ParsingAgent', 'scriptpulse.agents.structure_agent', 'ParsingAgent'),
+        ('SegmentationAgent', 'scriptpulse.agents.structure_agent', 'SegmentationAgent'),
+        ('DynamicsAgent', 'scriptpulse.agents.dynamics_agent', 'DynamicsAgent'),
+        ('InterpretationAgent', 'scriptpulse.agents.interpretation_agent', 'InterpretationAgent'),
+        ('EthicsAgent', 'scriptpulse.agents.ethics_agent', 'EthicsAgent')
+    ]
+    
+    for name, module, class_name in agents_to_test:
+        try:
+            mod = __import__(module, fromlist=[class_name])
+            agent_class = getattr(mod, class_name)
+            agent_instance = agent_class()
+            status['agents'][name] = 'healthy'
+        except Exception as e:
+            status['agents'][name] = f'ERROR: {e}'
+            status['status'] = 'degraded'
+    
+    # Test config files
+    config_files_to_check = [
+        'scriptpulse/config/genre_priors.json',
+        'scriptpulse/config/required_model_versions.json',
+        '.env.example',
+        'requirements.txt'
+    ]
+    
+    for config_file in config_files_to_check:
+        status['config_files'][config_file] = os.path.exists(config_file)
+    
+    return status
 
 if __name__ == "__main__":
     import sys

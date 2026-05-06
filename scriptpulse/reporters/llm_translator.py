@@ -3,6 +3,9 @@ import json
 import logging
 import streamlit as st
 from openai import OpenAI
+import time
+import signal
+from contextlib import contextmanager
 try:
     from groq import Groq
     GROQ_AVAILABLE = True
@@ -32,6 +35,60 @@ def _get_api_config():
         "hf": get_token("HF_TOKEN") or get_token("HUGGINGFACE_API_KEY")
     }
 
+@contextmanager
+def timeout_context(seconds=10):
+    """Context manager for timeout handling"""
+    def timeout_handler(signum, frame):
+        raise TimeoutError(f"Operation timed out after {seconds} seconds")
+    
+    # Set timeout
+    old_handler = signal.signal(signal.SIGALRM, timeout_handler)
+    signal.alarm(seconds)
+    
+    try:
+        yield
+    finally:
+        # Cancel timeout
+        signal.alarm(0)
+        signal.signal(signal.SIGALRM, old_handler)
+
+def sanitize_diagnostics(diagnostics):
+    """
+    Sanitize diagnostic messages to prevent prompt injection attacks.
+    Strip or escape potentially dangerous content from user-supplied snippets.
+    """
+    sanitized = []
+    for diag in diagnostics:
+        # Remove potential prompt injection patterns
+        sanitized_diag = diag
+        
+        # Escape common injection patterns
+        injection_patterns = [
+            'SYSTEM:', 'ASSISTANT:', 'USER:', 'HUMAN:', 'AI:',
+            'IGNORE PREVIOUS', 'DISREGARD', 'FORGET',
+            'NEW ROLE:', 'ACT AS:', 'PRETEND:',
+            '```json', '```', '"""', "'''",
+            '<script>', '</script>', '<javascript>',
+        ]
+        
+        for pattern in injection_patterns:
+            sanitized_diag = sanitized_diag.replace(pattern, '')
+        
+        # Limit snippet length to prevent token flooding
+        if '(e.g., ' in sanitized_diag:
+            snippet_start = sanitized_diag.find('(e.g., ')
+            snippet_end = sanitized_diag.find(')', snippet_start)
+            if snippet_end > snippet_start:
+                snippet = sanitized_diag[snippet_start:snippet_end+1]
+                # Truncate long snippets
+                if len(snippet) > 200:
+                    truncated = snippet[:150] + '... [truncated])'
+                    sanitized_diag = sanitized_diag[:snippet_start] + truncated
+        
+        sanitized.append(sanitized_diag)
+    
+    return sanitized
+
 def generate_ai_summary(script_data, lens='viewer', api_key=None):
     """
     Translates ScriptPulse data into an emotional audience reaction.
@@ -56,8 +113,12 @@ def generate_ai_summary(script_data, lens='viewer', api_key=None):
         "commercial_comps": dashboard.get("commercial_comps")
     }
     
+    # Sanitize diagnostic data to prevent prompt injection
+    raw_diagnosis = script_data.get("writer_intelligence", {}).get("narrative_diagnosis", [])
+    sanitized_diagnosis = sanitize_diagnostics(raw_diagnosis)
+    
     data_payload = {
-        "pacing_issues": script_data.get("writer_intelligence", {}).get("narrative_diagnosis", []),
+        "pacing_issues": sanitized_diagnosis,
         "priorities": script_data.get("writer_intelligence", {}).get("rewrite_priorities", []),
         "structural_dashboard": slim_dashboard
     }
@@ -86,37 +147,46 @@ def generate_ai_summary(script_data, lens='viewer', api_key=None):
     # 1. Try GEMINI (Best for long-form reasoning and "Story Soul")
     if keys["gemini"] and GEMINI_AVAILABLE:
         try:
-            genai.configure(api_key=keys["gemini"])
-            model = genai.GenerativeModel('gemini-1.5-flash')
-            response = model.generate_content(f"SYSTEM: {system_prompt}\n\nUSER: {user_content}")
-            return response.text, None
+            with timeout_context(10):
+                genai.configure(api_key=keys["gemini"])
+                model = genai.GenerativeModel('gemini-1.5-flash')
+                response = model.generate_content(f"SYSTEM: {system_prompt}\n\nUSER: {user_content}")
+                return response.text, None
+        except TimeoutError:
+            errors.append("Gemini: Request timed out after 10 seconds")
         except Exception as e:
             errors.append(f"Gemini: {str(e)}")
 
     # 2. Try GROQ (Blazing Fast)
     if keys["groq"] and GROQ_AVAILABLE:
         try:
-            client = Groq(api_key=keys["groq"])
-            completion = client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
-                messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_content}],
-                temperature=0.6,
-                max_tokens=1200
-            )
-            return completion.choices[0].message.content, None
+            with timeout_context(10):
+                client = Groq(api_key=keys["groq"])
+                completion = client.chat.completions.create(
+                    model="llama-3.3-70b-versatile",
+                    messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_content}],
+                    temperature=0.6,
+                    max_tokens=1200
+                )
+                return completion.choices[0].message.content, None
+        except TimeoutError:
+            errors.append("Groq: Request timed out after 10 seconds")
         except Exception as e:
             errors.append(f"Groq: {str(e)}")
 
     # 3. Fallback to Hugging Face
     if keys["hf"]:
         try:
-            client = OpenAI(base_url="https://router.huggingface.co/v1", api_key=keys["hf"])
-            completion = client.chat.completions.create(
-                model="moonshotai/Kimi-K2-Instruct-0905",
-                messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_content}],
-                max_tokens=1200
-            )
-            return completion.choices[0].message.content, None
+            with timeout_context(10):
+                client = OpenAI(base_url="https://router.huggingface.co/v1", api_key=keys["hf"])
+                completion = client.chat.completions.create(
+                    model="moonshotai/Kimi-K2-Instruct-0905",
+                    messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_content}],
+                    max_tokens=1200
+                )
+                return completion.choices[0].message.content, None
+        except TimeoutError:
+            errors.append("HF: Request timed out after 10 seconds")
         except Exception as e:
             errors.append(f"HF: {str(e)}")
             

@@ -25,8 +25,13 @@ def normalize_character_name(name):
     # Handle suffixes without parentheses (e.g. CHARACTER-O.S.)
     stemmed = re.sub(r'[-\s](O\.?S\.?|V\.?O\.?|ALT|OFF-SCREEN|DASHES|FILTERED)$', '', stemmed)
     
-    # Upper, strip punctuation but keep internal spaces/hashes
-    clean = re.sub(r'[^A-Z0-9\s#]', '', stemmed).strip()
+    # Strip prefixes like MR., MS., DR., MRS., PROF.
+    prefix_pattern = r'^(MR\.?|MS\.?|DR\.?|MRS\.?|PROF\.?)\s+'
+    stemmed = re.sub(prefix_pattern, '', stemmed).strip()
+    
+    # Preserve hyphens as word separators, then collapse
+    clean = re.sub(r'[^A-Z0-9\s\-]', '', stemmed).strip()
+    clean = re.sub(r'-+', ' ', clean).strip()  # normalize hyphens to spaces
     
     # Body Part & Structural Blacklist
     # We only filter the 'garbage' items that are definitely action fragments misparsed.
@@ -78,7 +83,7 @@ class EncodingAgent:
             # 6. Affective Load (VADER Emotional Valence/Sentiment)
             affective = self._extract_affective_load(scene_lines)
             
-            # 6. Narrative Metadata (For Charts/UI)
+            # 7. Narrative Metadata (For Charts/UI)
             metadata = self._extract_narrative_metadata(scene_lines)
             
             features = {
@@ -214,11 +219,14 @@ class EncodingAgent:
     def _extract_entropy(self, lines):
         text = " ".join([l['text'] for l in lines]).lower()
         words = re.findall(r'\b\w+\b', text)
-        if not words: return 0.0
+        if len(words) < 5:
+            return 0.0
         counts = Counter(words)
         total = len(words)
-        entropy = -sum((c/total) * math.log2(c/total) for c in counts.values())
-        return round(entropy, 3)
+        raw_entropy = -sum((c/total) * math.log2(c/total) for c in counts.values())
+        # Normalize: divide by log2(unique_words) so max entropy = 1.0
+        max_possible = math.log2(len(counts)) if len(counts) > 1 else 1.0
+        return round(raw_entropy / max_possible, 3)
 
     def _extract_affective_load(self, lines):
         # 1. Prepare text for analysis (Action 'A' and Dialogue 'D')
@@ -229,12 +237,8 @@ class EncodingAgent:
 
         # 2. High-Priority Narrative Override: Violence & Death (Task 1)
         # We must detect deaths even in action-heavy scenes without 'C' tags.
-        violence_triggers = [
-            'shot', 'killed', 'ambush', 'trap', 'gunfire', 'body', 'murder', 'blood', 'execution', 
-            'assassinate', 'bullet', 'massacre', 'stabbed', 'slaughter', 'wound', 'dying',
-            'blast', 'explosion', 'corpse', 'funeral', 'firefight', 'gunmen', 'trigger',
-            'mowed down', 'sprayed', 'hitman', 'assassin', 'weapon', 'grenade', 'knife'
-        ]
+        violence_triggers_hard = ['killed', 'murdered', 'shot dead', 'execution', 'massacre', 'slaughter']
+        violence_triggers_soft = ['shot', 'blood', 'body', 'weapon', 'knife', 'grenade', 'trigger']
         
         # Check for character presence via tags OR capitalized names in Action lines
         has_character = any(l['tag'] == 'C' for l in lines)
@@ -242,10 +246,12 @@ class EncodingAgent:
             # Look for [A-Z]{3,} name signals in Action text
             has_character = any(re.search(r'\b[A-Z]{3,}\b', l['text']) for l in lines if l['tag'] == 'A')
 
-        has_violence = any(w in all_text for w in violence_triggers)
-        if has_violence and has_character:
-            # Force high-stakes Negative Sentiment for these cinematic story-beats
-            return {'pos': 0.00, 'neg': 0.98, 'neu': 0.02, 'compound': -0.99}
+        hard_match = any(w in all_text for w in violence_triggers_hard)
+        soft_count = sum(1 for w in violence_triggers_soft if w in all_text)
+        
+        if has_character and (hard_match or soft_count >= 3):
+            penalty = -0.99 if hard_match else -0.65
+            return {'pos': 0.00, 'neg': abs(penalty), 'neu': 1 - abs(penalty), 'compound': penalty}
 
         if self.classifier:
             try:
@@ -271,9 +277,12 @@ class EncodingAgent:
         return {'pos': 0.0, 'neg': 0.0, 'neu': 1.0, 'compound': round(max(-1.0, min(1.0, compound)), 3)}
 
     def _extract_structural(self, scene, all_scenes, idx):
-        if idx == 0: return {'event_boundary_score': 0.0}
-        gap = scene['start_line'] - all_scenes[idx-1]['end_line']
-        return {'event_boundary_score': min(100.0, gap * 2.0)}
+        prev_heading = all_scenes[idx-1].get('heading', '') if idx > 0 else ''
+        curr_heading = scene.get('heading', '')
+        # Extract location (text before ' - DAY/NIGHT') from heading
+        def extract_loc(h): return re.sub(r'\s*-\s*(DAY|NIGHT|.*?)$', '', h).strip()
+        location_change = extract_loc(prev_heading) != extract_loc(curr_heading) if idx > 0 else False
+        return {'location_change': location_change, 'event_boundary_score': 1.0 if location_change else 0.0}
 
     def _extract_ambient(self, ling, dial, vis):
         score = ( (1 - dial['turn_velocity']) + (1 - min(1.0, vis['action_lines']/10)) ) / 2

@@ -42,10 +42,24 @@ class InterpretationAgent:
         total = len(temporal_trace)
         if total < 5: return {'acts': [], 'beats': []}
         
-        # ACT 1 ends around 25%
-        a1_end = int(total * 0.25)
-        # ACT 2 ends around 75%
-        a2_end = int(total * 0.75)
+        def _find_act_boundary(signals, search_range):
+            """Find the lowest attentional signal in a range = likely act break."""
+            segment = signals[search_range[0]:search_range[1]]
+            if not segment:
+                return search_range[0]
+            min_idx = segment.index(min(segment, key=lambda s: s['attentional_signal']))
+            return search_range[0] + min_idx
+        
+        # Dynamic act boundaries using attentional signal valleys
+        # Act 1 boundary between 20%–30%
+        a1_search_start = int(total * 0.20)
+        a1_search_end = int(total * 0.30)
+        a1_end = _find_act_boundary(temporal_trace, [a1_search_start, a1_search_end])
+        
+        # Act 2 boundary between 60%–80%
+        a2_search_start = int(total * 0.60)
+        a2_search_end = int(total * 0.80)
+        a2_end = _find_act_boundary(temporal_trace, [a2_search_start, a2_search_end])
         
         acts = [
             {'name': 'Act 1: Setup', 'range': [0, a1_end]},
@@ -119,6 +133,10 @@ class InterpretationAgent:
         if not temporal_trace or not features or not scenes or len(features) != len(temporal_trace) or len(scenes) != len(temporal_trace): 
             return diagnosis
             
+        # Minimum scene thresholds per diagnostic type
+        MIN_SCENES_FOR_SAG = 8         # Need 8 scenes before a sag is meaningful
+        MIN_SCENES_FOR_OVERCROWD = 5   # Need 5 scenes to flag character churn
+        
         signals = [s['attentional_signal'] for s in temporal_trace]
         
         # Pacing Threshold Adjustment by Genre
@@ -126,16 +144,17 @@ class InterpretationAgent:
         sag_scenes = 3 if genre.lower() == 'drama' else 2 
             
         # 1. Overcrowded Narrative
-        for i in range(len(temporal_trace)):
-            feat = features[i]
-            att_sig = temporal_trace[i]['attentional_signal']
-            churn = feat.get('referential_load', {}).get('character_churn', 0.0)
-            if churn >= 3.5 and att_sig < 0.5:
-                snippet = self._get_snippet(scenes[i])
-                diagnosis.append(
-                    f"🟠 **Information Churn (Scene {i+1})**: Excessive name density. Suggest compressing introduction or embedding these details into an existing conflict. (e.g., {snippet})"
-                )
-                break
+        if len(temporal_trace) >= MIN_SCENES_FOR_OVERCROWD:
+            for i in range(len(temporal_trace)):
+                feat = features[i]
+                att_sig = temporal_trace[i]['attentional_signal']
+                churn = feat.get('referential_load', {}).get('character_churn', 0.0)
+                if churn >= 3.5 and att_sig < 0.5:
+                    snippet = self._get_snippet(scenes[i])
+                    diagnosis.append(
+                        f"🟠 **Information Churn (Scene {i+1})**: Excessive name density. Suggest compressing introduction or embedding these details into an existing conflict. (e.g., {snippet})"
+                    )
+                    break
 
         # 2. Action Peak
         for i in range(len(temporal_trace)):
@@ -151,19 +170,20 @@ class InterpretationAgent:
                 break
                 
         # 3. Structural Sag
-        high_runs = 0
-        for i, s in enumerate(signals):
-            if s < sag_limit: 
-                high_runs += 1
-            else: 
-                high_runs = 0
-            
-            if high_runs >= sag_scenes:
-                snippet = self._get_snippet(scenes[i])
-                diagnosis.append(
-                    f"🟠 **Attentional Valley (Scene {i+1})**: Cumulative period of lower dramatic signals. (e.g., {snippet})"
-                )
-                break
+        if len(temporal_trace) >= MIN_SCENES_FOR_SAG:
+            high_runs = 0
+            for i, s in enumerate(signals):
+                if s < sag_limit: 
+                    high_runs += 1
+                else: 
+                    high_runs = 0
+                
+                if high_runs >= sag_scenes:
+                    snippet = self._get_snippet(scenes[i])
+                    diagnosis.append(
+                        f"🟠 **Attentional Valley (Scene {i+1})**: Cumulative period of lower dramatic signals. (e.g., {snippet})"
+                    )
+                    break
                 
         # 4. Exposition Heavy
         for i in range(len(temporal_trace)):

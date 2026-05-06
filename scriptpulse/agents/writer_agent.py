@@ -1,9 +1,10 @@
 # MODULE: writer_agent.py
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-import random
 import re
 import statistics
+import hashlib
+import random
 
 class WriterAgent:
     """
@@ -11,6 +12,11 @@ class WriterAgent:
     Translates raw engine signals into actionable writer feedback.
     Does not run simulations; interprets existing trace data.
     """
+    
+    def _get_deterministic_rng(self, script_content):
+        """Create a deterministic random number generator seeded from script content."""
+        seed = int(hashlib.md5(script_content[:100].encode()).hexdigest(), 16) % (2**32)
+        return random.Random(seed)  # Seeded, deterministic
     
     def analyze(self, final_output, genre="General"):
         """
@@ -52,9 +58,16 @@ class WriterAgent:
         new_diagnostics.extend(self._diagnose_nonlinear_structure(trace))
         new_diagnostics.extend(self._diagnose_theme_coherence(trace))
         
-        # Determine unique items and sort EVERYTHING for absolute score determinism
-        # This ensures the penalty calculation always sees the exact same input order.
-        all_diagnostics = sorted(list(set(narrative_health + new_diagnostics + self._diagnose_representation_risks(final_output.get('fairness_audit', {})))))
+        # Determine unique items and sort by severity before truncating
+        severity_order = {'🔴': 0, '🟠': 1, '🟡': 2, '🔵': 3, '💡': 4, '🟢': 5, '✨': 6, '🤫': 7}
+        def severity_key(d):
+            for emoji, rank in severity_order.items():
+                if emoji in d:
+                    return rank
+            return 99
+        
+        all_diagnostics_raw = list(set(narrative_health + new_diagnostics + self._diagnose_representation_risks(final_output.get('fairness_audit', {}))))
+        all_diagnostics_sorted = sorted(all_diagnostics_raw, key=severity_key)
         
         # 2. Structural Dashboard with Arc Vectors + Scene Map
         dashboard = self._build_dashboard(trace, genre, final_output)
@@ -81,17 +94,17 @@ class WriterAgent:
         dashboard['market_readiness'] = self._calculate_market_readiness(dashboard)
 
         # Composite ScriptPulse Score (0-100) using the truly sorted diagnostics
-        dashboard['scriptpulse_score'] = self._calculate_scriptpulse_score(dashboard, all_diagnostics, trace, genre)
+        dashboard['scriptpulse_score'] = self._calculate_scriptpulse_score(dashboard, all_diagnostics_sorted, trace, genre)
         
         # 3. Rewrite Priorities (Top 3 Critical Diagnostics)
-        rewrite_priorities = [d for d in all_diagnostics if "🔴" in d][:3]
+        rewrite_priorities = [d for d in all_diagnostics_sorted if "🔴" in d][:3]
         
         # Inject into output
         final_output['writer_intelligence'] = {
-            'narrative_diagnosis': all_diagnostics[:15],
+            'narrative_diagnosis': all_diagnostics_sorted[:15],
             'structural_dashboard': dashboard,
-            'narrative_summary': self._build_narrative_summary(trace, genre, all_diagnostics),
-            'creative_provocations': self._generate_creative_provocations(all_diagnostics, genre),
+            'narrative_summary': self._build_narrative_summary(trace, genre, all_diagnostics_sorted),
+            'creative_provocations': self._generate_creative_provocations(all_diagnostics_sorted, genre),
             'rewrite_priorities': rewrite_priorities,
             'genre_context': genre
         }
@@ -537,8 +550,12 @@ class WriterAgent:
 
             # P6: Flat — genuinely static characters only (strict threshold < 0.005)
             elif abs(sentiment_delta) < 0.005 and abs(agency_delta) < 0.005:
-                arc_label = "Flat Arc ⚠️"
-                arc_note = "Character remains static across both emotional and power axes. Is this intended?"
+                if total_lines < 10:
+                    arc_label = "Supporting Role"
+                    arc_note = "Appears in too few scenes for arc analysis."
+                else:
+                    arc_label = "Flat Arc ⚠️"
+                    arc_note = "Character remains static across both emotional and power axes. Is this intended?"
 
             # P7: Developing — some movement, no dominant classified pattern.
             else:
@@ -749,10 +766,16 @@ class WriterAgent:
         Compare against genre benchmarks and surface an insight.
         """
         benchmarks = {
-            'action':      0.40, 'thriller':    0.45, 'horror':      0.38,
-            'drama':       0.56, 'crime drama': 0.54, 'comedy':      0.69, 
-            'romance':     0.70, 'sci-fi':      0.50, 'fantasy':     0.48,
-            'western':     0.45, 'avant-garde': 0.55, 'general':     0.55
+            'Drama':     0.60,  # Dialogue-heavy
+            'Comedy':    0.65,  # Heavy dialogue, fast exchanges
+            'Thriller':  0.45,  # Balanced — tension through action too
+            'Horror':    0.35,  # Action-description dominant
+            'Action':    0.30,  # Mostly action lines
+            'Sci-Fi':    0.50,  # Balanced world-building
+            'Romance':   0.65,  # Character-driven, dialogue-heavy
+            'Fantasy':   0.45,  # World-building action + dialogue
+            'Avant-Garde': 0.40,
+            'Crime Drama': 0.54, 'Western': 0.45, 'General': 0.55
         }
         total_d = sum(s.get('dialogue_action_ratio', {}).get('dialogue_lines', 0) for s in trace)
         total_a = sum(s.get('dialogue_action_ratio', {}).get('action_lines', 0) for s in trace)
@@ -964,13 +987,17 @@ class WriterAgent:
         if not char_lines: return []
 
         # Normalise both metrics then combine (60% lines, 40% scene presence)
-        max_lines = max(char_lines.values()) or 1
-        max_scenes = max(char_scenes.values()) or 1
+        # Filter out non-numeric values before max calculation
+        line_values = [v for v in char_lines.values() if isinstance(v, (int, float))]
+        scene_values = [v for v in char_scenes.values() if isinstance(v, (int, float))]
+        
+        max_lines = max(line_values) if line_values else 1
+        max_scenes = max(scene_values) if scene_values else 1
         char_score = {
             c: (char_lines[c] / max_lines * 0.6) + (char_scenes.get(c, 0) / max_scenes * 0.4)
             for c in char_lines
         }
-        protagonist = max(char_score, key=char_score.get)
+        protagonist = max(char_score.keys(), key=lambda k: char_score[k])
 
         # Build protagonist's agency through each act
         third = len(trace) // 3
@@ -1089,11 +1116,12 @@ class WriterAgent:
         ext_count = 0
 
         for s in trace:
-            loc_data = s.get('location_data', {})
-            raw_loc = loc_data.get('location', 'UNKNOWN')
+            loc_data = s.get('location_data') or {}
+            raw_loc = loc_data.get('location', 'UNKNOWN') or 'UNKNOWN'
             # Fix 1: Strip time-of-day suffixes for better deduplication
             loc = re.sub(r'\s*[-–—]\s*(DAY|NIGHT|DAWN|DUSK|MORNING|EVENING|CONTINUOUS|LATER|SAME|MOMENTS?\s+LATER).*$', '', raw_loc, flags=re.IGNORECASE).strip()
-            interior = loc_data.get('interior')
+            interior = loc_data.get('interior', '') or ''
+            interior = interior.strip().upper() if interior else ''
 
             location_counts[loc] = location_counts.get(loc, 0) + 1
             if interior == 'INT': int_count += 1
@@ -1206,7 +1234,7 @@ class WriterAgent:
         # Warn if any turning point has very low strength (flat, undramatic)
         for label, tp in result.items():
             if isinstance(tp, dict) and tp.get('strength', 1) < 0.1:
-                tp['warning'] = f"This turning point is very weak — the {label.replace('_', ' ')} may be missing or underwritten."
+                result[label]['warning'] = f"This turning point is very weak — the {label.replace('_', ' ')} may be missing or underwritten."
 
         return result
 
@@ -1453,7 +1481,7 @@ class WriterAgent:
                 for theme, score in s.get('thematic_clusters', {}).get('theme_scores', {}).items():
                     agg[theme] = agg.get(theme, 0) + score
             if not agg: return None
-            return max(agg, key=agg.get)
+            return max(agg.keys(), key=lambda k: agg[k])
 
         t1 = dominant_theme(trace[:third])
         t2 = dominant_theme(trace[third:third*2])
@@ -1765,6 +1793,10 @@ class WriterAgent:
 
         # Dialogue harmony — fix: use correct key 'dialogue_action_ratio'
         dr      = dashboard.get('dialogue_action_ratio', {})
+        if not dr:
+            # Warning: Empty dialogue_action_ratio detected - potential regression
+            import logging
+            logging.warning("dialogue_action_ratio is empty - using defaults")
         d_ratio = dr.get('global_dialogue_ratio', 0.55)
         d_bench = dr.get('genre_benchmark', 0.55)
         d_harmony = max(0, 100 - abs(d_ratio - d_bench) * 750) # Proportional Strictness
