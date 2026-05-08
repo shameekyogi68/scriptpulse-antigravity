@@ -83,6 +83,12 @@
             "beta_recovery": 0.35,
             "fatigue_threshold": 1.25,
             "description": "Moderate decay with sustained tension. Crime elements create baseline unease while thriller elements provide peaks. Higher tolerance for intensity due to genre expectations."
+        },
+        "sci-fi": {
+            "lambda_decay": 0.80,
+            "beta_recovery": 0.30,
+            "fatigue_threshold": 1.2,
+            "description": "Moderate decay with world-building exposition. High cognitive tolerance for density and complex concepts. Balance between action and intellectual elements."
         }
     }
 }

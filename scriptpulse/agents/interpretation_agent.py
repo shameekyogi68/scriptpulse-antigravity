@@ -517,6 +517,17 @@ class InterpretationAgent:
             psych_score = (psychological_keywords * 2) + (dialogue_ratio * 1) + (avg_tension * 1)
             genre_scores['psychological_thriller'] = psych_score
         
+        # Sci-Fi: technology/science keywords + intellectual content
+        scifi_keywords = 0
+        for scene in temporal_trace:
+            text_content = " ".join([str(v) for v in scene.values()]).lower()
+            if any(word in text_content for word in ['technology', 'science', 'future', 'space', 'robot', 'alien', 'computer', 'system', 'digital', 'virtual']):
+                scifi_keywords += 1
+        
+        if scifi_keywords >= 2:
+            scifi_score = (scifi_keywords * 2) + (psychological_keywords * 1) + (avg_tension * 1.2)
+            genre_scores['sci-fi'] = scifi_score
+        
         # Drama: balanced content with dialogue/emotional elements
         drama_score = (dialogue_ratio * 1.5) + (family_themes * 1) + (avg_tension * 0.8)
         genre_scores['drama'] = drama_score

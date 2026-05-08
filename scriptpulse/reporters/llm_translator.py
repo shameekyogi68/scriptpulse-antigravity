@@ -41,16 +41,25 @@ def timeout_context(seconds=10):
     def timeout_handler(signum, frame):
         raise TimeoutError(f"Operation timed out after {seconds} seconds")
     
-    # Set timeout
-    old_handler = signal.signal(signal.SIGALRM, timeout_handler)
-    signal.alarm(seconds)
+    old_handler = None
+    try:
+        # Set timeout
+        old_handler = signal.signal(signal.SIGALRM, timeout_handler)
+        signal.alarm(seconds)
+    except ValueError:
+        # signal only works in main thread of the main interpreter
+        pass
     
     try:
         yield
     finally:
         # Cancel timeout
-        signal.alarm(0)
-        signal.signal(signal.SIGALRM, old_handler)
+        if old_handler is not None:
+            try:
+                signal.alarm(0)
+                signal.signal(signal.SIGALRM, old_handler)
+            except ValueError:
+                pass
 
 def sanitize_diagnostics(diagnostics):
     """
