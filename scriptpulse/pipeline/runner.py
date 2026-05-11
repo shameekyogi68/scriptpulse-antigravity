@@ -249,7 +249,7 @@ def run_pipeline(script_content, genre='drama', story_framework='3_act', progres
             'total_scenes': len(segmented_scenes),
             'genre': genre,
             'framework': story_framework,
-            'version': "v15.0 (Research Edition)",
+            'version': "v1.0 (Production Release)",
             'confidence': 0.85,  # Will be updated below with proper calculation
             'run_id': str(uuid.uuid4()),
             'agent_timings': telemetry['stages']
