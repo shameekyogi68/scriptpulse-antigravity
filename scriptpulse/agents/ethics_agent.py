@@ -176,8 +176,13 @@ class EthicsAgent:
         char_agency = collections.defaultdict(list) # Placeholder for agency integration
         
         # Get Agency Data if available (self-call or passed)
-        agency_data = self.analyze_agency(input_data).get('agency_metrics', [])
-        agency_map = {item['character']: item['agency_score'] for item in agency_data}
+        agency_results = self.analyze_agency(input_data)
+        agency_data = agency_results.get('agency_metrics', [])
+        agency_map = {
+            item['character']: item.get('agency_score', 0.5) 
+            for item in agency_data 
+            if isinstance(item, dict) and 'character' in item
+        }
         
         for i, scene in enumerate(scenes):
             val = valence_scores[i] if i < len(valence_scores) else 0.0

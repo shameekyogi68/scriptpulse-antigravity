@@ -9,7 +9,7 @@ Consolidates: parsing.py, bert_parser.py, segmentation.py, beat.py, importers.py
 import re
 import math
 try:
-    import defusedxml.ElementTree as ET
+    import defusedxml.ElementTree as ET # type: ignore
 except ImportError:
     import xml.etree.ElementTree as ET
     # Log warning: defusedxml not installed, FDX parsing may be vulnerable
