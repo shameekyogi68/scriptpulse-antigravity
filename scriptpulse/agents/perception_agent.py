@@ -393,7 +393,11 @@ class EncodingAgent:
                 try:
                     # Type narrowing to satisfy the IDE and ensure safety
                     if isinstance(v, (int, float, str)):
-                        curr_val = float(v)
+                        if isinstance(v, str) and not v.strip():
+                            curr_val = 0.0
+                        else:
+                            curr_val = float(v)
+                        
                         if curr_val > max_val:
                             max_val = curr_val
                             dominant = k
@@ -600,8 +604,8 @@ class EncodingAgent:
 
         return {
             'character_scene_vectors': arcs,
-            'stakes': {'dominant': dominant, 'breakdown': {k: round(float(v), 2) for k, v in scores.items() if isinstance(v, (int, float, str))}},
-            'payoff': {'payoff_density': round(sum(float(v) for v in scores.values() if isinstance(v, (int, float, str))) / max(1, len(lines)), 2)},
+            'stakes': {'dominant': dominant, 'breakdown': {k: round(float(v) if (not isinstance(v, str) or v.strip()) else 0.0, 2) for k, v in scores.items() if isinstance(v, (int, float, str))}},
+            'payoff': {'payoff_density': round(sum(float(v) if (not isinstance(v, str) or v.strip()) else 0.0 for v in scores.values() if isinstance(v, (int, float, str))) / max(1, len(lines)), 2)},
             'stichomythia': {'has_stichomythia': sticho_count > 4, 'count': sticho_count},
             'monologue_data': {'has_monologue': len(monologues) > 0, 'monologues': monologues},
             'passive_voice': {'passive_ratio': passive_count / max(1, n_lines), 'passive_count': passive_count, 'examples': passive_examples},
