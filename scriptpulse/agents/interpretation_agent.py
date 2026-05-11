@@ -50,10 +50,16 @@ class InterpretationAgent:
         action_heavy = 0
         crime_keywords = 0
         family_themes = 0
-        horror_sentiment = 0  # Track negative sentiment for horror
+        # FIX: Horror requires STRONGLY negative sentiment (< -0.6) NOT just any negative scene.
+        # Drama scripts routinely have negative scenes; using -0.3 causes huge false positive rate.
+        horror_sentiment = 0  # Track STRONGLY negative sentiment for horror
         comedy_sentiment = 0  # Track positive sentiment for comedy
         semantic_patterns = 0  # Track genre-specific patterns
         structural_signals = 0  # Track pacing/tension patterns
+        
+        # FIX: Count explicit genre-specific keywords at scene text level
+        horror_explicit = 0   # Tracks actual horror keywords in scene text
+        fantasy_explicit = 0  # Tracks actual fantasy keywords in scene text
         
         for scene in temporal_trace:
             # Check dialogue vs action balance
@@ -70,12 +76,19 @@ class InterpretationAgent:
             if any(word in text_content for word in ['family', 'father', 'son', 'mother', 'corleone']):
                 family_themes += 1
             
-            # Analyze sentiment patterns for genre detection
+            # FIX: Only count horror_sentiment if sentiment is VERY strongly negative
+            # Drama scripts regularly score -0.3 to -0.5 during conflict/tragedy — this is NOT horror.
             sentiment = scene.get('sentiment', 0)
-            if sentiment < -0.3:  # Negative sentiment
+            if sentiment < -0.6:  # Only extreme negativity signals horror
                 horror_sentiment += 1
             elif sentiment > 0.2:  # Positive sentiment
                 comedy_sentiment += 1
+            
+            # FIX: Count explicit horror/fantasy keywords directly in scene text
+            if any(word in text_content for word in ['ghost', 'demon', 'haunt', 'monster', 'possess', 'curse', 'scream', 'nightmare', 'zombie', 'vampire', 'undead']):
+                horror_explicit += 1
+            if any(word in text_content for word in ['magic', 'wizard', 'witch', 'dragon', 'kingdom', 'spell', 'prophecy', 'elf', 'enchant', 'sorcerer', 'realm']):
+                fantasy_explicit += 1
             
             # Enhanced semantic pattern analysis
             scene_type = scene.get('scene_type', '').lower()
@@ -95,15 +108,31 @@ class InterpretationAgent:
             elif attention < 0.3:  # Low tension
                 structural_signals += 1
         
-        # AI-enhanced genre detection
+        total_scenes = max(1, len(temporal_trace))
+        
+        # FIX: EXPLICIT KEYWORD GATE — Horror and Fantasy must have ACTUAL keywords,
+        # not just inferred from sentiment or tension. A drama with sad scenes is NOT horror.
+        # Require at least 10% of scenes to contain explicit genre markers.
+        horror_threshold = max(3, total_scenes * 0.10)
+        fantasy_threshold = max(3, total_scenes * 0.10)
+        
+        # AI-enhanced genre detection — only trust if we have explicit content evidence
         ai_genre = self._ai_genre_detection(temporal_trace, features)
+        if ai_genre:
+            # FIX: Validate AI genre predictions against explicit keyword evidence
+            # before accepting them. AI zero-shot can hallucinate on ambiguous drama.
+            if ai_genre == 'horror' and horror_explicit < horror_threshold:
+                ai_genre = None  # Reject — no explicit horror markers
+            elif ai_genre == 'fantasy' and fantasy_explicit < fantasy_threshold:
+                ai_genre = None  # Reject — no explicit fantasy markers
         if ai_genre:
             return ai_genre
             
         # Enhanced heuristic detection as fallback
         heuristic_genre = self._heuristic_genre_detection(
             crime_keywords, family_themes, dialogue_heavy, action_heavy,
-            comedy_sentiment, horror_sentiment, temporal_trace
+            comedy_sentiment, horror_sentiment, temporal_trace,
+            horror_explicit=horror_explicit, fantasy_explicit=fantasy_explicit
         )
         return heuristic_genre or 'drama'  # Default fallback
 
@@ -238,7 +267,7 @@ class InterpretationAgent:
                 if churn >= 3.5 and att_sig < 0.5:
                     snippet = self._get_snippet(scenes[i])
                     diagnosis.append(
-                        f"🟠 **Information Churn (Scene {i+1})**: Excessive name density. Suggest compressing introduction or embedding these details into an existing conflict. (e.g., {snippet})"
+                        f"🟠 **Dense Introduction (Scene {i+1})**: This scene introduces many names quickly — consider spacing character introductions across scenes for clarity. (e.g., {snippet})"
                     )
                     break
 
@@ -267,7 +296,7 @@ class InterpretationAgent:
                 if high_runs >= sag_scenes:
                     snippet = self._get_snippet(scenes[i])
                     diagnosis.append(
-                        f"🟠 **Attentional Valley (Scene {i+1})**: Cumulative period of lower dramatic signals. (e.g., {snippet})"
+                        f"🟠 **Pacing Opportunity (Scene {i+1})**: This section has a quieter rhythm — consider adding a small dramatic beat or reveal to sustain forward momentum. (e.g., {snippet})"
                     )
                     break
                 
@@ -279,11 +308,11 @@ class InterpretationAgent:
             if entropy > 4.5 and att_sig < 0.4:  # Raised significantly to filter anything but pure data-dumps
                 snippet = self._get_snippet(scenes[i])
                 diagnosis.append(
-                    f"💡 **Informational Peak (Scene {i+1})**: Dry exposition. Convert this block into a dramatic confrontation or high-stakes discovery to restore narrative momentum. (e.g., {snippet})"
+                    f"💡 **Exposition Opportunity (Scene {i+1})**: Dense information here — consider weaving key facts into dialogue or a dramatic discovery to keep momentum high. (e.g., {snippet})"
                 )
                 break
 
-        # 5. Talking Heads (High Dialogue, Low Action, Mid Tension)
+        # 5. Visual Opportunity (High Dialogue, Low Action, Mid Tension)
         for i in range(len(temporal_trace)):
             feat = features[i]
             att_sig = temporal_trace[i]['attentional_signal']
@@ -293,7 +322,7 @@ class InterpretationAgent:
             if dial > 15 and action < 2 and 0.4 < att_sig < 0.6:
                 snippet = self._get_snippet(scenes[i])
                 diagnosis.append(
-                    f"🗣️ **Talking Heads (Scene {i+1})**: Physical passivity. Inject visual subtext or external environment shifts to avoid dialogue fatigue. (e.g., {snippet})"
+                    f"🗣️ **Visual Opportunity (Scene {i+1})**: Dialogue-rich scene — consider adding physical movement or environmental detail to create visual contrast. (e.g., {snippet})"
                 )
                 break
 
@@ -359,7 +388,7 @@ class InterpretationAgent:
             similar_pairs = frustration.get('similar_name_pairs', [])
             if similar_pairs:
                 diagnosis.append(
-                    f"🧠 **Audience Confusion (Scene {i+1})**: Characters with similar names ({', '.join(similar_pairs)}) may confuse the reader."
+                    f"🧠 **Clarity Note (Scene {i+1})**: Characters with similar names ({', '.join(similar_pairs)}) — consider differentiating to help readers track them effortlessly."
                 )
                 break
 
@@ -457,7 +486,7 @@ class InterpretationAgent:
                 top_genre = result['labels'][0]
                 confidence = result['scores'][0] if result.get('scores') else 0
                 
-                # Require higher confidence since we have better coverage now
+                    # Require higher confidence since we have better coverage now
                 if confidence > 0.35:
                     return top_genre
                     
@@ -467,89 +496,236 @@ class InterpretationAgent:
         return None
 
     def _heuristic_genre_detection(self, crime_keywords, family_themes, dialogue_heavy, 
-                                action_heavy, comedy_sentiment, horror_sentiment, temporal_trace):
+                                action_heavy, comedy_sentiment, horror_sentiment, temporal_trace,
+                                horror_explicit=0, fantasy_explicit=0):
         """
-        Sophisticated genre detection with weighted scoring system
+        UNIVERSAL genre detection — every genre must have its own POSITIVE EVIDENCE.
+        
+        Design principles:
+        1. Drama is the safe default. ALL other genres must earn the label.
+        2. Sentiment & tension alone NEVER classify a genre. They are shared across all genres.
+        3. Every genre has a dedicated keyword vocabulary. Overlap is minimised.
+        4. A genre must beat drama's score by a MEANINGFUL MARGIN (40%) to win.
+        5. Keyword thresholds scale with script length (% of scenes, not fixed counts).
         """
         total_scenes = len(temporal_trace)
         if total_scenes < 3:
             return 'drama'
-            
-        # Calculate content ratios
+
+        # ── Structural signals (shared, not genre-defining alone) ────────────
         dialogue_ratio = dialogue_heavy / max(1, dialogue_heavy + action_heavy)
-        action_ratio = action_heavy / max(1, dialogue_heavy + action_heavy)
-        
-        # Analyze tension patterns
-        tension_peaks = sum(1 for s in temporal_trace if s.get('attentional_signal', 0) > 0.7)
-        avg_tension = sum(s.get('attentional_signal', 0) for s in temporal_trace) / total_scenes
-        
-        # Enhanced keyword analysis
-        romance_keywords = 0
-        psychological_keywords = 0
+        action_ratio   = action_heavy   / max(1, dialogue_heavy + action_heavy)
+        tension_peaks  = sum(1 for s in temporal_trace if s.get('attentional_signal', 0) > 0.7)
+        avg_tension    = sum(s.get('attentional_signal', 0) for s in temporal_trace) / total_scenes
+
+        # ── Per-scene keyword counting (single pass) ─────────────────────────
+        # Each vocabulary is EXCLUSIVE to its genre — no shared terms.
+        # Generic words that appear in many genres are intentionally excluded.
+        kw = {
+            'crime_strong': 0,
+            'crime_weak':   0,
+            'horror':    0,
+            'fantasy':   0,
+            'scifi':     0,
+            'action':    0,
+            'comedy':    0,
+            'romance':   0,
+            'psych':     0,
+            'western':   0,
+        }
+
+        CRIME_STRONG  = {'mafia', 'mob', 'gang', 'cartel', 'don', 'corleone', 'hitman',
+                         'assassin', 'heist', 'smugg', 'racket', 'narco'}
+        CRIME_WEAK    = {'detective', 'investigat', 'interrogat', 'forensic', 'suspect',
+                         'evidence', 'witness', 'alibi', 'arrest', 'prison', 'jail',
+                         'cop', 'police', 'fbi', 'cia', 'interpol', 'criminal', 'convict'}
+        HORROR_KW     = {'ghost', 'demon', 'haunt', 'monster', 'possess', 'curse',
+                         'scream', 'nightmare', 'zombie', 'vampire', 'undead', 'apparit',
+                         'poltergeist', 'exorcis', 'supernatural', 'satanic', 'wraith',
+                         'specter', 'spectre', 'eldritch', 'entity'}
+        FANTASY_KW    = {'magic', 'wizard', 'witch', 'dragon', 'sorcerer', 'enchant',
+                         'prophecy', 'elf', 'elves', 'dwarf', 'realm', 'kingdom',
+                         'quest', 'rune', 'alchemy', 'warlock', 'mage', 'paladin',
+                         'orc', 'goblin', 'fairy', 'faerie', 'mythic', 'spellcast'}
+        SCIFI_KW      = {'spaceship', 'starship', 'alien', 'robot', 'android', 'cyborg',
+                         'hologram', 'warp', 'galactic', 'interstellar', 'extraterrest',
+                         'quantum', 'nanotech', 'cryogen', 'terraform', 'lightyear',
+                         'wormhole', 'dystopia', 'utopia', 'cyberpunk', 'biopunk',
+                         'clone', 'mutant', 'ai overlord', 'neural implant'}
+        ACTION_KW     = {'chase', 'gunfight', 'shootout', 'explosion', 'ambush',
+                         'brawl', 'martial art', 'sniper', 'detonate', 'firefight',
+                         'combat', 'mission', 'infiltrat', 'mercenary', 'spec ops',
+                         'airstrike', 'squad', 'platoon', 'commando'}
+        COMEDY_KW     = {'joke', 'laugh', 'hilarious', 'comedic', 'punchline',
+                         'slapstick', 'wisecrack', 'banter', 'farce', 'absurd',
+                         'sitcom', 'parody', 'satire', 'quip', 'witty', 'snarky',
+                         'comedians', 'stand-up', 'gag', 'spoof', 'zany'}
+        ROMANCE_KW    = {'romance', 'romantic', 'kissing', 'kisses', 'flirt', 'serenade',
+                         'courtship', 'sweetheart', 'beloved', 'darling', 'lover', 'dating',
+                         'propose', 'engagement', 'honeymoon', 'infatuat', 'enamored',
+                         'rendezvous', 'admirer', 'valentine', 'courtship'}
+        PSYCH_KW      = {'manipulat', 'gaslighting', 'delusion', 'hallucin',
+                         'paranoia', 'dissociat', 'alter ego', 'split personality',
+                         'unreliable', 'mind control', 'brainwash', 'obsession',
+                         'stalker', 'psychopath', 'sociopath', 'narcissist'}
+        WESTERN_KW    = {'sheriff', 'outlaw', 'cowboy', 'saloon', 'frontier',
+                         'gunslinger', 'bandit', 'ranch', 'posse', 'bounty hunter',
+                         'lawman', 'duel', 'wild west', 'horseback', 'stagecoach'}
+
+        # Count SCENES that have at least one hit (not total hits across all scenes)
+        # This makes pct_scenes() correctly measure "what fraction of scenes mention this genre"
+        scene_kw_hits = {
+            'crime_strong': 0, 'crime_weak': 0, 'horror': 0, 'fantasy': 0,
+            'scifi': 0, 'action': 0, 'comedy': 0, 'romance': 0, 'psych': 0, 'western': 0
+        }
+
         for scene in temporal_trace:
-            text_content = " ".join([str(v) for v in scene.values()]).lower()
-            if any(word in text_content for word in ['love', 'romance', 'relationship', 'dating', 'marriage']):
-                romance_keywords += 1
-            if any(word in text_content for word in ['mind', 'psychological', 'mental', 'therapy', 'trauma']):
-                psychological_keywords += 1
-        
-        # Genre scoring system
+            raw_vals = " ".join(str(v) for v in scene.values()).lower()
+            # Crime
+            if any(w in raw_vals for w in CRIME_STRONG): scene_kw_hits['crime_strong'] += 1
+            if any(w in raw_vals for w in CRIME_WEAK):   scene_kw_hits['crime_weak']   += 1
+            # Genre-specific
+            if any(w in raw_vals for w in HORROR_KW):    scene_kw_hits['horror']        += 1
+            if any(w in raw_vals for w in FANTASY_KW):   scene_kw_hits['fantasy']       += 1
+            if any(w in raw_vals for w in SCIFI_KW):     scene_kw_hits['scifi']         += 1
+            if any(w in raw_vals for w in ACTION_KW):    scene_kw_hits['action']        += 1
+            if any(w in raw_vals for w in COMEDY_KW):    scene_kw_hits['comedy']        += 1
+            if any(w in raw_vals for w in ROMANCE_KW):   scene_kw_hits['romance']       += 1
+            if any(w in raw_vals for w in PSYCH_KW):     scene_kw_hits['psych']         += 1
+            if any(w in raw_vals for w in WESTERN_KW):   scene_kw_hits['western']       += 1
+            # Legacy kw counts (kept for score weighting, not thresholding)
+            kw['crime_strong'] += sum(1 for w in CRIME_STRONG if w in raw_vals)
+            kw['crime_weak']   += sum(1 for w in CRIME_WEAK   if w in raw_vals)
+            kw['horror']       += sum(1 for w in HORROR_KW    if w in raw_vals)
+            kw['fantasy']      += sum(1 for w in FANTASY_KW   if w in raw_vals)
+            kw['scifi']        += sum(1 for w in SCIFI_KW     if w in raw_vals)
+            kw['action']       += sum(1 for w in ACTION_KW    if w in raw_vals)
+            kw['comedy']       += sum(1 for w in COMEDY_KW    if w in raw_vals)
+            kw['romance']      += sum(1 for w in ROMANCE_KW   if w in raw_vals)
+            kw['psych']        += sum(1 for w in PSYCH_KW     if w in raw_vals)
+            kw['western']      += sum(1 for w in WESTERN_KW   if w in raw_vals)
+
+        family_marker_count = 0
+        for scene in temporal_trace:
+            raw_vals = " ".join(str(v) for v in scene.values()).lower()
+            if any(w in raw_vals for w in ['family', 'father', 'mother', 'son', 'daughter',
+                                            'husband', 'wife', 'sibling', 'grief', 'funeral',
+                                            'divorce', 'custody', 'inheritance']):
+                family_marker_count += 1
+
+        def pct_scenes(genre_key, pct=0.10):
+            """Returns True if at least pct% of scenes mention this genre's keywords."""
+            return scene_kw_hits[genre_key] >= max(2, total_scenes * pct)
+
         genre_scores = {}
-        
-        # Crime Thriller: crime + family/drama elements
-        if crime_keywords >= 2:
-            crime_score = (crime_keywords * 2) + (family_themes * 1.5) + (tension_peaks * 0.5)
-            genre_scores['crime_thriller'] = crime_score
-        
-        # Horror: negative sentiment + high tension peaks + low dialogue
-        if horror_sentiment >= 2 or tension_peaks >= 5:
-            horror_score = (horror_sentiment * 2) + (tension_peaks * 1.2) + ((1 - dialogue_ratio) * 3)
+        drama_score = (
+            (dialogue_ratio * 3.0) +
+            (family_marker_count * 0.15) +
+            (avg_tension * 0.5)
+        )
+        genre_scores['drama'] = max(1.0, drama_score)
+
+        crime_strong_hit = scene_kw_hits['crime_strong'] >= max(2, total_scenes * 0.06)
+        crime_weak_hit   = scene_kw_hits['crime_weak']   >= max(3, total_scenes * 0.12)
+        if crime_strong_hit:
+            crime_score = (
+                (kw['crime_strong'] * 2.5) +
+                (kw['crime_weak'] * 0.8) +
+                (tension_peaks * 0.4)
+            )
+            genre_scores['crime drama'] = crime_score
+            if tension_peaks >= max(3, total_scenes * 0.12) and avg_tension > 0.45:
+                genre_scores['crime thriller'] = crime_score * 1.2
+        elif crime_weak_hit and tension_peaks >= max(3, total_scenes * 0.12):
+            crime_score = (kw['crime_weak'] * 1.0) + (tension_peaks * 0.5)
+            if crime_score > drama_score * 1.4:
+                genre_scores['thriller'] = crime_score
+
+        if pct_scenes('horror', pct=0.10):
+            horror_score = (
+                (kw['horror'] * 4.0) +
+                (horror_sentiment * 1.0) +
+                (tension_peaks * 0.3)
+            )
             genre_scores['horror'] = horror_score
-        
-        # Action: high action ratio + tension peaks
-        if action_ratio > 0.5 and tension_peaks >= 3:
-            action_score = (action_ratio * 3) + (tension_peaks * 1.5)
-            genre_scores['action'] = action_score
-        
-        # Thriller: moderate action + tension + crime elements
-        thriller_score = (action_ratio * 2) + (tension_peaks * 1) + (crime_keywords * 1.5)
-        genre_scores['thriller'] = thriller_score
-        
-        # Comedy: high positive sentiment + dialogue-heavy
-        if comedy_sentiment >= 2 or dialogue_ratio > 0.7:
-            comedy_score = (comedy_sentiment * 2) + (dialogue_ratio * 2) + (avg_tension * 0.5)
-            genre_scores['comedy'] = comedy_score
-        
-        # Romance: romance keywords + positive sentiment
-        if romance_keywords >= 2:
-            romance_score = (romance_keywords * 2) + (comedy_sentiment * 1) + (dialogue_ratio * 1.5)
-            genre_scores['romance'] = romance_score
-        
-        # Psychological: psychological keywords + complex themes
-        if psychological_keywords >= 2:
-            psych_score = (psychological_keywords * 2) + (dialogue_ratio * 1) + (avg_tension * 1)
-            genre_scores['psychological_thriller'] = psych_score
-        
-        # Sci-Fi: technology/science keywords + intellectual content
-        scifi_keywords = 0
-        for scene in temporal_trace:
-            text_content = " ".join([str(v) for v in scene.values()]).lower()
-            if any(word in text_content for word in ['technology', 'science', 'future', 'space', 'robot', 'alien', 'computer', 'system', 'digital', 'virtual']):
-                scifi_keywords += 1
-        
-        if scifi_keywords >= 2:
-            scifi_score = (scifi_keywords * 2) + (psychological_keywords * 1) + (avg_tension * 1.2)
+
+        if pct_scenes('fantasy', pct=0.10):
+            fantasy_score = (
+                (kw['fantasy'] * 4.0) +
+                (avg_tension * 0.5)
+            )
+            genre_scores['fantasy'] = fantasy_score
+
+        if pct_scenes('scifi', pct=0.08):
+            scifi_score = (
+                (kw['scifi'] * 3.5) +
+                (avg_tension * 0.5)
+            )
             genre_scores['sci-fi'] = scifi_score
-        
-        # Drama: balanced content with dialogue/emotional elements
-        drama_score = (dialogue_ratio * 1.5) + (family_themes * 1) + (avg_tension * 0.8)
-        genre_scores['drama'] = drama_score
-        
-        # Return highest scoring genre
+
+        # ACTION: requires explicit combat/tactical vocabulary AND either action-dominant
+        # scene structure OR a clear keyword density. The action_ratio param is from
+        # detect_genre's loop; if called standalone, fall back to pure keyword density.
+        action_density_ok = (action_ratio > 0.40) or pct_scenes('action', pct=0.15)
+        if pct_scenes('action', pct=0.08) and action_density_ok:
+            action_score = (
+                (kw['action'] * 2.5) +
+                (action_ratio * 3.0) +
+                (tension_peaks * 0.4)
+            )
+            genre_scores['action'] = action_score
+
+        if pct_scenes('comedy', pct=0.08):
+            comedy_score = (
+                (kw['comedy'] * 3.0) +
+                (comedy_sentiment * 1.0) +
+                (dialogue_ratio * 1.0)
+            )
+            genre_scores['comedy'] = comedy_score
+
+        if pct_scenes('romance', pct=0.12):
+            romance_score = (
+                (kw['romance'] * 3.0) +
+                (comedy_sentiment * 0.8) +
+                (dialogue_ratio * 1.0)
+            )
+            genre_scores['romance'] = romance_score
+
+        if pct_scenes('psych', pct=0.08) and (tension_peaks >= max(2, total_scenes * 0.10) or avg_tension >= 0.55):
+
+            psych_score = (
+                (kw['psych'] * 3.5) +
+                (avg_tension * 1.0) +
+                (tension_peaks * 0.3)
+            )
+            genre_scores['psychological thriller'] = psych_score
+
+        if pct_scenes('western', pct=0.08):
+            western_score = (
+                (kw['western'] * 4.0) +
+                (action_ratio * 1.5)
+            )
+            genre_scores['western'] = western_score
+
+        # THRILLER (generic fallback) — must have both crime/investigative signals AND
+        # meaningful tension. Tension alone (even very high) is NOT a thriller signal —
+        # dramas, horror, and action all have high tension.
+        # Gate: requires crime_weak keywords PLUS tension, not either alone.
+        thriller_raw = (kw['crime_weak'] * 1.2) + (action_ratio * 1.5)
+        has_crime_signal = scene_kw_hits['crime_weak'] >= max(2, total_scenes * 0.08)
+        has_tension_signal = tension_peaks >= max(3, total_scenes * 0.12)
+        if thriller_raw > 4.0 and has_crime_signal and has_tension_signal and 'crime drama' not in genre_scores and 'action' not in genre_scores:
+            genre_scores['thriller'] = thriller_raw
+
         if genre_scores:
-            best_genre = max(genre_scores.items(), key=lambda x: x[1])
-            return best_genre[0] if best_genre[1] > 2.0 else 'drama'
-        
+            drama_s = genre_scores.get('drama', 1.0)
+            ranked = sorted(genre_scores.items(), key=lambda x: x[1], reverse=True)
+            winner_genre, winner_score = ranked[0]
+            if winner_genre == 'drama':
+                return 'drama'
+            if winner_score > drama_s * 1.40 and winner_score >= 3.0:
+                return winner_genre
+
         return 'drama'
 
 

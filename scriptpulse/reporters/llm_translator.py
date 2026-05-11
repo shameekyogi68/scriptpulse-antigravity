@@ -29,12 +29,35 @@ except ImportError:
     Groq = None
     GROQ_AVAILABLE = False
 
+# Gemini SDK handling (supports both google-genai and legacy google-generativeai)
+GEMINI_MODE = None
+GEMINI_AVAILABLE = False
+genai = None
+
+import importlib
+import warnings
 try:
-    from google import genai
-    GEMINI_AVAILABLE = True
-except ImportError:
-    genai = None
-    GEMINI_AVAILABLE = False
+    # Try the new google-genai SDK first (preferred)
+    _google = importlib.import_module("google")
+    if hasattr(_google, "genai"):
+        _genai_new = _google.genai
+        if hasattr(_genai_new, 'Client'):
+            genai = _genai_new
+            GEMINI_MODE = 'new'
+            GEMINI_AVAILABLE = True
+except (ImportError, ModuleNotFoundError):
+    pass
+
+if not GEMINI_AVAILABLE:
+    try:
+        # Fallback to legacy google-generativeai SDK (suppress deprecation warning)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", FutureWarning)
+            genai = importlib.import_module("google.generativeai")
+        GEMINI_MODE = 'old'
+        GEMINI_AVAILABLE = True
+    except (ImportError, ModuleNotFoundError):
+        pass
 
 _log = logging.getLogger(__name__)
 
@@ -154,44 +177,77 @@ def generate_ai_summary(script_data, lens='viewer', api_key=None):
         "structural_dashboard": slim_dashboard
     }
     
-    # Customize the persona based on the lens
-    persona_map = {
-        "Studio Executive": "a sharp-eyed Development Executive at a major studio. Focus on commercial viability, audience demographic expansion, budget risks, and market positioning.",
-        "Story Editor": "a master Story Editor for major film and television productions. Focus on internal character logic, causality, emotional stakes, and structural beats.",
-        "Script Coordinator": "a technical Script Analyst and Pacing Consultant. Focus on dialogue economy, visual description energy, scene-to-scene transitions, and stylistic consistency."
-    }
-    persona_desc = persona_map.get(lens, "a professional Script Consultant.")
+    # Import the differentiated lens system
+    try:
+        from ..pipeline.lenses import get_persona_description
+        persona_desc = get_persona_description(lens, mode='full')
+    except Exception:
+        persona_desc = "a professional Script Consultant."
+
+    # Build a perspective-specific focus instruction
+    perspective_focus = {
+        "Studio Executive": (
+            "Your analysis MUST address: (1) Whether the script's engagement floor is high enough "
+            "for a wide theatrical release. (2) The budget risk profile based on locations, cast, "
+            "and action density. (3) Which demographic this script targets and whether it has "
+            "four-quadrant potential. End with 3 Fix Suggestions that a development team can act on "
+            "immediately to improve the commercial package."
+        ),
+        "Story Editor": (
+            "Your analysis MUST address: (1) Whether the three-act structure has correctly placed "
+            "inciting incident, midpoint, and climax beats. (2) Whether character arcs show measurable "
+            "agency growth or decline. (3) Whether the emotional stakes escalate believably toward the "
+            "resolution. End with 3 Fix Suggestions that target the script's internal narrative logic."
+        ),
+        "Script Coordinator": (
+            "Your analysis MUST address: (1) Whether the dialogue-to-action ratio serves the "
+            "genre (e.g., too many talking-head scenes for an action piece). (2) Scene economy — "
+            "flag which scenes are bloated or under-written. (3) Whether the visual descriptions "
+            "have enough energy and specificity to direct from. End with 3 Fix Suggestions that "
+            "a writer can execute on the page in the next draft."
+        ),
+    }.get(lens, "End with 3 actionable Fix Suggestions.")
 
     system_prompt = (
         f"You are {persona_desc} "
         "You ONLY analyze screenplays. Provide a precise, evidence-based analysis grounded exclusively in the structural data provided. "
         "CRITICAL RULES — violating any of these is unacceptable:\n"
         "1. NEVER invent plot details, character names, or scenes not supported by the data. If you don't have the data, say 'the data does not indicate this.'\n"
-        "2. Strictly maintain this specific professional persona throughout. Use role-appropriate vocabulary (e.g., Executive uses 'ROI', 'Comp', 'Demographic'; Editor uses 'Beat', 'Arc', 'Causality'; Coordinator uses 'White Space', 'Rhythm', 'Flow').\n"
+        "2. Strictly maintain this specific professional persona throughout. Use ONLY role-appropriate vocabulary for your perspective.\n"
         "3. Every claim you make MUST be supported by a specific metric or finding from the Experience Data. If you reference a problem, cite the scene number or metric that surfaces it.\n"
-        "4. ALWAYS end with exactly 3 concrete 'Fix Suggestions' — each fix must be specific and actionable for a working writer (not generic advice like 'improve pacing').\n"
+        f"4. {perspective_focus}\n"
         "5. If you mention 'ScriptPulse', ALWAYS format it EXACTLY like this: Script<span style='color: #0052FF; font-weight: bold;'>Pulse</span>\n"
         "6. Do NOT flag page length as an issue unless the runtime data explicitly shows the script is significantly outside the genre benchmark range.\n"
-        "7. Your tone must be respectful, direct, and constructive — you are a mentor, not a gatekeeper."
+        "7. Your tone must be respectful, direct, and constructive — you are a mentor, not a gatekeeper. Frame every finding as an opportunity for the writer to strengthen their work.\n"
+        "8. NEVER use dismissive or rejecting language like 'fails', 'broken', 'weak', or 'should be cut'. Instead, frame improvements as 'could be elevated by', 'has room to grow', or 'would benefit from'."
     )
     user_content = f"Experience Data: {json.dumps(data_payload)}"
     errors = []
 
     # 1. Try GEMINI (Best for long-form reasoning and "Story Soul")
-    if keys["gemini"] and GEMINI_AVAILABLE:
+    if keys["gemini"] and GEMINI_AVAILABLE and genai is not None:
         try:
             with timeout_context(10):
-                genai.configure(api_key=keys["gemini"])
-                model = genai.GenerativeModel('gemini-1.5-flash')
-                response = model.generate_content(f"SYSTEM: {system_prompt}\n\nUSER: {user_content}")
-                return response.text, None
+                if GEMINI_MODE == 'new':
+                    client = genai.Client(api_key=keys["gemini"])
+                    response = client.models.generate_content(
+                        model='gemini-1.5-flash',
+                        contents=f"SYSTEM: {system_prompt}\n\nUSER: {user_content}"
+                    )
+                    return response.text, None
+                else:
+                    # Old SDK
+                    genai.configure(api_key=keys["gemini"])
+                    model = genai.GenerativeModel('gemini-1.5-flash')
+                    response = model.generate_content(f"SYSTEM: {system_prompt}\n\nUSER: {user_content}")
+                    return response.text, None
         except TimeoutError:
             errors.append("Gemini: Request timed out after 10 seconds")
         except Exception as e:
             errors.append(f"Gemini: {str(e)}")
 
     # 2. Try GROQ (Blazing Fast)
-    if keys["groq"] and GROQ_AVAILABLE:
+    if keys["groq"] and GROQ_AVAILABLE and Groq is not None:
         try:
             with timeout_context(10):
                 client = Groq(api_key=keys["groq"])
@@ -237,38 +293,52 @@ def generate_section_insight(script_data, section_type, lens='viewer', api_key=N
     if not any(keys.values()):
         return "Connect an API key (Groq, Gemini, or HF) to hear audience reactions."
 
-    # Persona definitions for sections
-    persona_map = {
-        "Studio Executive": "a Development Executive focused on commercial pacing and audience retention.",
-        "Story Editor": "a Story Editor focused on structural beats and emotional momentum.",
-        "Script Coordinator": "a Script Coordinator focused on the physical read and visual energy."
-    }
-    p_desc = persona_map.get(lens, "a professional Script Consultant.")
+    # Import differentiated persona descriptions
+    try:
+        from ..pipeline.lenses import get_persona_description
+        p_desc = get_persona_description(lens, mode='full')
+    except Exception:
+        p_desc = "a professional Script Consultant."
 
     if section_type == 'pulse':
         tp = script_data.get('writer_intelligence', {}).get('structural_dashboard', {}).get('structural_turning_points', {})
         payload = {"peaks": tp}
+        # Each perspective reads the pacing graph through a different professional lens
+        pulse_focus = {
+            "Studio Executive": "Focus on whether the engagement arc supports sustained audience retention. Highlight the strongest momentum beats and suggest where pacing could be tightened.",
+            "Story Editor":     "Focus on whether the pacing peaks align with the structural beats (inciting incident, midpoint, climax). Identify the most narratively significant pacing shift.",
+            "Script Coordinator": "Focus on the rhythm of scene transitions. Identify whether the tension spikes are supported by physical action or pure dialogue.",
+        }.get(lens, "Identify the most significant pacing trend observed.")
         system_msg = (
             f"You are {p_desc} Analyze the story's structural pacing graph. "
-            "Explain how this sequence affects the audience's attention from your professional perspective. "
-            "Identify the most significant pacing trend observed. One precise sentence. "
+            f"{pulse_focus} One precise sentence. "
             "CRITICAL: Do not use phrases like 'Based on the provided data' or 'Raw Experience Math'. Speak directly and naturally to the writer. "
             "If referring to the engine, format it as: Script<span style='color: #0052FF; font-weight: bold;'>Pulse</span>"
         )
     elif section_type == 'dna':
         payload = {"distribution": "Speed vs Detail balance"}
+        dna_focus = {
+            "Studio Executive": "Focus on whether the action-to-world-building ratio will engage a mainstream audience and where the balance could be further optimized.",
+            "Story Editor":     "Focus on whether the balance of action and exposition serves the emotional arc of the story. Does the script breathe in the right places?",
+            "Script Coordinator": "Focus on the page density. Can action blocks be tightened? Is dialogue doing work that visuals could handle more effectively?",
+        }.get(lens, "Evaluate the impact of this balance on reader immersion for the current story goals.")
         system_msg = (
             f"You are {p_desc} Evaluate the balance of narrative action vs world-building. "
-            "Evaluate the impact of this balance on reader immersion for the current story goals. One clear sentence. "
+            f"{dna_focus} One clear sentence. "
             "CRITICAL: Do not use phrases like 'Based on the provided data' or 'Raw Experience Math'. Speak directly and naturally to the writer. "
             "If referring to the engine, format it as: Script<span style='color: #0052FF; font-weight: bold;'>Pulse</span>"
         )
-    else: # habits
+    else:  # habits
         perceptual = script_data.get('perceptual_features', [])[:10]
         payload = {"samples": perceptual}
+        habits_focus = {
+            "Studio Executive": "Focus on whether the dialogue has a distinctive voice that will attract A-list talent. Is it quotable? Is it genre-specific?",
+            "Story Editor":     "Focus on what the dialogue texture reveals about character dynamics and subtext. Are characters talking past each other in interesting ways?",
+            "Script Coordinator": "Focus on the rhythm, compression, and economy of the dialogue. Are there over-written speeches? Are parentheticals being abused?",
+        }.get(lens, "Identify what the current dialogue texture reveals about the character dynamics.")
         system_msg = (
             f"You are {p_desc} Evaluate the rhythm and subtext of the characters' dialogue. "
-            "Identify what the current dialogue texture reveals about the character dynamics. One professional sentence. "
+            f"{habits_focus} One professional sentence. "
             "If referring to the engine, format it as: Script<span style='color: #0052FF; font-weight: bold;'>Pulse</span>"
         )
 
@@ -286,19 +356,26 @@ def generate_section_insight(script_data, section_type, lens='viewer', api_key=N
     errors = []
 
     for provider in order:
-        if provider == 'gemini' and keys["gemini"] and GEMINI_AVAILABLE:
+        if provider == 'gemini' and keys["gemini"] and GEMINI_AVAILABLE and genai is not None:
             try:
-                client = genai.Client(api_key=keys["gemini"])
-                response = client.models.generate_content(
-                    model='gemini-1.5-flash',
-                    contents=f"SYSTEM: {system_msg}\n\nUSER: {user_content}"
-                )
-                return response.text
+                if GEMINI_MODE == 'new':
+                    client = genai.Client(api_key=keys["gemini"])
+                    response = client.models.generate_content(
+                        model='gemini-1.5-flash',
+                        contents=f"SYSTEM: {system_msg}\n\nUSER: {user_content}"
+                    )
+                    return response.text
+                else:
+                    # Old SDK
+                    genai.configure(api_key=keys["gemini"])
+                    model = genai.GenerativeModel('gemini-1.5-flash')
+                    response = model.generate_content(f"SYSTEM: {system_msg}\n\nUSER: {user_content}")
+                    return response.text
             except Exception as e:
                 errors.append(f"Gemini: {str(e)}")
                 continue
             
-        if provider == 'groq' and keys["groq"] and GROQ_AVAILABLE:
+        if provider == 'groq' and keys["groq"] and GROQ_AVAILABLE and Groq is not None:
             try:
                 client = Groq(api_key=keys["groq"])
                 completion = client.chat.completions.create(

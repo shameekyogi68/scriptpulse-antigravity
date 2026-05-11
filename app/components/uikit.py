@@ -14,7 +14,7 @@ def get_brand_html(size: str = "3.8rem", align: str = "center", margin_bottom: s
     )
 
 def render_hero_section(title: str, subtitle: str):
-    """Renders the main hero section with the ScriptPulse icon logo above the brand text."""
+    """Renders the main hero section with the ScriptPulse icon logo, brand text, and trust bar."""
     import os, base64
 
     # Resolve icon path relative to any working directory
@@ -35,12 +35,23 @@ def render_hero_section(title: str, subtitle: str):
 
     brand_html = get_brand_html(size="3.8rem", align="center", margin_bottom="10px")
 
+    # Trust bar with live indicators
+    trust_bar_html = (
+        '<div class="trust-bar">'
+        '<div class="trust-item"><span class="trust-dot"></span> Engine Online</div>'
+        '<div class="trust-item"><span class="trust-dot"></span> Privacy First</div>'
+        '<div class="trust-item"><span class="trust-dot"></span> AI-Verified</div>'
+        '<div class="trust-item"><span class="trust-dot"></span> Scene-Level Analysis</div>'
+        '</div>'
+    )
+
     html_content = f"""
-    <div style="text-align: center; padding: 2rem 0 1.5rem 0; width: 100%; background: transparent !important;">
+    <div style="text-align: center; padding: 2rem 0 1.5rem 0; width: 100%; background: transparent !important; position: relative;">
         {logo_html}
         {brand_html}
         <div style="color: #A3A0B3 !important; font-size: 1.15rem; font-weight: 300;
-                    max-width: 800px; margin: 0 auto;">{subtitle}</div>
+                    max-width: 800px; margin: 0 auto; position: relative; z-index: 1;">{subtitle}</div>
+        {trust_bar_html}
     </div>
     """
     st.markdown(html_content, unsafe_allow_html=True)
@@ -91,6 +102,36 @@ def render_tooltip_card(content: str):
     st.markdown(f"""
     <div class="tooltip-card">
         {content}
+    </div>
+    """, unsafe_allow_html=True)
+
+def render_empty_state():
+    """Renders a premium empty state with compelling CTA and feature highlights."""
+    st.markdown("""
+    <div style="text-align: center; padding: 2.5rem 2rem; margin: 1rem 0;
+                background: linear-gradient(135deg, rgba(0, 82, 255, 0.04) 0%, rgba(106, 72, 187, 0.03) 50%, rgba(0, 82, 255, 0.04) 100%);
+                border: 1px solid rgba(0, 82, 255, 0.08); border-radius: 20px;
+                position: relative; overflow: hidden;">
+        <div style="position: absolute; top: 0; left: 0; right: 0; height: 2px;
+                    background: linear-gradient(90deg, transparent, rgba(0, 82, 255, 0.4), transparent);"></div>
+        <div style="font-size: 2.5rem; margin-bottom: 12px; filter: drop-shadow(0 0 12px rgba(0, 82, 255, 0.3));">📄</div>
+        <div style="font-size: 1.15rem; font-weight: 600; color: white; margin-bottom: 8px;">
+            Upload or paste your screenplay to begin
+        </div>
+        <div style="font-size: 0.88rem; color: rgba(163, 160, 179, 0.9); max-width: 500px; margin: 0 auto 20px auto; line-height: 1.6;">
+            ScriptPulse will analyze your script's emotional architecture, structural health, and character dynamics in seconds.
+        </div>
+        <div style="display: flex; justify-content: center; gap: 24px; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; color: rgba(244, 246, 251, 0.5);">
+                <span style="color: #00D2A0;">✓</span> Supports PDF, TXT, FDX
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; color: rgba(244, 246, 251, 0.5);">
+                <span style="color: #00D2A0;">✓</span> Genre-calibrated benchmarks
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; color: rgba(244, 246, 251, 0.5);">
+                <span style="color: #00D2A0;">✓</span> 3 professional perspectives
+            </div>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -155,15 +196,23 @@ def render_ai_consultant_box(insight_text: str, persona: str = "Script Consultan
     display_title = box_title if box_title else f"{persona} Intelligence"
 
     html = (
-        f'<div style="background: linear-gradient(135deg, rgba(106, 72, 187, 0.1) 0%, rgba(106, 72, 187, 0.03) 100%); '
-        f'border-radius: var(--radius-lg); padding: 20px; border: 1px solid rgba(106, 72, 187, 0.2); '
-        f'backdrop-filter: blur(12px); box-shadow: 0 4px 20px rgba(0,0,0,0.2); margin-top: 20px;">'
-        f'<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">'
-        f'<span style="font-size: 1.4rem; filter: drop-shadow(0 0 8px {Theme.ACCENT_PRIMARY});">🧠</span>'
-        f'<span style="font-weight: 700; color: white; font-size: 0.9rem; letter-spacing: 0.1em; text-transform: uppercase;">'
+        f'<div style="background: linear-gradient(135deg, rgba(0, 82, 255, 0.06) 0%, rgba(106, 72, 187, 0.04) 50%, rgba(0, 82, 255, 0.06) 100%); '
+        f'border-radius: 16px; padding: 22px 24px; border: 1px solid rgba(0, 82, 255, 0.15); '
+        f'backdrop-filter: blur(16px); box-shadow: 0 8px 32px rgba(0,0,0,0.25); margin-top: 20px; '
+        f'position: relative; overflow: hidden;">'
+        f'<div style="position: absolute; top: 0; left: 0; right: 0; height: 2px; '
+        f'background: linear-gradient(90deg, transparent, rgba(0, 82, 255, 0.6), rgba(106, 72, 187, 0.4), transparent);"></div>'
+        f'<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">'
+        f'<div style="display: flex; align-items: center; gap: 10px;">'
+        f'<span style="font-size: 1.4rem; filter: drop-shadow(0 0 8px rgba(0, 82, 255, 0.5));">🧠</span>'
+        f'<span style="font-weight: 700; color: white; font-size: 0.85rem; letter-spacing: 0.1em; text-transform: uppercase;">'
         f'{display_title}</span>'
         f'</div>'
-        f'<div style="color: rgba(244, 246, 251, 0.95); font-size: 1rem; line-height: 1.7; font-style: italic; font-weight: 300;">'
+        f'<span style="font-size: 0.6rem; color: rgba(0, 210, 160, 0.7); font-weight: 700; letter-spacing: 0.1em; '
+        f'text-transform: uppercase; background: rgba(0, 210, 160, 0.08); border: 1px solid rgba(0, 210, 160, 0.2); '
+        f'border-radius: 12px; padding: 3px 10px;">✓ AI-VERIFIED</span>'
+        f'</div>'
+        f'<div style="color: rgba(244, 246, 251, 0.92); font-size: 0.98rem; line-height: 1.8; font-style: italic; font-weight: 300;">'
         f'"{text_html}"</div>'
         f'</div>'
     )

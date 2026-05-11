@@ -1,7 +1,7 @@
 import streamlit as st
 
 def render_sidebar(ui_mode, is_cloud, stu):
-    """Renders the ScriptPulse product sidebar — clean and focused."""
+    """Renders the ScriptPulse product sidebar — market release."""
     from app.components import uikit
     
     with st.sidebar:
@@ -14,28 +14,38 @@ def render_sidebar(ui_mode, is_cloud, stu):
         
         # How It Works
         st.markdown("#### How It Works")
-        st.caption(
-            "1. **Upload** your screenplay (PDF, TXT, FDX)\n"
-            "2. **Select** your genre\n"
-            "3. **Analyze** — get instant feedback\n"
-            "4. **Export** professional reports"
-        )
+        st.markdown("""
+        <div style="font-size: 0.82rem; color: rgba(244,246,251,0.8); line-height: 2.0;">
+            <div style="margin-bottom: 4px;"><span style="background: rgba(0,82,255,0.15); color: #5B9AFF; border-radius: 4px; padding: 2px 8px; font-weight: 700; font-size: 0.7rem; margin-right: 8px;">1</span> Upload your screenplay</div>
+            <div style="margin-bottom: 4px;"><span style="background: rgba(0,82,255,0.15); color: #5B9AFF; border-radius: 4px; padding: 2px 8px; font-weight: 700; font-size: 0.7rem; margin-right: 8px;">2</span> Select genre & perspective</div>
+            <div style="margin-bottom: 4px;"><span style="background: rgba(0,82,255,0.15); color: #5B9AFF; border-radius: 4px; padding: 2px 8px; font-weight: 700; font-size: 0.7rem; margin-right: 8px;">3</span> Get instant AI analysis</div>
+            <div><span style="background: rgba(0,82,255,0.15); color: #5B9AFF; border-radius: 4px; padding: 2px 8px; font-weight: 700; font-size: 0.7rem; margin-right: 8px;">4</span> Export pro reports</div>
+        </div>
+        """, unsafe_allow_html=True)
 
-        # System Intelligence & Analysis Depth
-        st.markdown("#### Analysis Depth")
-        st.caption("🧠 **Multidimensional Evaluation**")
-        st.progress(1.0, text="✨ **Narrative Dimensions**: 15+")
-        st.progress(1.0, text="📊 **Structural Theory**: 3-Act Logic")
-        st.progress(1.0, text="🔬 **Granularity**: Scene-by-Scene")
+        st.markdown("---")
+
+        # Capabilities
+        st.markdown("#### Capabilities")
+        st.markdown("""
+        <div style="font-size: 0.78rem; line-height: 2.1; color: rgba(244,246,251,0.7);">
+            <div>📊 <b>15+ Narrative Dimensions</b></div>
+            <div>🎬 <b>3-Act Structural Analysis</b></div>
+            <div>🔬 <b>Scene-by-Scene Granularity</b></div>
+            <div>🎭 <b>Character Voice Distinction</b></div>
+            <div>🧠 <b>AI-Powered Coverage Memos</b></div>
+            <div>📥 <b>Pro Export (Writer / Studio / Summary)</b></div>
+        </div>
+        """, unsafe_allow_html=True)
         
         st.markdown(f"""
-        <div style="background: linear-gradient(90deg, rgba(59,130,246,0.15), rgba(59,130,246,0.05)); 
-                    border: 1px solid rgba(59, 130, 246, 0.4); border-left: 3px solid #3b82f6;
+        <div style="background: linear-gradient(90deg, rgba(0,82,255,0.12), rgba(0,82,255,0.04)); 
+                    border: 1px solid rgba(0, 82, 255, 0.25); border-left: 3px solid #0052FF;
                     border-radius: 8px; padding: 12px; margin-top: 15px; text-align: center;
-                    box-shadow: 0 4px 15px rgba(59,130,246,0.1), inset 0 0 10px rgba(59,130,246,0.05);">
+                    box-shadow: 0 4px 15px rgba(0,82,255,0.08);">
             <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
                 <span style="font-size: 1.1rem;">⚡</span>
-                <span style="color: #3b82f6; font-weight: 800; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase;">AI-Powered Analysis</span>
+                <span style="color: #5B9AFF; font-weight: 800; font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase;">AI-Powered Analysis</span>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -43,9 +53,15 @@ def render_sidebar(ui_mode, is_cloud, stu):
         st.markdown("---")
 
         # Engine Info
-        st.markdown("<div style='font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 10px;'>⚡ <b>Engine</b>: Script<span style='color: #0052FF; font-weight: 700;'>Pulse</span> v15.0 Gold</div>", unsafe_allow_html=True)
+        st.markdown("""
+        <div style="font-size: 0.78rem; color: rgba(255,255,255,0.5); margin-top: 10px;">
+            ⚡ <b>Engine</b>: Script<span style="color: #0052FF; font-weight: 700;">Pulse</span> v1.0
+        </div>
+        """, unsafe_allow_html=True)
         st.caption("🧠 **Mode**: Hybrid ML + Cognitive Sim")
-        st.caption("🔒 **Privacy**: Your scripts are never stored.")
+        st.caption("🔒 **Privacy**: Scripts never stored")
+        st.caption("🎯 **Accuracy**: Genre-calibrated benchmarks")
+        st.caption("© 2026 ScriptPulse")
 
         st.markdown("---")
 

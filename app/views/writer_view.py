@@ -75,10 +75,10 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
             score_label = "Strong Draft"
         elif sp_score >= 45:
             score_color = Theme.SEMANTIC_WARNING
-            score_label = "Needs Work"
+            score_label = "Developing — Clear Potential"
         else:
             score_color = Theme.SEMANTIC_CRITICAL
-            score_label = "Major Revision"
+            score_label = "Early Draft — Growth Path Identified"
 
         rgb = ','.join(str(int(score_color.lstrip('#')[i:i+2], 16)) for i in (0, 2, 4))
 
@@ -88,7 +88,11 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
                         border: 1px solid rgba({rgb}, 0.3);
                         box-shadow: 0 4px 20px rgba({rgb}, 0.15), inset 0 2px 5px rgba(255,255,255,0.05);
                         backdrop-filter: blur(8px);
-                        border-radius: 20px; padding: 18px 32px; text-align: center; min-width: 140px;">
+                        border-radius: 20px; padding: 18px 32px; text-align: center; min-width: 140px;
+                        position: relative; overflow: hidden;">
+                <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px;
+                            background: linear-gradient(90deg, transparent, {score_color}, transparent);
+                            animation: scoreShimmer 3s ease-in-out infinite;"></div>
                 <div style="font-size: 2.8rem; font-weight: 800; color: {score_color}; text-shadow: 0 0 15px rgba({rgb},0.4);
                             font-family: 'Outfit', sans-serif; line-height: 1;">{sp_score}</div>
                 <div style="font-size: 0.65rem; color: #FFFFFF; text-transform: uppercase;
@@ -100,13 +104,22 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
                 <p style="color: rgba(163, 160, 179, 0.9); font-size: 1rem; margin: 0; font-weight: 300; line-height: 1.5;">{config['tagline']}</p>
             </div>
         </div>
+        <style>@keyframes scoreShimmer {{ 0%,100% {{ opacity: 0.3; }} 50% {{ opacity: 1; }} }}</style>
         """, unsafe_allow_html=True)
 
         # --- Confidence Badge ---
         confidence = report.get('meta', {}).get('confidence_level', 'MEDIUM')
         reasons = report.get('meta', {}).get('confidence_reasons', [])
         confidence_colors = {'HIGH': '#22C55E', 'MEDIUM': '#F59E0B', 'LOW': '#EF4444'}
-        st.markdown(f"<span style='color:{confidence_colors[confidence]}'>● {confidence} Confidence</span>", unsafe_allow_html=True)
+        conf_icon = {'HIGH': '✅', 'MEDIUM': '⚡', 'LOW': '⚠️'}
+        st.markdown(f"""
+        <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba({','.join(str(int(confidence_colors[confidence].lstrip('#')[i:i+2], 16)) for i in (0,2,4))}, 0.1);
+                    border: 1px solid rgba({','.join(str(int(confidence_colors[confidence].lstrip('#')[i:i+2], 16)) for i in (0,2,4))}, 0.3);
+                    border-radius: 20px; padding: 6px 16px; font-size: 0.8rem;">
+            <span>{conf_icon[confidence]}</span>
+            <span style="color: {confidence_colors[confidence]}; font-weight: 700;">{confidence} Confidence</span>
+        </div>
+        """, unsafe_allow_html=True)
         if reasons:
             st.caption(f"Why: {', '.join(reasons)}")
 
@@ -264,7 +277,7 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
     # =====================================================================
     def render_diagnostics():
         st.markdown("<br>", unsafe_allow_html=True)
-        uikit.render_section_header("🧠", "Structural Diagnostics", config['diag_desc'])
+        uikit.render_section_header("🧠", "Narrative Insights", config['diag_desc'])
 
         diagnoses = writer_intel.get('narrative_diagnosis', [])
         
@@ -569,38 +582,53 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
     # PERSONA-RESPONSIVE FLOW — SHOW ONLY WHAT'S NEEDED
     # =====================================================================
 
+    def _safe_render(fn, label):
+        """Crash-safe wrapper for section rendering."""
+        try:
+            fn()
+        except Exception as e:
+            st.warning(f"⚠️ Could not render {label}. Your analysis data is intact.")
+            with st.expander(f"{label} — Technical Details"):
+                st.code(str(e))
+
     if lens == "Studio Executive":
-        # Executive Flow: Score → AI Memo → Producer Intel → Tension Map → Diagnostics
-        # NO Characters, NO Scene Turns, NO Mentor
-        render_score_card()
-        render_coverage_memo()
-        render_producer_intel()
+        _safe_render(render_score_card, "Score Card")
+        _safe_render(render_coverage_memo, "AI Coverage")
+        _safe_render(render_producer_intel, "Producer Intel")
         st.markdown("---")
-        render_story_pulse()
-        render_diagnostics()
+        _safe_render(render_story_pulse, "Tension Map")
+        _safe_render(render_diagnostics, "Diagnostics")
 
     elif lens == "Script Coordinator":
-        # Coordinator Flow: Score → Tension Map → Diagnostics → Scene Turns → Scene Economy → AI Memo
-        # NO Producer Intel, NO Mentor, NO Characters
-        render_score_card()
-        render_story_pulse()
-        render_diagnostics()
-        render_scene_turns()
-        render_scene_economy()
+        _safe_render(render_score_card, "Score Card")
+        _safe_render(render_story_pulse, "Tension Map")
+        _safe_render(render_diagnostics, "Diagnostics")
+        _safe_render(render_scene_turns, "Scene Turns")
+        _safe_render(render_scene_economy, "Scene Economy")
         st.markdown("---")
-        render_coverage_memo()
+        _safe_render(render_coverage_memo, "AI Coverage")
 
     else:  # Story Editor (Default)
-        # Editor Flow: Score → Tension Map → Diagnostics → Characters → Scene Turns → Mentor → AI Memo → Producer Intel
-        # FULL VIEW — the Editor sees everything
-        render_score_card()
-        render_story_pulse()
-        render_diagnostics()
-        render_characters()
-        render_scene_turns()
-        render_mentor()
+        _safe_render(render_score_card, "Score Card")
+        _safe_render(render_story_pulse, "Tension Map")
+        _safe_render(render_diagnostics, "Diagnostics")
+        _safe_render(render_characters, "Characters")
+        _safe_render(render_scene_turns, "Scene Turns")
+        _safe_render(render_mentor, "Mentor")
         st.markdown("---")
-        render_coverage_memo()
-        render_producer_intel()
+        _safe_render(render_coverage_memo, "AI Coverage")
+        _safe_render(render_producer_intel, "Producer Intel")
 
-    render_export()
+    _safe_render(render_export, "Export")
+
+    # --- Methodology Footer ---
+    st.markdown("""
+    <div style="margin-top: 2rem; padding: 16px 20px; background: linear-gradient(90deg, rgba(0, 82, 255, 0.04) 0%, rgba(106, 72, 187, 0.03) 100%);
+                border: 1px solid rgba(0, 82, 255, 0.08); border-radius: 12px;">
+        <div style="font-size: 0.72rem; color: rgba(244, 246, 251, 0.5); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; margin-bottom: 8px;">How This Works</div>
+        <div style="font-size: 0.82rem; color: rgba(244, 246, 251, 0.65); line-height: 1.6;">
+            ScriptPulse analyzes your screenplay using a <b>hybrid pipeline</b>: NLP feature extraction → cognitive load simulation → structural interpretation → expert-system scoring.
+            Each metric is calibrated against <b>genre-specific benchmarks</b> from professional screenwriting standards. AI insights are generated by LLMs grounded exclusively in your script's data — never hallucinated.
+        </div>
+    </div>
+    """, unsafe_allow_html=True)

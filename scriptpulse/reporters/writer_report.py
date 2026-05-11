@@ -103,7 +103,7 @@ def generate_writer_report(pipeline_output, title="Untitled Script", genre=None)
     lines.append(f"**PROJECT:** `{title.upper()}`  ")
     lines.append(f"**GENRE PROFILE:** `{genre.upper()}`  ")
     lines.append(f"**ANALYSIS DATE:** {analysis_date}  ")
-    lines.append(f"**ENGINE VERSION:** `v15.0 Gold`  ")
+    lines.append(f"**ENGINE VERSION:** `v1.0`  ")
     lines.append("\n" + "---" * 10 + "\n")
 
     # -------------------------------------------------------------------------
@@ -217,8 +217,8 @@ def generate_writer_report(pipeline_output, title="Untitled Script", genre=None)
     # -------------------------------------------------------------------------
     # NARRATIVE DIAGNOSIS
     # -------------------------------------------------------------------------
-    lines.append("\n## 🩺 Narrative Diagnosis")
-    lines.append("*Multi-dimensional structural health check:*\n")
+    lines.append("\n## 🩺 Narrative Health Check")
+    lines.append("*Multi-dimensional structural insights:*\n")
     if diagnosis:
         for item in diagnosis:
             lines.append(f" - {item}")
@@ -263,7 +263,7 @@ def generate_writer_report(pipeline_output, title="Untitled Script", genre=None)
     high_scenes = econ_map.get('high_economy_scenes', [])
 
     if cut_candidates:
-        lines.append(f"> [!IMPORTANT]\n> Found **{low_count} Efficiency Gaps**. Narrative flow shows signs of potential deceleration in: Scenes {', '.join(str(s) for s in cut_candidates)}")
+        lines.append(f"> [!IMPORTANT]\n> Found **{low_count} Pacing Opportunities**. These scenes could benefit from tighter rhythm: Scenes {', '.join(str(s) for s in cut_candidates)}")
     
     if high_scenes:
         lines.append(f"🌟 **Load-Bearing Scenes:** {', '.join(str(s) for s in high_scenes[:5])}")

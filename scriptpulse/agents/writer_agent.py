@@ -1823,8 +1823,17 @@ class WriterAgent:
         lookup = {
             ('Crime', 'Political/Mob/Society'): ["The Godfather", "The Departed", "The Irishman"],
             ('Crime', 'Psychological/Moral'): ["Chinatown", "No Country for Old Men", "Heat"],
+            ('Crime Drama', 'Political/Mob/Society'): ["The Godfather", "The Departed", "The Irishman"],
+            ('Crime Drama', 'Psychological/Moral'): ["Chinatown", "No Country for Old Men", "Heat"],
+            ('Crime Drama', 'Personal/Relational'): ["A Bronx Tale", "The Irishman", "Goodfellas"],
+            ('Crime Thriller', 'Political/Mob/Society'): ["The Godfather", "The Departed", "Heat"],
+            ('Crime Thriller', 'Psychological/Moral'): ["Chinatown", "No Country for Old Men", "Prisoners"],
             ('Drama', 'Personal/Relational'): ["Marriage Story", "Ordinary People", "Lady Bird"],
-            ('Drama', 'Political/Mob/Society'): ["The Godfather", "The Irishman", "A Bronx Tale"],
+            ('Drama', 'Political/Mob/Society'): ["Spotlight", "The Post", "All the President's Men"],
+            ('Drama', 'Psychological/Moral'): ["Whiplash", "Black Swan", "A Beautiful Mind"],
+            ('Drama', 'Philosophical/Surreal'): ["The Tree of Life", "Boyhood", "Her"],
+            ('Drama', 'Visceral/Action'): ["The Wrestler", "Southpaw", "Warrior"],
+            ('Psychological Thriller', 'Psychological/Moral'): ["Shutter Island", "Parasite", "Black Swan"],
             ('Action', 'Visceral/Action'): ["48 Hrs.", "Lethal Weapon", "Die Hard"],
             ('Action', 'Personal/Relational'): ["Logan", "The Dark Knight", "Gladiator"],
             ('Action', 'Political/Mob/Society'): ["48 Hrs.", "Lethal Weapon", "Beverly Hills Cop"],
@@ -1832,6 +1841,8 @@ class WriterAgent:
             ('Horror', 'Visceral/Action'): ["Halloween", "A Quiet Place", "The Conjuring"],
             ('Sci-Fi', 'Philosophical/Surreal'): ["2001: A Space Odyssey", "Arrival", "Blade Runner 2049"],
             ('Sci-Fi', 'Psychological/Moral'): ["Gattaca", "Children of Men", "Ex Machina"],
+            ('Fantasy', 'Philosophical/Surreal'): ["Pan's Labyrinth", "The Princess Bride", "Stardust"],
+            ('Fantasy', 'Visceral/Action'): ["The Lord of the Rings", "Conan the Barbarian", "Willow"],
             ('Thriller', 'Political/Mob/Society'): ["The Godfather", "The Departed", "Heat"],
             ('Comedy', 'Political/Mob/Society'): ["48 Hrs.", "Beverly Hills Cop", "Midnight Run"],
             ('Comedy', 'Visceral/Action'): ["48 Hrs.", "Rush Hour", "The Nice Guys"],
@@ -1839,8 +1850,26 @@ class WriterAgent:
             ('Romance', 'Personal/Relational'): ["Before Sunrise", "Normal People", "The Notebook"]
         }
         
-        g = genre.replace('-', ' ').split()[0].title() 
-        if 'Sci' in g: g = 'Sci-Fi'
+        # FIX: Properly normalize the genre key to match lookup table.
+        # Old code did `.split()[0].title()` which broke multi-word genres like
+        # 'crime drama' -> 'Crime' (wrong) or 'psychological thriller' -> 'Psychological' (wrong).
+        g_norm = self._normalize_genre_key(genre)
+        genre_key_map = {
+            'drama': 'Drama',
+            'crime drama': 'Crime Drama',
+            'crime thriller': 'Crime Thriller',
+            'crime_thriller': 'Crime Thriller',
+            'thriller': 'Thriller',
+            'horror': 'Horror',
+            'comedy': 'Comedy',
+            'action': 'Action',
+            'romance': 'Romance',
+            'sci-fi': 'Sci-Fi',
+            'fantasy': 'Fantasy',
+            'psychological thriller': 'Psychological Thriller',
+            'psychological_thriller': 'Psychological Thriller',
+        }
+        g = genre_key_map.get(g_norm, g_norm.replace('-', ' ').title())
         
         # Primary Match: Genre + Subgenre
         key = (g, subgenre)
@@ -1849,6 +1878,10 @@ class WriterAgent:
         # Secondary Match: Just Genre + any stake
         for k_g, k_s in lookup.keys():
             if k_g == g: return lookup[(k_g, k_s)]
+        
+        # Tertiary: If genre contains 'drama' in any form, fall back to Drama comps
+        if 'drama' in g_norm:
+            return ["Marriage Story", "Ordinary People", "Spotlight"]
             
         return ["The Social Network", "Parasite", "Pulp Fiction"] # Ultimate fallbacks
 

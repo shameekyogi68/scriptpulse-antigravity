@@ -51,7 +51,7 @@ from scriptpulse.reporters import writer_report, studio_report, print_summary
 # =============================================================================
 # INITIALIZATION
 # =============================================================================
-APP_BUILD = "genre-output-fix-004a61b"
+APP_BUILD = "v1.0-release"
 
 @st.cache_resource
 def init_application():
@@ -167,10 +167,18 @@ lens = col2.selectbox("Perspective", ["Story Editor", "Studio Executive", "Scrip
 if script_input:
     st.markdown("<br/>", unsafe_allow_html=True)
     if st.button("🎬 Analyze My Script", type="primary", use_container_width=True):
-        bar = st.progress(0, text="Initializing engine...")
+        bar = st.progress(0, text="⚡ Initializing ScriptPulse engine...")
         try:
+            stage_labels = {
+                "Parsing structure...": "📐 Parsing screenplay structure...",
+                "Extracting features...": "🔬 Extracting narrative features...",
+                "Simulating dynamics...": "🧠 Running cognitive simulation...",
+                "Running interpretation...": "🎯 Interpreting narrative patterns...",
+                "Generating insights...": "✨ Generating writer intelligence...",
+            }
             def progress_callback(stage_name, pct):
-                bar.progress(pct, text=f"Analyzing: {stage_name}...")
+                label = stage_labels.get(stage_name, f"⚡ {stage_name}")
+                bar.progress(pct, text=label)
             
             report = runner.run_pipeline(
                 script_input, genre=genre, lens=lens,
@@ -231,7 +239,7 @@ if script_input:
             st.stop()
 else:
     from app.components import uikit
-    uikit.render_tooltip_card("👆 <b style='color: white;'>Upload or paste your screenplay</b> above to begin the intelligence analysis.")
+    uikit.render_empty_state()
 
 # =============================================================================
 # STEP 3: RENDER RESULTS
@@ -243,7 +251,12 @@ current_genre = st.session_state.get('current_genre', 'Drama')
 if report and current_input:
     st.markdown("---")
     # Render unified dashboard: Writer insights first, followed by Producer telemetry
-    render_writer_view(report, current_input, current_genre, lens=lens)
+    try:
+        render_writer_view(report, current_input, current_genre, lens=lens)
+    except Exception as e:
+        st.error(f"A rendering issue occurred. Your analysis data is safe.")
+        with st.expander("Technical Details"):
+            st.code(str(e))
 
 # =============================================================================
 # STEP 4: EXPORT
@@ -257,20 +270,44 @@ if report and current_input:
     title = st.session_state.get('last_filename', 'Script')
 
     with c1:
-        st.download_button("📄 Writer Report", 
-            writer_report.generate_writer_report(report, title=title, genre=genre),
-            f"ScriptPulse_Writer_{genre}.md", "text/markdown",
-            use_container_width=True)
+        try:
+            st.download_button("📄 Writer Report", 
+                writer_report.generate_writer_report(report, title=title, genre=genre),
+                f"ScriptPulse_Writer_{genre}.md", "text/markdown",
+                use_container_width=True)
+        except Exception:
+            st.button("📄 Writer Report", disabled=True, use_container_width=True)
     with c2:
-        st.download_button("🎬 Studio Coverage",
-            studio_report.generate_report(report, script_title=title, lens=lens),
-            f"ScriptPulse_Studio_{genre}.html", "text/html",
-            use_container_width=True)
+        try:
+            st.download_button("🎬 Studio Coverage",
+                studio_report.generate_report(report, script_title=title, lens=lens),
+                f"ScriptPulse_Studio_{genre}.html", "text/html",
+                use_container_width=True)
+        except Exception:
+            st.button("🎬 Studio Coverage", disabled=True, use_container_width=True)
     with c3:
-        st.download_button("🖨️ One-Page Summary",
-            print_summary.generate_print_summary(report, script_title=title),
-            f"ScriptPulse_Summary_{genre}.html", "text/html",
-            use_container_width=True)
+        try:
+            st.download_button("🖨️ One-Page Summary",
+                print_summary.generate_print_summary(report, script_title=title),
+                f"ScriptPulse_Summary_{genre}.html", "text/html",
+                use_container_width=True)
+        except Exception:
+            st.button("🖨️ One-Page Summary", disabled=True, use_container_width=True)
 
-# Application end
+# ============================================================================
+# FOOTER
+# ============================================================================
+st.markdown(f"""
+<div class="sp-footer">
+    <div style="margin-bottom: 8px;">
+        <span style="font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 0.9rem; color: rgba(244, 246, 251, 0.5);">
+            Script<span style="color: rgba(0, 82, 255, 0.7);">Pulse</span>
+        </span>
+        <span style="margin-left: 8px; font-size: 0.7rem; color: rgba(244, 246, 251, 0.3);">v1.0 · Production</span>
+    </div>
+    <div>AI Story Intelligence Engine · Hybrid ML + Cognitive Simulation</div>
+    <div style="margin-top: 4px;">🔒 Your scripts are never stored · Privacy by design</div>
+    <div style="margin-top: 6px; font-size: 0.6rem; color: rgba(244, 246, 251, 0.2);">&copy; 2026 ScriptPulse. All rights reserved.</div>
+</div>
+""", unsafe_allow_html=True)
 

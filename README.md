@@ -1,34 +1,42 @@
-# ScriptPulse: The AI Story Intelligence Instrument
-**Version:** v15.0 Gold (Transformer-Augmented)
-**Status:** Research-Grade / Production-Ready
+# ScriptPulse: AI Story Intelligence Engine
+**Version:** v1.0 Production  
+**Status:** Market Release  
 **Engine:** Hybrid Cognitive Simulation + Transformer NLP
 
 ---
 
 ## 🎯 Overview
-ScriptPulse is a high-fidelity computational framework for analyzing screenplay narratives. Unlike traditional tools that focus on formatting, ScriptPulse simulates **Reader Cognitive Load** and **Emotional Resonance**.
+ScriptPulse is a professional-grade AI platform for analyzing screenplay narratives. Unlike traditional tools that focus on formatting, ScriptPulse simulates **Reader Cognitive Load** and **Emotional Resonance** — providing writers with constructive, guided insights to strengthen their scripts.
 
-By combining a **Multi-Agent Architecture** with modern Transformers (Jina-v2 & DeBERTa-v3), the system tracks how an audience's attention peaks, valleys, and fatigues over the course of a 100-page read.
+By combining a **Multi-Agent Architecture** with modern Transformers (Jina-v2 & DeBERTa-v3), the system tracks how an audience's attention peaks, valleys, and fatigues over the course of a screenplay.
 
 ---
 
-## 🚀 Key Capabilities (v15 Gold)
+## 🚀 Key Capabilities
 
-### 1. Attentional Dynamics simulation
-The core engine utilizes a linear dynamical system to model interest ($A_t$) based on:
+### 1. Attentional Dynamics Simulation
+The core engine utilizes a linear dynamical system to model audience interest based on:
 *   **Linguistic Load**: Syntactic complexity and idea density.
 *   **Narrative Momentum**: Turn velocity and action density.
 *   **Recovery Potential**: Genre-specific breathers and pacing resets.
 
 ### 2. Transformer-Augmented Perception
-*   **8k Context Horizon**: Powered by `Jina-v2-small`, the system "perceives" entire scenes at once without truncation.
-*   **Zero-Shot Emotional Mapping**: `DeBERTa-v3` categorizes conflict, stakes, and sentiment with clinical precision.
+*   **8k Context Horizon**: Powered by `Jina-v2-small`, the system perceives entire scenes without truncation.
+*   **Zero-Shot Emotional Mapping**: `DeBERTa-v3` categorizes conflict, stakes, and sentiment with precision.
 
 ### 3. Persona-Responsive Intelligence
 The UI adapts automatically to three industry personas:
-*   🕵️ **Story Editor**: Structural integrity and logic gaps.
+*   🕵️ **Story Editor**: Structural integrity and narrative logic.
 *   🏢 **Studio Executive**: Commercial viability and production risk.
 *   ✍️ **Script Coordinator**: Prose economy and craft precision.
+
+### 4. Constructive Guidance
+Every insight is framed as a growth opportunity — never harsh, never discouraging. ScriptPulse is a mentor, not a gatekeeper.
+
+### 5. Professional Export Suite
+*   📄 **Writer Report** — Detailed markdown analysis
+*   🎬 **Studio Coverage** — Professional HTML coverage memo
+*   🖨️ **One-Page Summary** — Printable overview
 
 ---
 
@@ -39,43 +47,34 @@ The UI adapts automatically to three industry personas:
 pip install -r requirements.txt
 ```
 
+### Environment Variables
+Create a `.env` file with your API keys:
+```
+GROQ_API_KEY=your_groq_key
+GOOGLE_API_KEY=your_gemini_key
+HF_TOKEN=your_huggingface_token
+```
+
 ### Run the Dashboard
 ```bash
 streamlit run streamlit_app.py
 ```
 
-### Research Verification
-To run our high-precision validation suite:
-```bash
-python3 scripts/final_validation.py
-```
+---
+
+## 📂 Repository Structure
+*   `scriptpulse/` — **Core Engine.** Multi-agent narrative simulation logic.
+*   `app/` — **View Layer.** Streamlit dashboard components and assets.
+*   `scripts/` — **Workbench.** Automation and research tools.
+*   `docs/` — **Knowledge Base.** Theory, validation, and guides.
+*   `config/` — **Environment.** Model version pins and genre priors.
+*   `tests/` — **Quality Assurance.** Regression and unit test suites.
 
 ---
 
-## 📂 Repository Structure (v15.0 Gold)
-*   `scriptpulse/` - **Core Engine.** Multi-agent narrative simulation logic.
-*   `app/` - **View Layer.** Streamlit dashboard components and assets.
-*   `scripts/` - **Workbench.** Automation, optimization, and research showcases.
-*   `docs/` - **Knowledge Base.** 
-    *   `docs/theory/`: Theoretical grounding and formal specifications.
-    *   `docs/validation/`: Certification reports and performance metrics.
-    *   `docs/guides/`: Onboarding and professional user manuals.
-    *   `docs/business/`: Roadmaps and deployment logs.
-*   `config/` - **Environment.** Model version pins and genre dynamic priors.
-*   `data/` - **Analytics.** Ground truth datasets and script samples.
-*   `tests/` - **Quality Assurance.** Regression and unit test suites.
-
----
-
-## 🛡️ Key Documentation
-*   `docs/theory/PAPER_METHODS.md`: Mathematical model and research derivation.
-*   `docs/guides/WRITER_GUIDE.md`: Professional interpretation guide.
-*   `docs/validation/Validation_Report_v15.md`: Gold Master certification.
-
-
-
----
+## 🔒 Privacy
+Scripts are processed in-memory only and are **never stored** on any server.
 
 ## 🛡️ License
-Proprietary Research Instrument. Confidentiality and Intellectual Property protections apply.
-© 2026 ScriptPulse Biometric Systems. 
+Proprietary. Confidentiality and Intellectual Property protections apply.  
+© 2026 ScriptPulse. All rights reserved.

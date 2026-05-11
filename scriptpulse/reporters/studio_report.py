@@ -16,49 +16,65 @@ def generate_report(report_data, script_title="Untitled Script", user_notes="", 
     
     # 1. Extract Key Metrics
     trace = report_data.get('temporal_trace', [])
-    avg_effort = statistics.mean([t['attentional_signal'] for t in trace]) if trace else 0
+    try:
+        avg_effort = statistics.mean([t.get('attentional_signal', 0.5) for t in trace]) if trace else 0.5
+    except Exception:
+        avg_effort = 0.5
     
     writer_intel = report_data.get('writer_intelligence', {})
     diagnoses = writer_intel.get('narrative_diagnosis', [])
     priorities = writer_intel.get('rewrite_priorities', [])
 
-    # --- Persona Filtering Logic (Sync with writer_view.py) ---
-    EXEC_ICONS = ['🔵', '🔴', '⚖️', '🚫', '👥', '📉', '⚠️', '🎢', '🟠', '✨', '💎']
-    EDITOR_ICONS = ['🧵', '⬜', '👻', '✅', '🔵', '🔴', '⭐', '✨', '🟡', '🎢', '🟠', '🗣️', '🧠', '💡', '💎']
-    COORD_ICONS = ['✂️', '🔴', '🟠', '🚫', '💎', '⛓️', '🎭', '👥', '🎙️', '🟢', '🗣️', '🧠', '💡', '✨']
-    
+    # ── Pull lens configuration from the master lens registry ──────────────
+    try:
+        from ..pipeline.lenses import get_lens
+        lens_cfg = get_lens(lens)
+    except Exception:
+        lens_cfg = {'color': '#3b82f6', 'priority_icons': [], 'priority_keywords': [], 'description': ''}
+
+    accent_color   = lens_cfg.get('color', '#3b82f6')
+    priority_icons = set(lens_cfg.get('priority_icons', []))
+    priority_kws   = lens_cfg.get('priority_keywords', [])
+    lens_desc      = lens_cfg.get('description', '')
+    # Studio Executive gets 5-column stat grid; others get 3
+    stat_cols      = '5' if lens == 'Studio Executive' else '3'
+
+    # --- Perspective-Aware Diagnostic Filtering ---
+    # Each perspective has its own priority icon set — filter accordingly.
+    # If a lens has NO priority_icons defined, it sees everything (Story Editor).
     filtered_diags = []
     for text in diagnoses:
-        is_exec = any(icon in text for icon in EXEC_ICONS)
-        is_editor = any(icon in text for icon in EDITOR_ICONS)
-        is_coord = any(icon in text for icon in COORD_ICONS)
-        if "Same Voice" in text: is_exec, is_editor, is_coord = False, True, True
-        elif "Engagement Drop" in text: is_exec, is_editor, is_coord = True, True, False
-        if (lens == "Studio Executive" and is_exec) or \
-           (lens == "Story Editor" and is_editor) or \
-           (lens == "Script Coordinator" and is_coord):
+        if not priority_icons:  # Story Editor sees all
             filtered_diags.append(text)
-    
+        elif any(icon in text for icon in priority_icons):
+            filtered_diags.append(text)
+
+    # Force-override special cases that all perspectives should share
+    for text in diagnoses:
+        if "Same Voice" in text and text not in filtered_diags:
+            filtered_diags.append(text)
+        if "Engagement Drop" in text and lens == "Studio Executive" and text not in filtered_diags:
+            filtered_diags.append(text)
+
     if not filtered_diags and diagnoses:
         filtered_diags = [d for d in diagnoses if any(i in d for i in ['✅', '✨', '🟢'])] or diagnoses[:1]
 
+    # --- Perspective-Aware Priority Filtering ---
     filtered_pris = []
-    exec_pri_kws = ["boredom", "cut", "engagement", "budget", "unfilmable", "name", "slow"]
-    coord_pri_kws = ["dialogue", "show", "unfilmable", "fluff", "prose", "voice", "economy"]
     for p in priorities:
         txt = f"{p.get('action', '')} {p.get('root_cause', '')}".lower()
-        if (lens == "Studio Executive" and any(k in txt for k in exec_pri_kws)) or \
-           (lens == "Script Coordinator" and any(k in txt for k in coord_pri_kws)) or \
-           (lens == "Story Editor"):
+        if not priority_kws:  # Story Editor sees all priorities
             filtered_pris.append(p)
-    
+        elif any(k in txt for k in priority_kws):
+            filtered_pris.append(p)
+
     if not filtered_pris and priorities:
         filtered_pris = priorities[:3]
 
-    # Recommendation Logic
-    rec = "CONSIDER"
-    if avg_effort < 0.35: rec = "PASS (Low Engagement)"
-    elif avg_effort > 0.75: rec = "PASS (High Strain)"
+    # Recommendation Logic — always constructive, never rejecting
+    rec = "CONSIDER — Promising foundation with clear development path"
+    if avg_effort < 0.35: rec = "DEVELOP — Strengthen engagement hooks to maximize audience retention"
+    elif avg_effort > 0.75: rec = "REFINE — High-intensity core; calibrate pacing for sustained impact"
     
     # --- Additional Data Extraction ---
     loc_profile = report_data.get('writer_intelligence', {}).get('structural_dashboard', {}).get('location_profile', {})
@@ -78,7 +94,7 @@ def generate_report(report_data, script_title="Untitled Script", user_notes="", 
         <style>
             :root {{
                 --primary: #0f172a;
-                --accent: {('#3b82f6' if lens == "Story Editor" else '#6366f1' if lens == "Studio Executive" else '#10b981')};
+                --accent: {accent_color};
                 --success: #10b981;
                 --warning: #f59e0b;
                 --danger: #ef4444;
@@ -148,7 +164,7 @@ def generate_report(report_data, script_title="Untitled Script", user_notes="", 
             
             .stats-grid {{ 
                 display: grid; 
-                grid-template-columns: repeat({('5' if lens == "Studio Executive" else '3')}, 1fr); 
+                grid-template-columns: repeat({stat_cols}, 1fr); 
                 gap: 20px; 
                 margin-bottom: 40px; 
             }}
@@ -246,8 +262,11 @@ def generate_report(report_data, script_title="Untitled Script", user_notes="", 
         <div class="header">
             <h1>Intelligence Coverage ({lens})</h1>
             <h2>{script_title}</h2>
-            <div class="meta">
-                ENGINE: Script<span style="color: #0052FF; font-weight: bold;">Pulse</span> v15.0 Gold | PERSPECTIVE: {lens}
+            <div class="meta" style="opacity: 0.85; margin-top: 6px; font-size: 13px; letter-spacing: 0.05em;">
+                📌 {lens_desc}
+            </div>
+            <div class="meta" style="margin-top: 8px;">
+                ENGINE: Script<span style="color: #0052FF; font-weight: bold;">Pulse</span> v1.0 | PERSPECTIVE: {lens}
             </div>
         </div>
         
@@ -283,11 +302,11 @@ def generate_report(report_data, script_title="Untitled Script", user_notes="", 
                 <h4>🎭 Cast Size</h4>
                 <p>{cast_size if cast_size else '—'}</p>
             </div>
-            ''' if lens == "Studio Executive" else ""}
+            ''' if lens == 'Studio Executive' else ""}
         </div>
         
         <div class="section">
-            <h3>Diagnostic Summary</h3>
+            <h3>Narrative Insights</h3>
             <ul>
                 {''.join([f"<li>{item}</li>" for item in filtered_diags]) if filtered_diags else '<li>Analysis clear. No high-risk anomalies.</li>'}
             </ul>
@@ -311,12 +330,12 @@ def generate_report(report_data, script_title="Untitled Script", user_notes="", 
         ''' if lens == "Script Coordinator" and economy_map else ""}
 
         <div class="section">
-            <h3>Rewrite Priorities</h3>
+            <h3>Growth Opportunities</h3>
             <table class="priority-table">
                 <thead>
                     <tr>
-                        <th>Intervention Strategy</th>
-                        <th>Leverage</th>
+                        <th>Recommended Action</th>
+                        <th>Impact</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -331,7 +350,7 @@ def generate_report(report_data, script_title="Untitled Script", user_notes="", 
             <h3>Character Voice Audit</h3>
             <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px;">Distinctiveness check for lead roles:</p>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                {''.join([f"<div style='background: #f8fafc; padding: 15px; border-radius: 8px;'><div style='font-weight: 700; color: var(--primary);'>{char}</div><div style='font-size: 13px;'>Agency (Action): {metrics['agency']:.2f} | Sentiment: {metrics['sentiment']:.2f}</div></div>" for char, metrics in list(report_data.get('voice_fingerprints', {}).items())[:6]])}
+                {''.join([f"<div style='background: #f8fafc; padding: 15px; border-radius: 8px;'><div style='font-weight: 700; color: var(--primary);'>{char}</div><div style='font-size: 13px;'>Agency (Action): {metrics.get('agency', 0):.2f} | Sentiment: {metrics.get('sentiment', 0):.2f}</div></div>" for char, metrics in list(report_data.get('voice_fingerprints', {}).items())[:6]]) if report_data.get('voice_fingerprints') else '<p style="font-size: 13px; color: var(--text-muted);">Voice analysis unavailable for this script.</p>'}
             </div>
         </div>
         

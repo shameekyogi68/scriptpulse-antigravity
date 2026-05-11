@@ -21,18 +21,20 @@ def generate_print_summary(report_data, script_title="Untitled Script"):
     
     # Extract key metrics from the CORRECT keys
     trace = report_data.get('temporal_trace', [])
-    avg_tension = sum(p['attentional_signal'] for p in trace) / len(trace) if trace else 0
+    try:
+        avg_tension = sum(p.get('attentional_signal', 0.5) for p in trace) / len(trace) if trace else 0.5
+    except Exception:
+        avg_tension = 0.5
     
     wi = report_data.get('writer_intelligence', {})
     dashboard = wi.get('structural_dashboard', {})
     diagnosis = wi.get('narrative_diagnosis', [])
     priorities = wi.get('rewrite_priorities', [])
     
-    # ScriptPulse Score
     sp_score = dashboard.get('scriptpulse_score', 50)
     if sp_score >= 70: score_label = "Strong Draft"
-    elif sp_score >= 45: score_label = "Needs Work"
-    else: score_label = "Major Revision"
+    elif sp_score >= 45: score_label = "Developing — Clear Potential"
+    else: score_label = "Early Draft — Growth Path Identified"
     
     # Pacing and Cast (Task 3 & 4)
     pacing = dashboard.get('act_structure', {}).get('pacing_benchmark', 'Balanced')
@@ -143,7 +145,7 @@ def generate_print_summary(report_data, script_title="Untitled Script"):
                 <h1>{script_title}</h1>
                 <div style="font-size: 14px; color: var(--muted); margin-top: 5px;">Script<span style="color: #0052FF;">Pulse</span> Core Intelligence Summary</div>
             </div>
-            <div class="date">v15.0 Gold | Script<span style="color: #0052FF;">Pulse</span> Score: {sp_score}/100 ({score_label})</div>
+            <div class="date">v1.0 | Script<span style="color: #0052FF;">Pulse</span> Score: {sp_score}/100 ({score_label})</div>
         </div>
 
         <div class="stats-bar">
@@ -167,7 +169,7 @@ def generate_print_summary(report_data, script_title="Untitled Script"):
         
         <div class="grid">
             <div>
-                <h2>Issues to Address</h2>
+                <h2>Growth Opportunities</h2>
                 {problems_html}
                 {fixes_html}
             </div>
