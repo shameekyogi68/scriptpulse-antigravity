@@ -381,28 +381,44 @@ class EncodingAgent:
         elif getattr(self, 'spacy_model', None): confidence = 0.7
         
         # 1. AI-Enhanced Cognitive Stakes Detection
-        scores = self._ai_stakes_detection(text)
-        if not scores:
+        detection_result = self._ai_stakes_detection(text)
+        if not detection_result:
             # Enhanced heuristic fallback with semantic awareness
-            scores = self._contextual_stakes_detection(text)
+            detection_result = self._contextual_stakes_detection(text)
             
+        # Standardize the extraction regardless of method
+        breakdown_map = {}
         dominant = 'Unknown'
-        if scores:
-            max_val = -1.0
-            for k, v in scores.items():
-                try:
-                    # Type narrowing to satisfy the IDE and ensure safety
-                    if isinstance(v, (int, float, str)):
-                        if isinstance(v, str) and not v.strip():
-                            curr_val = 0.0
-                        else:
-                            curr_val = float(v)
-                        
-                        if curr_val > max_val:
-                            max_val = curr_val
-                            dominant = k
-                except (ValueError, TypeError):
-                    continue
+        
+        if isinstance(detection_result, dict):
+            if 'breakdown' in detection_result and 'dominant' in detection_result:
+                # Format from _ai_stakes_detection
+                breakdown_map = detection_result.get('breakdown', {})
+                dominant = detection_result.get('dominant', 'Unknown')
+            elif 'stakes' in detection_result:
+                # Format from _contextual_stakes_detection
+                stakes_data = detection_result.get('stakes')
+                if isinstance(stakes_data, dict):
+                    breakdown_map = stakes_data.get('breakdown', {})
+                    dominant = stakes_data.get('dominant', 'Unknown')
+
+        # Ensure breakdown_map only contains valid numeric scores
+        safe_breakdown = {}
+        
+        # Robustness: detection_result or its children might occasionally be malformed
+        if not isinstance(breakdown_map, dict):
+            breakdown_map = {}
+
+        for k, v in breakdown_map.items():
+            try:
+                if isinstance(v, (int, float)):
+                    safe_breakdown[k] = float(v)
+                elif isinstance(v, str) and v.strip():
+                    safe_breakdown[k] = float(v)
+                else:
+                    safe_breakdown[k] = 0.0
+            except (ValueError, TypeError):
+                safe_breakdown[k] = 0.0
             
         # 2. Character Arcs (Per-scene vectors based on context, not just word count)
         # Collect diagnostic representative quotes for later reference
@@ -604,8 +620,8 @@ class EncodingAgent:
 
         return {
             'character_scene_vectors': arcs,
-            'stakes': {'dominant': dominant, 'breakdown': {k: round(float(v) if (not isinstance(v, str) or v.strip()) else 0.0, 2) for k, v in scores.items() if isinstance(v, (int, float, str))}},
-            'payoff': {'payoff_density': round(sum(float(v) if (not isinstance(v, str) or v.strip()) else 0.0 for v in scores.values() if isinstance(v, (int, float, str))) / max(1, len(lines)), 2)},
+            'stakes': {'dominant': dominant, 'breakdown': {k: round(v, 2) for k, v in safe_breakdown.items()}},
+            'payoff': {'payoff_density': round(sum(safe_breakdown.values()) / max(1, len(lines)), 2)},
             'stichomythia': {'has_stichomythia': sticho_count > 4, 'count': sticho_count},
             'monologue_data': {'has_monologue': len(monologues) > 0, 'monologues': monologues},
             'passive_voice': {'passive_ratio': passive_count / max(1, n_lines), 'passive_count': passive_count, 'examples': passive_examples},
@@ -725,9 +741,16 @@ class EncodingAgent:
                 scores = {label_map[k]: v for k, v in zip(result['labels'], result['scores'])}
                 dominant = label_map[result['labels'][0]]
                 
+                def safe_float(val):
+                    try:
+                        if isinstance(val, (int, float)): return float(val)
+                        if isinstance(val, str) and val.strip(): return float(val)
+                    except: pass
+                    return 0.0
+
                 return {
                     'dominant': dominant,
-                    'breakdown': {k: round(v, 2) for k, v in scores.items()},
+                    'breakdown': {k: round(safe_float(v), 2) for k, v in scores.items()},
                     'confidence': 0.92,
                     'ai_detected': True
                 }
