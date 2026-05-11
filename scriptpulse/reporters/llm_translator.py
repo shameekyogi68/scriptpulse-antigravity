@@ -158,10 +158,27 @@ def generate_ai_summary(script_data, lens='viewer', api_key=None):
     
     # CRITICAL: Slim down the dashboard payload to avoid Groq's 12,000 TPM free tier limit
     # Do NOT send full scene-by-scene arrays like scene_turn_map or scene_economy_map
+    
+    # Defensive validation: ensure numeric values are not empty strings
+    def safe_float(value, default=0.0):
+        """Safely convert value to float, handling empty strings and None"""
+        if value is None:
+            return default
+        if isinstance(value, str):
+            if not value.strip():  # empty string
+                return default
+            try:
+                return float(value)
+            except ValueError:
+                return default
+        if isinstance(value, (int, float)):
+            return float(value)
+        return default
+    
     slim_dashboard = {
-        "scriptpulse_score": dashboard.get("scriptpulse_score"),
-        "page_turner_index": dashboard.get("page_turner_index"),
-        "market_readiness": dashboard.get("market_readiness"),
+        "scriptpulse_score": safe_float(dashboard.get("scriptpulse_score")),
+        "page_turner_index": safe_float(dashboard.get("page_turner_index")),
+        "market_readiness": safe_float(dashboard.get("market_readiness")),
         "act_structure": dashboard.get("act_structure"),
         "budget_impact": dashboard.get("budget_impact"),
         "commercial_comps": dashboard.get("commercial_comps")
@@ -235,8 +252,7 @@ def generate_ai_summary(script_data, lens='viewer', api_key=None):
                         contents=f"SYSTEM: {system_prompt}\n\nUSER: {user_content}"
                     )
                     return response.text, None
-                else:
-                    # Old SDK
+                else:  # old API
                     genai.configure(api_key=keys["gemini"])
                     model = genai.GenerativeModel('gemini-1.5-flash')
                     response = model.generate_content(f"SYSTEM: {system_prompt}\n\nUSER: {user_content}")
