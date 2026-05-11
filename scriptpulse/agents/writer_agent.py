@@ -8,13 +8,51 @@ import random
 import json
 import os
 from typing import Any
+from ..utils.model_manager import manager as _model_manager
 
 class WriterAgent:
     """
     The 'Collaborator' Layer (v2.0 Phase 1).
     Translates raw engine signals into actionable writer feedback.
     Does not run simulations; interprets existing trace data.
+    Powered by: spaCy (syntax), Jina SBERT (semantic similarity), DeBERTa (zero-shot).
     """
+    
+    def __init__(self):
+        # Lazy-load models so agent can be instantiated fast
+        self._sbert = None
+        self._deberta = None
+        self._models_loaded = False
+
+    def _ensure_models(self):
+        """Load SBERT and DeBERTa on first use (only when needed for ML paths)."""
+        if not self._models_loaded:
+            self._sbert = _model_manager.get_sentence_transformer()
+            self._deberta = _model_manager.get_zero_shot()
+            self._models_loaded = True
+
+    def _sbert_cosine(self, texts_a, texts_b):
+        """
+        Compute pairwise cosine similarity between two text lists using Jina SBERT.
+        Returns a list of similarity scores (0-1), or None on failure.
+        """
+        self._ensure_models()
+        if not self._sbert or not texts_a or not texts_b:
+            return None
+        try:
+            import numpy as np
+            embs_a = self._sbert.encode(texts_a, convert_to_tensor=False, show_progress_bar=False)
+            embs_b = self._sbert.encode(texts_b, convert_to_tensor=False, show_progress_bar=False)
+            scores = []
+            for ea, eb in zip(embs_a, embs_b):
+                na, nb = np.linalg.norm(ea), np.linalg.norm(eb)
+                if na > 0 and nb > 0:
+                    scores.append(float(np.dot(ea, eb) / (na * nb)))
+                else:
+                    scores.append(0.0)
+            return scores
+        except Exception:
+            return None
     
     def _get_deterministic_rng(self, script_content):
         """Create a deterministic random number generator seeded from script content."""
@@ -382,7 +420,9 @@ class WriterAgent:
 
             # v2.0 Fix: Robustly extract text from both string and dict suggestions
             if isinstance(item, dict):
-                suggestion_text = item.get('strategy', item.get('diagnosis', 'Unknown Suggestion'))
+                # Ensure we always get a string even if the key is missing or None
+                strategy = item.get('strategy') or item.get('diagnosis') or "Unknown Suggestion"
+                suggestion_text = str(strategy)
                 # Also check tactics
                 tactics = item.get('tactics', [])
                 if tactics: suggestion_text += f": {', '.join(tactics)}"
@@ -422,7 +462,7 @@ class WriterAgent:
         prioritized.sort(key=lambda x: x['score'], reverse=True)
         return prioritized
 
-    def _build_dashboard(self, trace, genre, report=None):
+    def _build_dashboard(self, trace, genre, report=None) -> dict:
         """
         Key structural checkpoints.
         """
@@ -750,18 +790,20 @@ class WriterAgent:
         Aggregate the stakes taxonomy across the whole script.
         Returns a high-level count of Physical/Emotional/Social/Moral/Existential scenes.
         """
-        profile = {'Physical': 0, 'Emotional': 0, 'Social': 0, 'Moral': 0, 'Existential': 0, 'None': 0}
+        counts = {'Physical': 0, 'Emotional': 0, 'Social': 0, 'Moral': 0, 'Existential': 0, 'None': 0}
         for s in trace:
-            dominant = s.get('stakes_taxonomy', {}).get('dominant', 'None')
-            if dominant in profile:
-                profile[dominant] += 1
+            # Use a different variable name to avoid confusion with the 'dominant' key
+            cat = s.get('stakes_taxonomy', {}).get('dominant', 'None')
+            if cat in counts:
+                counts[cat] += 1
             else:
-                profile['None'] += 1
-        profile['dominant'] = max(
+                counts['None'] += 1
+                
+        dominant_category = max(
             ['Physical', 'Emotional', 'Social', 'Moral', 'Existential'],
-            key=lambda k: profile.get(k, 0)
+            key=lambda k: counts.get(k, 0)
         )
-        return profile
+        return {**counts, 'dominant': dominant_category}
 
     # =========================================================================
     # PHASE 25: SCENE-LEVEL MICRO-DRAMA METHODS
@@ -942,43 +984,74 @@ class WriterAgent:
 
     def _diagnose_redundant_scenes(self, trace):
         """
-        Compare scene vocabulary fingerprints to flag pairs of scenes that may be
-        covering the same narrative ground (same purpose + high vocabulary overlap).
+        Detects semantically redundant scenes using Jina SBERT cosine similarity.
+        Two scenes are flagged if they share the same narrative purpose AND have
+        semantic embedding similarity > 0.82 (tight threshold to avoid false positives).
+        Falls back to Jaccard overlap if SBERT is unavailable.
         """
         assessments = []
         if len(trace) < 4:
             return []
 
-        # Build a list of (scene_index, purpose, vocab_set) tuples
+        self._ensure_models()
+
+        # Build scene data with representative text for SBERT
         scene_data = []
         for s in trace:
             purpose = s.get('scene_purpose', {}).get('purpose', 'Unknown')
             vocab = set(s.get('scene_vocabulary', []))
-            scene_data.append((s['scene_index'], purpose, vocab))
+            # Build a representative text block from the scene's key signals
+            rep_text = ' '.join([
+                s.get('representative_dialogue', ''),
+                s.get('representative_action', ''),
+                ' '.join(s.get('scene_vocabulary', [])[:30])
+            ]).strip()
+            scene_data.append((s['scene_index'], purpose, vocab, rep_text))
 
         flagged = set()
+        candidates = []  # (idx_a, idx_b, purpose, similarity)
+
         for i in range(len(scene_data)):
             for j in range(i + 1, min(i + 40, len(scene_data))):
-                idx_a, purpose_a, vocab_a = scene_data[i]
-                idx_b, purpose_b, vocab_b = scene_data[j]
+                idx_a, purpose_a, vocab_a, text_a = scene_data[i]
+                idx_b, purpose_b, vocab_b, text_b = scene_data[j]
 
-                if not vocab_a or not vocab_b:
-                    continue
                 if purpose_a != purpose_b:
                     continue  # Only compare same-purpose scenes
 
-                # Jaccard similarity
-                intersection = len(vocab_a & vocab_b)
-                union = len(vocab_a | vocab_b)
-                similarity = intersection / union if union > 0 else 0.0
+                if (idx_a, idx_b) in flagged:
+                    continue
 
-                if similarity > 0.55 and (idx_a, idx_b) not in flagged:
-                    flagged.add((idx_a, idx_b))
-                    assessments.append(
-                        f"♻️ **Possible Redundancy (Scenes {idx_a} & {idx_b})**: Both are '{purpose_a}' "
-                        f"scenes with {round(similarity * 100)}% vocabulary overlap. "
-                        f"They may be covering the same ground — consider merging or differentiating."
-                    )
+                # --- Path 1: SBERT Semantic Similarity (Trustworthy) ---
+                if self._sbert and text_a and text_b and len(text_a) > 30 and len(text_b) > 30:
+                    try:
+                        scores = self._sbert_cosine([text_a[:512]], [text_b[:512]])
+                        if scores and scores[0] > 0.82:
+                            flagged.add((idx_a, idx_b))
+                            candidates.append((idx_a, idx_b, purpose_a, scores[0], 'SBERT'))
+                        continue
+                    except Exception:
+                        pass
+
+                # --- Path 2: Jaccard Fallback (when SBERT unavailable) ---
+                if vocab_a and vocab_b:
+                    intersection = len(vocab_a & vocab_b)
+                    union = len(vocab_a | vocab_b)
+                    similarity = intersection / union if union > 0 else 0.0
+                    if similarity > 0.60:
+                        flagged.add((idx_a, idx_b))
+                        candidates.append((idx_a, idx_b, purpose_a, similarity, 'Lexical'))
+
+        # Sort by similarity descending (most redundant first)
+        candidates.sort(key=lambda x: x[3], reverse=True)
+
+        for idx_a, idx_b, purpose, sim, method in candidates[:2]:
+            method_note = f"({method} similarity: {round(sim * 100)}%)" if method == 'SBERT' else f"(vocabulary overlap: {round(sim * 100)}%)"
+            assessments.append(
+                f"♻️ **Semantic Redundancy (Scenes {idx_a} & {idx_b})**: Both are '{purpose}' scenes "
+                f"covering nearly identical dramatic ground {method_note}. "
+                f"Consider merging these into a single high-impact sequence."
+            )
 
         return assessments[:2]
 
@@ -1567,14 +1640,67 @@ class WriterAgent:
 
     def _diagnose_theme_coherence(self, trace):
         """
-        Aggregate thematic clusters across the full script and check Act-level consistency.
-        Flag if the dominant theme shifts significantly between Acts.
+        Measures thematic coherence using Jina SBERT: computes the centroid embedding
+        of Act 1 dialogue and checks how far Act 3 drifts from it semantically.
+        A high drift score (> 0.35 cosine distance) flags a genuine thematic break.
+        Falls back to keyword-cluster scoring if SBERT is unavailable.
         """
         assessments = []
-        if len(trace) < 4: return []
+        if len(trace) < 6: return []
 
+        self._ensure_models()
         third = max(1, len(trace) // 3)
 
+        def get_act_text(scenes):
+            texts = []
+            for s in scenes:
+                t = ' '.join([
+                    s.get('representative_dialogue', ''),
+                    s.get('representative_action', '')
+                ]).strip()
+                if len(t) > 20:
+                    texts.append(t[:400])
+            return texts
+
+        act1_texts = get_act_text(trace[:third])
+        act3_texts = get_act_text(trace[third*2:])
+
+        # --- SBERT Path: Semantic Thematic Drift ---
+        if self._sbert and act1_texts and act3_texts:
+            try:
+                import numpy as np
+                embs1 = self._sbert.encode(act1_texts, convert_to_tensor=False, show_progress_bar=False)
+                embs3 = self._sbert.encode(act3_texts, convert_to_tensor=False, show_progress_bar=False)
+                centroid1 = np.mean(embs1, axis=0)
+                centroid3 = np.mean(embs3, axis=0)
+                n1, n3 = np.linalg.norm(centroid1), np.linalg.norm(centroid3)
+                if n1 > 0 and n3 > 0:
+                    similarity = float(np.dot(centroid1 / n1, centroid3 / n3))
+                    drift = 1.0 - similarity
+                    if drift > 0.35:
+                        assessments.append(
+                            f"🎭 **Thematic Drift Detected** *(SBERT semantic distance: {drift:.2f})*: "
+                            f"Act 1 and Act 3 diverge significantly in thematic register. "
+                            f"Strong scripts maintain a consistent emotional/thematic spine. "
+                            f"Review whether Act 3 resolves the promise made in Act 1."
+                        )
+                    elif drift < 0.12:
+                        assessments.append(
+                            f"✅ **Thematic Coherence** *(SBERT drift: {drift:.2f})*: "
+                            f"Act 1 and Act 3 share a tight thematic alignment. "
+                            f"The script delivers on its opening promise."
+                        )
+                    else:
+                        assessments.append(
+                            f"🟡 **Mild Thematic Shift** *(SBERT drift: {drift:.2f})*: "
+                            f"Some divergence between Act 1 and Act 3 tone. "
+                            f"This may be intentional character growth or an unintended tonal wander — confirm it's deliberate."
+                        )
+                return assessments[:1]
+            except Exception:
+                pass
+
+        # --- Keyword Fallback ---
         def dominant_theme(scenes):
             agg = {}
             for s in scenes:
@@ -1586,35 +1712,24 @@ class WriterAgent:
         t1 = dominant_theme(trace[:third])
         t2 = dominant_theme(trace[third:third*2])
         t3 = dominant_theme(trace[third*2:])
-
-        # Script-wide dominant theme
         all_themes = {}
         for s in trace:
             for theme, score in s.get('thematic_clusters', {}).get('theme_scores', {}).items():
                 all_themes[theme] = all_themes.get(theme, 0) + score
-
-        if not all_themes:
-            return []
-
+        if not all_themes: return []
         top_global = sorted(all_themes.items(), key=lambda x: x[1], reverse=True)[:2]
         global_themes = [t for t, _ in top_global]
-
-        # Check for thematic drift between acts
         themes = [t for t in [t1, t2, t3] if t]
         if len(set(themes)) == len(themes) and len(themes) == 3:
             assessments.append(
                 f"🎭 **Thematic Drift**: Dominant theme shifts each Act "
-                f"({t1} → {t2} → {t3}). Strong scripts stay anchored to 1-2 core themes. "
-                f"Your script appears to be exploring '{global_themes[0]}' overall — "
-                f"consider threading it more consistently across all 3 Acts."
+                f"({t1} → {t2} → {t3}). Strong scripts stay anchored to 1-2 core themes."
             )
-        else:
-            if global_themes:
-                assessments.append(
-                    f"✅ **Thematic Coherence**: Core themes are "
-                    f"**{global_themes[0]}**{(' & **' + global_themes[1] + '**') if len(global_themes) > 1 else ''} "
-                    f"— consistent across Acts. Strong thematic spine."
-                )
+        elif global_themes:
+            assessments.append(
+                f"✅ **Thematic Coherence**: Core themes are **{global_themes[0]}**"
+                f"{(' & **' + global_themes[1] + '**') if len(global_themes) > 1 else ''} — consistent across Acts."
+            )
         return assessments[:1]
     def _generate_creative_provocations(self, diagnosis, genre):
         """Generates mentor-like questions to push the writer's craft further."""

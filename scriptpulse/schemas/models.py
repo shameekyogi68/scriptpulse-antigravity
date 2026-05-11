@@ -5,27 +5,32 @@ Defines strict data contracts for all data flowing through the pipeline.
 Replaces the loose dict-based contracts with validated, documented models.
 """
 
-from typing import Optional, List, Dict, Any
-try:
+from typing import Optional, List, Dict, Any, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    # Use real types for the IDE/Type Checker
     from pydantic import BaseModel, ConfigDict, Field
-except ImportError:
-    # Graceful degradation if pydantic is not installed
-    import logging
-    logging.getLogger('scriptpulse.schemas').warning(
-        "Pydantic not installed — schemas will not enforce runtime validation. "
-        "Install with: pip install pydantic>=2.0"
-    )
-    # Provide no-op base class
-    class BaseModel:
-        model_config = {}
-        def __init__(self, **kwargs):
-            for k, v in kwargs.items():
-                setattr(self, k, v)
-        def model_dump(self):
-            return self.__dict__
-    class ConfigDict:
-        def __init__(self, **kwargs): pass
-    def Field(default=None, **kwargs): return default
+else:
+    try:
+        from pydantic import BaseModel, ConfigDict, Field
+    except ImportError:
+        # Graceful degradation if pydantic is not installed
+        import logging
+        logging.getLogger('scriptpulse.schemas').warning(
+            "Pydantic not installed — schemas will not enforce runtime validation. "
+            "Install with: pip install pydantic>=2.0"
+        )
+        # Provide no-op base class
+        class BaseModel:
+            model_config = {}
+            def __init__(self, **kwargs):
+                for k, v in kwargs.items():
+                    setattr(self, k, v)
+            def model_dump(self):
+                return self.__dict__
+        class ConfigDict:
+            def __init__(self, **kwargs): pass
+        def Field(default=None, **kwargs): return default
 
 
 # =============================================================================

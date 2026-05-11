@@ -50,6 +50,7 @@ class EncodingAgent:
     def __init__(self):
         self.classifier = manager.get_zero_shot()
         self.sentence_transformer = manager.get_sentence_transformer()
+        self.spacy_model = manager.get_spacy()
         self.stakes_labels = ['Physical Survival', 'Emotional Connection', 'Social Status', 'Moral Dilemma', 'Existential Dread']
         self.sentiment_labels = ['High Tension / Conflict', 'Positive Connection', 'Despair / Loss', 'Neutral / Calm']
         self.scene_type_labels = ['Action Sequence', 'Dialogue Scene', 'Transition', 'Revelation', 'Escalation', 'Resolution']
@@ -129,19 +130,31 @@ class EncodingAgent:
         sentences = re.split(r'[.!?]+', text)
         sentences = [s.strip() for s in sentences if s]
         
-        if not words: return {'mean_sentence_length': 0, 'sentence_length_variance': 0, 'sentence_count': 0, 'idea_density': 0}
+        if not words: return {'mean_sentence_length': 0, 'sentence_length_variance': 0, 'sentence_count': 0, 'idea_density': 0, 'word_count': 0, 'clarity_score': 0.8}
         
         lengths = [len(s.split()) for s in sentences]
         avg = sum(lengths)/len(lengths) if lengths else 0
         var = sum((x-avg)**2 for x in lengths)/len(lengths) if lengths else 0
-        uniq = len(set(words))
+        
+        if getattr(self, 'spacy_model', None):
+            try:
+                doc = self.spacy_model(text[:10000])  # Cap for performance & stability
+                lemmas = [t.lemma_ for t in doc if not t.is_stop and not t.is_punct]
+                uniq = len(set(lemmas))
+                idea_density = uniq / max(1, len(lemmas))
+            except Exception:
+                uniq = len(set(words))
+                idea_density = uniq/len(words) if words else 0
+        else:
+            uniq = len(set(words))
+            idea_density = uniq/len(words) if words else 0
         
         return {
             'mean_sentence_length': round(avg, 2),
             'sentence_length_variance': round(var, 2),
             'sentence_count': len(sentences),
             'word_count': len(words),
-            'idea_density': round(uniq/len(words), 3) if sum(lengths) > 0 else 0,
+            'idea_density': round(idea_density, 3),
             'clarity_score': 0.8 # Placeholder
         }
 
@@ -220,6 +233,28 @@ class EncodingAgent:
 
     def _extract_entropy(self, lines):
         text = " ".join([l['text'] for l in lines]).lower()
+        if getattr(self, 'sentence_transformer', None):
+            try:
+                sentences = re.split(r'[.!?]+', text)
+                sentences = [s.strip() for s in sentences if len(s.split()) > 3]
+                if len(sentences) > 1:
+                    import numpy as np
+                    embeddings = self.sentence_transformer.encode(sentences, convert_to_tensor=False)
+                    centroid = np.mean(embeddings, axis=0)
+                    centroid_norm = np.linalg.norm(centroid)
+                    if centroid_norm > 0:
+                        centroid = centroid / centroid_norm
+                    distances = []
+                    for emb in embeddings:
+                        norm = np.linalg.norm(emb)
+                        if norm > 0:
+                            sim = np.dot(emb / norm, centroid)
+                            distances.append(1.0 - sim)
+                    semantic_entropy = float(np.mean(distances)) * 2.0
+                    return round(min(1.0, max(0.0, semantic_entropy)), 3)
+            except Exception:
+                pass
+
         words = re.findall(r'\b\w+\b', text)
         if len(words) < 5:
             return 0.0
@@ -277,7 +312,31 @@ class EncodingAgent:
         }
 
     def _extract_micro(self, lines):
-        return [{'tag': l['tag'], 'word_count': len(l['text'].split())} for l in lines]
+        """
+        Returns a lightweight per-line record including tag, word_count, text snippet,
+        and the current speaker (for dialogue lines). Used by CharacterVoiceDistinctionAgent
+        in the runner to build per-character dialogue corpora.
+        """
+        micro = []
+        current_speaker = None
+        for l in lines:
+            tag = l.get('tag', '')
+            text = l.get('text', '')
+            if tag == 'C':
+                name = normalize_character_name(text)
+                if name:
+                    current_speaker = name
+                else:
+                    current_speaker = None
+            entry = {
+                'tag': tag,
+                'word_count': len(text.split()),
+                'text': text[:200],  # Truncate for memory efficiency
+            }
+            if tag == 'D' and current_speaker:
+                entry['speaker'] = current_speaker
+            micro.append(entry)
+        return micro
 
     def _extract_reader_frustration(self, lines, char_count):
         """Detects structural issues that confuse readers."""
@@ -316,14 +375,31 @@ class EncodingAgent:
         text = " ".join([l['text'] for l in lines]).lower()
         vocab = set(re.findall(r'\b\w+\b', text))
         
-        # 1. AI-Enhanced Cognitive Stakes Detection
-        ai_stakes = self._ai_stakes_detection(text)
-        if ai_stakes:
-            return ai_stakes
-            
-        # Enhanced heuristic fallback with semantic awareness
-        return self._contextual_stakes_detection(text)
+        # Calculate base confidence for this scene analysis
+        confidence = 0.4 # Default for lexical fallback
+        if getattr(self, 'classifier', None): confidence = 0.9
+        elif getattr(self, 'spacy_model', None): confidence = 0.7
         
+        # 1. AI-Enhanced Cognitive Stakes Detection
+        scores = self._ai_stakes_detection(text)
+        if not scores:
+            # Enhanced heuristic fallback with semantic awareness
+            scores = self._contextual_stakes_detection(text)
+            
+        dominant = 'Unknown'
+        if scores:
+            max_val = -1.0
+            for k, v in scores.items():
+                try:
+                    # Type narrowing to satisfy the IDE and ensure safety
+                    if isinstance(v, (int, float, str)):
+                        curr_val = float(v)
+                        if curr_val > max_val:
+                            max_val = curr_val
+                            dominant = k
+                except (ValueError, TypeError):
+                    continue
+            
         # 2. Character Arcs (Per-scene vectors based on context, not just word count)
         # Collect diagnostic representative quotes for later reference
         rep_dialogue = ""
@@ -376,6 +452,17 @@ class EncodingAgent:
 
             # 2. Passive Voice Detection in Action lines
             if tag == 'A':
+                if getattr(self, 'spacy_model', None):
+                    try:
+                        doc = self.spacy_model(txt)
+                        is_passive = any(token.dep_ == "auxpass" for token in doc)
+                        if is_passive:
+                            passive_count += 1
+                            if len(passive_examples) < 2: passive_examples.append(txt)
+                        continue
+                    except Exception:
+                        pass
+                        
                 passive_markers = [
                     r'\bis being\b', r'\bwas being\b', r'\bhas been\b', r'\bhad been\b',
                     r'\bis seen\b', r'\bare seen\b', r'\bwas seen\b', r'\bi?s heard\b',
@@ -480,12 +567,25 @@ class EncodingAgent:
 
         # Purpose Detection: Based on action vs dialogue vs vocabulary novelty
         purpose = 'Transition'
-        if len(a_lines) > len(d_lines) * 2 and len(a_lines) > 5:
-            purpose = 'Escalation / Action'
-        elif any(w in all_text for w in ['realize', 'discover', 'reveal', 'finds', 'truth']):
-            purpose = 'Revelation / Discovery'
-        elif len(d_lines) > 10:
-            purpose = 'Negotiation / Conflict'
+        if getattr(self, 'classifier', None):
+            try:
+                purpose_labels = ['Transition', 'Escalation / Action', 'Revelation / Discovery', 'Negotiation / Conflict']
+                result = self.classifier(all_text[:1024], purpose_labels, multi_label=False)
+                purpose = result['labels'][0]
+            except Exception:
+                if len(a_lines) > len(d_lines) * 2 and len(a_lines) > 5:
+                    purpose = 'Escalation / Action'
+                elif any(w in all_text for w in ['realize', 'discover', 'reveal', 'finds', 'truth']):
+                    purpose = 'Revelation / Discovery'
+                elif len(d_lines) > 10:
+                    purpose = 'Negotiation / Conflict'
+        else:
+            if len(a_lines) > len(d_lines) * 2 and len(a_lines) > 5:
+                purpose = 'Escalation / Action'
+            elif any(w in all_text for w in ['realize', 'discover', 'reveal', 'finds', 'truth']):
+                purpose = 'Revelation / Discovery'
+            elif len(d_lines) > 10:
+                purpose = 'Negotiation / Conflict'
 
         # Check for narrative closure signals in action lines (Strict death/exit detection)
         # Only unambiguous death words — 'falls', 'collapses', 'slumps' are excluded
@@ -500,8 +600,8 @@ class EncodingAgent:
 
         return {
             'character_scene_vectors': arcs,
-            'stakes': {'dominant': dominant, 'breakdown': {k: round(v, 2) for k,v in scores.items()}},
-            'payoff': {'payoff_density': round(sum(scores.values()) / max(1, len(lines)), 2)},
+            'stakes': {'dominant': dominant, 'breakdown': {k: round(float(v), 2) for k, v in scores.items() if isinstance(v, (int, float, str))}},
+            'payoff': {'payoff_density': round(sum(float(v) for v in scores.values() if isinstance(v, (int, float, str))) / max(1, len(lines)), 2)},
             'stichomythia': {'has_stichomythia': sticho_count > 4, 'count': sticho_count},
             'monologue_data': {'has_monologue': len(monologues) > 0, 'monologues': monologues},
             'passive_voice': {'passive_ratio': passive_count / max(1, n_lines), 'passive_count': passive_count, 'examples': passive_examples},

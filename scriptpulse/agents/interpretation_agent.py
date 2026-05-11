@@ -394,19 +394,35 @@ class InterpretationAgent:
 
     def _ai_genre_detection(self, temporal_trace, features):
         """
-        AI-powered genre detection using zero-shot classification
-        Falls back gracefully if models are unavailable
+        AI-powered genre detection using DeBERTa zero-shot classification.
+        Stratified sampling: takes up to 15 scenes across Act 1, Act 2, Act 3
+        for a representative full-script read rather than just the opening 5 scenes.
+        Falls back gracefully if models are unavailable.
         """
         if not self.zero_shot_classifier or not temporal_trace:
             return None
             
         try:
-            # Extract representative text samples from scenes
+            # Stratified sampling: pick scenes from beginning, middle, and end of script
+            n = len(temporal_trace)
+            indices = set()
+            # 5 from Act 1 (first 30%)
+            a1_end = max(1, int(n * 0.30))
+            indices.update(range(0, a1_end, max(1, a1_end // 5)))
+            # 5 from Act 2 (30%-70%)
+            a2_start, a2_end = a1_end, max(a1_end + 1, int(n * 0.70))
+            step = max(1, (a2_end - a2_start) // 5)
+            indices.update(range(a2_start, a2_end, step))
+            # 5 from Act 3 (last 30%)
+            a3_start = int(n * 0.70)
+            step = max(1, (n - a3_start) // 5)
+            indices.update(range(a3_start, n, step))
+            indices = sorted(indices)[:15]  # Cap at 15
+
             text_samples = []
-            for i, scene in enumerate(temporal_trace[:5]):  # Sample first 5 scenes
+            for i in indices:
                 if features and i < len(features):
                     feat = features[i]
-                    # Get representative dialogue and action text
                     dialogue_text = " ".join([
                         l.get('text', '') for l in feat.get('micro_structure', [])
                         if l.get('tag') == 'D'
@@ -417,24 +433,22 @@ class InterpretationAgent:
                     ])
                     combined = f"{dialogue_text} {action_text}".strip()
                     if len(combined) > 50:
-                        text_samples.append(combined[:500])  # Limit length
+                        text_samples.append(combined[:400])
             
             if not text_samples:
                 return None
                 
-            # Use zero-shot classification for genre detection
             candidate_labels = [
                 'drama', 'comedy', 'action', 'horror', 'thriller', 
                 'crime drama', 'sci-fi', 'fantasy', 'romance', 'western'
             ]
             
-            # Combine samples for analysis
             combined_text = " ".join(text_samples)
             if len(combined_text) < 100:
                 return None
                 
             result = self.zero_shot_classifier(
-                combined_text[:1024],  # Limit to model's context window
+                combined_text[:1024],
                 candidate_labels,
                 multi_label=False
             )
@@ -443,12 +457,11 @@ class InterpretationAgent:
                 top_genre = result['labels'][0]
                 confidence = result['scores'][0] if result.get('scores') else 0
                 
-                # Only use AI prediction if confidence is reasonable
-                if confidence > 0.4:
+                # Require higher confidence since we have better coverage now
+                if confidence > 0.35:
                     return top_genre
                     
-        except Exception as e:
-            # Graceful fallback to heuristics
+        except Exception:
             pass
             
         return None

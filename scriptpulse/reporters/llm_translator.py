@@ -1,30 +1,52 @@
 import os
 import json
 import logging
-import streamlit as st
-from openai import OpenAI
 import time
 import signal
 from contextlib import contextmanager
+
+# Streamlit is optional — only available when running in the Streamlit server context.
+# When running via CLI, API, or tests this will be None and we fall back to env vars.
+try:
+    import streamlit as st
+    _ST_AVAILABLE = True
+except ImportError:
+    st = None
+    _ST_AVAILABLE = False
+
+# OpenAI client is optional (used as HuggingFace router fallback).
+try:
+    from openai import OpenAI
+    _OPENAI_AVAILABLE = True
+except ImportError:
+    OpenAI = None
+    _OPENAI_AVAILABLE = False
+
 try:
     from groq import Groq
     GROQ_AVAILABLE = True
 except ImportError:
+    Groq = None
     GROQ_AVAILABLE = False
 
 try:
     from google import genai
     GEMINI_AVAILABLE = True
 except ImportError:
+    genai = None
     GEMINI_AVAILABLE = False
 
 _log = logging.getLogger(__name__)
 
 def get_token(key, fallback=None):
-    try: 
-        val = st.secrets.get(key)
-        if val: return val
-    except: pass
+    """Reads a secret from Streamlit secrets (if in Streamlit context) or env vars."""
+    if _ST_AVAILABLE and st is not None:
+        try:
+            val = st.secrets.get(key)
+            if val:
+                return val
+        except Exception:
+            pass  # Not in Streamlit context or secret missing
     return os.environ.get(key, fallback)
 
 def _get_api_config():
@@ -142,13 +164,15 @@ def generate_ai_summary(script_data, lens='viewer', api_key=None):
 
     system_prompt = (
         f"You are {persona_desc} "
-        "Provide a comprehensive, actionable narrative analysis based on the structural and emotional data provided. "
-        "CRITICAL RULES: \n"
-        "1. Strictly maintain this specific professional persona. Use role-appropriate vocabulary (e.g., Executive uses 'ROI', 'Comp', 'Demographic'; Editor uses 'Beat', 'Arc', 'Causality'; Coordinator uses 'White Space', 'Rhythm', 'Flow').\n"
-        "2. Prioritize your specific areas of expertise in the report.\n"
-        "3. ALWAYS provide 3 concrete 'Fix Suggestions' at the end of the report to elevate the script for production.\n"
-        "4. If you mention 'ScriptPulse', ALWAYS format it EXACTLY like this: Script<span style='color: #0052FF; font-weight: bold;'>Pulse</span>\n"
-        "5. Avoid archaic or overly rigid length rules. Prestige features often exceed 120 minutes; only flag length if it meaningfully drags the pacing or structural integrity."
+        "You ONLY analyze screenplays. Provide a precise, evidence-based analysis grounded exclusively in the structural data provided. "
+        "CRITICAL RULES — violating any of these is unacceptable:\n"
+        "1. NEVER invent plot details, character names, or scenes not supported by the data. If you don't have the data, say 'the data does not indicate this.'\n"
+        "2. Strictly maintain this specific professional persona throughout. Use role-appropriate vocabulary (e.g., Executive uses 'ROI', 'Comp', 'Demographic'; Editor uses 'Beat', 'Arc', 'Causality'; Coordinator uses 'White Space', 'Rhythm', 'Flow').\n"
+        "3. Every claim you make MUST be supported by a specific metric or finding from the Experience Data. If you reference a problem, cite the scene number or metric that surfaces it.\n"
+        "4. ALWAYS end with exactly 3 concrete 'Fix Suggestions' — each fix must be specific and actionable for a working writer (not generic advice like 'improve pacing').\n"
+        "5. If you mention 'ScriptPulse', ALWAYS format it EXACTLY like this: Script<span style='color: #0052FF; font-weight: bold;'>Pulse</span>\n"
+        "6. Do NOT flag page length as an issue unless the runtime data explicitly shows the script is significantly outside the genre benchmark range.\n"
+        "7. Your tone must be respectful, direct, and constructive — you are a mentor, not a gatekeeper."
     )
     user_content = f"Experience Data: {json.dumps(data_payload)}"
     errors = []
@@ -184,7 +208,7 @@ def generate_ai_summary(script_data, lens='viewer', api_key=None):
             errors.append(f"Groq: {str(e)}")
 
     # 3. Fallback to Hugging Face
-    if keys["hf"]:
+    if keys["hf"] and _OPENAI_AVAILABLE and OpenAI is not None:
         try:
             with timeout_context(10):
                 client = OpenAI(base_url="https://router.huggingface.co/v1", api_key=keys["hf"])
@@ -198,6 +222,8 @@ def generate_ai_summary(script_data, lens='viewer', api_key=None):
             errors.append("HF: Request timed out after 10 seconds")
         except Exception as e:
             errors.append(f"HF: {str(e)}")
+    elif keys["hf"] and not _OPENAI_AVAILABLE:
+        errors.append("HF: openai package not installed (pip install openai)")
             
     return None, f"All AI APIs failed. Details: {' | '.join(errors)}"
 
@@ -286,7 +312,7 @@ def generate_section_insight(script_data, section_type, lens='viewer', api_key=N
                 errors.append(f"Groq: {str(e)}")
                 continue
 
-        if provider == 'hf' and keys["hf"]:
+        if provider == 'hf' and keys["hf"] and _OPENAI_AVAILABLE and OpenAI is not None:
             try:
                 client = OpenAI(base_url="https://router.huggingface.co/v1", api_key=keys["hf"])
                 completion = client.chat.completions.create(

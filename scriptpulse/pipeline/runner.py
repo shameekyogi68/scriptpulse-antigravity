@@ -7,6 +7,7 @@ Simplified ScriptPulse Runner - High Performance, Linear Pipeline
 Designed for MCA Research Defense: Clear, Logical, and Deterministic
 """
 
+from typing import Any
 import time
 import json
 import uuid
@@ -16,6 +17,7 @@ from scriptpulse.agents.dynamics_agent import DynamicsAgent
 from scriptpulse.agents.interpretation_agent import InterpretationAgent
 from scriptpulse.agents.ethics_agent import EthicsAgent
 from scriptpulse.agents.writer_agent import WriterAgent
+from scriptpulse.agents.experimental_agent import CharacterVoiceDistinctionAgent
 from scriptpulse.utils import normalizer, runtime
 from scriptpulse.utils.confidence_scorer import ConfidenceScorer
 
@@ -29,7 +31,7 @@ def run_pipeline(script_content, genre='drama', story_framework='3_act', progres
     """
     
     _t_start = time.time()
-    telemetry = {'status': 'active', 'stages': {}}
+    telemetry: dict[str, Any] = {'status': 'active', 'stages': {}}
     
     # --- STAGE 0: Normalize & Prepare ---
     if not script_content or len(script_content.strip()) < 50:
@@ -201,21 +203,33 @@ def run_pipeline(script_content, genre='drama', story_framework='3_act', progres
 
     # --- STAGE 6: Final Assembly ---
     _t_end = time.time()
+    _t_stage = time.time()  # Reset timer specifically for assembly measurement
     
-    # Aggregate Voice Fingerprints (Cumulative)
+    # Aggregate Voice Fingerprints (Cumulative) + collect dialogue samples
     voice_fingerprints = {}
+    char_dialogue_samples = {}  # For CharacterVoiceDistinctionAgent
     for f in perceptual_features:
         for char, v in f.get('character_scene_vectors', {}).items():
             if char not in voice_fingerprints:
-                voice_fingerprints[char] = {'agency': 0, 'sentiment': 0, 'line_count': 0}
+                voice_fingerprints[char] = {'agency': 0, 'sentiment': 0, 'line_count': 0, 'dialogue_samples': []}
+                char_dialogue_samples[char] = []
             voice_fingerprints[char]['line_count'] += v['line_count']
             voice_fingerprints[char]['agency'] += v['agency']
             voice_fingerprints[char]['sentiment'] += v['sentiment']
+        # Collect raw dialogue lines per character from micro_structure
+        for line in f.get('micro_structure', []):
+            if line.get('tag') == 'D' and line.get('speaker'):
+                spk = line['speaker']
+                txt = line.get('text', '').strip()
+                if spk in char_dialogue_samples and txt and len(txt) > 5:
+                    if len(char_dialogue_samples[spk]) < 40:  # Cap at 40 samples per char
+                        char_dialogue_samples[spk].append(txt)
     
     # Normalize averages & Meld with Agency
     for char in voice_fingerprints:
         count = voice_fingerprints[char]['line_count']
         voice_fingerprints[char]['sentiment'] = round(voice_fingerprints[char]['sentiment'] / max(1, count), 2)
+        voice_fingerprints[char]['dialogue_samples'] = char_dialogue_samples.get(char, [])
         
         # Use EthicsAgent's higher-fidelity agency calculation if available
         if char in agency_map and isinstance(agency_map[char], dict):
@@ -271,12 +285,44 @@ def run_pipeline(script_content, genre='drama', story_framework='3_act', progres
     writer = WriterAgent()
     report = writer.analyze(report, genre=genre)
     
+    # --- STAGE 5b: Character Voice Distinction (Unique AI Feature) ---
+    try:
+        voice_agent = CharacterVoiceDistinctionAgent()
+        voice_report = voice_agent.analyze(voice_fingerprints)
+        report['voice_distinction_report'] = voice_report
+        # Inject standout finding into writer_intelligence diagnostics if available
+        if voice_report.get('flagged_pairs') and 'writer_intelligence' in report:
+            for flagged in voice_report['flagged_pairs'][:2]:
+                diag_msg = (
+                    f"🎭 **Voice Similarity ({flagged['pair']})**: "
+                    f"{flagged['severity']} — {flagged['advice']}"
+                )
+                report['writer_intelligence']['narrative_diagnosis'].insert(0, diag_msg)
+    except Exception as e:
+        import logging
+        logging.warning("CharacterVoiceDistinctionAgent failed gracefully: %s", e)
+        report['voice_distinction_report'] = {'method': 'Error', 'voice_diversity_index': None}
+    
     # --- STAGE 6: Calculate Confidence Score ---
     scorer = ConfidenceScorer()
     confidence_result = scorer.calculate(temporal_trace)
     report['meta']['confidence'] = confidence_result['score']
     report['meta']['confidence_level'] = confidence_result['level']
     report['meta']['confidence_reasons'] = confidence_result['reasons']
+    
+    # Surface confidence in writer_intelligence for UI transparency
+    if 'writer_intelligence' in report:
+        report['writer_intelligence']['analysis_confidence'] = {
+            'score': confidence_result['score'],
+            'level': confidence_result['level'],
+            'reasons': confidence_result['reasons'],
+            'interpretation': (
+                'High confidence: sufficient scene data, strong signal variance.' if confidence_result['level'] == 'HIGH'
+                else 'Medium confidence: some results may be imprecise on shorter scripts.'
+                if confidence_result['level'] == 'MEDIUM'
+                else 'Low confidence: script is too short or too uniform for reliable analysis.'
+            )
+        }
     
     # Validate against Pydantic schema for type safety
     try:
