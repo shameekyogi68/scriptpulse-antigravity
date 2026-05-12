@@ -1,3 +1,6 @@
+# MODULE: models.py
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 """
 ScriptPulse Pydantic Schemas - Research-Grade Type Safety
 

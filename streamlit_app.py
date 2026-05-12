@@ -1,3 +1,6 @@
+# MODULE: streamlit_app.py
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 """
 Proxy entrypoint for Streamlit Community Cloud.
 Streamlit Cloud expects `streamlit_app.py` at the root directory by default.

@@ -1,3 +1,6 @@
+# MODULE: model_manager.py
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 """
 ScriptPulse Model Manager (MLOps Layer)
 Centralizes model loading, caching, and hardware acceleration.

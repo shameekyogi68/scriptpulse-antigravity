@@ -1,3 +1,6 @@
+# MODULE: xai_highlighter.py
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 import re
 
 def generate_xai_html(text: str) -> str:

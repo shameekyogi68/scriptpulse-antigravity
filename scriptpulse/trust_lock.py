@@ -1,3 +1,6 @@
+# MODULE: trust_lock.py
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 """
 ScriptPulse Trust Lock (LHTL)
 Philosophical Checksum & Invariant Enforcement

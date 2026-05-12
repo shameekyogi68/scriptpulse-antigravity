@@ -1,3 +1,6 @@
+# MODULE: confidence_scorer.py
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 import statistics
 
 class ConfidenceScorer:

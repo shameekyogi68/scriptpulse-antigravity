@@ -1,3 +1,6 @@
+# MODULE: lenses.py
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 """
 ScriptPulse Lenses - Contextual Weighting Filters
 Defines three distinct professional perspectives through which a script is analyzed.

@@ -1,3 +1,6 @@
+# MODULE: sidebar.py
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 import streamlit as st
 
 def render_sidebar(ui_mode, is_cloud, stu):

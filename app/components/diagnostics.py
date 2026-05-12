@@ -1,3 +1,6 @@
+# MODULE: diagnostics.py
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 import streamlit as st
 import os
 
@@ -25,10 +28,10 @@ def render_diagnostics():
             os.environ["SCRIPTPULSE_HEURISTICS_ONLY"] = "1" if mem_safe else "0"
             # Invalidate model cache so next run picks up the change
             try:
-                from scriptpulse.pipeline import runner as _runner
-                _runner._AGENT_CACHE.clear()
+                from scriptpulse.utils.model_manager import manager as _mm
+                _mm.release_models()
                 st.toast("Mode changed — model cache cleared." if mem_safe else "Full ML mode restored.")
-            except ImportError:
+            except Exception:
                 pass
 
         # ── Manual memory release ──────────────────────────────────
@@ -36,9 +39,7 @@ def render_diagnostics():
                      help="Releases SBERT/DeBERTa references and triggers GC. Use when RAM is low."):
             try:
                 from scriptpulse.utils.model_manager import manager as _mm
-                from scriptpulse.pipeline import runner as _runner
                 _mm.release_models()
-                _runner._AGENT_CACHE.clear()
                 st.success("Model memory released. Next analysis will reload if needed.")
             except Exception as _e:
                 st.warning(f"Release partial: {_e}")

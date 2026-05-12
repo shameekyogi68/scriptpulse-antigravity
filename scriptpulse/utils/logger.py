@@ -1,3 +1,6 @@
+# MODULE: logger.py
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 """
 ScriptPulse Structured Logger
 Provides a centralized, environment-aware logging facility for all agents.

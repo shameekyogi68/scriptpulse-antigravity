@@ -49,7 +49,8 @@ class DynamicsAgent:
             'avant garde': 'avant-garde',
         }
         g_key = aliases.get(g_key, g_key)
-        priors = self.GENRE_PRIORS.get(g_key, self.GENRE_PRIORS['drama']).copy()
+        drama_priors = self.GENRE_PRIORS.get('drama', {'lambda': [0.65, 0.75], 'beta': [0.35, 0.45]})
+        priors = self.GENRE_PRIORS.get(g_key, drama_priors).copy()
         
         # AI-driven parameter adaptation based on content analysis
         priors = self._adapt_parameters_to_content(features, g_key, priors, kwargs)

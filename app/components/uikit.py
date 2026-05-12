@@ -1,4 +1,8 @@
+# MODULE: uikit.py
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 import re
+from typing import Optional
 import streamlit as st
 from app.components.theme import Theme
 
@@ -135,7 +139,7 @@ def render_empty_state():
     </div>
     """, unsafe_allow_html=True)
 
-def render_signal_box(title: str, badge_html: str, action: str, border_color: str = None):
+def render_signal_box(title: str, badge_html: str, action: str, border_color: Optional[str] = None):
     """Renders a premium signal box for priorities or AI summaries."""
 
     action_html = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', action)
@@ -187,7 +191,7 @@ def get_status_icon_html(is_ok: bool) -> str:
     icon_class = "bi-check-circle-fill icon-pass" if is_ok else "bi-x-circle-fill icon-fail"
     return f"<i class='bi {icon_class}'></i>"
 
-def render_ai_consultant_box(insight_text: str, persona: str = "Script Consultant", box_title: str = None):
+def render_ai_consultant_box(insight_text: str, persona: str = "Script Consultant", box_title: Optional[str] = None):
     """Renders a premium glassmorphic box for AI-powered consultant insights."""
 
     text_html = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', insight_text)
@@ -218,7 +222,7 @@ def render_ai_consultant_box(insight_text: str, persona: str = "Script Consultan
     )
     st.markdown(html, unsafe_allow_html=True)
 
-def render_metric_card(label: str, value: str, help_text: str = None):
+def render_metric_card(label: str, value: str, help_text: Optional[str] = None):
     """Renders a premium, non-truncating metric card for the Story Dashboard."""
     from app.components.theme import Theme
     
@@ -227,8 +231,8 @@ def render_metric_card(label: str, value: str, help_text: str = None):
     
     # Value auto-downsizing for long strings
     val_size = "1.8rem"
-    if len(str(value)) > 10: val_size = "1.4rem"
-    if len(str(value)) > 15: val_size = "1.1rem"
+    if len(value) > 10: val_size = "1.4rem"
+    if len(value) > 15: val_size = "1.1rem"
 
     html = (
         f'<div style="background: linear-gradient(135deg, rgba(32, 29, 48, 0.6) 0%, rgba(26, 23, 41, 0.8) 100%); '

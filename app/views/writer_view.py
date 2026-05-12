@@ -1,3 +1,6 @@
+# MODULE: writer_view.py
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 """
 ScriptPulse — Unified Dashboard View
 Product-Grade UI: Persona-Responsive Layout v3.0

@@ -1,3 +1,6 @@
+# MODULE: governance.py
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 """
 ScriptPulse Governance & Sanitization
 Provides hard bounds on input parameters to protect NLP models from Out-Of-Memory (OOM) 

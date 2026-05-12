@@ -196,7 +196,7 @@ if script_input:
             st.session_state.pop('ai_summary_cache', None)
             # Clear all lens-specific caches so fresh analysis is generated
             for k in list(st.session_state.keys()):
-                if k.startswith('ai_summary_') or k.startswith('ai_pulse_'):
+                if isinstance(k, str) and (k.startswith('ai_summary_') or k.startswith('ai_pulse_')):
                     del st.session_state[k]
 
             # Auto-generate AI pulse insight for the selected lens
