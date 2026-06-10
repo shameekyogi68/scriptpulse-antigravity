@@ -223,5 +223,5 @@ class PipelineOutput(BaseModel):
     fingerprint: str = ""
     genre: str = "drama"
     lens: str = "viewer"
-    pipeline_version: str = "14.0"
+    pipeline_version: str = "1.0"
     wall_time_seconds: float = 0.0

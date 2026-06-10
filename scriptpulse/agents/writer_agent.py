@@ -1276,12 +1276,17 @@ class WriterAgent:
         ext_count = 0
 
         for s in trace:
-            loc_data = s.get('location_data') or {}
-            raw_loc = loc_data.get('location', 'UNKNOWN') or 'UNKNOWN'
-            # Fix 1: Strip time-of-day suffixes for better deduplication
+            loc_data = s.get('location_data')
+            # Guard: location_data may be None when scenes have no headings
+            if not isinstance(loc_data, dict):
+                loc_data = {}
+            raw_loc = loc_data.get('location') or 'UNKNOWN'
+            # Strip time-of-day suffixes for better deduplication
             loc = re.sub(r'\s*[-–—]\s*(DAY|NIGHT|DAWN|DUSK|MORNING|EVENING|CONTINUOUS|LATER|SAME|MOMENTS?\s+LATER).*$', '', raw_loc, flags=re.IGNORECASE).strip()
-            interior = loc_data.get('interior', '') or ''
-            interior = interior.strip().upper() if interior else ''
+            if not loc:
+                loc = 'UNKNOWN'
+            interior = loc_data.get('interior') or ''
+            interior = str(interior).strip().upper()
 
             location_counts[loc] = location_counts.get(loc, 0) + 1
             if interior == 'INT': int_count += 1

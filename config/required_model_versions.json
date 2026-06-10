@@ -1,5 +1,5 @@
 {
-    "_version": "v15.0",
+    "_version": "v1.0",
     "_policy": "Exact match required. Mismatch is a hard fail.",
     "models": {
         "zero-shot-classification": {
@@ -12,7 +12,7 @@
             "name": "jinaai/jina-embeddings-v2-small-en",
             "task": "sentence-embedding",
             "revision": "main",
-            "notes": "Jina v2 Small - 8k context, research-grade embeddings"
+            "notes": "Jina v2 Small - 8k context, research-grade embeddings. Selected over all-MiniLM-L6-v2 for full-scene encoding without truncation."
         },
         "spacy": {
             "name": "en_core_web_sm",
