@@ -265,6 +265,24 @@ Mary waits.
             self.assertTrue(any('COFFEE SHOP' in h for h in headings))
 
 
+class TestScreenplayValidation(unittest.TestCase):
+    """Test validation of screenplay structure"""
+    
+    def test_non_screenplay_text_rejected(self):
+        """Plain non-screenplay text without scene headings or dialogue should be rejected"""
+        non_screenplay_script = """
+        This is a random document that contains some information.
+        It is a simple essay about artificial intelligence.
+        There are no scene headings starting with INT. or EXT. in this entire text.
+        There are also no character names or dialogue blocks.
+        Just regular paragraphs explaining various concepts and ideas.
+        We hope the system rejects it because it is not a screenplay.
+        """
+        with self.assertRaises(ValueError) as context:
+            runner.run_pipeline(non_screenplay_script, force_screenplay_validation=True)
+        self.assertIn("could not detect screenplay structure", str(context.exception))
+
+
 if __name__ == '__main__':
     print("="*60)
     print("ScriptPulse Comprehensive Test Suite")

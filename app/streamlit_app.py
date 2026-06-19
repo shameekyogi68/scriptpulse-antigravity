@@ -304,6 +304,11 @@ if script_input:
                     "Make sure scenes start with INT. or EXT. (e.g., 'INT. COFFEE SHOP - DAY'). "
                     "You can also try pasting just one scene to test."
                 ),
+                "could not detect screenplay structure": (
+                    "ScriptPulse couldn't find screenplay structure in your document. "
+                    "Please ensure the file is a screenplay containing standard scene headings "
+                    "(e.g., 'INT. ROOM - DAY') or character dialogue blocks."
+                ),
                 "requires more text": (
                     "Your script is too short for analysis. "
                     "Please upload at least 2-3 scenes for meaningful results."

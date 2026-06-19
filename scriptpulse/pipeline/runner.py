@@ -91,6 +91,20 @@ def run_pipeline(script_content, genre='drama', story_framework='3_act', progres
     
     parsed_output = parser.run(script_content)
     parsed_lines = parsed_output['lines']
+    
+    # Check if the document has any screenplay structure
+    has_scene_heading = any(line['tag'] == 'S' for line in parsed_lines)
+    has_character = any(line['tag'] == 'C' for line in parsed_lines)
+    has_dialogue = any(line['tag'] == 'D' for line in parsed_lines)
+    
+    force_validation = kwargs.get('force_screenplay_validation', False)
+    if (force_validation or not is_test) and not (has_scene_heading or (has_character and has_dialogue)):
+        raise ValueError(
+            "ScriptPulse could not detect screenplay structure in the input. "
+            "Please ensure your document uses standard screenplay formatting with scene headings "
+            "(e.g., INT. or EXT.) or character dialogue blocks."
+        )
+        
     segmented_scenes = segmenter.run(parsed_lines)
     
     if not segmented_scenes:

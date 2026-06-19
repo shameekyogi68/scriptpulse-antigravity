@@ -161,7 +161,7 @@ Indeed it does. We must proceed carefully.""")
     if timings:
         print(f"\n  Per-Agent Timing Table:")
         for agent, ms in sorted(timings.items()):
-            print(f"    {agent:25s} {ms:>6d} ms")
+            print(f"    {agent:25s} {int(ms):>6d} ms")
 
     return {
         'total_scenes': total_scenes,
@@ -203,8 +203,19 @@ def measure_concurrent():
     from scriptpulse.pipeline import runner
 
     test_script = """INT. ROOM - DAY
+
+ALEX sits at the desk, typing furiously on a computer keyboard. The light from the screen illuminates his tired face. He sighs, rubbing his temples, exhausted from a long day.
+
 ALEX
-Hello world."""
+I cannot believe this is taking so long. There has to be a better way to solve this problem.
+
+MARIA enters the room quietly, carrying a cup of hot coffee. She places it gently on the desk next to him.
+
+MARIA
+You need to take a break, Alex. You've been at it for hours.
+
+ALEX
+Not until this is done. I'm almost there, I just need a few more minutes."""
 
     times = []
     for i in range(3):
