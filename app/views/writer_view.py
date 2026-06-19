@@ -551,8 +551,6 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
     # SECTION: EXPORT — STACKED VERTICALLY
     # =====================================================================
     def render_export():
-        st.markdown("<br>", unsafe_allow_html=True)
-        st.markdown("---")
         uikit.render_section_header("📦", "Script & Data", "View your original script and export research data.")
 
         # --- Original Script (full width) ---
@@ -603,46 +601,85 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
             with st.expander(f"{label} — Technical Details"):
                 st.code(str(e))
 
+    # Always render score card at the top
+    _safe_render(render_score_card, "Score Card")
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # Render tabs based on perspective
     if lens == "Studio Executive":
-        _safe_render(render_score_card, "Score Card")
-        _safe_render(render_coverage_memo, "AI Coverage")
-        _safe_render(render_producer_intel, "Producer Intel")
-        st.markdown("---")
-        _safe_render(render_story_pulse, "Tension Map")
-        _safe_render(render_diagnostics, "Diagnostics")
+        tab_pulse, tab_producer, tab_insights, tab_memo, tab_export = st.tabs([
+            "📈 Pacing & Tension",
+            "🏢 Market & Production",
+            "🧠 Narrative Insights",
+            "📝 AI Executive Memo",
+            "📦 Export & Lab Data"
+        ])
+        with tab_pulse:
+            _safe_render(render_story_pulse, "Tension Map")
+        with tab_producer:
+            _safe_render(render_producer_intel, "Producer Intel")
+        with tab_insights:
+            _safe_render(render_diagnostics, "Diagnostics")
+        with tab_memo:
+            _safe_render(render_coverage_memo, "AI Coverage")
+        with tab_export:
+            _safe_render(render_export, "Export")
 
     elif lens == "Script Coordinator":
-        _safe_render(render_score_card, "Score Card")
-        _safe_render(render_story_pulse, "Tension Map")
-        _safe_render(render_diagnostics, "Diagnostics")
-        _safe_render(render_scene_turns, "Scene Turns")
-        _safe_render(render_scene_economy, "Scene Economy")
-        st.markdown("---")
-        _safe_render(render_coverage_memo, "AI Coverage")
+        tab_pulse, tab_prose, tab_insights, tab_memo, tab_export = st.tabs([
+            "📈 Pacing & Tension",
+            "📐 Prose & Pacing Flow",
+            "🧠 Technical Insights",
+            "📝 AI Coordinator Memo",
+            "📦 Export & Lab Data"
+        ])
+        with tab_pulse:
+            _safe_render(render_story_pulse, "Tension Map")
+        with tab_prose:
+            _safe_render(render_scene_economy, "Scene Economy")
+            _safe_render(render_scene_turns, "Scene Turns")
+        with tab_insights:
+            _safe_render(render_diagnostics, "Diagnostics")
+        with tab_memo:
+            _safe_render(render_coverage_memo, "AI Coverage")
+        with tab_export:
+            _safe_render(render_export, "Export")
 
     else:  # Story Editor (Default)
-        _safe_render(render_score_card, "Score Card")
-        _safe_render(render_story_pulse, "Tension Map")
-        _safe_render(render_diagnostics, "Diagnostics")
-        _safe_render(render_characters, "Characters")
-        _safe_render(render_scene_turns, "Scene Turns")
-        _safe_render(render_mentor, "Mentor")
-        st.markdown("---")
-        _safe_render(render_coverage_memo, "AI Coverage")
-        _safe_render(render_producer_intel, "Producer Intel")
-
-    _safe_render(render_export, "Export")
+        tab_pulse, tab_insights, tab_characters, tab_producer, tab_memo, tab_export = st.tabs([
+            "📈 Pacing & Tension",
+            "🧠 Structural Insights",
+            "👥 Character Dynamics",
+            "🏢 Producer Intel",
+            "📝 AI Story Memo",
+            "📦 Export & Lab Data"
+        ])
+        with tab_pulse:
+            _safe_render(render_story_pulse, "Tension Map")
+        with tab_insights:
+            _safe_render(render_diagnostics, "Diagnostics")
+            _safe_render(render_mentor, "Mentor")
+        with tab_characters:
+            _safe_render(render_characters, "Characters")
+            _safe_render(render_scene_turns, "Scene Turns")
+        with tab_producer:
+            _safe_render(render_producer_intel, "Producer Intel")
+        with tab_memo:
+            _safe_render(render_coverage_memo, "AI Coverage")
+        with tab_export:
+            _safe_render(render_export, "Export")
 
     # --- Methodology Footer ---
+    st.markdown("<br><br>", unsafe_allow_html=True)
     disclaimer_items = "".join(f"<li>{line}</li>" for line in FULL_DISCLAIMER_LINES)
     st.markdown(f"""
-    <div style="margin-top: 2rem; padding: 16px 20px; background: linear-gradient(90deg, rgba(0, 82, 255, 0.04) 0%, rgba(106, 72, 187, 0.03) 100%);
-                border: 1px solid rgba(0, 82, 255, 0.08); border-radius: 12px;">
-        <div style="font-size: 0.72rem; color: rgba(244, 246, 251, 0.5); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; margin-bottom: 8px;">Important — How To Read These Results</div>
-        <ul style="font-size: 0.82rem; color: rgba(244, 246, 251, 0.65); line-height: 1.6; margin: 0 0 12px 1.2rem; padding: 0;">
+    <div style="margin-top: 1rem; padding: 20px 24px; background: linear-gradient(90deg, rgba(0, 82, 255, 0.04) 0%, rgba(106, 72, 187, 0.03) 100%);
+                border: 1px solid rgba(0, 82, 255, 0.08); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
+        <div style="font-size: 0.72rem; color: rgba(244, 246, 251, 0.5); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; margin-bottom: 10px;">Important — How To Read These Results</div>
+        <ul style="font-size: 0.82rem; color: rgba(244, 246, 251, 0.65); line-height: 1.65; margin: 0 0 14px 1.2rem; padding: 0;">
             {disclaimer_items}
         </ul>
-        <div style="font-size: 0.82rem; color: rgba(244, 246, 251, 0.65); line-height: 1.6;">
+        <div style="font-size: 0.82rem; color: rgba(244, 246, 251, 0.65); line-height: 1.65;">
             {METHODOLOGY_NOTE}
         </div>
     </div>

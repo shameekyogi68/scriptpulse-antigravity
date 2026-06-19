@@ -85,111 +85,110 @@ render_hero_section(
     "AI Story Intelligence — Map how your screenplay may feel to a first-time reader. Reference signals for reflection, not judgment."
 )
 
-# =============================================================================
-# STEP 1: UPLOAD
-# =============================================================================
-render_section_header("📄", "Your Screenplay",
-    "Upload your script or paste a scene. We'll map its emotional architecture.")
+# Create two columns for the setup stage: Left for Screenplay, Right for Configuration & Run
+col_setup_left, col_setup_right = st.columns([1.1, 0.9], gap="medium")
 
-tab_up, tab_paste = st.tabs(["📁 Upload File", "📝 Paste Text"])
+with col_setup_left:
+    render_section_header("📄", "Your Screenplay",
+        "Upload your script or paste a scene. We'll map its emotional architecture.")
 
-script_input = None
-with tab_up:
-    uploaded_file = st.file_uploader(
-        "Drop your screenplay here (PDF, TXT, or FDX)",
-        type=['pdf', 'txt', 'fdx'],
-        label_visibility="visible"
-    )
-    if uploaded_file and stu.check_upload_size(uploaded_file):
-        with st.spinner("Reading script..."):
-            ext = uploaded_file.name.split('.')[-1].lower()
-            if ext == 'pdf':
-                try:
-                    from io import BytesIO
-                    import PyPDF2
-                    script_input = "\n".join([
-                        p.extract_text() or "" for p in PyPDF2.PdfReader(BytesIO(uploaded_file.read())).pages
-                    ])
-                    # PDF validation: check that extracted text has at least 300 words
-                    if script_input and len(script_input.strip().split()) < 300:
-                        st.error("This PDF appears to be image-based (scanned). Please convert to text-based PDF or paste text manually.")
+    tab_up, tab_paste = st.tabs(["📁 Upload File", "📝 Paste Text"])
+
+    script_input = None
+    with tab_up:
+        uploaded_file = st.file_uploader(
+            "Drop your screenplay here (PDF, TXT, or FDX)",
+            type=['pdf', 'txt', 'fdx'],
+            label_visibility="visible"
+        )
+        if uploaded_file and stu.check_upload_size(uploaded_file):
+            with st.spinner("Reading script..."):
+                ext = uploaded_file.name.split('.')[-1].lower()
+                if ext == 'pdf':
+                    try:
+                        from io import BytesIO
+                        import PyPDF2
+                        script_input = "\n".join([
+                            p.extract_text() or "" for p in PyPDF2.PdfReader(BytesIO(uploaded_file.read())).pages
+                        ])
+                        # PDF validation: check that extracted text has at least 300 words
+                        if script_input and len(script_input.strip().split()) < 300:
+                            st.error("This PDF appears to be image-based (scanned). Please convert to text-based PDF or paste text manually.")
+                            script_input = None
+                    except Exception as e:
+                        st.error("Could not read PDF. The file may be corrupted or protected. Please try a TXT or FDX file.")
                         script_input = None
-                except Exception as e:
-                    st.error("Could not read PDF. The file may be corrupted or protected. Please try a TXT or FDX file.")
-                    script_input = None
-            elif ext == 'fdx':
-                try:
-                    from scriptpulse.agents.structure_agent import ImporterAgent
-                    importer = ImporterAgent()
-                    parsed_lines = importer.run(uploaded_file.getvalue().decode("utf-8"))
-                    if isinstance(parsed_lines, list):
-                        script_input = "\n".join([l['text'] for l in parsed_lines])
-                    else:
-                        script_input = parsed_lines
-                except Exception as e:
-                    st.error("Could not parse FDX formatting. Please ensure it's a valid Final Draft XML file.")
-                    script_input = None
-            else:
-                try:
-                    script_input = uploaded_file.read().decode('utf-8')
-                except Exception:
-                    st.error("Could not decode text. Please ensure the file is saved in standard UTF-8 format.")
-                    script_input = None
+                elif ext == 'fdx':
+                    try:
+                        from scriptpulse.agents.structure_agent import ImporterAgent
+                        importer = ImporterAgent()
+                        parsed_lines = importer.run(uploaded_file.getvalue().decode("utf-8"))
+                        if isinstance(parsed_lines, list):
+                            script_input = "\n".join([l['text'] for l in parsed_lines])
+                        else:
+                            script_input = parsed_lines
+                    except Exception as e:
+                        st.error("Could not parse FDX formatting. Please ensure it's a valid Final Draft XML file.")
+                        script_input = None
+                else:
+                    try:
+                        script_input = uploaded_file.read().decode('utf-8')
+                    except Exception:
+                        st.error("Could not decode text. Please ensure the file is saved in standard UTF-8 format.")
+                        script_input = None
 
-with tab_paste:
-    pasted = st.text_area("Paste text here", height=200,
-                          placeholder="INT. COFFEE SHOP - DAY\n\nA young WRITER stares at a blank screen...")
-    
-    # Word count indicator
-    word_count = len(pasted.split()) if pasted else 0
-    if pasted:
-        st.caption(f"📝 {word_count} words detected")
-    
-    # Minimum validation: 300 words OR at least 1 scene heading
-    has_scene_heading = any(line.strip().startswith(('INT.', 'EXT.', 'INT ', 'EXT ')) 
-                           for line in pasted.split('\n') if line.strip()) if pasted else False
-    
-    if not script_input and pasted and (word_count >= 300 or has_scene_heading):
-        if stu.check_input_length(pasted):
-            script_input = pasted
+    with tab_paste:
+        pasted = st.text_area("Paste text here", height=230,
+                              placeholder="INT. COFFEE SHOP - DAY\n\nA young WRITER stares at a blank screen...")
+        
+        # Word count indicator
+        word_count = len(pasted.split()) if pasted else 0
+        if pasted:
+            st.caption(f"📝 {word_count} words detected")
+        
+        # Minimum validation: 300 words OR at least 1 scene heading
+        has_scene_heading = any(line.strip().startswith(('INT.', 'EXT.', 'INT ', 'EXT ')) 
+                               for line in pasted.split('\n') if line.strip()) if pasted else False
+        
+        if not script_input and pasted and (word_count >= 300 or has_scene_heading):
+            if stu.check_input_length(pasted):
+                script_input = pasted
 
-# =============================================================================
-# STEP 2: CONFIGURE & ANALYZE
-# =============================================================================
-render_section_header("⚙️", "Configure Analysis",
-    "Select genre and perspective. Analysis adapts presentation — core signals stay consistent across perspectives.")
+with col_setup_right:
+    render_section_header("⚙️", "Configure Analysis",
+        "Select genre and perspective to calibrate benchmarks.")
 
-st.info("ScriptPulse provides audience-experience reference signals for your draft. It does not rank, approve, or predict commercial success.")
+    st.info("ScriptPulse provides audience-experience reference signals. It does not rank, approve, or predict commercial success.")
 
-col1, col2 = st.columns(2)
-genre_raw = col1.selectbox("Genre", ["Drama", "Action", "Thriller", "Horror", "Comedy", "Sci-Fi", "Romance", "Fantasy", "Avant-Garde"],
-                      help="The engine adjusts its benchmarks to match the expectations of your genre.")
-genre = genre_raw.lower().replace("-", "-")  # Preserve hyphens, force lowercase
-lens = col2.selectbox("Perspective", ["Story Editor", "Studio Executive", "Script Coordinator"],
-                      help="🕵️ Story Editor = Plot & Logic | 🏢 Studio Executive = Market & Budget | ✍️ Script Coordinator = Craft & Flow")
+    genre_raw = st.selectbox("Genre", ["Drama", "Action", "Thriller", "Horror", "Comedy", "Sci-Fi", "Romance", "Fantasy", "Avant-Garde"],
+                          help="The engine adjusts its benchmarks to match the expectations of your genre.")
+    genre = genre_raw.lower().replace("-", "-")  # Preserve hyphens, force lowercase
+    lens = st.selectbox("Perspective", ["Story Editor", "Studio Executive", "Script Coordinator"],
+                          help="🕵️ Story Editor = Plot & Logic | 🏢 Studio Executive = Market & Budget | ✍️ Script Coordinator = Craft & Flow")
 
-# System Limitations expander
-with st.expander("🔍 System Limitations & Methodology"):
-    st.markdown("""
-    ### 🔬 System Bounds & Mathematical Methodology
+    # System Limitations expander
+    with st.expander("🔍 System Limitations & Methodology"):
+        st.markdown("""
+        ### 🔬 System Bounds & Mathematical Methodology
 
-    ScriptPulse is designed as a diagnostic writing aid leveraging NLP models and temporal dynamics simulation. In alignment with academic and industry standards, users should note the following system constraints:
+        ScriptPulse is designed as a diagnostic writing aid leveraging NLP models and temporal dynamics simulation. In alignment with academic and industry standards, users should note the following system constraints:
 
-    1. **Deterministic Structural Proxies**: 
-       The pacing, momentum, and effort scores are generated using deterministic mathematical formulas (e.g. Shannon entropy, speaker switches, dialogue velocity). These are structural proxies and do *not* represent a direct prediction of human audience psychology or emotional resonance.
-    
-    2. **Screenplay Formatting Sensitivity**:
-       The structural parser operates on standard industry layouts (e.g., Hollywood standard sluglines starting with `INT.` or `EXT.`, uppercase character tags, parentheticals). Script formatting deviations, scanned/image-based PDFs, or non-standard margins may lead to parsing errors.
-       
-    3. **Heuristic Calibration Limits**:
-       The default baseline weights in the narrative formulas (e.g., `0.7 * Speaker Switches + 0.3 * Velocity`) were empirically tuned on a standard screenplay corpus (primarily drama/thriller). They may not align perfectly with highly experimental, silent, or avant-garde formats.
-       
-    4. **Probabilistic Bounds of NLP Models**:
-       Auxiliary intelligence modules like **Jina Embeddings** (cosine similarity) and **DeBERTa-v3** (zero-shot classification) are probabilistic in nature. While highly accurate, their classifications are subject to typical machine-learning confidence boundaries.
-       
-    5. **Reference Signal Intention**:
-       ScriptPulse provides feedback for self-reflection. It is *not* a scoring, grading, or commercial ranking tool and does not replace the qualitative expertise of human script editors.
-    """)
+        1. **Deterministic Structural Proxies**: 
+           The pacing, momentum, and effort scores are generated using deterministic mathematical formulas (e.g. Shannon entropy, speaker switches, dialogue velocity). These are structural proxies and do *not* represent a direct prediction of human audience psychology or emotional resonance.
+        
+        2. **Screenplay Formatting Sensitivity**:
+           The structural parser operates on standard industry layouts (sluglines starting with `INT.` or `EXT.`, uppercase character tags, parentheticals). Formatting deviations may lead to parsing errors.
+           
+        3. **Heuristic Calibration Limits**:
+           Default baseline weights in narrative formulas were empirically tuned on a screenplay corpus. They may not align perfectly with highly experimental, silent, or avant-garde formats.
+           
+        4. **Probabilistic Bounds of NLP Models**:
+           Auxiliary intelligence modules like **Jina Embeddings** and **DeBERTa-v3** are probabilistic in nature.
+           
+        5. **Reference Signal Intention**:
+           ScriptPulse provides feedback for self-reflection. It is *not* a scoring, grading, or commercial ranking tool.
+        """)
+
 
 if script_input:
     st.markdown("<br/>", unsafe_allow_html=True)
