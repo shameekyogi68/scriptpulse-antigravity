@@ -34,10 +34,10 @@ _HEURISTICS_ONLY = os.environ.get("SCRIPTPULSE_HEURISTICS_ONLY", "0") == "1"
 
 # Centralized Imports
 try:
-    import torch
-    from transformers import pipeline
-    from sentence_transformers import SentenceTransformer
-    import spacy
+    import torch  # type: ignore
+    from transformers import pipeline  # type: ignore
+    from sentence_transformers import SentenceTransformer  # type: ignore
+    import spacy  # type: ignore
 except ImportError:
     torch = None
     pipeline = None
