@@ -33,7 +33,6 @@ st.set_page_config(
 # Import Modular Components
 from app.components.styles import apply_custom_styles
 from app.components.theme import init_plotly_template
-from app.components.sidebar import render_sidebar
 from app.components.uikit import render_hero_section, render_section_header
 from app.views.writer_view import render_writer_view
 
@@ -67,15 +66,19 @@ if 'last_report' not in st.session_state:
     st.session_state['last_report'] = None
 
 # =============================================================================
-# SIDEBAR
+# CONFIGURATION STATE
 # =============================================================================
-sidebar_state = render_sidebar(
-    ui_mode=st.session_state.get('ui_mode', "Unified"),
-    is_cloud=True,
-    stu=stu
-)
-st.session_state['ui_mode'] = sidebar_state['ui_mode']
-st.sidebar.caption(f"Build: {APP_BUILD}")
+sidebar_state = {
+    'ui_mode': "Unified",
+    'force_cloud': True,
+    'ablation_config': {
+        'use_sbert': True,
+        'use_multimodal': False
+    },
+    'shadow_mode': False,
+    'high_accuracy_mode': True
+}
+st.session_state['ui_mode'] = "Unified"
 
 # =============================================================================
 # HERO

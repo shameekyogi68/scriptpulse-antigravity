@@ -41,11 +41,15 @@ def apply_custom_styles():
             --radius-xl: 20px;
         }
 
-        /* ===== GLOBAL ===== */
         /* Hide Streamlit's default header space */
         header, [data-testid="stHeader"] {
             display: none !important;
             height: 0 !important;
+        }
+
+        /* Hide sidebar toggle control completely */
+        [data-testid="collapsedControl"] {
+            display: none !important;
         }
 
         /* ===== SCROLLBAR ===== */
