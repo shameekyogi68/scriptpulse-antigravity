@@ -34,7 +34,7 @@ st.set_page_config(
 # Import Modular Components
 from app.components.styles import apply_custom_styles
 from app.components.theme import init_plotly_template
-from app.components.uikit import render_hero_section, render_section_header
+from app.components.uikit import render_hero_section, render_section_header, clean_html
 from app.views.writer_view import render_writer_view
 
 # Import Core Pipeline
@@ -255,7 +255,7 @@ if script_input:
                 }}
                 </style>
                 """
-                loading_placeholder.markdown(textwrap.dedent(html), unsafe_allow_html=True)
+                loading_placeholder.markdown(clean_html(html), unsafe_allow_html=True)
             
             # Initial stage
             progress_callback("Parsing structure...", 0)

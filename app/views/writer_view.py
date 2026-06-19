@@ -91,7 +91,7 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
 
         rgb = ','.join(str(int(score_color.lstrip('#')[i:i+2], 16)) for i in (0, 2, 4))
 
-        st.markdown(textwrap.dedent(f"""
+        st.markdown(uikit.clean_html(f"""
         <div style="display: flex; align-items: center; gap: 24px; margin-bottom: 24px;">
             <div style="background: linear-gradient(135deg, rgba({rgb}, 0.15) 0%, rgba({rgb}, 0.05) 100%); 
                         border: 1px solid rgba({rgb}, 0.3);
@@ -122,7 +122,7 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
         reasons = report.get('meta', {}).get('confidence_reasons', [])
         confidence_colors = {'HIGH': '#22C55E', 'MEDIUM': '#F59E0B', 'LOW': '#EF4444'}
         conf_icon = {'HIGH': '✅', 'MEDIUM': '⚡', 'LOW': '⚠️'}
-        st.markdown(textwrap.dedent(f"""
+        st.markdown(uikit.clean_html(f"""
         <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba({','.join(str(int(confidence_colors[confidence].lstrip('#')[i:i+2], 16)) for i in (0,2,4))}, 0.1);
                     border: 1px solid rgba({','.join(str(int(confidence_colors[confidence].lstrip('#')[i:i+2], 16)) for i in (0,2,4))}, 0.3);
                     border-radius: 20px; padding: 6px 16px; font-size: 0.8rem;">
@@ -191,7 +191,7 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
 
             with ac1:
                 if act and act.get('act1_pct', 0) > 0:
-                    st.markdown(textwrap.dedent(f"""
+                    st.markdown(uikit.clean_html(f"""
                     <div style="background: linear-gradient(135deg, rgba(32, 29, 48, 0.7) 0%, rgba(26, 23, 41, 0.95) 100%); 
                                 backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05);
                                 border-radius: var(--radius-lg); padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
@@ -218,7 +218,7 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
                     d_pct = round(dar.get('global_dialogue_ratio', 0.5) * 100)
                     a_pct = 100 - d_pct
                     bench = round(dar.get('genre_benchmark', 0.5) * 100) if isinstance(dar.get('genre_benchmark'), float) else dar.get('genre_benchmark', 50)
-                    st.markdown(textwrap.dedent(f"""
+                    st.markdown(uikit.clean_html(f"""
                     <div style="background: linear-gradient(135deg, rgba(32, 29, 48, 0.7) 0%, rgba(26, 23, 41, 0.95) 100%); 
                                 backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05);
                                 border-radius: var(--radius-lg); padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
@@ -483,7 +483,7 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
             comp_cols = st.columns(len(comps))
             for i, comp in enumerate(comps):
                 with comp_cols[i]:
-                    st.markdown(textwrap.dedent(f"""
+                    st.markdown(uikit.clean_html(f"""
                     <div class="comp-film-card">
                         <span style="font-size: 1.2rem; margin-right: 8px;">🎥</span>
                         <span style="font-weight: 600; color: white;">{comp}</span>
@@ -551,7 +551,7 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
         uikit.render_section_header("🧭", "Mentor's Corner",
                                     "Creative provocations to challenge your choices and push the draft further.")
         for msg in provocations:
-            st.markdown(textwrap.dedent(f"""
+            st.markdown(uikit.clean_html(f"""
             <div class="mentor-card">
                 <div style="font-size: 0.75rem; color: #55e0ff; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px;">💡 MENTOR INSIGHT</div>
                 <div style="color: rgba(244, 246, 251, 0.9); line-height: 1.7; font-weight: 300;">{msg}</div>
@@ -683,7 +683,7 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
     # --- Methodology Footer ---
     st.markdown("<br><br>", unsafe_allow_html=True)
     disclaimer_items = "".join(f"<li>{line}</li>" for line in FULL_DISCLAIMER_LINES)
-    st.markdown(textwrap.dedent(f"""
+    st.markdown(uikit.clean_html(f"""
     <div style="margin-top: 1rem; padding: 20px 24px; background: linear-gradient(90deg, rgba(0, 82, 255, 0.04) 0%, rgba(106, 72, 187, 0.03) 100%);
                 border: 1px solid rgba(0, 82, 255, 0.08); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
         <div style="font-size: 0.72rem; color: rgba(244, 246, 251, 0.5); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; margin-bottom: 10px;">Important — How To Read These Results</div>

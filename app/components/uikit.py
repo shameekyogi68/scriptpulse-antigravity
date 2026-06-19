@@ -7,6 +7,10 @@ from typing import Optional
 import streamlit as st
 from app.components.theme import Theme
 
+def clean_html(html_str: str) -> str:
+    """Removes leading and trailing whitespace from every line of HTML to prevent Markdown code block parsing."""
+    return "\n".join(line.strip() for line in html_str.split("\n"))
+
 def get_brand_html(size: str = "3.8rem", align: str = "center", margin_bottom: str = "0px") -> str:
     """Returns the standardized, globally consistent ScriptPulse brand HTML."""
     return (
@@ -59,11 +63,11 @@ def render_hero_section(title: str, subtitle: str):
         {trust_bar_html}
     </div>
     """
-    st.markdown(textwrap.dedent(html_content), unsafe_allow_html=True)
+    st.markdown(clean_html(html_content), unsafe_allow_html=True)
 
 def render_sidebar_header(title: str, subtitle: str):
     """Renders the sidebar branding as solid white as requested."""
-    st.markdown(textwrap.dedent(f"""
+    st.markdown(clean_html(f"""
     <div style="text-align: center; padding: 0.5rem 0 0.5rem 0;">
         <span style="font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 700; color: white !important; -webkit-text-fill-color: white !important; letter-spacing: -0.02em;">
             ScriptPulse
@@ -73,7 +77,7 @@ def render_sidebar_header(title: str, subtitle: str):
 
 def render_section_header(icon: str, title: str, explainer: str):
     """Renders a premium section header with an animated glowing divider."""
-    st.markdown(textwrap.dedent(f"""
+    st.markdown(clean_html(f"""
     <div style="margin: 2.5rem 0 1.5rem 0;">
         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
             <span style="font-size: 1.6rem; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));">{icon}</span>
@@ -103,7 +107,7 @@ def render_insight_card(text: str):
 
 def render_tooltip_card(content: str):
     """Renders a subtle tooltip/explainer card."""
-    st.markdown(textwrap.dedent(f"""
+    st.markdown(clean_html(f"""
     <div class="tooltip-card">
         {content}
     </div>
@@ -111,7 +115,7 @@ def render_tooltip_card(content: str):
 
 def render_empty_state():
     """Renders a premium empty state with compelling CTA and feature highlights."""
-    st.markdown(textwrap.dedent("""
+    st.markdown(clean_html("""
     <div style="text-align: center; padding: 2.5rem 2rem; margin: 1rem 0;
                 background: linear-gradient(135deg, rgba(0, 82, 255, 0.04) 0%, rgba(106, 72, 187, 0.03) 50%, rgba(0, 82, 255, 0.04) 100%);
                 border: 1px solid rgba(0, 82, 255, 0.08); border-radius: 20px;
@@ -179,7 +183,7 @@ def get_leverage_badge(leverage: str) -> str:
 
 def render_lab_pipeline_header():
     """Renders the top neon bar for the Lab Mode."""
-    st.markdown(textwrap.dedent(f"""
+    st.markdown(clean_html(f"""
     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
         <span style="background: {Theme.ACCENT_ROSE}; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: bold; letter-spacing: 1px;">LAB PIPELINE</span>
         <span style="color: {Theme.TEXT_MUTED}; font-family: monospace; font-size: 12px;">STATUS: ACTIVE / TELEMETRY: STREAMING</span>
@@ -232,7 +236,7 @@ def render_metric_card(label: str, value: str, help_text: Optional[str] = None):
     if len(value) > 10: val_size = "1.4rem"
     if len(value) > 15: val_size = "1.1rem"
 
-    html = textwrap.dedent(f"""
+    html = clean_html(f"""
     <div class="custom-metric-card">
         <div style="font-size: 0.7rem; color: rgba(255,255,255,0.6); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; line-height: 1.2; white-space: normal; overflow: visible;">
             {label} {tooltip_html}
