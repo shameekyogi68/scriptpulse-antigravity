@@ -500,7 +500,7 @@ class InterpretationAgent:
             int_norm = round(int_score / total, 2)
             
             scores = {'External': ext_norm, 'Social': soc_norm, 'Internal': int_norm}
-            dominant = max(scores, key=scores.get)
+            dominant = max(scores, key=lambda k: scores[k])
             
             typology.append({
                 'scene_index': feat.get('scene_index', i),
