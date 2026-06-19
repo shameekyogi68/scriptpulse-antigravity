@@ -2,6 +2,7 @@
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 import re
+import textwrap
 from typing import Optional
 import streamlit as st
 from app.components.theme import Theme
@@ -12,8 +13,8 @@ def get_brand_html(size: str = "3.8rem", align: str = "center", margin_bottom: s
         f'<div style="text-align: {align}; margin-bottom: {margin_bottom};">'
         f'<span style="font-family: \'Outfit\', Helvetica, Arial, sans-serif; font-weight: 700; font-size: {size}; '
         f'color: #FFFFFF !important; display: inline;">Script</span>'
-        f'<span style="font-family: \'Outfit\', Helvetica, Arial, sans-serif; font-weight: 700; font-size: {size}; '
-        f'color: #0052FF !important; display: inline;">Pulse</span>'
+        f'<span class="brand-pulse-gradient" style="font-family: \'Outfit\', Helvetica, Arial, sans-serif; font-weight: 700; font-size: {size}; '
+        f'color: #0052FF !important; display: inline-block;">Pulse</span>'
         f'</div>'
     )
 
@@ -58,22 +59,21 @@ def render_hero_section(title: str, subtitle: str):
         {trust_bar_html}
     </div>
     """
-    st.markdown(html_content, unsafe_allow_html=True)
+    st.markdown(textwrap.dedent(html_content), unsafe_allow_html=True)
 
 def render_sidebar_header(title: str, subtitle: str):
     """Renders the sidebar branding as solid white as requested."""
-    st.markdown(f"""
+    st.markdown(textwrap.dedent(f"""
     <div style="text-align: center; padding: 0.5rem 0 0.5rem 0;">
-        <span style="font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 700; '
-        'color: white !important; -webkit-text-fill-color: white !important; letter-spacing: -0.02em;">
+        <span style="font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 700; color: white !important; -webkit-text-fill-color: white !important; letter-spacing: -0.02em;">
             ScriptPulse
         </span>
     </div>
-    """, unsafe_allow_html=True)
+    """), unsafe_allow_html=True)
 
 def render_section_header(icon: str, title: str, explainer: str):
     """Renders a premium section header with an animated glowing divider."""
-    st.markdown(f"""
+    st.markdown(textwrap.dedent(f"""
     <div style="margin: 2.5rem 0 1.5rem 0;">
         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
             <span style="font-size: 1.6rem; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));">{icon}</span>
@@ -82,7 +82,7 @@ def render_section_header(icon: str, title: str, explainer: str):
         <p style="color: rgba(163, 160, 179, 0.9); font-size: 0.95rem; margin-bottom: 15px; font-weight: 300; letter-spacing: 0.02em;">{explainer}</p>
         <div style="height: 1px; width: 100%; background: linear-gradient(90deg, rgba(85,224,255,0.5) 0%, rgba(106,72,187,0.2) 50%, transparent 100%); margin-bottom: 1rem;"></div>
     </div>
-    """, unsafe_allow_html=True)
+    """), unsafe_allow_html=True)
 
 def render_insight_card(text: str):
     """Renders a color-coded insight card based on text content."""
@@ -103,15 +103,15 @@ def render_insight_card(text: str):
 
 def render_tooltip_card(content: str):
     """Renders a subtle tooltip/explainer card."""
-    st.markdown(f"""
+    st.markdown(textwrap.dedent(f"""
     <div class="tooltip-card">
         {content}
     </div>
-    """, unsafe_allow_html=True)
+    """), unsafe_allow_html=True)
 
 def render_empty_state():
     """Renders a premium empty state with compelling CTA and feature highlights."""
-    st.markdown("""
+    st.markdown(textwrap.dedent("""
     <div style="text-align: center; padding: 2.5rem 2rem; margin: 1rem 0;
                 background: linear-gradient(135deg, rgba(0, 82, 255, 0.04) 0%, rgba(106, 72, 187, 0.03) 50%, rgba(0, 82, 255, 0.04) 100%);
                 border: 1px solid rgba(0, 82, 255, 0.08); border-radius: 20px;
@@ -137,7 +137,7 @@ def render_empty_state():
             </div>
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    """), unsafe_allow_html=True)
 
 def render_signal_box(title: str, badge_html: str, action: str, border_color: Optional[str] = None):
     """Renders a premium signal box for priorities or AI summaries."""
@@ -179,12 +179,12 @@ def get_leverage_badge(leverage: str) -> str:
 
 def render_lab_pipeline_header():
     """Renders the top neon bar for the Lab Mode."""
-    st.markdown(f"""
+    st.markdown(textwrap.dedent(f"""
     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
         <span style="background: {Theme.ACCENT_ROSE}; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: bold; letter-spacing: 1px;">LAB PIPELINE</span>
         <span style="color: {Theme.TEXT_MUTED}; font-family: monospace; font-size: 12px;">STATUS: ACTIVE / TELEMETRY: STREAMING</span>
     </div>
-    """, unsafe_allow_html=True)
+    """), unsafe_allow_html=True)
 
 def get_status_icon_html(is_ok: bool) -> str:
     """Returns the themed HTML for a status icon (pass/fail)."""
@@ -224,8 +224,6 @@ def render_ai_consultant_box(insight_text: str, persona: str = "Script Consultan
 
 def render_metric_card(label: str, value: str, help_text: Optional[str] = None):
     """Renders a premium, non-truncating metric card for the Story Dashboard."""
-    from app.components.theme import Theme
-    
     # Tooltip logic
     tooltip_html = f'<span title="{help_text}" style="cursor:help; margin-left:4px; opacity:0.6; font-size:0.8rem;">ⓘ</span>' if help_text else ""
     
@@ -234,15 +232,14 @@ def render_metric_card(label: str, value: str, help_text: Optional[str] = None):
     if len(value) > 10: val_size = "1.4rem"
     if len(value) > 15: val_size = "1.1rem"
 
-    html = (
-        f'<div style="background: linear-gradient(135deg, rgba(32, 29, 48, 0.6) 0%, rgba(26, 23, 41, 0.8) 100%); '
-        f'border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 15px; '
-        f'text-align: left; height: 110px; display: flex; flex-direction: column; justify-content: space-between; '
-        f'box-shadow: 0 4px 15px rgba(0,0,0,0.2); backdrop-filter: blur(8px); overflow: visible;">'
-        f'<div style="font-size: 0.7rem; color: rgba(255,255,255,0.6); font-weight: 700; text-transform: uppercase; '
-        f'letter-spacing: 0.1em; line-height: 1.2; white-space: normal; overflow: visible;">{label} {tooltip_html}</div>'
-        f'<div style="font-size: {val_size}; font-weight: 800; color: white; margin-top: 5px; '
-        f'font-family: \'Outfit\', sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{value}</div>'
-        f'</div>'
-    )
+    html = textwrap.dedent(f"""
+    <div class="custom-metric-card">
+        <div style="font-size: 0.7rem; color: rgba(255,255,255,0.6); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; line-height: 1.2; white-space: normal; overflow: visible;">
+            {label} {tooltip_html}
+        </div>
+        <div style="font-size: {val_size}; font-weight: 800; color: white; margin-top: 5px; font-family: 'Outfit', sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+            {value}
+        </div>
+    </div>
+    """)
     st.markdown(html, unsafe_allow_html=True)

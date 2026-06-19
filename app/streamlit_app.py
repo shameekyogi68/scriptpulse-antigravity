@@ -11,6 +11,7 @@ import streamlit as st
 import sys
 import os
 import time
+import textwrap
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -235,10 +236,10 @@ if script_input:
                     {logo_html}
                     <div style="margin-bottom: 15px;">
                         <span style="font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 1.8rem; color: #FFFFFF;">Script</span>
-                        <span style="font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 1.8rem; color: #0052FF;">Pulse</span>
+                        <span class="brand-pulse-gradient" style="font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 1.8rem; display: inline-block;">Pulse</span>
                     </div>
                     <div style="display: flex; justify-content: center; margin-bottom: 20px;">
-                        <div style="width: 45px; height: 45px; border: 3px solid rgba(255,255,255,0.08); border-top: 3px solid #0052FF; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                        <div style="width: 45px; height: 45px; border: 3px solid rgba(255,255,255,0.08); border-top: 3px solid #55E0FF; border-radius: 50%; animation: spin 1s linear infinite; box-shadow: 0 0 15px rgba(85, 224, 255, 0.4);"></div>
                     </div>
                     <div style="color: #FFFFFF; font-size: 1.05rem; font-weight: 600; margin-bottom: 6px;">{label}</div>
                     <div style="color: rgba(244, 246, 251, 0.65); font-size: 0.85rem; margin-bottom: 15px;">Stage Progress: {pct}%</div>
@@ -254,7 +255,7 @@ if script_input:
                 }}
                 </style>
                 """
-                loading_placeholder.markdown(html, unsafe_allow_html=True)
+                loading_placeholder.markdown(textwrap.dedent(html), unsafe_allow_html=True)
             
             # Initial stage
             progress_callback("Parsing structure...", 0)

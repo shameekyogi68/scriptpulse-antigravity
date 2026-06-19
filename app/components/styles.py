@@ -641,6 +641,93 @@ def apply_custom_styles():
         .score-high { background: linear-gradient(90deg, rgba(0,210,160,0.2) 0%, rgba(0,210,160,0.05) 100%); color: #00D2A0; border: 1px solid rgba(0,210,160,0.3); box-shadow: 0 0 10px rgba(0,210,160,0.2); }
         .score-mid { background: linear-gradient(90deg, rgba(245,121,70,0.2) 0%, rgba(245,121,70,0.05) 100%); color: #F57946; border: 1px solid rgba(245,121,70,0.3); box-shadow: 0 0 10px rgba(245,121,70,0.2); }
         .score-low { background: linear-gradient(90deg, rgba(255,51,102,0.2) 0%, rgba(255,51,102,0.05) 100%); color: #FF3366; border: 1px solid rgba(255,51,102,0.3); box-shadow: 0 0 10px rgba(255,51,102,0.2); }
+
+        /* ===== BRAND GRADIENT ===== */
+        .brand-pulse-gradient {
+            background: linear-gradient(135deg, #55E0FF 0%, #0052FF 100%) !important;
+            -webkit-background-clip: text !important;
+            -webkit-text-fill-color: transparent !important;
+            display: inline-block !important;
+            text-shadow: 0 0 20px rgba(85, 224, 255, 0.35);
+        }
+
+        /* ===== CUSTOM METRIC CARDS ===== */
+        .custom-metric-card {
+            background: linear-gradient(135deg, rgba(40, 36, 60, 0.65) 0%, rgba(26, 23, 41, 0.9) 100%) !important;
+            border: 1px solid rgba(255,255,255,0.06) !important;
+            border-top: 1px solid rgba(255,255,255,0.12) !important;
+            border-radius: var(--radius-lg) !important;
+            padding: 18px 20px !important;
+            text-align: left !important;
+            height: 110px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3) !important;
+            backdrop-filter: blur(12px) !important;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+            position: relative !important;
+            overflow: visible !important;
+        }
+        
+        .custom-metric-card:hover {
+            transform: translateY(-6px) scale(1.02) !important;
+            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.5), 0 0 20px rgba(106, 72, 187, 0.35) !important;
+            border-color: rgba(255, 255, 255, 0.15) !important;
+        }
+
+        .custom-metric-card::before {
+            content: '' !important;
+            position: absolute !important;
+            top: 0 !important; left: 0 !important; right: 0 !important; height: 3px !important;
+            background: var(--gradient-hero) !important;
+            opacity: 0 !important;
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
+            transition: opacity 0.4s ease !important;
+        }
+
+        .custom-metric-card:hover::before {
+            opacity: 1 !important;
+        }
+
+        /* ===== COMPARABLE FILM CARDS ===== */
+        .comp-film-card {
+            background: linear-gradient(135deg, rgba(106, 72, 187, 0.12) 0%, rgba(217, 41, 135, 0.06) 100%) !important;
+            border: 1px solid rgba(106, 72, 187, 0.25) !important;
+            border-radius: var(--radius-md) !important;
+            padding: 12px 18px !important;
+            text-align: center !important;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2) !important;
+            transition: all 0.3s ease !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            margin-bottom: 8px !important;
+        }
+        
+        .comp-film-card:hover {
+            transform: translateY(-3px) !important;
+            box-shadow: 0 10px 25px rgba(106, 72, 187, 0.35) !important;
+            border-color: rgba(106, 72, 187, 0.5) !important;
+        }
+
+        /* ===== MENTOR CARDS ===== */
+        .mentor-card {
+            background: linear-gradient(135deg, rgba(85, 224, 255, 0.06) 0%, rgba(106, 72, 187, 0.03) 100%) !important;
+            border: 1px solid rgba(85, 224, 255, 0.15) !important;
+            border-left: 4px solid #55e0ff !important;
+            border-radius: var(--radius-md) !important;
+            padding: 18px 22px !important;
+            margin-bottom: 14px !important;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2) !important;
+            transition: all 0.3s ease !important;
+        }
+        
+        .mentor-card:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 12px 30px rgba(85, 224, 255, 0.25) !important;
+            border-color: rgba(85, 224, 255, 0.4) !important;
+        }
     </style>
     """
     

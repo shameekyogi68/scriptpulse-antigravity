@@ -1,0 +1,50 @@
+{
+  "cold_start": {
+    "cold_pipeline_ms": 0,
+    "cold_sbert_ms": 0,
+    "total_cold_ms": 0
+  },
+  "cache_hit": {
+    "warm_pipeline_ms": 0,
+    "warm_sbert_ms": 0
+  },
+  "memory": {
+    "delta_mb": 6.7,
+    "peak_snapshot_mb": 6.7
+  },
+  "throughput": {
+    "total_scenes": 5,
+    "token_count": 220,
+    "elapsed_s": 0.0,
+    "scenes_per_s": 1040.0,
+    "tokens_per_s": 45759.8,
+    "agent_timings": {
+      "normalization_ms": 0.14,
+      "structural_parsing_ms": 0.24,
+      "feature_extraction_ms": 1.6,
+      "cognitive_simulation_ms": 0.06,
+      "interpretation_ms": 0.29,
+      "ethics_audit_ms": 0.23,
+      "assembly_ms": 0.04
+    }
+  },
+  "model_calls": {
+    "estimated_calls_per_scene": 4,
+    "breakdown": {
+      "bert_parser": "1 per line (zero-shot classification)",
+      "embeddings (SBERT)": "1 per scene",
+      "semantic (SBERT)": "1 per scene",
+      "stanislavski": "1 per scene (if enabled)",
+      "valence": "1 per scene (or strided)"
+    }
+  },
+  "stability": {
+    "run_times": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "variance_s": 0.0,
+    "stable": true
+  }
+}
