@@ -281,6 +281,22 @@ class TestScreenplayValidation(unittest.TestCase):
         with self.assertRaises(ValueError) as context:
             runner.run_pipeline(non_screenplay_script, force_screenplay_validation=True)
         self.assertIn("could not detect screenplay structure", str(context.exception))
+        
+    def test_report_with_headings_rejected(self):
+        """A report with uppercase headings (which could be misclassified as character names) should be rejected"""
+        report_text = """
+        INTRODUCTION
+        This is the introduction section of the report. It details the initial research.
+        
+        METHODOLOGY
+        We conducted a survey and analyzed the responses using standard tools.
+        
+        CONCLUSION
+        The results show that the hypothesis was correct and the tool is effective.
+        """
+        with self.assertRaises(ValueError) as context:
+            runner.run_pipeline(report_text, force_screenplay_validation=True)
+        self.assertIn("could not detect screenplay structure", str(context.exception))
 
 
 if __name__ == '__main__':

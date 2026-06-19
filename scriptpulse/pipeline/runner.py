@@ -94,11 +94,33 @@ def run_pipeline(script_content, genre='drama', story_framework='3_act', progres
     
     # Check if the document has any screenplay structure
     has_scene_heading = any(line['tag'] == 'S' for line in parsed_lines)
-    has_character = any(line['tag'] == 'C' for line in parsed_lines)
-    has_dialogue = any(line['tag'] == 'D' for line in parsed_lines)
     
+    import re
+    from collections import Counter
+    
+    character_names = []
+    dialog_count = 0
+    for line in parsed_lines:
+        if line['tag'] == 'C':
+            name = re.sub(r'\(.*?\)', '', line['text']).strip().upper()
+            if name:
+                character_names.append(name)
+        elif line['tag'] == 'D':
+            dialog_count += 1
+            
+    counts = Counter(character_names)
+    has_repeated_character = any(count >= 2 for count in counts.values())
+    unique_characters = len(counts)
+    word_count = len(script_content.strip().split())
+    
+    is_valid_screenplay = False
+    if has_scene_heading or has_repeated_character:
+        is_valid_screenplay = True
+    elif word_count <= 400 and unique_characters == 1 and dialog_count >= 1:
+        is_valid_screenplay = True
+        
     force_validation = kwargs.get('force_screenplay_validation', False)
-    if (force_validation or not is_test) and not (has_scene_heading or (has_character and has_dialogue)):
+    if (force_validation or not is_test) and not is_valid_screenplay:
         raise ValueError(
             "ScriptPulse could not detect screenplay structure in the input. "
             "Please ensure your document uses standard screenplay formatting with scene headings "
