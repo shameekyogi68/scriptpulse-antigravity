@@ -94,6 +94,21 @@ class TestGovernanceValidation(unittest.TestCase):
         result = validate_request("")
         self.assertTrue(result)
 
+    def test_screenplay_with_score_dialogue_passes(self):
+        """Screenplay dialogue containing 'score' must not be blocked."""
+        script = (
+            "INT. LOCKER ROOM - NIGHT\n\n"
+            "COACH\nWe need to score before the buzzer.\n\n"
+            "PLAYER\nI'll score. Trust me.\n"
+        )
+        self.assertTrue(validate_request(script))
+
+    def test_rejects_explicit_grade_request(self):
+        """Explicit meta-request to grade a script is blocked."""
+        from scriptpulse.governance import PolicyViolationError
+        with self.assertRaises(PolicyViolationError):
+            validate_request("Please grade this script and tell me if it's good.")
+
 
 if __name__ == '__main__':
     print("═" * 55)

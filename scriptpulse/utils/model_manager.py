@@ -155,7 +155,7 @@ class ModelManager:
 
     def get_sentence_transformer(self, model_name="jinaai/jina-embeddings-v2-small-en"):
         """
-        Get a SentenceTransformer model (Jina v2 Small).
+        Get a SentenceTransformer model (Jina v2 Small or all-MiniLM-L6-v2).
         Loaded from HuggingFace Hub on first use, then cached locally.
         """
         if _HEURISTICS_ONLY:
@@ -163,11 +163,12 @@ class ModelManager:
         if not SentenceTransformer:
             return None
         
-        self._verify_model('sentence-transformer', model_name)
+        task = 'sentence-transformer-fast' if 'all-MiniLM' in model_name else 'sentence-transformer'
+        self._verify_model(task, model_name)
             
         try:
             if model_name not in self._loaded_models:
-                logger.info("Loading SBERT (Jina v2-Small): %s...", model_name)
+                logger.info("Loading SBERT model: %s...", model_name)
                 self._loaded_models[model_name] = SentenceTransformer(model_name, cache_folder=self.cache_dir)
             return self._loaded_models[model_name]
         except Exception as e:

@@ -8,6 +8,7 @@ that can be printed to PDF.
 
 import base64
 import statistics
+from scriptpulse.disclaimers import FULL_DISCLAIMER_HTML, engagement_signal_label
 
 def generate_report(report_data, script_title="Untitled Script", user_notes="", lens="Story Editor"):
     """
@@ -62,6 +63,11 @@ def generate_report(report_data, script_title="Untitled Script", user_notes="", 
     # --- Perspective-Aware Priority Filtering ---
     filtered_pris = []
     for p in priorities:
+        if isinstance(p, str):
+            filtered_pris.append({'action': p, 'leverage': 'Medium', 'root_cause': ''})
+            continue
+        if not isinstance(p, dict):
+            continue
         txt = f"{p.get('action', '')} {p.get('root_cause', '')}".lower()
         if not priority_kws:  # Story Editor sees all priorities
             filtered_pris.append(p)
@@ -71,10 +77,19 @@ def generate_report(report_data, script_title="Untitled Script", user_notes="", 
     if not filtered_pris and priorities:
         filtered_pris = priorities[:3]
 
-    # Recommendation Logic — always constructive, never rejecting
-    rec = "CONSIDER — Promising foundation with clear development path"
-    if avg_effort < 0.35: rec = "DEVELOP — Strengthen engagement hooks to maximize audience retention"
-    elif avg_effort > 0.75: rec = "REFINE — High-intensity core; calibrate pacing for sustained impact"
+    # Experience framing — not pass/fail coverage verdicts
+    rec = "STABLE FLOW — No major attentional strain spikes detected in this version"
+    if avg_effort < 0.35:
+        rec = "LOW ENGAGEMENT SIGNAL — Consider strengthening hooks where attention dips"
+    elif avg_effort > 0.75:
+        rec = "HIGH INTENSITY — Sustained engagement load; review recovery beats for balance"
+
+    confidence_pct = report_data.get('meta', {}).get('confidence', 0.85)
+    if isinstance(confidence_pct, float) and confidence_pct <= 1:
+        confidence_pct = int(confidence_pct * 100)
+    else:
+        confidence_pct = int(confidence_pct or 85)
+    confidence_level = report_data.get('meta', {}).get('confidence_level', 'MEDIUM')
     
     # --- Additional Data Extraction ---
     loc_profile = report_data.get('writer_intelligence', {}).get('structural_dashboard', {}).get('location_profile', {})
@@ -272,12 +287,17 @@ def generate_report(report_data, script_title="Untitled Script", user_notes="", 
         
         <div class="verdict">
             <div>
-                <div class="verdict-label">Recommendation</div><br>
+                <div class="verdict-label">Experience Summary</div><br>
                 <div class="verdict-value">{rec}</div>
             </div>
             <div class="confidence-pill">
-                Confidence: {int(report_data.get('meta', {}).get('confidence_score', {}).get('score', 0)*100)}%
+                Confidence: {confidence_pct}% ({confidence_level})
             </div>
+        </div>
+        
+        <div class="section" style="background: #f8fafc; border: 1px solid #e2e8f0; font-size: 13px; color: #475569;">
+            <h3 style="margin-top: 0;">Important — How To Read This Report</h3>
+            {FULL_DISCLAIMER_HTML}
         </div>
         
         <div class="stats-grid">
@@ -308,7 +328,7 @@ def generate_report(report_data, script_title="Untitled Script", user_notes="", 
         <div class="section">
             <h3>Narrative Insights</h3>
             <ul>
-                {''.join([f"<li>{item}</li>" for item in filtered_diags]) if filtered_diags else '<li>Analysis clear. No high-risk anomalies.</li>'}
+                {''.join([f"<li>{item}</li>" for item in filtered_diags]) if filtered_diags else '<li>No major attentional strain alerts in this version. This does not mean the script is approved or complete — only that no high-risk patterns were flagged.</li>'}
             </ul>
         </div>
         
@@ -339,7 +359,7 @@ def generate_report(report_data, script_title="Untitled Script", user_notes="", 
                     </tr>
                 </thead>
                 <tbody>
-                    {''.join([f"<tr><td>{edit['action']}</td><td><span class='tag tag-high'>{edit['leverage']}</span></td></tr>" for edit in filtered_pris[:5]]) if filtered_pris else '<tr><td colspan="2">No high-priority revisions required.</td></tr>'}
+                    {''.join([f"<tr><td>{edit['action']}</td><td><span class='tag tag-high'>{edit['leverage']}</span></td></tr>" for edit in filtered_pris[:5]]) if filtered_pris else '<tr><td colspan="2">No high-priority reflection points surfaced for this version.</td></tr>'}
                 </tbody>
             </table>
         </div>

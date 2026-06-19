@@ -13,6 +13,13 @@ import json
 import plotly.graph_objects as go
 from app.components.theme import Theme
 from app.components import uikit, charts
+from scriptpulse.disclaimers import (
+    SHORT_DISCLAIMER,
+    FULL_DISCLAIMER_LINES,
+    METHODOLOGY_NOTE,
+    engagement_signal_label,
+    get_engine_mode_note,
+)
 
 
 # ── Persona Configuration ───────────────────────────────────────────────────
@@ -75,13 +82,11 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
         sp_score = dashboard.get('scriptpulse_score', 50)
         if sp_score >= 70:
             score_color = Theme.SEMANTIC_GOOD
-            score_label = "Strong Draft"
         elif sp_score >= 45:
             score_color = Theme.SEMANTIC_WARNING
-            score_label = "Developing — Clear Potential"
         else:
             score_color = Theme.SEMANTIC_CRITICAL
-            score_label = "Early Draft — Growth Path Identified"
+        score_label = engagement_signal_label(sp_score)
 
         rgb = ','.join(str(int(score_color.lstrip('#')[i:i+2], 16)) for i in (0, 2, 4))
 
@@ -99,8 +104,9 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
                 <div style="font-size: 2.8rem; font-weight: 800; color: {score_color}; text-shadow: 0 0 15px rgba({rgb},0.4);
                             font-family: 'Outfit', sans-serif; line-height: 1;">{sp_score}</div>
                 <div style="font-size: 0.65rem; color: #FFFFFF; text-transform: uppercase;
-                            letter-spacing: 0.15em; margin-top: 6px; font-weight: 600;">Script<span style="color: #0052FF;">Pulse</span> Score</div>
+                            letter-spacing: 0.15em; margin-top: 6px; font-weight: 600;">Engagement Index</div>
                 <div style="font-size: 0.8rem; color: {score_color}; font-weight: 700; margin-top: 4px; letter-spacing: 0.03em;">{score_label}</div>
+                <div style="font-size: 0.65rem; color: rgba(255,255,255,0.45); margin-top: 6px; max-width: 140px; line-height: 1.3;">Not a quality rating</div>
             </div>
             <div>
                 <h3 style="margin: 0 0 6px 0 !important; padding: 0 !important; font-size: 1.8rem !important;">{config['icon']} {config['score_title']}</h3>
@@ -126,6 +132,9 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
         if reasons:
             st.caption(f"Why: {', '.join(reasons)}")
 
+        st.info(f"ℹ️ {SHORT_DISCLAIMER}")
+        st.caption(get_engine_mode_note())
+
         # --- Pacing ---
         pacing = "Balanced"
         if avg_tension < 0.35: pacing = "Slow Burn 🐢"
@@ -143,9 +152,9 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
 
         if lens == "Studio Executive":
             c1, c2, c3, c4, c5, c6 = st.columns(6)
-            with c1: uikit.render_metric_card("Market Readiness", f"{readiness}/100", help_text="Commercial viability score.")
-            with c2: uikit.render_metric_card("Budget Tier", dashboard.get('budget_impact', 'Indie'), help_text="Estimated production scale.")
-            with c3: uikit.render_metric_card("Prod. Risk", f"{dashboard.get('production_risk_score', 50)}/100", help_text="Complexity vs payoff.")
+            with c1: uikit.render_metric_card("Market Signal", f"{readiness}/100", help_text="Structural commercial indicators — reference only, not an approval score.")
+            with c2: uikit.render_metric_card("Budget Tier", dashboard.get('budget_impact', 'Indie'), help_text="Estimated production scale from locations and complexity.")
+            with c3: uikit.render_metric_card("Prod. Complexity", f"{dashboard.get('production_risk_score', 50)}/100", help_text="Production complexity vs narrative payoff — reference signal.")
             with c4: uikit.render_metric_card("Locations", str(loc_profile.get('unique_locations', '—')), help_text="Total locations.")
             with c5: uikit.render_metric_card("Cast Size", str(cast_size if cast_size else '—'), help_text="Total speaking roles.")
             with c6: uikit.render_metric_card("Runtime", rt_label)
@@ -154,13 +163,13 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
             c1, c2, c3, c4, c5 = st.columns(5)
             with c1: uikit.render_metric_card("Writing Texture", texture, help_text="Cinematic = lean. Novelistic = dense.")
             with c2: uikit.render_metric_card("Pacing", pacing)
-            with c3: uikit.render_metric_card("Page-Turner", f"{pti}/100", help_text="Scene cliffhanger momentum.")
+            with c3: uikit.render_metric_card("Page-Turner", f"{pti}/100", help_text="Scene-to-scene momentum signal — reference only.")
             with c4: uikit.render_metric_card("Scenes", str(total_scenes))
             with c5: uikit.render_metric_card("Runtime", rt_label)
 
         else:  # Story Editor
             c1, c2, c3, c4, c5 = st.columns(5)
-            with c1: uikit.render_metric_card("Page-Turner", f"{pti}/100", help_text="Scene cliffhanger momentum.")
+            with c1: uikit.render_metric_card("Page-Turner", f"{pti}/100", help_text="Scene-to-scene momentum signal — reference only.")
             with c2: uikit.render_metric_card("Pacing", pacing)
             with c3: uikit.render_metric_card("Midpoint", dashboard.get('midpoint_status', 'N/A'), help_text="Structural health.")
             with c4: uikit.render_metric_card("Scenes", str(total_scenes))
@@ -445,8 +454,8 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
         cast_size = len(report.get('voice_fingerprints', {}))
 
         c1, c2, c3, c4, c5, c6 = st.columns(6)
-        with c1: uikit.render_metric_card("Production Risk", f"{dashboard.get('production_risk_score', 50)}/100", help_text="Complexity vs narrative payoff.")
-        with c2: uikit.render_metric_card("Market Readiness", f"{dashboard.get('market_readiness', 50)}/100", help_text="Combined commercial viability.")
+        with c1: uikit.render_metric_card("Production Complexity", f"{dashboard.get('production_risk_score', 50)}/100", help_text="Complexity vs narrative payoff — reference signal.")
+        with c2: uikit.render_metric_card("Market Signal", f"{dashboard.get('market_readiness', 50)}/100", help_text="Structural commercial indicators — reference only.")
         with c3: uikit.render_metric_card("Budget Tier", dashboard.get('budget_impact', 'Standard'), help_text="Indie → Studio → Blockbuster.")
         with c4: uikit.render_metric_card("Locations", str(loc_profile.get('unique_locations', '—')), help_text="Unique locations. More = higher budget.")
         with c5: uikit.render_metric_card("Cast", str(cast_size if cast_size else '—'), help_text="Total speaking roles.")
@@ -625,13 +634,16 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
     _safe_render(render_export, "Export")
 
     # --- Methodology Footer ---
-    st.markdown("""
+    disclaimer_items = "".join(f"<li>{line}</li>" for line in FULL_DISCLAIMER_LINES)
+    st.markdown(f"""
     <div style="margin-top: 2rem; padding: 16px 20px; background: linear-gradient(90deg, rgba(0, 82, 255, 0.04) 0%, rgba(106, 72, 187, 0.03) 100%);
                 border: 1px solid rgba(0, 82, 255, 0.08); border-radius: 12px;">
-        <div style="font-size: 0.72rem; color: rgba(244, 246, 251, 0.5); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; margin-bottom: 8px;">How This Works</div>
+        <div style="font-size: 0.72rem; color: rgba(244, 246, 251, 0.5); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; margin-bottom: 8px;">Important — How To Read These Results</div>
+        <ul style="font-size: 0.82rem; color: rgba(244, 246, 251, 0.65); line-height: 1.6; margin: 0 0 12px 1.2rem; padding: 0;">
+            {disclaimer_items}
+        </ul>
         <div style="font-size: 0.82rem; color: rgba(244, 246, 251, 0.65); line-height: 1.6;">
-            ScriptPulse analyzes your screenplay using a <b>hybrid pipeline</b>: NLP feature extraction → cognitive load simulation → structural interpretation → expert-system scoring.
-            Each metric is calibrated against <b>genre-specific benchmarks</b> from professional screenwriting standards. AI insights are generated by LLMs grounded exclusively in your script's data — never hallucinated.
+            {METHODOLOGY_NOTE}
         </div>
     </div>
     """, unsafe_allow_html=True)

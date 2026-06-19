@@ -14,6 +14,12 @@
             "revision": "main",
             "notes": "Jina v2 Small - 8k context, research-grade embeddings. Selected over all-MiniLM-L6-v2 for full-scene encoding without truncation."
         },
+        "sentence-transformer-fast": {
+            "name": "sentence-transformers/all-MiniLM-L6-v2",
+            "task": "sentence-embedding",
+            "revision": "main",
+            "notes": "all-MiniLM-L6-v2 - Lightweight SBERT model used for fast/on-device action/dialogue segment analysis."
+        },
         "spacy": {
             "name": "en_core_web_sm",
             "task": "nlp-pipeline",

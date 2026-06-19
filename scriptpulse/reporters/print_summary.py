@@ -5,6 +5,7 @@ Uses writer_intelligence data for accurate, persona-aware output.
 """
 
 import re
+from scriptpulse.disclaimers import FULL_DISCLAIMER_HTML, engagement_signal_label
 
 def _strip_md(text):
     """Convert markdown bold/italic to HTML for clean rendering."""
@@ -32,9 +33,7 @@ def generate_print_summary(report_data, script_title="Untitled Script"):
     priorities = wi.get('rewrite_priorities', [])
     
     sp_score = dashboard.get('scriptpulse_score', 50)
-    if sp_score >= 70: score_label = "Strong Draft"
-    elif sp_score >= 45: score_label = "Developing — Clear Potential"
-    else: score_label = "Early Draft — Growth Path Identified"
+    score_label = engagement_signal_label(sp_score)
     
     # Pacing and Cast (Task 3 & 4)
     pacing = dashboard.get('act_structure', {}).get('pacing_benchmark', 'Balanced')
@@ -51,7 +50,7 @@ def generate_print_summary(report_data, script_title="Untitled Script"):
         for p in problem_items[:5]:
             problems_html += f'<div class="card problem">{_strip_md(p)}</div>'
     else:
-        problems_html = '<p style="font-size:13px;">No critical errors identified. Your script is clean.</p>'
+        problems_html = '<p style="font-size:13px;">No major attentional strain alerts flagged. This does not mean the draft is complete — review strengths and optional reflection points below.</p>'
     
     # Strengths (from diagnostics — green items)
     strengths_html = ""
@@ -60,13 +59,18 @@ def generate_print_summary(report_data, script_title="Untitled Script"):
         for s in strength_items[:5]:
             strengths_html += f'<div class="card strength">{_strip_md(s)}</div>'
     else:
-        strengths_html = '<p style="font-size:13px;">Focus on increasing high-engagement beats.</p>'
+        strengths_html = '<p style="font-size:13px;">No standout positive signals auto-detected. Focus on scenes with high engagement in the full dashboard.</p>'
     
     # Priority Fixes
     fixes_html = ""
     if priorities:
         for i, p in enumerate(priorities[:3]):
-            fixes_html += f'<div class="card problem"><b>FIX {i+1}: {p.get("leverage", "Medium")} IMPACT</b>{_strip_md(p.get("action", ""))}</div>'
+            if isinstance(p, str):
+                action, leverage = p, 'Medium'
+            else:
+                action = p.get('action', '')
+                leverage = p.get('leverage', 'Medium')
+            fixes_html += f'<div class="card problem"><b>FIX {i+1}: {leverage} IMPACT</b>{_strip_md(action)}</div>'
     
     html = f"""
     <!DOCTYPE html>
@@ -150,8 +154,9 @@ def generate_print_summary(report_data, script_title="Untitled Script"):
 
         <div class="stats-bar">
             <div class="stat">
-                <div class="stat-label">Script<span style="color: #0052FF;">Pulse</span> Score</div>
+                <div class="stat-label">Engagement Index</div>
                 <div class="stat-value">{sp_score}/100</div>
+                <div style="font-size:11px;color:#666;margin-top:4px;">{score_label}</div>
             </div>
             <div class="stat">
                 <div class="stat-label">Pacing Profile</div>
@@ -180,9 +185,14 @@ def generate_print_summary(report_data, script_title="Untitled Script"):
             </div>
         </div>
         
+        <div style="margin: 20px 0; padding: 14px; background: #f8fafc; border: 1px solid #e2e8f0; font-size: 12px; color: #475569;">
+            <strong>Important:</strong> Reference signals only — not a quality score, ranking, or approval system.
+            {FULL_DISCLAIMER_HTML}
+        </div>
+
         <div class="footer">
-            <div>&copy; 2026 ScriptPulse AI Story Intelligence. For internal writer use only.</div>
-            <div>PRODUCTION READY</div>
+            <div>&copy; 2026 ScriptPulse AI Story Intelligence. For writer reflection only.</div>
+            <div>Not suitable for evaluation, selection, or rejection decisions.</div>
         </div>
     </body>
     </html>

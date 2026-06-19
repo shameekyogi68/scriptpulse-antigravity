@@ -13,12 +13,32 @@ class PolicyViolationError(Exception):
     """Raised when an input violates the system's philosophical constraints."""
     pass
 
-PROHIBITED_PHRASES = {
+# Prompt-injection / meta-request patterns — not screenplay vocabulary.
+# Screenplays may contain words like "score" in dialogue; we only block explicit
+# evaluation requests at the start of a line or as standalone instructions.
+PROHIBITED_REQUEST_PATTERNS = (
     "rank 1 to 10",
-    "grade this",
-    "score",
-    "hiring recommendation"
-}
+    "rank this script",
+    "grade this script",
+    "grade this screenplay",
+    "score this script",
+    "score this screenplay",
+    "hiring recommendation",
+    "should we buy this",
+    "pass or fail",
+    "recommend pass",
+    "recommend reject",
+)
+
+
+def _contains_prohibited_request(text_data: str) -> str | None:
+    """Return the matched prohibited pattern, if any."""
+    lower = text_data.lower()
+    for phrase in PROHIBITED_REQUEST_PATTERNS:
+        if phrase in lower:
+            return phrase
+    return None
+
 
 def validate_request(text_data: str):
     """
@@ -35,9 +55,11 @@ def validate_request(text_data: str):
     if '\x00' in text_data:
         raise ValueError("Governance Audit Failed: Binary payload or null-bytes detected.")
 
-    # LHTL: Enforce philosophical constraints
-    for phrase in PROHIBITED_PHRASES:
-        if phrase in text_data.lower():
-            raise PolicyViolationError(f"Governance Audit Failed: Prohibited request pattern detected ('{phrase}').")
+    matched = _contains_prohibited_request(text_data)
+    if matched:
+        raise PolicyViolationError(
+            f"Governance Audit Failed: Prohibited evaluation request detected ('{matched}'). "
+            "ScriptPulse models audience experience signals — it cannot rank, grade, or approve scripts."
+        )
         
     return True

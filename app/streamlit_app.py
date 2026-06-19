@@ -40,6 +40,7 @@ from app.views.writer_view import render_writer_view
 # Import Core Pipeline
 try:
     from scriptpulse.pipeline import runner
+    from scriptpulse.governance import PolicyViolationError
 except Exception as e:
     st.error(f"Failed to load ScriptPulse Engine: {e}")
     st.stop()
@@ -81,7 +82,7 @@ st.sidebar.caption(f"Build: {APP_BUILD}")
 # =============================================================================
 render_hero_section(
     "ScriptPulse",
-    "AI Story Intelligence — See how your screenplay feels to an audience before you ever hit send."
+    "AI Story Intelligence — Map how your screenplay may feel to a first-time reader. Reference signals for reflection, not judgment."
 )
 
 # =============================================================================
@@ -149,13 +150,16 @@ with tab_paste:
                            for line in pasted.split('\n') if line.strip()) if pasted else False
     
     if not script_input and pasted and (word_count >= 300 or has_scene_heading):
-        script_input = pasted
+        if stu.check_input_length(pasted):
+            script_input = pasted
 
 # =============================================================================
 # STEP 2: CONFIGURE & ANALYZE
 # =============================================================================
 render_section_header("⚙️", "Configure Analysis",
-    "Select the genre so the engine knows what benchmarks to apply.")
+    "Select genre and perspective. Analysis adapts presentation — core signals stay consistent across perspectives.")
+
+st.info("ScriptPulse provides audience-experience reference signals for your draft. It does not rank, approve, or predict commercial success.")
 
 col1, col2 = st.columns(2)
 genre_raw = col1.selectbox("Genre", ["Drama", "Action", "Thriller", "Horror", "Comedy", "Sci-Fi", "Romance", "Fantasy", "Avant-Garde"],
@@ -164,10 +168,45 @@ genre = genre_raw.lower().replace("-", "-")  # Preserve hyphens, force lowercase
 lens = col2.selectbox("Perspective", ["Story Editor", "Studio Executive", "Script Coordinator"],
                       help="🕵️ Story Editor = Plot & Logic | 🏢 Studio Executive = Market & Budget | ✍️ Script Coordinator = Craft & Flow")
 
+# System Limitations expander
+with st.expander("🔍 System Limitations & Methodology"):
+    st.markdown("""
+    ### 🔬 System Bounds & Mathematical Methodology
+
+    ScriptPulse is designed as a diagnostic writing aid leveraging NLP models and temporal dynamics simulation. In alignment with academic and industry standards, users should note the following system constraints:
+
+    1. **Deterministic Structural Proxies**: 
+       The pacing, momentum, and effort scores are generated using deterministic mathematical formulas (e.g. Shannon entropy, speaker switches, dialogue velocity). These are structural proxies and do *not* represent a direct prediction of human audience psychology or emotional resonance.
+    
+    2. **Screenplay Formatting Sensitivity**:
+       The structural parser operates on standard industry layouts (e.g., Hollywood standard sluglines starting with `INT.` or `EXT.`, uppercase character tags, parentheticals). Script formatting deviations, scanned/image-based PDFs, or non-standard margins may lead to parsing errors.
+       
+    3. **Heuristic Calibration Limits**:
+       The default baseline weights in the narrative formulas (e.g., `0.7 * Speaker Switches + 0.3 * Velocity`) were empirically tuned on a standard screenplay corpus (primarily drama/thriller). They may not align perfectly with highly experimental, silent, or avant-garde formats.
+       
+    4. **Probabilistic Bounds of NLP Models**:
+       Auxiliary intelligence modules like **Jina Embeddings** (cosine similarity) and **DeBERTa-v3** (zero-shot classification) are probabilistic in nature. While highly accurate, their classifications are subject to typical machine-learning confidence boundaries.
+       
+    5. **Reference Signal Intention**:
+       ScriptPulse provides feedback for self-reflection. It is *not* a scoring, grading, or commercial ranking tool and does not replace the qualitative expertise of human script editors.
+    """)
+
 if script_input:
     st.markdown("<br/>", unsafe_allow_html=True)
     if st.button("🎬 Analyze My Script", type="primary", use_container_width=True):
-        bar = st.progress(0, text="⚡ Initializing ScriptPulse engine...")
+        loading_placeholder = st.empty()
+        
+        def get_logo_base64():
+            import base64
+            logo_path = os.path.join(ROOT_DIR, "app", "assets", "ScriptPulse_Icon.png")
+            if os.path.exists(logo_path):
+                try:
+                    with open(logo_path, "rb") as f:
+                        return base64.b64encode(f.read()).decode()
+                except Exception:
+                    pass
+            return None
+
         try:
             stage_labels = {
                 "Parsing structure...": "📐 Parsing screenplay structure...",
@@ -176,9 +215,47 @@ if script_input:
                 "Running interpretation...": "🎯 Interpreting narrative patterns...",
                 "Generating insights...": "✨ Generating writer intelligence...",
             }
+            
             def progress_callback(stage_name, pct):
                 label = stage_labels.get(stage_name, f"⚡ {stage_name}")
-                bar.progress(pct, text=label)
+                b64_logo = get_logo_base64()
+                logo_html = ""
+                if b64_logo:
+                    logo_html = (
+                        f'<img src="data:image/png;base64,{b64_logo}" '
+                        f'style="width: 65px; height: 65px; object-fit: contain; '
+                        f'margin-bottom: 12px; filter: drop-shadow(0 0 15px rgba(0, 82, 255, 0.5));" '
+                        f'alt="ScriptPulse Logo" /><br/>'
+                    )
+                
+                html = f"""
+                <div style="text-align: center; padding: 2.5rem; background: linear-gradient(135deg, rgba(32, 29, 48, 0.85) 0%, rgba(26, 23, 41, 0.95) 100%); border-radius: 20px; border: 1px solid rgba(0, 82, 255, 0.25); box-shadow: 0 15px 40px rgba(0,0,0,0.55); max-width: 550px; margin: 2rem auto;">
+                    {logo_html}
+                    <div style="margin-bottom: 15px;">
+                        <span style="font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 1.8rem; color: #FFFFFF;">Script</span>
+                        <span style="font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 1.8rem; color: #0052FF;">Pulse</span>
+                    </div>
+                    <div style="display: flex; justify-content: center; margin-bottom: 20px;">
+                        <div style="width: 45px; height: 45px; border: 3px solid rgba(255,255,255,0.08); border-top: 3px solid #0052FF; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                    </div>
+                    <div style="color: #FFFFFF; font-size: 1.05rem; font-weight: 600; margin-bottom: 6px;">{label}</div>
+                    <div style="color: rgba(244, 246, 251, 0.65); font-size: 0.85rem; margin-bottom: 15px;">Stage Progress: {pct}%</div>
+                    <div style="background-color: rgba(255,255,255,0.08); border-radius: 10px; height: 6px; width: 85%; margin: 0 auto; overflow: hidden; border: 1px solid rgba(255,255,255,0.03);">
+                        <div style="background: linear-gradient(90deg, #0052FF, #00D2A0); height: 100%; width: {pct}%; transition: width 0.3s ease;"></div>
+                    </div>
+                    <div style="color: rgba(244, 246, 251, 0.4); font-size: 0.75rem; margin-top: 15px; font-weight: 300;">Analyzing character voice profiles, pacing, and conflict dynamics...</div>
+                </div>
+                <style>
+                @keyframes spin {{
+                    0% {{ transform: rotate(0deg); }}
+                    100% {{ transform: rotate(360deg); }}
+                }}
+                </style>
+                """
+                loading_placeholder.markdown(html, unsafe_allow_html=True)
+            
+            # Initial stage
+            progress_callback("Parsing structure...", 0)
             
             report = runner.run_pipeline(
                 script_input, genre=genre, lens=lens,
@@ -206,9 +283,17 @@ if script_input:
             except Exception:
                 st.session_state['ai_pulse_insight'] = None
 
-            bar.progress(100, text="Analysis complete!")
+            progress_callback("Generating insights...", 100)
             time.sleep(0.5)
-            bar.empty()
+            loading_placeholder.empty()
+        except PolicyViolationError as e:
+            st.error(
+                "This request looks like an evaluation or ranking task. "
+                "ScriptPulse models first-pass audience experience — upload your screenplay for structural analysis instead."
+            )
+            with st.expander("Technical Details"):
+                st.code(str(e))
+            st.stop()
         except Exception as e:
             # User-friendly error mapping
             USER_FRIENDLY_ERRORS = {
@@ -305,8 +390,9 @@ st.markdown(f"""
         </span>
         <span style="margin-left: 8px; font-size: 0.7rem; color: rgba(244, 246, 251, 0.3);">v1.0 · Production</span>
     </div>
-    <div>AI Story Intelligence Engine · Hybrid ML + Cognitive Simulation</div>
-    <div style="margin-top: 4px;">🔒 Your scripts are never stored · Privacy by design</div>
+    <div>AI Story Intelligence Engine · Audience experience simulation</div>
+    <div style="margin-top: 4px;">🔒 Processed in your session only · Not stored on ScriptPulse servers</div>
+    <div style="margin-top: 4px; font-size: 0.65rem; color: rgba(244, 246, 251, 0.35);">Reference signals only — not a quality score or approval system</div>
     <div style="margin-top: 6px; font-size: 0.6rem; color: rgba(244, 246, 251, 0.2);">&copy; 2026 ScriptPulse. All rights reserved.</div>
 </div>
 """, unsafe_allow_html=True)

@@ -239,7 +239,10 @@ def generate_ai_summary(script_data, lens='viewer', api_key=None):
         "5. If you mention 'ScriptPulse', ALWAYS format it EXACTLY like this: Script<span style='color: #0052FF; font-weight: bold;'>Pulse</span>\n"
         "6. Do NOT flag page length as an issue unless the runtime data explicitly shows the script is significantly outside the genre benchmark range.\n"
         "7. Your tone must be respectful, direct, and constructive — you are a mentor, not a gatekeeper. Frame every finding as an opportunity for the writer to strengthen their work.\n"
-        "8. NEVER use dismissive or rejecting language like 'fails', 'broken', 'weak', or 'should be cut'. Instead, frame improvements as 'could be elevated by', 'has room to grow', or 'would benefit from'."
+        "8. NEVER use dismissive or rejecting language like 'fails', 'broken', 'weak', or 'should be cut'. Instead, frame improvements as 'could be elevated by', 'has room to grow', or 'would benefit from'.\n"
+        "9. NEVER issue pass/fail, buy/pass, recommend/reject, or quality verdicts. ScriptPulse describes audience experience signals only.\n"
+        "10. NEVER claim commercial success, box office potential, or that a script is 'good' or 'bad'. Use experiential language: 'may feel', 'could read as', 'signals suggest'.\n"
+        "11. Always remind the writer that metrics are reference signals calibrated from structure — not judgments of talent or merit."
     )
     user_content = f"Experience Data: {json.dumps(data_payload)}"
     errors = []

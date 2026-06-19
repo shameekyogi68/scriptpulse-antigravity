@@ -18,16 +18,14 @@ class TestEmptyScript(unittest.TestCase):
     """Test handling of empty or minimal input"""
     
     def test_empty_string(self):
-        """Empty string should not crash"""
-        result = runner.run_pipeline("")
-        self.assertIsNotNone(result)
-        # Empty string may produce 1 default scene (conservative handling)
-        self.assertLessEqual(result.get('total_scenes', 0), 1)
+        """Empty string should raise ValueError"""
+        with self.assertRaises(ValueError):
+            runner.run_pipeline("")
     
     def test_whitespace_only(self):
-        """Whitespace-only input should not crash"""
-        result = runner.run_pipeline("   \n\n   \n  ")
-        self.assertIsNotNone(result)
+        """Whitespace-only input should raise ValueError"""
+        with self.assertRaises(ValueError):
+            runner.run_pipeline("   \n\n   \n  ")
 
 
 class TestSingleScene(unittest.TestCase):

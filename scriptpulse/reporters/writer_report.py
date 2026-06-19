@@ -12,6 +12,11 @@ Usage:
 """
 
 from datetime import datetime
+from scriptpulse.disclaimers import (
+    FULL_DISCLAIMER_MARKDOWN,
+    engagement_signal_label,
+    get_engine_mode_note,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -104,6 +109,9 @@ def generate_writer_report(pipeline_output, title="Untitled Script", genre=None)
     lines.append(f"**GENRE PROFILE:** `{genre.upper()}`  ")
     lines.append(f"**ANALYSIS DATE:** {analysis_date}  ")
     lines.append(f"**ENGINE VERSION:** `v1.0`  ")
+    lines.append("\n## Important — How To Read This Report")
+    lines.append(FULL_DISCLAIMER_MARKDOWN)
+    lines.append(f"\n*{get_engine_mode_note()}*")
     lines.append("\n" + "---" * 10 + "\n")
 
     # -------------------------------------------------------------------------
@@ -300,6 +308,7 @@ def generate_writer_report(pipeline_output, title="Untitled Script", genre=None)
     # FOOTER
     # -------------------------------------------------------------------------
     lines.append("\n" + "---" * 10 + "\n")
-    lines.append("*Created with Script<span style='color: #0052FF;'>Pulse</span> v15.0 · Private Intellectual Property · Confidential*")
+    lines.append("*Created with ScriptPulse v1.0 · Reference signals for writer reflection · Confidential*")
+    lines.append("\n" + FULL_DISCLAIMER_MARKDOWN)
 
     return "\n".join(lines)

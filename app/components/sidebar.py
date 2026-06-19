@@ -32,11 +32,11 @@ def render_sidebar(ui_mode, is_cloud, stu):
         st.markdown("#### Capabilities")
         st.markdown("""
         <div style="font-size: 0.78rem; line-height: 2.1; color: rgba(244,246,251,0.7);">
-            <div>📊 <b>15+ Narrative Dimensions</b></div>
-            <div>🎬 <b>3-Act Structural Analysis</b></div>
+            <div>📊 <b>Audience Experience Signals</b></div>
+            <div>🎬 <b>Structural & Pacing Analysis</b></div>
             <div>🔬 <b>Scene-by-Scene Granularity</b></div>
             <div>🎭 <b>Character Voice Distinction</b></div>
-            <div>🧠 <b>AI-Powered Coverage Memos</b></div>
+            <div>🧠 <b>Optional AI Coverage Memos</b></div>
             <div>📥 <b>Pro Export (Writer / Studio / Summary)</b></div>
         </div>
         """, unsafe_allow_html=True)
@@ -61,9 +61,9 @@ def render_sidebar(ui_mode, is_cloud, stu):
             ⚡ <b>Engine</b>: Script<span style="color: #0052FF; font-weight: 700;">Pulse</span> v1.0
         </div>
         """, unsafe_allow_html=True)
-        st.caption("🧠 **Mode**: Hybrid ML + Cognitive Sim")
-        st.caption("🔒 **Privacy**: Scripts never stored")
-        st.caption("🎯 **Accuracy**: Genre-calibrated benchmarks")
+        st.caption("🧠 **Mode**: Hybrid analysis (heuristic fallback when ML unavailable)")
+        st.caption("🔒 **Privacy**: Session-only processing")
+        st.caption("📊 **Metrics**: Genre-calibrated reference signals — not quality verdicts")
         st.caption("© 2026 ScriptPulse")
 
         st.markdown("---")

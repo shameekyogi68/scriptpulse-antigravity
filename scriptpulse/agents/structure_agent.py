@@ -110,20 +110,24 @@ def is_scene_heading(line_text):
     line = line_text.strip()
     if not line: return False
     
-    # 1. Standard Int/Ext prefixes
+    # 1. Standard Int/Ext prefixes (including abbreviated I. / E.)
     line_upper = line.upper()
-    if line_upper.startswith(("INT.", "EXT.", "INT ", "EXT ", "I/E.", "INT/", "EXT/")): return True
+    if line_upper.startswith(("INT.", "EXT.", "INT ", "EXT ", "I/E.", "INT/", "EXT/", "I. ", "E. ")): return True
 
-    # 'SCENE' only qualifies when followed by a digit, INT, or EXT (not 'SCENE OF THE CRIME', etc.)
-    if re.match(r'^SCENE\s*(\d+|INT|EXT)', line_upper): return True
+    # 'SCENE' prefix detection (e.g. SCENE 1, SCENE: THE ARRIVAL)
+    if re.match(r'^SCENE\b', line_upper): return True
 
-    # 2. Fallback Patterns (Full words)
+    # 2. Fallback Patterns (Full words or ending with a dash + time indicator)
     fallback_patterns = [
         r'^INTERIOR\s+', r'^EXTERIOR\s+',
         r'^\d+\s*(INT|EXT)'
     ]
     for pattern in fallback_patterns:
         if re.match(pattern, line, re.IGNORECASE): return True
+
+    # Time of day fallback (e.g. COFFEE SHOP - DAY)
+    if re.search(r'\s+[-–—]\s*(DAY|NIGHT|DAWN|DUSK|MORNING|EVENING|LATER|SAME|CONTINUOUS)$', line_upper):
+        return True
 
     return False
 

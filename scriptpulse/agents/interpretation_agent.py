@@ -412,11 +412,177 @@ class InterpretationAgent:
 
     def map_archetypes(self, voice_map): return {}
     def audit_subtext(self, encoded, voice_map): return []
-    def map_to_custom_framework(self, trace, framework_type='3_act'): return self.map_to_structure(trace)
-    def audit_narrative_intelligence(self, scenes, trace): return []
-    def calculate_conflict_typology(self, encoded, valence): return []
-    def track_thematic_recurrence(self, encoded): return []
-    def map_interaction_networks(self, scenes, typologies): return {'edges': [], 'triangles': []}
+    def map_to_custom_framework(self, trace, framework_type='3_act'):
+        if framework_type == 'heros_journey':
+            total = len(trace)
+            if total < 4:
+                return {
+                    'acts': [
+                        {'name': 'Ordinary World & Call to Adventure', 'range': [0, max(0, total-1)]}
+                    ],
+                    'beats': []
+                }
+            ordinary_world_end = max(0, int(total * 0.15))
+            crossing_threshold = max(ordinary_world_end + 1, int(total * 0.35))
+            ordeal = max(crossing_threshold + 1, int(total * 0.70))
+            
+            acts = [
+                {'name': 'Ordinary World', 'range': [0, ordinary_world_end]},
+                {'name': 'Crossing the Threshold', 'range': [ordinary_world_end + 1, crossing_threshold]},
+                {'name': 'The Ordeal', 'range': [crossing_threshold + 1, ordeal]},
+                {'name': 'Return with the Elixir', 'range': [ordeal + 1, total - 1]}
+            ]
+            beats = [
+                {'name': 'Call to Adventure', 'scene_index': max(0, ordinary_world_end - 1)},
+                {'name': 'Supreme Ordeal', 'scene_index': int(total / 2)}
+            ]
+            return {'acts': acts, 'beats': beats}
+        
+        return self.map_to_structure(trace)
+
+    def audit_narrative_intelligence(self, scenes, trace):
+        import collections
+        motifs = ['gun', 'weapon', 'bomb', 'knife', 'letter', 'secret']
+        scene_motifs = collections.defaultdict(list)
+        
+        for i, scene in enumerate(scenes):
+            scene_text = " ".join([l.get('text', '') for l in scene.get('lines', [])]).lower()
+            for motif in motifs:
+                if motif in scene_text:
+                    scene_motifs[motif].append(i)
+                    
+        intelligence = []
+        for motif, scene_indices in scene_motifs.items():
+            if len(scene_indices) == 1:
+                idx = scene_indices[0]
+                intelligence.append({
+                    'type': 'Dropped Thread',
+                    'issue': f"Dropped Thread: '{motif.capitalize()}' was set up in Scene {idx+1} but never paid off in later scenes.",
+                    'advice': f"Consider resolving the setup of the '{motif}' in subsequent scenes, or remove the setup if it does not serve the plot."
+                })
+        return intelligence
+
+    def calculate_conflict_typology(self, encoded, valence):
+        typology = []
+        
+        external_keywords = {'runs', 'leaps', 'rolls', 'fires', 'bullets', 'rooftop', 'gunfight', 'chase', 'combat', 'jump', 'fall', 'hit', 'shot'}
+        social_keywords = {'where', 'busy', 'why', 'what', 'you', 'me', 'who', 'say', 'tell', 'hear', 'conversation', 'talk', 'argue', 'angry'}
+        internal_keywords = {'letter', 'ponder', 'regret', 'dread', 'feels', 'thinks', 'wonder', 'mind', 'memory', 'clock', 'solitude', 'lonely'}
+        
+        for i, feat in enumerate(encoded):
+            text = " ".join([line.get('text', '') for line in feat.get('micro_structure', [])]).lower()
+            
+            ext_score = sum(1 for w in external_keywords if w in text)
+            soc_score = sum(1 for w in social_keywords if w in text)
+            int_score = sum(1 for w in internal_keywords if w in text)
+            
+            dial_dynamics = feat.get('dialogue_dynamics', {})
+            vis_dynamics = feat.get('visual_abstraction', {})
+            
+            ext_score += vis_dynamics.get('visual_intensity', 0.0) * 5.0
+            ext_score += vis_dynamics.get('action_lines', 0) * 0.5
+            
+            soc_score += dial_dynamics.get('turn_velocity', 0.0) * 5.0
+            soc_score += dial_dynamics.get('speaker_switches', 0) * 0.5
+            
+            ling = feat.get('linguistic_load', {})
+            int_score += ling.get('idea_density', 0.0) * 3.0
+            if ling.get('mean_sentence_length', 0) > 15:
+                int_score += 2.0
+                
+            ext_score = max(0.1, ext_score)
+            soc_score = max(0.1, soc_score)
+            int_score = max(0.1, int_score)
+            
+            total = ext_score + soc_score + int_score
+            ext_norm = round(ext_score / total, 2)
+            soc_norm = round(soc_score / total, 2)
+            int_norm = round(int_score / total, 2)
+            
+            scores = {'External': ext_norm, 'Social': soc_norm, 'Internal': int_norm}
+            dominant = max(scores, key=scores.get)
+            
+            typology.append({
+                'scene_index': feat.get('scene_index', i),
+                'dominant': dominant,
+                'external': ext_norm,
+                'social': soc_norm,
+                'internal': int_norm
+            })
+        return typology
+
+    def track_thematic_recurrence(self, encoded):
+        echoes = []
+        n = len(encoded)
+        if n < 3: return echoes
+        
+        thematic_motifs = {'rose', 'crimson', 'petal', 'gun', 'blood', 'family', 'gold', 'ring', 'shadow', 'clock'}
+        
+        for i in range(n):
+            vocab_i = set(encoded[i].get('scene_vocabulary', []))
+            motifs_i = vocab_i.intersection(thematic_motifs)
+            if not motifs_i:
+                continue
+                
+            for j in range(i + 2, n):
+                vocab_j = set(encoded[j].get('scene_vocabulary', []))
+                motifs_j = vocab_j.intersection(thematic_motifs)
+                
+                shared = motifs_i.intersection(motifs_j)
+                if shared:
+                    sim = len(shared) / max(1, min(len(motifs_i), len(motifs_j)))
+                    echoes.append({
+                        'scenes': [i, j],
+                        'similarity': round(sim, 2),
+                        'shared_motifs': sorted(list(shared))
+                    })
+        return echoes
+
+    def map_interaction_networks(self, scenes, typologies=None):
+        import collections
+        scene_speakers = []
+        all_chars = set()
+        for scene in scenes:
+            speakers = set()
+            for line in scene.get('lines', []):
+                if line.get('tag') == 'C':
+                    name = line.get('text', '').split('(')[0].strip().upper()
+                    from scriptpulse.agents.perception_agent import normalize_character_name
+                    norm_name = normalize_character_name(name)
+                    if norm_name:
+                        speakers.add(norm_name)
+                        all_chars.add(norm_name)
+            scene_speakers.append(speakers)
+
+        edge_weights = collections.defaultdict(int)
+        for speakers in scene_speakers:
+            sorted_spk = sorted(list(speakers))
+            for i in range(len(sorted_spk)):
+                for j in range(i + 1, len(sorted_spk)):
+                    pair = (sorted_spk[i], sorted_spk[j])
+                    edge_weights[pair] += 1
+
+        edges = []
+        adjacency = collections.defaultdict(set)
+        for (src, dst), weight in edge_weights.items():
+            if weight >= 1:
+                edges.append({'source': src, 'target': dst, 'weight': weight})
+                adjacency[src].add(dst)
+                adjacency[dst].add(src)
+
+        triangles = []
+        sorted_nodes = sorted(list(all_chars))
+        for i in range(len(sorted_nodes)):
+            for j in range(i + 1, len(sorted_nodes)):
+                for k in range(j + 1, len(sorted_nodes)):
+                    n1, n2, n3 = sorted_nodes[i], sorted_nodes[j], sorted_nodes[k]
+                    if n2 in adjacency[n1] and n3 in adjacency[n1] and n3 in adjacency[n2]:
+                        triangles.append([n1, n2, n3])
+
+        return {
+            'edges': edges,
+            'triangles': triangles
+        }
     def audit_timeline_continuity(self, scenes): return []
     def audit_narrative_causality(self, encoded, scenes): return []
     def calculate_dialogue_authenticity(self, encoded): return []
