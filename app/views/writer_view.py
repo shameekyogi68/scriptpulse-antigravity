@@ -110,7 +110,6 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
             <div style="background: rgba({rgb}, 0.1); color: {score_color}; font-size: 0.72rem; font-weight: 700; 
                         padding: 4px 12px; border-radius: 12px; display: inline-block; border: 1px solid rgba({rgb}, 0.2); 
                         letter-spacing: 0.04em; text-transform: uppercase;">{score_label}</div>
-            <div style="font-size: 0.65rem; color: rgba(255,255,255,0.45); margin-top: 10px; line-height: 1.3;">Reference signal only</div>
         </div>
         <style>@keyframes scoreShimmer {{ 0%,100% {{ opacity: 0.3; }} 50% {{ opacity: 1; }} }}</style>
         """), unsafe_allow_html=True)
@@ -562,8 +561,8 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
         </div>
         """), unsafe_allow_html=True)
         
-        st.info(f"ℹ️ {SHORT_DISCLAIMER}")
-        st.caption(get_engine_mode_note())
+
+
 
         # High-level AI Consultant Summary box displayed wide at the top
         if isinstance(summary, dict) and summary.get('summary'):
@@ -690,19 +689,3 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
                 _safe_render(render_coverage_memo, "AI Coverage")
             with tab_export:
                 _safe_render(render_export, "Export")
-
-    # --- Methodology Footer ---
-    st.markdown("<br><br>", unsafe_allow_html=True)
-    disclaimer_items = "".join(f"<li>{line}</li>" for line in FULL_DISCLAIMER_LINES)
-    st.markdown(uikit.clean_html(f"""
-    <div style="margin-top: 1rem; padding: 20px 24px; background: rgba(255, 255, 255, 0.02);
-                border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
-        <div style="font-size: 0.72rem; color: rgba(244, 246, 251, 0.5); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; margin-bottom: 10px;">Important — How To Read These Results</div>
-        <ul style="font-size: 0.82rem; color: rgba(244, 246, 251, 0.65); line-height: 1.65; margin: 0 0 14px 1.2rem; padding: 0;">
-            {disclaimer_items}
-        </ul>
-        <div style="font-size: 0.82rem; color: rgba(244, 246, 251, 0.65); line-height: 1.65;">
-            {METHODOLOGY_NOTE}
-        </div>
-    </div>
-    """), unsafe_allow_html=True)

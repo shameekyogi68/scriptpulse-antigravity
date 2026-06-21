@@ -164,36 +164,12 @@ with col_setup_right:
         render_section_header("⚙️", "Configure Analysis",
             "Select genre and perspective to calibrate benchmarks.")
 
-        st.info("ScriptPulse provides audience-experience reference signals. It does not rank, approve, or predict commercial success.")
-
         genre_raw = st.selectbox("Genre", ["Drama", "Action", "Thriller", "Horror", "Comedy", "Sci-Fi", "Romance", "Fantasy", "Avant-Garde"],
                               help="The engine adjusts its benchmarks to match the expectations of your genre.")
         genre = genre_raw.lower().replace("-", "-")  # Preserve hyphens, force lowercase
         lens = st.selectbox("Perspective", ["Story Editor", "Studio Executive", "Script Coordinator"],
                               help="🕵️ Story Editor = Plot & Logic | 🏢 Studio Executive = Market & Budget | ✍️ Script Coordinator = Craft & Flow")
 
-        # System Limitations expander
-        with st.expander("🔍 System Limitations & Methodology"):
-            st.markdown("""
-            ### 🔬 System Bounds & Mathematical Methodology
-
-            ScriptPulse is designed as a diagnostic writing aid leveraging NLP models and temporal dynamics simulation. In alignment with academic and industry standards, users should note the following system constraints:
-
-            1. **Deterministic Structural Proxies**: 
-               The pacing, momentum, and effort scores are generated using deterministic mathematical formulas (e.g. Shannon entropy, speaker switches, dialogue velocity). These are structural proxies and do *not* represent a direct prediction of human audience psychology or emotional resonance.
-            
-            2. **Screenplay Formatting Sensitivity**:
-               The structural parser operates on standard industry layouts (sluglines starting with `INT.` or `EXT.`, uppercase character tags, parentheticals). Formatting deviations may lead to parsing errors.
-               
-            3. **Heuristic Calibration Limits**:
-               Default baseline weights in narrative formulas were empirically tuned on a screenplay corpus. They may not align perfectly with highly experimental, silent, or avant-garde formats.
-               
-            4. **Probabilistic Bounds of NLP Models**:
-               Auxiliary intelligence modules like **Jina Embeddings** and **DeBERTa-v3** are probabilistic in nature.
-               
-             5. **Reference Signal Intention**:
-                ScriptPulse provides feedback for self-reflection. It is *not* a scoring, grading, or commercial ranking tool.
-             """)
 
 
 if script_input:
@@ -385,18 +361,11 @@ if report and current_input:
 # ============================================================================
 # FOOTER
 # ============================================================================
-st.markdown(f"""
+st.markdown("""
 <div class="sp-footer">
-    <div style="margin-bottom: 8px;">
-        <span style="font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 0.9rem; color: rgba(244, 246, 251, 0.5);">
-            Script<span style="color: rgba(0, 82, 255, 0.7);">Pulse</span>
-        </span>
-        <span style="margin-left: 8px; font-size: 0.7rem; color: rgba(244, 246, 251, 0.3);">v1.0 · Production</span>
+    <div style="font-size: 0.7rem; color: rgba(244, 246, 251, 0.35); font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em;">
+        &copy; 2026 ScriptPulse. All rights reserved.
     </div>
-    <div>AI Story Intelligence Engine · Audience experience simulation</div>
-    <div style="margin-top: 4px;">🔒 Processed in your session only · Not stored on ScriptPulse servers</div>
-    <div style="margin-top: 4px; font-size: 0.65rem; color: rgba(244, 246, 251, 0.35);">Reference signals only — not a quality score or approval system</div>
-    <div style="margin-top: 6px; font-size: 0.6rem; color: rgba(244, 246, 251, 0.2);">&copy; 2026 ScriptPulse. All rights reserved.</div>
 </div>
 """, unsafe_allow_html=True)
 
