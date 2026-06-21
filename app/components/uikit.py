@@ -81,20 +81,65 @@ def render_section_header(icon: str, title: str, explainer: str):
     """), unsafe_allow_html=True)
 
 def render_insight_card(text: str):
-    """Renders a color-coded insight card based on text content."""
-    css_class = 'insight-info'
-    if any(x in text for x in ['🔴', 'CRITICAL', '🚫']):
-        css_class = 'insight-critical'
-    elif any(x in text for x in ['🟠', 'WARNING', '⚠️', '🟡', '✂️', '⬜', '💬', '✍️', '🎢', '♻️', '📉', '🧵', '🎙️', '👻', '👥', '🔤']):
-        css_class = 'insight-warning'
-    elif any(x in text for x in ['✨', '🟢', '✅', '💎', '⭐', '🤫', '⛓️', '🎭', '⚡']):
-        css_class = 'insight-good'
+    """Renders a color-coded insight card based on text content, styled exactly like the mockup."""
+    # Clean up standard emojis from text to avoid duplicating icons
+    clean_text = text
+    for emoji in ['🔴', '🚫', '🟠', '⚠️', '🟡', '✂️', '⬜', '💬', '✍️', '🎢', '♻️', '📉', '🧵', '🎙️', '👻', '👥', '🔤', '✨', '🟢', '✅', '💎', '⭐', '🤫', '⛓️', '🎭', '⚡', 'ℹ️']:
+        clean_text = clean_text.replace(emoji, '')
+    clean_text = clean_text.strip()
     
+    # Determine type
+    icon = 'ti-info-circle'
+    icon_color = 'var(--text-secondary)'
+    bg_color = 'rgba(255, 255, 255, 0.03)'
+    border_left = '4px solid var(--text-secondary)'
+    
+    if any(x in text for x in ['🔴', 'CRITICAL', '🚫']):
+        icon = 'ti-alert-circle'
+        icon_color = '#FF3366'
+        bg_color = 'rgba(255, 51, 102, 0.05)'
+        border_left = '4px solid #FF3366'
+    elif any(x in text for x in ['🟠', 'WARNING', '⚠️', '🟡', '✂️', '⬜', '💬', '✍️', '🎢', '♻️', '📉', '🧵', '🎙️', '👻', '👥', '🔤']):
+        icon = 'ti-alert-triangle'
+        icon_color = 'var(--coral)'
+        bg_color = 'rgba(255, 112, 67, 0.05)'
+        border_left = '4px solid var(--coral)'
+    elif any(x in text for x in ['✨', '🟢', '✅', '💎', '⭐', '🤫', '⛓️', '🎭', '⚡']):
+        icon = 'ti-sparkles'
+        icon_color = 'var(--emerald)'
+        bg_color = 'rgba(0, 200, 83, 0.05)'
+        border_left = '4px solid var(--emerald)'
 
-    text_html = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)
+    # Convert markdown bold/italics to HTML
+    text_html = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', clean_text)
     text_html = re.sub(r'\*(.*?)\*', r'<i>\1</i>', text_html)
     
-    st.markdown(f"<div class='{css_class}'>{text_html}</div>", unsafe_allow_html=True)
+    # Split text into Title and Body if colon is present (e.g. "Action Peak: Strong integration...")
+    parts = text_html.split(':', 1)
+    if len(parts) == 2:
+        title_html = f"<div style='font-size: 0.9rem; font-weight: 700; color: white; margin-bottom: 4px;'>{parts[0].strip()}</div>"
+        desc_html = f"<div style='font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6;'>{parts[1].strip()}</div>"
+    else:
+        title_html = ""
+        desc_html = f"<div style='font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6;'>{text_html}</div>"
+
+    html = f"""
+    <div style="display: flex; gap: 16px; padding: 20px; margin-bottom: 12px;
+                background: {bg_color}; border-left: {border_left}; border-radius: var(--radius-md);
+                border-top: 1px solid rgba(255,255,255,0.03); border-right: 1px solid rgba(255,255,255,0.03);
+                border-bottom: 1px solid rgba(255,255,255,0.03); box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
+        <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(255,255,255,0.03);
+                    display: flex; align-items: center; justify-content: center; font-size: 1.25rem; color: {icon_color};
+                    border: 1px solid rgba(255,255,255,0.05); flex-shrink: 0;">
+            <i class="ti {icon}"></i>
+        </div>
+        <div>
+            {title_html}
+            {desc_html}
+        </div>
+    </div>
+    """
+    st.markdown(clean_html(html), unsafe_allow_html=True)
 
 
 def render_tooltip_card(content: str):
@@ -109,14 +154,14 @@ def render_empty_state():
     """Renders a premium empty state with compelling CTA and feature highlights."""
     st.markdown(clean_html("""
     <div style="text-align: center; padding: 2.5rem 2rem; margin: 1rem 0;
-                background: linear-gradient(135deg, rgba(0, 82, 255, 0.04) 0%, rgba(106, 72, 187, 0.03) 50%, rgba(0, 82, 255, 0.04) 100%);
-                border: 1px solid rgba(0, 82, 255, 0.08); border-radius: 20px;
-                position: relative; overflow: hidden;">
+                background: linear-gradient(135deg, rgba(155, 81, 224, 0.04) 0%, rgba(165, 109, 255, 0.02) 50%, rgba(155, 81, 224, 0.04) 100%);
+                border: 1px solid rgba(155, 81, 224, 0.15); border-radius: 20px;
+                position: relative; overflow: hidden; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);">
         <div style="position: absolute; top: 0; left: 0; right: 0; height: 2px;
-                    background: linear-gradient(90deg, transparent, rgba(0, 82, 255, 0.4), transparent);"></div>
-        <div style="font-size: 2.5rem; margin-bottom: 12px; filter: drop-shadow(0 0 12px rgba(0, 82, 255, 0.3));">📄</div>
+                    background: linear-gradient(90deg, transparent, rgba(155, 81, 224, 0.45), transparent);"></div>
+        <div style="font-size: 2.5rem; margin-bottom: 12px; filter: drop-shadow(0 0 12px rgba(155, 81, 224, 0.45));">📄</div>
         <div style="font-size: 1.15rem; font-weight: 600; color: white; margin-bottom: 8px;">
-            Upload or paste your screenplay to begin
+            Upload your screenplay to begin
         </div>
         <div style="font-size: 0.88rem; color: rgba(163, 160, 179, 0.9); max-width: 500px; margin: 0 auto 20px auto; line-height: 1.6;">
             ScriptPulse will analyze your script's emotional architecture, structural health, and character dynamics in seconds.

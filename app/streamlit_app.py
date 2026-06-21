@@ -95,69 +95,49 @@ col_setup_left, col_setup_right = st.columns([1.1, 0.9], gap="medium")
 with col_setup_left:
     with st.container(border=True):
         render_section_header("📄", "Your Screenplay",
-            "Upload your script or paste a scene. We'll map its emotional architecture.")
-
-        tab_up, tab_paste = st.tabs(["📁 Upload File", "📝 Paste Text"])
+            "Upload your script. We'll map its emotional architecture.")
 
         script_input = None
-        with tab_up:
-            uploaded_file = st.file_uploader(
-                "Drop your screenplay here (PDF, TXT, or FDX)",
-                type=['pdf', 'txt', 'fdx'],
-                label_visibility="visible"
-            )
-            if uploaded_file and stu.check_upload_size(uploaded_file):
-                with st.spinner("Reading script..."):
-                    ext = uploaded_file.name.split('.')[-1].lower()
-                    if ext == 'pdf':
-                        try:
-                            from io import BytesIO
-                            import PyPDF2
-                            script_input = "\n".join([
-                                p.extract_text() or "" for p in PyPDF2.PdfReader(BytesIO(uploaded_file.read())).pages
-                            ])
-                            # PDF validation: check that extracted text has at least 300 words
-                            if script_input and len(script_input.strip().split()) < 300:
-                                st.error("This PDF appears to be image-based (scanned). Please convert to text-based PDF or paste text manually.")
-                                script_input = None
-                        except Exception as e:
-                            st.error("Could not read PDF. The file may be corrupted or protected. Please try a TXT or FDX file.")
+        uploaded_file = st.file_uploader(
+            "Drop your screenplay here (PDF, TXT, or FDX)",
+            type=['pdf', 'txt', 'fdx'],
+            label_visibility="visible"
+        )
+        if uploaded_file and stu.check_upload_size(uploaded_file):
+            with st.spinner("Reading script..."):
+                ext = uploaded_file.name.split('.')[-1].lower()
+                if ext == 'pdf':
+                    try:
+                        from io import BytesIO
+                        import PyPDF2
+                        script_input = "\n".join([
+                            p.extract_text() or "" for p in PyPDF2.PdfReader(BytesIO(uploaded_file.read())).pages
+                        ])
+                        # PDF validation: check that extracted text has at least 300 words
+                        if script_input and len(script_input.strip().split()) < 300:
+                            st.error("This PDF appears to be image-based (scanned). Please convert to a text-based PDF or upload a TXT/FDX file instead.")
                             script_input = None
-                    elif ext == 'fdx':
-                        try:
-                            from scriptpulse.agents.structure_agent import ImporterAgent
-                            importer = ImporterAgent()
-                            parsed_lines = importer.run(uploaded_file.getvalue().decode("utf-8"))
-                            if isinstance(parsed_lines, list):
-                                script_input = "\n".join([l['text'] for l in parsed_lines])
-                            else:
-                                script_input = parsed_lines
-                        except Exception as e:
-                            st.error("Could not parse FDX formatting. Please ensure it's a valid Final Draft XML file.")
-                            script_input = None
-                    else:
-                        try:
-                            script_input = uploaded_file.read().decode('utf-8')
-                        except Exception:
-                            st.error("Could not decode text. Please ensure the file is saved in standard UTF-8 format.")
-                            script_input = None
-
-        with tab_paste:
-            pasted = st.text_area("Paste text here", height=230,
-                                  placeholder="INT. COFFEE SHOP - DAY\n\nA young WRITER stares at a blank screen...")
-            
-            # Word count indicator
-            word_count = len(pasted.split()) if pasted else 0
-            if pasted:
-                st.caption(f"📝 {word_count} words detected")
-            
-            # Minimum validation: 300 words OR at least 1 scene heading
-            has_scene_heading = any(line.strip().startswith(('INT.', 'EXT.', 'INT ', 'EXT ')) 
-                                   for line in pasted.split('\n') if line.strip()) if pasted else False
-            
-            if not script_input and pasted and (word_count >= 300 or has_scene_heading):
-                if stu.check_input_length(pasted):
-                    script_input = pasted
+                    except Exception as e:
+                        st.error("Could not read PDF. The file may be corrupted or protected. Please try a TXT or FDX file.")
+                        script_input = None
+                elif ext == 'fdx':
+                    try:
+                        from scriptpulse.agents.structure_agent import ImporterAgent
+                        importer = ImporterAgent()
+                        parsed_lines = importer.run(uploaded_file.getvalue().decode("utf-8"))
+                        if isinstance(parsed_lines, list):
+                            script_input = "\n".join([l['text'] for l in parsed_lines])
+                        else:
+                            script_input = parsed_lines
+                    except Exception as e:
+                        st.error("Could not parse FDX formatting. Please ensure it's a valid Final Draft XML file.")
+                        script_input = None
+                else:
+                    try:
+                        script_input = uploaded_file.read().decode('utf-8')
+                    except Exception:
+                        st.error("Could not decode text. Please ensure the file is saved in standard UTF-8 format.")
+                        script_input = None
 
 with col_setup_right:
     with st.container(border=True):
