@@ -500,21 +500,82 @@ def apply_custom_styles():
 
         /* ===== FILE UPLOADER ===== */
         [data-testid="stFileUploader"] {
+            background: transparent !important;
+            border: none !important;
+            padding: 0 !important;
+            box-shadow: none !important;
+        }
+        [data-testid="stFileUploaderDropzone"] {
+            background: rgba(0, 0, 0, 0.2) !important;
+            box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.6) !important;
+            border: 2px dashed rgba(255, 255, 255, 0.08) !important;
+            border-radius: var(--radius-md) !important;
+            padding: 48px 30px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-align: center !important;
+            gap: 0 !important;
+            transition: all 0.3s ease !important;
+        }
+        [data-testid="stFileUploaderDropzone"]:hover {
+            border-color: rgba(255, 255, 255, 0.15) !important;
             background: rgba(255, 255, 255, 0.01) !important;
-            backdrop-filter: blur(24px) !important;
-            border-radius: var(--radius-lg) !important;
-            border: 2px dashed var(--border-subtle) !important;
-            padding: 2.5rem 2rem !important;
-            transition: all 0.4s ease !important;
-            box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.4) !important;
         }
-        
-        [data-testid="stFileUploader"]:hover {
-            border-color: var(--accent-primary) !important;
-            background: rgba(255, 255, 255, 0.03) !important;
-            box-shadow: 0 0 30px rgba(155, 81, 224, 0.15), inset 0 4px 12px rgba(0,0,0,0.4) !important;
+        [data-testid="stFileUploaderDropzone"] svg {
+            display: none !important;
+        }
+        [data-testid="stFileUploaderDropzone"] div[data-testid="stFileUploaderDropzoneInput"] {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+        }
+        [data-testid="stFileUploaderDropzone"] div[data-testid="stFileUploaderDropzoneInput"] > span {
+            display: none !important;
+        }
+        [data-testid="stFileUploaderDropzone"] div[data-testid="stFileUploaderDropzoneInput"] > div {
+            display: none !important;
+        }
+        [data-testid="stFileUploaderDropzone"]::before {
+            order: 1 !important;
+            content: "\ea60" !important; /* ti-cloud-upload */
+            font-family: 'tabler-icons' !important;
+            font-size: 3rem !important;
+            color: var(--text-secondary) !important;
+            opacity: 0.4 !important;
+            margin-bottom: 16px !important;
+            line-height: 1 !important;
+        }
+        [data-testid="stFileUploaderDropzone"]::after {
+            order: 2 !important;
+            content: "Drop your screenplay here (PDF, TXT, or FDX)" !important;
+            color: var(--text-secondary) !important;
+            font-weight: 600 !important;
+            font-size: 0.95rem !important;
+            margin-bottom: 0px !important;
+        }
+        [data-testid="stFileUploader"] button[data-testid="stBaseButton-secondary"] {
+            order: 3 !important;
+            background: linear-gradient(135deg, var(--accent-primary) 0%, #7B3FE4 100%) !important;
+            color: white !important;
+            font-weight: 600 !important;
+            padding: 12px 28px !important;
+            border-radius: 40px !important;
+            box-shadow: 0 4px 15px rgba(155, 81, 224, 0.4) !important;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+            border: none !important;
+            cursor: pointer !important;
+            text-transform: uppercase !important;
+            font-size: 0.85rem !important;
+            letter-spacing: 0.05em !important;
+            margin-top: 16px !important;
+        }
+        [data-testid="stFileUploader"] button[data-testid="stBaseButton-secondary"]:hover {
             transform: translateY(-2px) !important;
+            box-shadow: 0 8px 25px rgba(155, 81, 224, 0.6) !important;
         }
+
 
         /* ===== SELECT BOX / INPUTS ===== */
         [data-baseweb="select"] > div, [data-baseweb="input"] > div, [data-baseweb="textarea"] > div {

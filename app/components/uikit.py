@@ -266,19 +266,25 @@ def render_ai_consultant_box(insight_text: str, persona: str = "Script Consultan
 def render_metric_card(label: str, value: str, help_text: Optional[str] = None):
     """Renders a premium, non-truncating metric card for the Story Dashboard."""
     # Tooltip logic
-    tooltip_html = f'<span title="{help_text}" style="cursor:help; margin-left:4px; opacity:0.6; font-size:0.8rem;">ⓘ</span>' if help_text else ""
+    tooltip_html = f'<span title="{help_text}" style="cursor:help; margin-left:4px; opacity:0.3;"><i class="ti ti-info-circle"></i></span>' if help_text else ""
     
     # Value auto-downsizing for long strings
     val_size = "1.8rem"
     if len(value) > 10: val_size = "1.4rem"
     if len(value) > 15: val_size = "1.1rem"
 
+    # Highlight specific values with Amethyst color
+    val_color = "white"
+    if value in ["Healthy", "Balanced"]:
+        val_color = "var(--accent-primary)"
+
     html = clean_html(f"""
     <div class="custom-metric-card">
-        <div style="font-size: 0.7rem; color: rgba(255,255,255,0.6); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; line-height: 1.2; white-space: normal; overflow: visible;">
-            {label} {tooltip_html}
+        <div style="font-size: 0.65rem; color: var(--text-secondary); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; line-height: 1.2; display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <span>{label}</span>
+            {tooltip_html}
         </div>
-        <div style="font-size: {val_size}; font-weight: 800; color: white; margin-top: 5px; font-family: 'Outfit', sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+        <div style="font-size: {val_size}; font-weight: 800; color: {val_color}; margin-top: 5px; font-family: 'Outfit', sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
             {value}
         </div>
     </div>

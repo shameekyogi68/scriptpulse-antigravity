@@ -91,48 +91,26 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
 
         rgb = ','.join(str(int(score_color.lstrip('#')[i:i+2], 16)) for i in (0, 2, 4))
 
-        # We display the Engagement Index in a premium tactile glass card
+        # We display the Engagement Index and Confidence in a single unified tactile glass card matching the mockup exactly
         st.markdown(uikit.clean_html(f"""
-        <div style="background: rgba(255, 255, 255, 0.03); 
-                    border: 1px solid rgba(255, 255, 255, 0.08);
-                    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-                    backdrop-filter: blur(24px);
-                    -webkit-backdrop-filter: blur(24px);
-                    border-radius: var(--radius-lg); padding: 24px; text-align: center;
-                    position: relative; overflow: hidden; margin-bottom: 20px;">
-            <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px;
-                        background: linear-gradient(90deg, transparent, {score_color}, transparent);
-                        animation: scoreShimmer 3s ease-in-out infinite;"></div>
-            <div style="font-[0.65rem] font-weight: 700; color: rgba(255,255,255,0.6); text-transform: uppercase;
-                        letter-spacing: 0.12em; margin-bottom: 6px;">Engagement Index</div>
-            <div style="font-size: 3.5rem; font-weight: 800; color: {score_color}; text-shadow: 0 0 15px rgba({rgb},0.4);
-                        font-family: 'Outfit', sans-serif; line-height: 1; margin: 10px 0;">{sp_score}</div>
-            <div style="background: rgba({rgb}, 0.1); color: {score_color}; font-size: 0.72rem; font-weight: 700; 
-                        padding: 4px 12px; border-radius: 12px; display: inline-block; border: 1px solid rgba({rgb}, 0.2); 
-                        letter-spacing: 0.04em; text-transform: uppercase;">{score_label}</div>
-        </div>
-        <style>@keyframes scoreShimmer {{ 0%,100% {{ opacity: 0.3; }} 50% {{ opacity: 1; }} }}</style>
-        """), unsafe_allow_html=True)
-
-        # --- Confidence Badge ---
-        confidence = report.get('meta', {}).get('confidence_level', 'MEDIUM')
-        reasons = report.get('meta', {}).get('confidence_reasons', [])
-        confidence_colors = {'HIGH': '#00C853', 'MEDIUM': '#FF7043', 'LOW': '#FF3366'}
-        conf_icon = {'HIGH': '✅', 'MEDIUM': '⚡', 'LOW': '⚠️'}
-        
-        st.markdown(uikit.clean_html(f"""
-        <div style="display: flex; align-items: center; justify-content: center; gap: 8px; 
-                    background: rgba(255, 255, 255, 0.02);
-                    border: 1px solid rgba(255, 255, 255, 0.08);
-                    border-radius: 20px; padding: 6px 16px; font-size: 0.8rem; margin-bottom: 20px; text-align: center;">
-            <span>{conf_icon[confidence]}</span>
-            <span style="color: {confidence_colors[confidence]}; font-weight: 700;">{confidence} Confidence</span>
+        <div class="glass-card score-card hardware-metric" style="padding: 32px; text-align: center; margin-bottom: 20px;">
+            <div class="well" style="padding: 24px; margin-bottom: 24px; background: rgba(0, 0, 0, 0.2); box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.6); border-radius: var(--radius-md); border: 1px solid rgba(255, 255, 255, 0.03);">
+                <span style="font-size: 0.65rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.12em; display: block; margin-bottom: 4px;">Engagement Index</span>
+                <div style="font-family: 'Outfit', sans-serif; font-size: 4.5rem; font-weight: 800; line-height: 1; margin: 16px 0; color: {score_color}; text-shadow: 0 0 15px rgba({rgb},0.4);">{sp_score}</div>
+                <div style="background: rgba({rgb}, 0.1); color: {score_color}; font-size: 0.72rem; font-weight: 700; padding: 4px 12px; border-radius: 12px; display: inline-block; border: 1px solid rgba({rgb}, 0.2); letter-spacing: 0.04em; text-transform: uppercase;">{score_label}</div>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.75rem; font-weight: 700; color: var(--text-secondary);">
+                <i class="ti ti-circle-check" style="font-size: 1rem; color: {confidence_colors[confidence]};"></i>
+                <span style="text-transform: uppercase; letter-spacing: 0.05em;">{confidence} CONFIDENCE</span>
+            </div>
         </div>
         """), unsafe_allow_html=True)
         if reasons:
-            st.caption(f"Reason: {', '.join(reasons)}")
-
-        st.markdown("<br>", unsafe_allow_html=True)
+            st.markdown(uikit.clean_html(f"""
+            <div style="text-align: center; font-size: 0.72rem; color: var(--text-muted); margin-top: -12px; margin-bottom: 20px;">
+                Reason: {', '.join(reasons)}
+            </div>
+            """), unsafe_allow_html=True)
 
         # --- Metric Values Calculations ---
         pacing = "Balanced"

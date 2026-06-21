@@ -94,14 +94,18 @@ col_setup_left, col_setup_right = st.columns([1.1, 0.9], gap="medium")
 
 with col_setup_left:
     with st.container(border=True):
-        render_section_header("📄", "Your Screenplay",
-            "Upload your script. We'll map its emotional architecture.")
+        st.markdown(clean_html("""
+        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px;">
+            <i class="ti ti-file-text" style="font-size: 1.8rem; color: #9B51E0;"></i>
+            <h3 style="margin: 0 !important; font-size: 1.25rem !important; font-weight: 700; color: white;">Your Screenplay</h3>
+        </div>
+        """), unsafe_allow_html=True)
 
         script_input = None
         uploaded_file = st.file_uploader(
             "Drop your screenplay here (PDF, TXT, or FDX)",
             type=['pdf', 'txt', 'fdx'],
-            label_visibility="visible"
+            label_visibility="collapsed"
         )
         if uploaded_file and stu.check_upload_size(uploaded_file):
             with st.spinner("Reading script..."):
@@ -141,8 +145,12 @@ with col_setup_left:
 
 with col_setup_right:
     with st.container(border=True):
-        render_section_header("⚙️", "Configure Analysis",
-            "Select genre and perspective to calibrate benchmarks.")
+        st.markdown(clean_html("""
+        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px;">
+            <i class="ti ti-settings" style="font-size: 1.8rem; color: #9B51E0;"></i>
+            <h3 style="margin: 0 !important; font-size: 1.25rem !important; font-weight: 700; color: white;">Configure Analysis</h3>
+        </div>
+        """), unsafe_allow_html=True)
 
         genre_raw = st.selectbox("Genre", ["Drama", "Action", "Thriller", "Horror", "Comedy", "Sci-Fi", "Romance", "Fantasy", "Avant-Garde"],
                               help="The engine adjusts its benchmarks to match the expectations of your genre.")
@@ -282,8 +290,8 @@ if script_input:
                 st.error(f"Analysis failed: {e}")
             st.stop()
 else:
-    from app.components import uikit
-    uikit.render_empty_state()
+    # Clear landing page layout (instead of redundant empty-state card)
+    pass
 
 # =============================================================================
 # STEP 3: RENDER RESULTS
