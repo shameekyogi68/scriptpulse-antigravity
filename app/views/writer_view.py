@@ -192,8 +192,6 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
         # Wrap chart in glass-card + chart-container well — matches template section
         st.markdown(uikit.clean_html("""
         <div class="glass-card hardware-metric" style="padding: 40px; margin-bottom: 8px; position: relative; overflow: hidden;">
-            <div style="position:absolute;top:0;left:0;right:0;height:2px;
-                        background:linear-gradient(90deg,transparent,rgba(155,81,224,0.5),rgba(165,109,255,0.3),transparent);"></div>
         """), unsafe_allow_html=True)
 
         st.plotly_chart(fig_display, use_container_width=True,
@@ -340,8 +338,6 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
 
                 html = (
                     f'<div class="glass-card hardware-metric" style="padding:24px; position:relative; overflow:hidden; height:100%;">'
-                    f'<div style="position:absolute;top:0;left:0;right:0;height:2px;'
-                    f'background:linear-gradient(90deg,transparent,{arc_color},transparent);"></div>'
 
                     # Name + arc icon row
                     f'<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">'
@@ -493,8 +489,6 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
 
         full_html = (
             '<div class="glass-card hardware-metric" style="padding:24px; position:relative; overflow:hidden;">'
-            '<div style="position:absolute;top:0;left:0;right:0;height:2px;'
-            'background:linear-gradient(90deg,transparent,rgba(155,81,224,0.5),transparent);"></div>'
             + header_html + rows_html
             + f'<div style="font-size:0.7rem; color:var(--text-secondary); margin-top:12px; '
             f'text-align:right; opacity:0.6;">Showing {len(turns_only)} non-flat scenes</div>'
@@ -816,8 +810,6 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
                 if act and act.get('act1_pct', 0) > 0:
                     st.markdown(uikit.clean_html(f"""
                     <div class="glass-card hardware-metric" style="padding: 20px; position: relative; overflow: hidden;">
-                        <div style="position:absolute;top:0;left:0;right:0;height:2px;
-                                    background:linear-gradient(90deg,transparent,rgba(155,81,224,0.4),transparent);"></div>
                         <div style="font-weight: 700; margin-bottom: 15px; font-size: 0.75rem; color: var(--text-secondary); letter-spacing: 0.1em; text-transform: uppercase;">🎬 Act Structure</div>
                         <div style="display: flex; gap: 3px; height: 26px; border-radius: 6px; overflow: hidden; margin-bottom: 8px;">
                             <div style="width: {max(8, act['act1_pct'])}%; background: {Theme.SEMANTIC_WARNING};
@@ -843,8 +835,6 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
                     bench = round(dar.get('genre_benchmark', 0.5) * 100) if isinstance(dar.get('genre_benchmark'), float) else dar.get('genre_benchmark', 50)
                     st.markdown(uikit.clean_html(f"""
                     <div class="glass-card hardware-metric" style="padding: 20px; position: relative; overflow: hidden;">
-                        <div style="position:absolute;top:0;left:0;right:0;height:2px;
-                                    background:linear-gradient(90deg,transparent,rgba(155,81,224,0.4),transparent);"></div>
                         <div style="font-weight: 700; margin-bottom: 15px; font-size: 0.75rem; color: var(--text-secondary); letter-spacing: 0.1em; text-transform: uppercase;">💬 Dialogue vs Action</div>
                         <div style="display: flex; gap: 3px; height: 26px; border-radius: 6px; overflow: hidden; margin-bottom: 8px;">
                             <div style="width: {max(8, d_pct)}%; background: {Theme.SEMANTIC_INFO};

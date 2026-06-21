@@ -519,11 +519,28 @@ def apply_custom_styles():
             height: 48px !important;
             margin: 0 auto 16px auto !important;
             display: block !important;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%239B51E0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'/%3E%3Cpolyline points='17 8 12 3 7 8'/%3E%3Cline x1='12' y1='3' x2='12' y2='15'/%3E%3C/svg%3E") !important;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%239E9E9E' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 11v9M9 14l3-3 3 3'/%3E%3Cpath d='M17 19.3a5 5 0 0 0-3-9.3c-.3 0-.6 0-.9.1a7 7 0 1 0-11.8 4A5 5 0 0 0 5 19.3'/%3E%3C/svg%3E") !important;
             background-size: contain !important;
             background-repeat: no-repeat !important;
             background-position: center !important;
-            opacity: 0.75 !important;
+            opacity: 0.4 !important;
+        }
+
+        /* Inject dropzone text prompt */
+        [data-testid="stFileUploaderDropzone"] div[data-testid="stFileUploaderDropzoneInput"]::before,
+        [data-testid="stFileUploadDropzone"] div[data-testid="stFileUploadDropzoneInput"]::before,
+        [data-testid="stFileUploaderDropzone"] div[data-testid="stFileUploadDropzoneInput"]::before,
+        [data-testid="stFileUploadDropzone"] div[data-testid="stFileUploaderDropzoneInput"]::before,
+        [data-testid="stFileUploaderDropzone"] div[class*="DropzoneInput"]::before,
+        [data-testid="stFileUploadDropzone"] div[class*="DropzoneInput"]::before {
+            content: "Drop your screenplay here (PDF, TXT, or FDX)" !important;
+            font-size: 0.88rem !important;
+            font-weight: 500 !important;
+            color: var(--text-secondary) !important;
+            margin-bottom: 24px !important;
+            display: block !important;
+            text-align: center !important;
+            font-family: 'Inter', sans-serif !important;
         }
         [data-testid="stFileUploader"] button[data-testid="stBaseButton-secondary"] {
             order: 3 !important;
@@ -761,6 +778,7 @@ def apply_custom_styles():
         div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) [data-testid="stFileUploaderDropzone"]::after,
         div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) [data-testid="stFileUploadDropzone"]::before,
         div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) [data-testid="stFileUploadDropzone"]::after { display: none !important; }
+        div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) div[class*="DropzoneInput"]::before { display: none !important; }
         div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) [data-testid="stFileUploaderDropzone"] button,
         div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) [data-testid="stFileUploadDropzone"] button { display: none !important; }
         div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) [data-testid="stFileUploaderDropzone"],
@@ -1091,16 +1109,7 @@ def apply_custom_styles():
             overflow: hidden !important;
         }
 
-        /* Top highlight bar (matches template section highlight lines) */
-        div[data-testid="stVerticalBlockBorderWrapper"]::before,
-        div[class*="stVerticalBlockBorderWrapper"]::before {
-            content: '' !important;
-            position: absolute !important;
-            top: 0 !important; left: 0 !important; right: 0 !important;
-            height: 2px !important;
-            background: linear-gradient(90deg, transparent, rgba(155, 81, 224, 0.5), rgba(165, 109, 255, 0.3), transparent) !important;
-            pointer-events: none !important;
-        }
+
 
         /* Shimmer overlay */
         div[data-testid="stVerticalBlockBorderWrapper"]::after,
