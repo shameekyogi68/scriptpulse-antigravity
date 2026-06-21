@@ -688,36 +688,52 @@ def apply_custom_styles():
             align-items: center !important;
         }
 
+        /* Hover state: highlight option */
         [data-baseweb="popover"] [role="option"]:hover,
         [data-testid="stSelectboxVirtualDropdown"] [role="option"]:hover,
         [data-baseweb="popover"] li:hover,
         [data-testid="stSelectboxVirtualDropdown"] li:hover {
-            background-color: rgba(155, 81, 224, 0.12) !important;
-            border-color: rgba(155, 81, 224, 0.2) !important;
+            background-color: rgba(155, 81, 224, 0.15) !important;
+            border-color: rgba(155, 81, 224, 0.25) !important;
             color: white !important;
         }
 
+        /* Selected state (non-hover): no background highlight, just amethyst color + bold */
         [data-baseweb="popover"] [role="option"][aria-selected="true"],
         [data-testid="stSelectboxVirtualDropdown"] [role="option"][aria-selected="true"],
         [data-baseweb="popover"] li[aria-selected="true"],
         [data-testid="stSelectboxVirtualDropdown"] li[aria-selected="true"] {
-            background-color: rgba(155, 81, 224, 0.18) !important;
-            border-color: rgba(155, 81, 224, 0.3) !important;
+            background-color: transparent !important;
+            border-color: transparent !important;
+            color: var(--amethyst) !important;
+            font-weight: 700 !important;
+        }
+
+        /* Hovered selected state: gets highlight background */
+        [data-baseweb="popover"] [role="option"][aria-selected="true"]:hover,
+        [data-testid="stSelectboxVirtualDropdown"] [role="option"][aria-selected="true"]:hover,
+        [data-baseweb="popover"] li[aria-selected="true"]:hover,
+        [data-testid="stSelectboxVirtualDropdown"] li[aria-selected="true"]:hover {
+            background-color: rgba(155, 81, 224, 0.15) !important;
+            border-color: rgba(155, 81, 224, 0.25) !important;
             color: white !important;
-            font-weight: 600 !important;
         }
 
         /* Selected item checkmark */
         [data-baseweb="popover"] [role="option"][aria-selected="true"]::after,
         [data-testid="stSelectboxVirtualDropdown"] [role="option"][aria-selected="true"]::after {
-            content: '' !important;
-            width: 6px !important;
-            height: 6px !important;
-            border-radius: 50% !important;
-            background: var(--amethyst) !important;
+            content: '\2713' !important; /* Unicode checkmark */
+            font-size: 0.9rem !important;
+            color: var(--amethyst) !important;
             margin-left: auto !important;
             display: inline-block !important;
-            box-shadow: 0 0 6px var(--amethyst-glow) !important;
+            font-weight: 700 !important;
+            box-shadow: none !important;
+        }
+
+        [data-baseweb="popover"] [role="option"][aria-selected="true"]:hover::after,
+        [data-testid="stSelectboxVirtualDropdown"] [role="option"][aria-selected="true"]:hover::after {
+            color: white !important;
         }
 
         /* ===== STREAMLIT NOTIFICATION / INFO BOX WELL ===== */
@@ -732,22 +748,30 @@ def apply_custom_styles():
             color: rgba(219, 234, 254, 0.75) !important;
         }
 
-        /* ===== UPLOADED FILE — premium emerald pill row ===== */
+        /* ===== UPLOADED FILE — premium theme-aligned row ===== */
         div[data-testid="stUploadedFile"] {
-            background: rgba(0, 200, 83, 0.06) !important;
-            border: 1px solid rgba(0, 200, 83, 0.2) !important;
+            background: rgba(155, 81, 224, 0.06) !important;
+            border: 1px solid rgba(155, 81, 224, 0.20) !important;
             border-radius: 12px !important;
             padding: 12px 16px !important;
-            margin-top: 12px !important;
+            margin-top: 8px !important;
+        }
+        div[data-testid="stUploadedFile"] * {
+            background: transparent !important;
+            background-color: transparent !important;
+            border-color: transparent !important;
         }
         div[data-testid="stUploadedFile"] span,
         div[data-testid="stUploadedFile"] p,
         div[data-testid="stUploadedFile"] div {
-            color: rgba(255,255,255,0.85) !important;
+            color: rgba(244, 246, 251, 0.85) !important;
             font-size: 0.88rem !important;
             font-weight: 500 !important;
         }
-        div[data-testid="stUploadedFile"] svg { color: var(--emerald) !important; }
+        div[data-testid="stUploadedFile"] svg {
+            color: var(--amethyst) !important;
+            fill: var(--amethyst) !important;
+        }
 
         /* ===== FILE UPLOADER — collapse when file loaded ===== */
         div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) [data-testid="stFileUploaderDropzone"]::before,
@@ -758,8 +782,10 @@ def apply_custom_styles():
         div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) [data-testid="stFileUploadDropzone"] button { display: none !important; }
         div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) [data-testid="stFileUploaderDropzone"],
         div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) [data-testid="stFileUploadDropzone"] {
-            padding: 12px !important; border: 1px solid rgba(255,255,255,0.06) !important;
-            background: rgba(0,0,0,0.1) !important; box-shadow: none !important;
+            padding: 16px 20px !important;
+            border: 1px solid rgba(155, 81, 224, 0.15) !important;
+            background: rgba(0,0,0,0.2) !important;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5) !important;
         }
 
         /* ===== EXPANDERS — glass card ===== */
