@@ -96,17 +96,20 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
 
         rgb = ','.join(str(int(score_color.lstrip('#')[i:i+2], 16)) for i in (0, 2, 4))
 
-        # We display the Engagement Index and Confidence in a single unified tactile glass card matching the mockup exactly
         st.markdown(uikit.clean_html(f"""
-        <div class="glass-card score-card hardware-metric" style="padding: 32px; text-align: center; margin-bottom: 20px;">
-            <div class="well" style="padding: 24px; margin-bottom: 24px; background: rgba(0, 0, 0, 0.2); box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.6); border-radius: var(--radius-md); border: 1px solid rgba(255, 255, 255, 0.03);">
-                <span style="font-size: 0.65rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.12em; display: block; margin-bottom: 4px;">Engagement Index</span>
-                <div style="font-family: 'Outfit', sans-serif; font-size: 4.5rem; font-weight: 800; line-height: 1; margin: 16px 0; color: var(--accent-primary); text-shadow: 0 0 15px rgba(155, 81, 224, 0.4);">{sp_score}</div>
-                <div style="background: rgba({rgb}, 0.1); color: {score_color}; font-size: 0.72rem; font-weight: 700; padding: 4px 12px; border-radius: 12px; display: inline-block; border: 1px solid rgba({rgb}, 0.2); letter-spacing: 0.04em; text-transform: uppercase;">{score_label}</div>
+        <div class="glass-card score-card hardware-metric" style="margin-bottom: 20px;">
+            <div class="well" style="padding: 24px; margin-bottom: 20px;">
+                <span style="font-size: 0.65rem; font-weight: 700; color: var(--text-secondary);
+                             text-transform: uppercase; letter-spacing: 0.12em; display: block; margin-bottom: 4px;">Engagement Index</span>
+                <div class="engagement-index">{sp_score}</div>
+                <div style="background: rgba({rgb}, 0.1); color: {score_color}; font-size: 0.7rem; font-weight: 700;
+                            padding: 4px 12px; border-radius: 12px; display: inline-block;
+                            border: 1px solid rgba({rgb}, 0.2); letter-spacing: 0.04em; text-transform: uppercase;">{score_label}</div>
             </div>
-            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.75rem; font-weight: 700; color: var(--text-secondary);">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 8px;
+                        font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">
                 <i class="ti ti-circle-check" style="font-size: 1rem; color: {confidence_colors[confidence]};"></i>
-                <span style="text-transform: uppercase; letter-spacing: 0.05em;">{confidence} CONFIDENCE</span>
+                {confidence} CONFIDENCE
             </div>
         </div>
         """), unsafe_allow_html=True)
@@ -186,8 +189,28 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
                 fig_display.add_vline(x=tp_data['scene'], line_width=1.5, line_dash="dot",
                                      line_color=color, annotation_text=label, annotation_position="top")
 
+        # Wrap chart in glass-card + chart-container well — matches template section
+        st.markdown(uikit.clean_html("""
+        <div class="glass-card hardware-metric" style="padding: 40px; margin-bottom: 8px; position: relative; overflow: hidden;">
+            <div style="position:absolute;top:0;left:0;right:0;height:2px;
+                        background:linear-gradient(90deg,transparent,rgba(155,81,224,0.5),rgba(165,109,255,0.3),transparent);"></div>
+        """), unsafe_allow_html=True)
+
         st.plotly_chart(fig_display, use_container_width=True,
                        config={'displayModeBar': False}, key=f"pulse_{lens}")
+
+        # Scene label row — matches template "Scene 1 · Attentional Flow Journey · Scene N"
+        scene_count = len(trace)
+        st.markdown(uikit.clean_html(
+            f'<div style="display:flex; justify-content:space-between; margin-top:4px; padding:0 4px; '
+            f'font-size:0.65rem; font-weight:700; color:var(--text-secondary); '
+            f'text-transform:uppercase; letter-spacing:0.12em;">'
+            f'<span>Scene 1</span>'
+            f'<span>Attentional Flow Journey</span>'
+            f'<span>Scene {scene_count}</span>'
+            f'</div>'
+            f'</div>'  # closes glass-card div
+        ), unsafe_allow_html=True)
 
         # AI Pacing Critique
         pulse_cache_key = f'ai_pulse_{lens.lower().replace(" ", "_")}'
@@ -549,9 +572,10 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
     with col_main:
         # Title of Dashboard with Persona Details
         st.markdown(uikit.clean_html(f"""
-        <div style="margin-bottom: 20px;">
-            <h3 style="margin: 0 0 6px 0 !important; padding: 0 !important; font-size: 1.8rem !important; color: white;">{config['icon']} {config['score_title']}</h3>
-            <p style="color: rgba(163, 160, 179, 0.9); font-size: 0.95rem; margin: 0; font-weight: 300; line-height: 1.5;">{config['tagline']}</p>
+        <div style="margin-bottom: 24px;">
+            <h3 style="margin: 0 0 6px 0 !important; padding: 0 !important; font-size: 1.8rem !important;
+                       font-weight: 800 !important; letter-spacing: -0.03em; color: white;">{config['icon']} {config['score_title']}</h3>
+            <p style="color: var(--text-secondary); font-size: 0.95rem; margin: 0; font-weight: 400; line-height: 1.5;">{config['tagline']}</p>
         </div>
         """), unsafe_allow_html=True)
         
@@ -573,10 +597,10 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
             with ac1:
                 if act and act.get('act1_pct', 0) > 0:
                     st.markdown(uikit.clean_html(f"""
-                    <div style="background: rgba(255, 255, 255, 0.03); 
-                                backdrop-filter: blur(24px); border: 1px solid rgba(255, 255, 255, 0.08);
-                                border-radius: var(--radius-lg); padding: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.4);">
-                        <div style="font-weight: 700; margin-bottom: 15px; font-size: 0.85rem; color: white; letter-spacing: 0.05em; text-transform: uppercase;">🎬 Act Structure</div>
+                    <div class="glass-card hardware-metric" style="padding: 20px; position: relative; overflow: hidden;">
+                        <div style="position:absolute;top:0;left:0;right:0;height:2px;
+                                    background:linear-gradient(90deg,transparent,rgba(155,81,224,0.4),transparent);"></div>
+                        <div style="font-weight: 700; margin-bottom: 15px; font-size: 0.75rem; color: var(--text-secondary); letter-spacing: 0.1em; text-transform: uppercase;">🎬 Act Structure</div>
                         <div style="display: flex; gap: 3px; height: 26px; border-radius: 6px; overflow: hidden; margin-bottom: 8px;">
                             <div style="width: {max(8, act['act1_pct'])}%; background: {Theme.SEMANTIC_WARNING};
                                         display: flex; align-items: center; justify-content: center;
@@ -588,8 +612,8 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
                                         display: flex; align-items: center; justify-content: center;
                                         font-size: 0.7rem; font-weight: 700; color: white;">III · {act['act3_pct']}%</div>
                         </div>
-                        <div style="font-size: 0.75rem; color: {Theme.TEXT_MUTED};">
-                            {act['act1']} + {act['act2']} + {act['act3']} scenes · Balance: <b>{act.get('balance', 'N/A')}</b>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary);">
+                            {act['act1']} + {act['act2']} + {act['act3']} scenes · Balance: <b style="color: white;">{act.get('balance', 'N/A')}</b>
                         </div>
                     </div>
                     """), unsafe_allow_html=True)
@@ -600,10 +624,10 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
                     a_pct = 100 - d_pct
                     bench = round(dar.get('genre_benchmark', 0.5) * 100) if isinstance(dar.get('genre_benchmark'), float) else dar.get('genre_benchmark', 50)
                     st.markdown(uikit.clean_html(f"""
-                    <div style="background: rgba(255, 255, 255, 0.03); 
-                                backdrop-filter: blur(24px); border: 1px solid rgba(255, 255, 255, 0.08);
-                                border-radius: var(--radius-lg); padding: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.4);">
-                        <div style="font-weight: 700; margin-bottom: 15px; font-size: 0.85rem; color: white; letter-spacing: 0.05em; text-transform: uppercase;">💬 Dialogue vs Action</div>
+                    <div class="glass-card hardware-metric" style="padding: 20px; position: relative; overflow: hidden;">
+                        <div style="position:absolute;top:0;left:0;right:0;height:2px;
+                                    background:linear-gradient(90deg,transparent,rgba(155,81,224,0.4),transparent);"></div>
+                        <div style="font-weight: 700; margin-bottom: 15px; font-size: 0.75rem; color: var(--text-secondary); letter-spacing: 0.1em; text-transform: uppercase;">💬 Dialogue vs Action</div>
                         <div style="display: flex; gap: 3px; height: 26px; border-radius: 6px; overflow: hidden; margin-bottom: 8px;">
                             <div style="width: {max(8, d_pct)}%; background: {Theme.SEMANTIC_INFO};
                                         display: flex; align-items: center; justify-content: center;
@@ -612,8 +636,8 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
                                         display: flex; align-items: center; justify-content: center;
                                         font-size: 0.7rem; font-weight: 700; color: white;">🎬 {a_pct}%</div>
                         </div>
-                        <div style="font-size: 0.75rem; color: {Theme.TEXT_MUTED};">
-                            {genre} range: {bench - 10}–{bench + 10}% dialogue · Your script: <b>{d_pct}%</b> {'✅' if (bench - 12) <= d_pct <= (bench + 12) else '⚠️'}
+                        <div style="font-size: 0.75rem; color: var(--text-secondary);">
+                            {genre} range: {bench - 10}–{bench + 10}% dialogue · Your script: <b style="color: white;">{d_pct}%</b> {'✅' if (bench - 12) <= d_pct <= (bench + 12) else '⚠️'}
                         </div>
                     </div>
                     """), unsafe_allow_html=True)

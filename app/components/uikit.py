@@ -23,38 +23,51 @@ def get_brand_html(size: str = "3.8rem", align: str = "center", margin_bottom: s
     )
 
 def render_hero_section(title: str, subtitle: str):
-    """Renders the main hero section with the ScriptPulse icon logo, brand text, and trust bar."""
-    import os, base64
-
-    # Resolve icon path relative to any working directory
-    _here = os.path.dirname(os.path.abspath(__file__))
-    icon_path = os.path.join(_here, "..", "assets", "ScriptPulse_Icon.png")
-    icon_path = os.path.normpath(icon_path)
-
-    logo_html = ""
-
-
-    brand_html = get_brand_html(size="3.8rem", align="center", margin_bottom="10px")
-
-    # Trust bar with live indicators
-    trust_bar_html = (
-        '<div class="trust-bar">'
-        '<div class="trust-item"><span class="trust-dot"></span> Engine Online</div>'
-        '<div class="trust-item"><span class="trust-dot"></span> Privacy First</div>'
-        '<div class="trust-item"><span class="trust-dot"></span> AI-Verified</div>'
-        '<div class="trust-item"><span class="trust-dot"></span> Scene-Level Analysis</div>'
+    """Renders the main hero section — exact Tactile Glass template spec."""
+    # Brand logo: Outfit 800, 4rem, letter-spacing -0.04em (matches .brand-logo in template)
+    brand_html = (
+        '<div class="brand-logo" style="font-family: \'Outfit\', sans-serif; font-weight: 800; font-size: 4rem; '
+        'letter-spacing: -0.04em; margin-bottom: 12px;">'
+        '<span style="color: #FFFFFF;">Script</span>'
+        '<span class="brand-pulse">Pulse</span>'
         '</div>'
     )
 
-    html_content = f"""
-    <div style="text-align: center; padding: 2rem 0 1.5rem 0; width: 100%; background: transparent !important; position: relative;">
-        {logo_html}
-        {brand_html}
-        <div style="color: #A3A0B3 !important; font-size: 1.15rem; font-weight: 300;
-                    max-width: 800px; margin: 0 auto; position: relative; z-index: 1;">{subtitle}</div>
-        {trust_bar_html}
-    </div>
-    """
+    # Subtitle: text-lg (1.125rem), text-secondary, font-medium, max-w-2xl centered (matches template p)
+    subtitle_html = (
+        f'<p style="font-size: 1.125rem; color: var(--text-secondary); font-weight: 500; '
+        f'margin-bottom: 2rem; max-width: 42rem; margin-left: auto; margin-right: auto; line-height: 1.6;">'
+        f'{subtitle}</p>'
+    )
+
+    # Trust bar: gap-32px (matches template .trust-bar gap: 32px)
+    trust_bar_html = (
+        '<div class="trust-bar" style="display: inline-flex; gap: 32px; padding: 12px 32px; '
+        'border-radius: 50px; background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border); '
+        'font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); '
+        'text-transform: uppercase; letter-spacing: 0.1em;">'
+        '<div class="trust-item" style="display:flex;align-items:center;gap:8px;">'
+        '<span class="trust-dot" style="width:6px;height:6px;border-radius:50%;background:var(--emerald);'
+        'box-shadow:0 0 8px var(--emerald-glow);"></span> Engine Online</div>'
+        '<div class="trust-item" style="display:flex;align-items:center;gap:8px;">'
+        '<span class="trust-dot" style="width:6px;height:6px;border-radius:50%;background:var(--emerald);'
+        'box-shadow:0 0 8px var(--emerald-glow);"></span> Privacy First</div>'
+        '<div class="trust-item" style="display:flex;align-items:center;gap:8px;">'
+        '<span class="trust-dot" style="width:6px;height:6px;border-radius:50%;background:var(--emerald);'
+        'box-shadow:0 0 8px var(--emerald-glow);"></span> AI-Verified</div>'
+        '<div class="trust-item" style="display:flex;align-items:center;gap:8px;">'
+        '<span class="trust-dot" style="width:6px;height:6px;border-radius:50%;background:var(--emerald);'
+        'box-shadow:0 0 8px var(--emerald-glow);"></span> Scene-Level Analysis</div>'
+        '</div>'
+    )
+
+    html_content = (
+        '<header class="hero-header" style="text-align:center; margin-bottom: 48px;">'
+        + brand_html
+        + subtitle_html
+        + trust_bar_html
+        + '</header>'
+    )
     st.markdown(clean_html(html_content), unsafe_allow_html=True)
 
 def render_sidebar_header(title: str, subtitle: str):
@@ -68,77 +81,100 @@ def render_sidebar_header(title: str, subtitle: str):
     """), unsafe_allow_html=True)
 
 def render_section_header(icon: str, title: str, explainer: str):
-    """Renders a premium section header with an animated glowing divider."""
-    st.markdown(clean_html(f"""
-    <div style="margin: 2.5rem 0 1.5rem 0;">
-        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
-            <span style="font-size: 1.6rem; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));">{icon}</span>
-            <h2 style="margin: 0 !important; font-size: 1.6rem !important; background: linear-gradient(135deg, #FFFFFF 0%, #A3A0B3 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">{title}</h2>
-        </div>
-        <p style="color: rgba(163, 160, 179, 0.9); font-size: 0.95rem; margin-bottom: 15px; font-weight: 300; letter-spacing: 0.02em;">{explainer}</p>
-        <div style="height: 1px; width: 100%; background: linear-gradient(90deg, rgba(85,224,255,0.5) 0%, rgba(106,72,187,0.2) 50%, transparent 100%); margin-bottom: 1rem;"></div>
-    </div>
-    """), unsafe_allow_html=True)
+    """Renders a section header — matches template h2 (text-2xl font-bold) with icon and explainer."""
+    st.markdown(clean_html(
+        f'<div style="margin: 2.5rem 0 1.5rem 0;">'
+        f'<div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">'
+        f'<i class="ti ti-{_section_icon_map(icon)}" style="font-size:1.5rem; color:var(--amethyst);"></i>'
+        f'<h2 style="margin:0 !important; font-size:1.5rem !important; font-weight:700 !important; color:white; letter-spacing:-0.02em;">{title}</h2>'
+        f'</div>'
+        f'<p style="color:rgba(158,158,158,0.9); font-size:0.9rem; margin:0 0 14px 0; font-weight:400; line-height:1.5;">{explainer}</p>'
+        f'<div style="height:1px; width:100%; background:linear-gradient(90deg, rgba(155,81,224,0.5) 0%, rgba(155,81,224,0.15) 60%, transparent 100%);"></div>'
+        f'</div>'
+    ), unsafe_allow_html=True)
+
+def _section_icon_map(emoji_or_name: str) -> str:
+    """Maps emoji to a tabler-icon name, or returns the string as-is if it looks like a ti- name."""
+    mapping = {
+        '📈': 'chart-line', '🧠': 'brain', '👥': 'users', '🏢': 'building',
+        '📝': 'notes', '📦': 'package', '📐': 'ruler', '🎢': 'roller-coaster',
+        '⚡': 'bolt', '🧭': 'compass', '📥': 'download', '🎬': 'movie',
+        '🖨️': 'printer', '🎯': 'target', '💬': 'message',
+    }
+    # If it's already an emoji used as label, return tabler name; else pass through
+    for emoji, name in mapping.items():
+        if emoji in emoji_or_name:
+            return name
+    # Fallback: strip ti- prefix if present, else circle
+    cleaned = emoji_or_name.replace('ti-', '')
+    return cleaned if cleaned.isalpha() or '-' in cleaned else 'circle'
 
 def render_insight_card(text: str):
-    """Renders a color-coded insight card based on text content, styled exactly like the mockup."""
-    # Clean up standard emojis from text to avoid duplicating icons
+    """Renders a color-coded insight card — exact Tactile Glass template .insight-item spec."""
+    # Strip leading emojis/signals from display text
     clean_text = text
-    for emoji in ['🔴', '🚫', '🟠', '⚠️', '🟡', '✂️', '⬜', '💬', '✍️', '🎢', '♻️', '📉', '🧵', '🎙️', '👻', '👥', '🔤', '✨', '🟢', '✅', '💎', '⭐', '🤫', '⛓️', '🎭', '⚡', 'ℹ️']:
+    for emoji in ['🔴', '🚫', '🟠', '⚠️', '🟡', '✂️', '⬜', '💬', '✍️', '🎢', '♻️', '📉',
+                  '🧵', '🎙️', '👻', '👥', '🔤', '✨', '🟢', '✅', '💎', '⭐', '🤫', '⛓️',
+                  '🎭', '⚡', 'ℹ️']:
         clean_text = clean_text.replace(emoji, '')
     clean_text = clean_text.strip()
-    
-    # Determine type
-    icon = 'ti-info-circle'
-    icon_color = 'var(--text-secondary)'
-    bg_color = 'rgba(255, 255, 255, 0.03)'
-    border_left = '4px solid var(--text-secondary)'
-    
-    if any(x in text for x in ['🔴', 'CRITICAL', '🚫']):
-        icon = 'ti-alert-circle'
-        icon_color = '#FF3366'
-        bg_color = 'rgba(255, 51, 102, 0.05)'
-        border_left = '4px solid #FF3366'
-    elif any(x in text for x in ['🟠', 'WARNING', '⚠️', '🟡', '✂️', '⬜', '💬', '✍️', '🎢', '♻️', '📉', '🧵', '🎙️', '👻', '👥', '🔤']):
-        icon = 'ti-alert-triangle'
-        icon_color = 'var(--coral)'
-        bg_color = 'rgba(255, 112, 67, 0.05)'
-        border_left = '4px solid var(--coral)'
-    elif any(x in text for x in ['✨', '🟢', '✅', '💎', '⭐', '🤫', '⛓️', '🎭', '⚡']):
-        icon = 'ti-sparkles'
-        icon_color = 'var(--emerald)'
-        bg_color = 'rgba(0, 200, 83, 0.05)'
-        border_left = '4px solid var(--emerald)'
 
-    # Convert markdown bold/italics to HTML
+    # Determine severity → colours + icon class (template pattern)
+    if any(x in text for x in ['🔴', 'CRITICAL', '🚫']):
+        icon_class     = 'ti-alert-circle'
+        icon_color     = 'var(--accent-rose)'
+        icon_bg        = 'rgba(255, 51, 102, 0.15)'
+        card_bg        = 'rgba(255, 51, 102, 0.05)'
+        border_left    = '4px solid var(--accent-rose)'
+    elif any(x in text for x in ['🟠', 'WARNING', '⚠️', '🟡', '✂️', '⬜', '💬',
+                                   '✍️', '🎢', '♻️', '📉', '🧵', '🎙️', '👻', '👥', '🔤']):
+        icon_class     = 'ti-alert-triangle'
+        icon_color     = 'var(--coral)'
+        icon_bg        = 'rgba(255, 112, 67, 0.15)'
+        card_bg        = 'rgba(255, 112, 67, 0.05)'
+        border_left    = '4px solid var(--coral)'
+    elif any(x in text for x in ['✨', '🟢', '✅', '💎', '⭐', '🤫', '⛓️', '🎭', '⚡']):
+        icon_class     = 'ti-sparkles'
+        icon_color     = 'var(--emerald)'
+        icon_bg        = 'rgba(0, 200, 83, 0.15)'
+        card_bg        = 'rgba(0, 200, 83, 0.05)'
+        border_left    = '4px solid var(--emerald)'
+    else:
+        icon_class     = 'ti-info-circle'
+        icon_color     = 'var(--amethyst)'
+        icon_bg        = 'rgba(155, 81, 224, 0.15)'
+        card_bg        = 'rgba(155, 81, 224, 0.05)'
+        border_left    = '4px solid var(--amethyst)'
+
+    # Convert markdown bold/italics → HTML
     text_html = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', clean_text)
     text_html = re.sub(r'\*(.*?)\*', r'<i>\1</i>', text_html)
-    
-    # Split text into Title and Body if colon is present (e.g. "Action Peak: Strong integration...")
+
+    # Split on first colon → title + body (matches template .text-sm.font-bold + p.text-secondary)
     parts = text_html.split(':', 1)
     if len(parts) == 2:
-        title_html = f"<div style='font-size: 0.9rem; font-weight: 700; color: white; margin-bottom: 4px;'>{parts[0].strip()}</div>"
-        desc_html = f"<div style='font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6;'>{parts[1].strip()}</div>"
+        title_part = f'<div style="font-size:0.875rem; font-weight:700; color:white; margin-bottom:4px;">{parts[0].strip()}</div>'
+        body_part  = f'<p style="font-size:0.875rem; color:var(--text-secondary); line-height:1.6; margin:0;">{parts[1].strip()}</p>'
     else:
-        title_html = ""
-        desc_html = f"<div style='font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6;'>{text_html}</div>"
+        title_part = ''
+        body_part  = f'<p style="font-size:0.875rem; color:var(--text-secondary); line-height:1.6; margin:0;">{text_html}</p>'
 
-    html = f"""
-    <div style="display: flex; gap: 16px; padding: 20px; margin-bottom: 12px;
-                background: {bg_color}; border-left: {border_left}; border-radius: var(--radius-md);
-                border-top: 1px solid rgba(255,255,255,0.03); border-right: 1px solid rgba(255,255,255,0.03);
-                border-bottom: 1px solid rgba(255,255,255,0.03); box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
-        <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(255,255,255,0.03);
-                    display: flex; align-items: center; justify-content: center; font-size: 1.25rem; color: {icon_color};
-                    border: 1px solid rgba(255,255,255,0.05); flex-shrink: 0;">
-            <i class="ti {icon}"></i>
-        </div>
-        <div>
-            {title_html}
-            {desc_html}
-        </div>
-    </div>
-    """
+    html = (
+        f'<div class="insight-item glass-card" style="display:flex; gap:16px; padding:20px; margin-bottom:12px; '
+        f'background:{card_bg}; border-left:{border_left}; border-radius:var(--radius-md); '
+        f'border-top:1px solid rgba(255,255,255,0.04); border-right:1px solid rgba(255,255,255,0.04); '
+        f'border-bottom:1px solid rgba(255,255,255,0.04);">'
+        f'<div class="insight-icon-box" style="width:40px; height:40px; border-radius:10px; background:{icon_bg}; '
+        f'color:{icon_color}; display:flex; align-items:center; justify-content:center; '
+        f'font-size:1.2rem; flex-shrink:0;">'
+        f'<i class="ti {icon_class}"></i>'
+        f'</div>'
+        f'<div style="flex:1; min-width:0;">'
+        f'{title_part}'
+        f'{body_part}'
+        f'</div>'
+        f'</div>'
+    )
     st.markdown(clean_html(html), unsafe_allow_html=True)
 
 
@@ -264,29 +300,34 @@ def render_ai_consultant_box(insight_text: str, persona: str = "Script Consultan
     st.markdown(html, unsafe_allow_html=True)
 
 def render_metric_card(label: str, value: str, help_text: Optional[str] = None):
-    """Renders a premium, non-truncating metric card for the Story Dashboard."""
-    # Tooltip logic
-    tooltip_html = f'<span title="{help_text}" style="cursor:help; margin-left:4px; opacity:0.3;"><i class="ti ti-info-circle"></i></span>' if help_text else ""
-    
-    # Value auto-downsizing for long strings
-    val_size = "1.8rem"
-    if len(value) > 10: val_size = "1.4rem"
-    if len(value) > 15: val_size = "1.1rem"
+    """Renders a metric tile — exact Tactile Glass template .metric-tile spec."""
+    tooltip_html = (
+        f'<span title="{help_text}" style="cursor:help; opacity:0.35; margin-left:4px;">'
+        f'<i class="ti ti-info-circle" style="font-size:0.75rem;"></i></span>'
+    ) if help_text else ''
 
-    # Highlight specific values with Amethyst color
-    val_color = "white"
-    if value in ["Healthy", "Balanced"]:
-        val_color = "var(--accent-primary)"
+    # Auto-scale value font for long strings
+    if len(value) > 12:
+        val_size = '1.3rem'
+    elif len(value) > 8:
+        val_size = '1.55rem'
+    else:
+        val_size = '1.8rem'
 
-    html = clean_html(f"""
-    <div class="custom-metric-card">
-        <div style="font-size: 0.65rem; color: var(--text-secondary); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; line-height: 1.2; display: flex; justify-content: space-between; align-items: center; width: 100%;">
-            <span>{label}</span>
-            {tooltip_html}
-        </div>
-        <div style="font-size: {val_size}; font-weight: 800; color: {val_color}; margin-top: 5px; font-family: 'Outfit', sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-            {value}
-        </div>
-    </div>
-    """)
+    # Amethyst accent for positive semantic values
+    val_color = 'var(--amethyst)' if value in ('Healthy', 'Balanced') else 'white'
+
+    html = clean_html(
+        f'<div class="glass-card metric-tile hardware-metric" '
+        f'style="padding:20px; text-align:left; margin-bottom:12px; position:relative; overflow:hidden;">'
+        f'<div style="font-size:0.65rem; font-weight:700; color:var(--text-secondary); '
+        f'text-transform:uppercase; letter-spacing:0.12em; display:flex; '
+        f'justify-content:space-between; align-items:center; margin-bottom:4px;">'
+        f'<span>{label}</span>{tooltip_html}'
+        f'</div>'
+        f'<div class="metric-value" style="font-family:\'Outfit\',sans-serif; font-size:{val_size}; '
+        f'font-weight:700; color:{val_color}; line-height:1.1; white-space:nowrap; '
+        f'overflow:hidden; text-overflow:ellipsis;">{value}</div>'
+        f'</div>'
+    )
     st.markdown(html, unsafe_allow_html=True)

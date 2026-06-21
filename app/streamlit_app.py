@@ -96,8 +96,8 @@ with col_setup_left:
     with st.container(border=True):
         st.markdown(clean_html("""
         <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px;">
-            <i class="ti ti-file-text" style="font-size: 1.8rem; color: #9B51E0;"></i>
-            <h3 style="margin: 0 !important; font-size: 1.25rem !important; font-weight: 700; color: white;">Your Screenplay</h3>
+            <i class="ti ti-file-text" style="font-size: 1.75rem; color: var(--amethyst);"></i>
+            <h3 style="margin: 0 !important; font-size: 1.25rem !important; font-weight: 700; color: white; letter-spacing: -0.02em;">Your Screenplay</h3>
         </div>
         """), unsafe_allow_html=True)
 
@@ -147,11 +147,11 @@ with col_setup_right:
     with st.container(border=True):
         st.markdown(clean_html("""
         <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px;">
-            <i class="ti ti-settings" style="font-size: 1.8rem; color: #9B51E0;"></i>
-            <h3 style="margin: 0 !important; font-size: 1.25rem !important; font-weight: 700; color: white;">Configure Analysis</h3>
+            <i class="ti ti-settings" style="font-size: 1.75rem; color: var(--amethyst);"></i>
+            <h3 style="margin: 0 !important; font-size: 1.25rem !important; font-weight: 700; color: white; letter-spacing: -0.02em;">Configure Analysis</h3>
         </div>
-        <div class="well" style="padding: 20px; background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: var(--radius-md); margin-bottom: 24px;">
-            <p style="font-size: 0.88rem; color: rgba(219, 234, 254, 0.75); line-height: 1.6; margin: 0;">
+        <div class="well" style="padding: 16px 20px; background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: var(--radius-md); margin-bottom: 24px;">
+            <p style="font-size: 0.875rem; color: rgba(219, 234, 254, 0.75); line-height: 1.6; margin: 0;">
                 ScriptPulse provides audience-experience reference signals. It does not rank, approve, or predict commercial success.
             </p>
         </div>
@@ -355,14 +355,14 @@ if report and current_input:
 # FOOTER
 # ============================================================================
 st.markdown("""
-<div class="sp-footer">
-    <div style="font-size: 0.7rem; color: rgba(244, 246, 251, 0.35); font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; display: flex; justify-content: center; gap: 24px; opacity: 0.6; flex-wrap: wrap;">
-        <span>PROCESSED IN SESSION ONLY</span>
-        <span>·</span>
-        <span>NOT STORED ON SCRIPTPULSE SERVERS</span>
-        <span>·</span>
-        <span>&copy; 2026 SCRIPTPULSE</span>
+<footer class="sp-footer">
+    <div>
+        <span>Processed in session only</span>
+        <span>•</span>
+        <span>Not stored on ScriptPulse servers</span>
+        <span>•</span>
+        <span>&copy; 2026 ScriptPulse</span>
     </div>
-</div>
+</footer>
 """, unsafe_allow_html=True)
 
