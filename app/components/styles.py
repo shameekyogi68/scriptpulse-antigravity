@@ -10,8 +10,9 @@ def apply_custom_styles():
     css = """
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@300;500;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont/tabler-icons.min.css">
     
     <style>
         /* ===== ROOT DESIGN TOKENS ===== */
@@ -421,29 +422,31 @@ def apply_custom_styles():
 
         /* ===== TABS ===== */
         .stTabs [data-baseweb="tab-list"] {
-            gap: 12px !important;
-            background: rgba(32, 29, 48, 0.5) !important;
-            border-radius: var(--radius-lg) !important;
+            gap: 8px !important;
+            background: rgba(0, 0, 0, 0.2) !important;
+            border-radius: 14px !important;
             padding: 6px !important;
             backdrop-filter: blur(10px) !important;
             border: 1px solid rgba(255,255,255,0.03) !important;
         }
 
         .stTabs [data-baseweb="tab"] {
-            height: 48px !important;
+            height: 44px !important;
             background-color: transparent !important;
-            border-radius: var(--radius-md) !important;
+            border-radius: 10px !important;
             color: var(--text-secondary) !important;
             font-weight: 600 !important;
-            font-size: 1.05rem !important;
-            padding: 8px 24px !important;
-            transition: all 0.3s ease !important;
+            font-size: 0.9rem !important;
+            padding: 8px 20px !important;
+            transition: all 0.2s ease !important;
+            border: 1px solid transparent !important;
         }
         
         .stTabs [data-baseweb="tab"][aria-selected="true"] {
-            background-color: var(--accent-primary) !important;
+            background-color: rgba(255, 255, 255, 0.03) !important;
             color: white !important;
-            box-shadow: 0 4px 15px rgba(106, 72, 187, 0.4) !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
         }
         
         .stTabs [data-baseweb="tab-highlight"] {
@@ -516,11 +519,11 @@ def apply_custom_styles():
         /* ===== SELECT BOX / INPUTS ===== */
         [data-baseweb="select"] > div, [data-baseweb="input"] > div, [data-baseweb="textarea"] > div {
             background: rgba(0, 0, 0, 0.2) !important;
-            border: 1px solid var(--border-subtle) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
             border-radius: var(--radius-md) !important;
             transition: all 0.3s ease !important;
             color: var(--text-primary) !important;
-            box-shadow: inset 0 2px 8px rgba(0,0,0,0.5) !important;
+            box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.6) !important;
         }
         
         [data-baseweb="select"], [data-baseweb="select"] div, [data-baseweb="select"] input {
@@ -529,15 +532,28 @@ def apply_custom_styles():
         
         [data-baseweb="select"] > div:hover, [data-baseweb="input"] > div:hover, [data-baseweb="textarea"] > div:hover {
             border-color: var(--accent-primary) !important;
-            box-shadow: 0 0 15px rgba(155, 81, 224, 0.15), inset 0 2px 8px rgba(0,0,0,0.5) !important;
+            box-shadow: 0 0 15px rgba(155, 81, 224, 0.15), inset 0 4px 12px rgba(0, 0, 0, 0.6) !important;
         }
         
         [data-baseweb="popover"] {
             background: var(--bg-secondary) !important;
-            border: 1px solid var(--border-subtle) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
             border-radius: var(--radius-md) !important;
             box-shadow: var(--shadow-card) !important;
         }
+
+        /* ===== STREAMLIT NOTIFICATION / INFO BOX WELL ===== */
+        div[data-testid="stNotification"], .stAlert {
+            background-color: rgba(59, 130, 246, 0.05) !important;
+            border: 1px solid rgba(59, 130, 246, 0.2) !important;
+            border-radius: var(--radius-md) !important;
+            color: rgba(219, 234, 254, 0.75) !important;
+            box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+        }
+        div[data-testid="stNotification"] *, .stAlert * {
+            color: rgba(219, 234, 254, 0.75) !important;
+        }
+
 
         /* ===== DOWNLOAD BUTTONS ===== */
         .stDownloadButton > button {
@@ -681,7 +697,8 @@ def apply_custom_styles():
         }
 
         /* ===== VERTICAL CONTAINER BORDER WRAPPER ===== */
-        div[data-testid="stVerticalBlockBorderWrapper"] {
+        div[data-testid="stVerticalBlockBorderWrapper"],
+        div[class*="stVerticalBlockBorderWrapper"] {
             background: rgba(255, 255, 255, 0.03) !important;
             backdrop-filter: blur(24px) !important;
             -webkit-backdrop-filter: blur(24px) !important;
@@ -694,7 +711,8 @@ def apply_custom_styles():
             overflow: hidden !important;
         }
         
-        div[data-testid="stVerticalBlockBorderWrapper"]::after {
+        div[data-testid="stVerticalBlockBorderWrapper"]::after,
+        div[class*="stVerticalBlockBorderWrapper"]::after {
             content: '' !important;
             position: absolute !important;
             top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
@@ -702,9 +720,15 @@ def apply_custom_styles():
             pointer-events: none !important;
         }
         
-        div[data-testid="stVerticalBlockBorderWrapper"]:hover {
+        div[data-testid="stVerticalBlockBorderWrapper"]:hover,
+        div[class*="stVerticalBlockBorderWrapper"]:hover {
             border-color: rgba(255, 255, 255, 0.15) !important;
             box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5) !important;
+        }
+
+        div[data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlock"],
+        div[class*="stVerticalBlockBorderWrapper"] [class*="stVerticalBlock"] {
+            background: transparent !important;
         }
 
         /* ===== CUSTOM METRIC CARDS ===== */
