@@ -89,6 +89,11 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
             score_color = Theme.SEMANTIC_CRITICAL
         score_label = engagement_signal_label(sp_score)
 
+        # --- Confidence Badge Data ---
+        confidence = report.get('meta', {}).get('confidence_level', 'MEDIUM')
+        reasons = report.get('meta', {}).get('confidence_reasons', [])
+        confidence_colors = {'HIGH': '#00C853', 'MEDIUM': '#FF7043', 'LOW': '#FF3366'}
+
         rgb = ','.join(str(int(score_color.lstrip('#')[i:i+2], 16)) for i in (0, 2, 4))
 
         # We display the Engagement Index and Confidence in a single unified tactile glass card matching the mockup exactly
