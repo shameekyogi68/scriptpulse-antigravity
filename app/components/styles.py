@@ -359,7 +359,9 @@ def apply_custom_styles():
         /* ===== TRUST BAR ===== */
         .trust-bar {
             display: inline-flex !important;
-            gap: 32px !important;
+            flex-wrap: wrap !important;
+            justify-content: center !important;
+            gap: 16px 32px !important;
             padding: 12px 32px !important;
             border-radius: 50px !important;
             background: rgba(255, 255, 255, 0.02) !important;
@@ -370,11 +372,13 @@ def apply_custom_styles():
             text-transform: uppercase !important;
             letter-spacing: 0.1em !important;
             margin: 20px auto 0 auto !important;
+            max-width: 95% !important;
         }
         .trust-bar .trust-item {
             display: flex !important;
             align-items: center !important;
             gap: 8px !important;
+            white-space: nowrap !important;
         }
         .trust-bar .trust-item .trust-dot {
             width: 6px !important;
@@ -569,8 +573,6 @@ def apply_custom_styles():
         [data-testid="stFileUploader"] button[data-testid="stBaseButton-secondary"] {
             order: 3 !important;
             background: linear-gradient(135deg, var(--accent-primary) 0%, #7B3FE4 100%) !important;
-            font-size: 0 !important; /* Hide original button text */
-            color: transparent !important;
             padding: 12px 32px !important;
             border-radius: 40px !important;
             box-shadow: 0 4px 15px rgba(155, 81, 224, 0.4) !important;
@@ -579,6 +581,14 @@ def apply_custom_styles():
             cursor: pointer !important;
             text-transform: uppercase !important;
             margin-top: 12px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+        [data-testid="stFileUploader"] button[data-testid="stBaseButton-secondary"] * {
+            display: none !important;
+            font-size: 0 !important;
+            color: transparent !important;
         }
         [data-testid="stFileUploader"] button[data-testid="stBaseButton-secondary"]::after {
             content: "SELECT FILE" !important;
@@ -586,6 +596,7 @@ def apply_custom_styles():
             font-weight: 700 !important;
             letter-spacing: 0.05em !important;
             color: white !important;
+            display: inline-block !important;
         }
         [data-testid="stFileUploader"] button[data-testid="stBaseButton-secondary"]:hover {
             transform: translateY(-2px) !important;
@@ -637,7 +648,8 @@ def apply_custom_styles():
             box-shadow: none !important;
         }
         
-        [data-baseweb="popover"] {
+        [data-baseweb="popover"],
+        [data-testid="stSelectboxVirtualDropdown"] {
             background: rgba(22, 20, 36, 0.98) !important;
             backdrop-filter: blur(16px) !important;
             border: 1px solid rgba(155, 81, 224, 0.3) !important;
@@ -645,15 +657,19 @@ def apply_custom_styles():
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(155, 81, 224, 0.15) !important;
         }
 
-        [data-baseweb="popover"] * {
+        [data-baseweb="popover"] *,
+        [data-testid="stSelectboxVirtualDropdown"] * {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
         }
 
-        [data-baseweb="popover"] ul {
+        [data-baseweb="popover"] ul,
+        [data-testid="stSelectboxVirtualDropdown"] ul {
             background-color: transparent !important;
             padding: 8px 0 !important;
         }
 
+        [data-baseweb="popover"] [role="option"],
+        [data-testid="stSelectboxVirtualDropdown"] [role="option"],
         [data-baseweb="popover"] li,
         [data-baseweb="menu-item"] {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
@@ -667,8 +683,12 @@ def apply_custom_styles():
             border-left: 3px solid transparent !important;
             transition: all 0.2s ease !important;
             cursor: pointer !important;
+            display: flex !important;
+            align-items: center !important;
         }
 
+        [data-baseweb="popover"] [role="option"]:hover,
+        [data-testid="stSelectboxVirtualDropdown"] [role="option"]:hover,
         [data-baseweb="popover"] li:hover,
         [data-baseweb="menu-item"]:hover {
             background-color: rgba(155, 81, 224, 0.18) !important;
@@ -677,6 +697,8 @@ def apply_custom_styles():
             padding-left: 17px !important;
         }
 
+        [data-baseweb="popover"] [role="option"][aria-selected="true"],
+        [data-testid="stSelectboxVirtualDropdown"] [role="option"][aria-selected="true"],
         [data-baseweb="popover"] li[aria-selected="true"],
         [data-baseweb="menu-item"][aria-selected="true"] {
             background-color: rgba(155, 81, 224, 0.25) !important;
