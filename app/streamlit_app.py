@@ -150,12 +150,17 @@ with col_setup_right:
             <i class="ti ti-settings" style="font-size: 1.8rem; color: #9B51E0;"></i>
             <h3 style="margin: 0 !important; font-size: 1.25rem !important; font-weight: 700; color: white;">Configure Analysis</h3>
         </div>
+        <div class="well" style="padding: 20px; background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: var(--radius-md); margin-bottom: 24px;">
+            <p style="font-size: 0.88rem; color: rgba(219, 234, 254, 0.75); line-height: 1.6; margin: 0;">
+                ScriptPulse provides audience-experience reference signals. It does not rank, approve, or predict commercial success.
+            </p>
+        </div>
         """), unsafe_allow_html=True)
 
-        genre_raw = st.selectbox("Genre", ["Drama", "Action", "Thriller", "Horror", "Comedy", "Sci-Fi", "Romance", "Fantasy", "Avant-Garde"],
+        genre_raw = st.selectbox("Target Genre", ["Drama", "Action", "Thriller", "Horror", "Comedy", "Sci-Fi", "Romance", "Fantasy", "Avant-Garde"],
                               help="The engine adjusts its benchmarks to match the expectations of your genre.")
         genre = genre_raw.lower().replace("-", "-")  # Preserve hyphens, force lowercase
-        lens = st.selectbox("Perspective", ["Story Editor", "Studio Executive", "Script Coordinator"],
+        lens = st.selectbox("Analysis Perspective", ["Story Editor", "Studio Executive", "Script Coordinator"],
                               help="🕵️ Story Editor = Plot & Logic | 🏢 Studio Executive = Market & Budget | ✍️ Script Coordinator = Craft & Flow")
 
 
@@ -351,8 +356,12 @@ if report and current_input:
 # ============================================================================
 st.markdown("""
 <div class="sp-footer">
-    <div style="font-size: 0.7rem; color: rgba(244, 246, 251, 0.35); font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em;">
-        &copy; 2026 ScriptPulse. All rights reserved.
+    <div style="font-size: 0.7rem; color: rgba(244, 246, 251, 0.35); font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; display: flex; justify-content: center; gap: 24px; opacity: 0.6; flex-wrap: wrap;">
+        <span>PROCESSED IN SESSION ONLY</span>
+        <span>·</span>
+        <span>NOT STORED ON SCRIPTPULSE SERVERS</span>
+        <span>·</span>
+        <span>&copy; 2026 SCRIPTPULSE</span>
     </div>
 </div>
 """, unsafe_allow_html=True)

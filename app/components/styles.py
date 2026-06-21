@@ -596,6 +596,30 @@ def apply_custom_styles():
             box-shadow: 0 0 15px rgba(155, 81, 224, 0.15), inset 0 4px 12px rgba(0, 0, 0, 0.6) !important;
         }
         
+        div[data-testid="stSelectbox"] label {
+            font-size: 0.65rem !important;
+            font-weight: 700 !important;
+            color: var(--text-secondary) !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.12em !important;
+            margin-bottom: 8px !important;
+        }
+
+        /* Hide custom uploader dropzone elements when a file is uploaded */
+        div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) [data-testid="stFileUploaderDropzone"]::before,
+        div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) [data-testid="stFileUploaderDropzone"]::after {
+            display: none !important;
+        }
+        div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) [data-testid="stFileUploaderDropzone"] button {
+            display: none !important;
+        }
+        div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) [data-testid="stFileUploaderDropzone"] {
+            padding: 12px !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            background: rgba(0,0,0,0.1) !important;
+            box-shadow: none !important;
+        }
+        
         [data-baseweb="popover"] {
             background: var(--bg-secondary) !important;
             border: 1px solid rgba(255, 255, 255, 0.08) !important;

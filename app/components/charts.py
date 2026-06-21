@@ -13,22 +13,8 @@ def hex_to_rgba(hex_str: str, alpha: float) -> str:
 
 @st.cache_resource
 def get_engagement_chart(df_trace):
-    """Generates the engagement journey chart with color-coded zones."""
+    """Generates the engagement journey chart with clean spline design matching the mockup."""
     fig = go.Figure()
-    
-    # Color-coded background zones so the writer instantly knows what the graph means
-    # Green zone: Calm / Story Building (0% - 35%)
-    fig.add_hrect(y0=0, y1=0.35, fillcolor=hex_to_rgba(Theme.SEMANTIC_GOOD, 0.04), line_width=0,
-                  annotation_text="😌 Calm / Story Building", annotation_position="top left",
-                  annotation_font=dict(size=10, color=hex_to_rgba(Theme.SEMANTIC_GOOD, 0.5)))
-    # Yellow zone: Rising Action (35% - 65%)
-    fig.add_hrect(y0=0.35, y1=0.65, fillcolor=hex_to_rgba(Theme.SEMANTIC_WARNING, 0.04), line_width=0,
-                  annotation_text="⚡ Rising Action", annotation_position="top left",
-                  annotation_font=dict(size=10, color=hex_to_rgba(Theme.SEMANTIC_WARNING, 0.5)))
-    # Red zone: Climax / High Stress (65% - 100%)
-    fig.add_hrect(y0=0.65, y1=1.0, fillcolor=hex_to_rgba(Theme.SEMANTIC_CRITICAL, 0.04), line_width=0,
-                  annotation_text="🔥 High Tension / Climax", annotation_position="top left",
-                  annotation_font=dict(size=10, color=hex_to_rgba(Theme.SEMANTIC_CRITICAL, 0.5)))
     
     # Dynamic Hover text if available
     hover_template = '<b>Scene %{x}</b><br>Tension Level: %{y:.0%}<br>%{customdata[0]}<extra></extra>' if 'Hover_Text' in df_trace.columns else '<b>Scene %{x}</b><br>Tension Level: %{y:.0%}<extra></extra>'
@@ -41,8 +27,8 @@ def get_engagement_chart(df_trace):
         fill='tozeroy',
         mode='lines',
         name='Tension Level',
-        line=dict(color=hex_to_rgba(Theme.ACCENT_PRIMARY, 0.9), width=2.5, shape='spline'),
-        fillcolor=hex_to_rgba(Theme.ACCENT_PRIMARY, 0.12),
+        line=dict(color=Theme.ACCENT_PRIMARY, width=3, shape='spline'),
+        fillcolor=hex_to_rgba(Theme.ACCENT_PRIMARY, 0.08),
         customdata=custom_data[0] if custom_data else None,
         hovertemplate=hover_template
     ))

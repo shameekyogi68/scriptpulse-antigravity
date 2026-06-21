@@ -101,7 +101,7 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
         <div class="glass-card score-card hardware-metric" style="padding: 32px; text-align: center; margin-bottom: 20px;">
             <div class="well" style="padding: 24px; margin-bottom: 24px; background: rgba(0, 0, 0, 0.2); box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.6); border-radius: var(--radius-md); border: 1px solid rgba(255, 255, 255, 0.03);">
                 <span style="font-size: 0.65rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.12em; display: block; margin-bottom: 4px;">Engagement Index</span>
-                <div style="font-family: 'Outfit', sans-serif; font-size: 4.5rem; font-weight: 800; line-height: 1; margin: 16px 0; color: {score_color}; text-shadow: 0 0 15px rgba({rgb},0.4);">{sp_score}</div>
+                <div style="font-family: 'Outfit', sans-serif; font-size: 4.5rem; font-weight: 800; line-height: 1; margin: 16px 0; color: var(--accent-primary); text-shadow: 0 0 15px rgba(155, 81, 224, 0.4);">{sp_score}</div>
                 <div style="background: rgba({rgb}, 0.1); color: {score_color}; font-size: 0.72rem; font-weight: 700; padding: 4px 12px; border-radius: 12px; display: inline-block; border: 1px solid rgba({rgb}, 0.2); letter-spacing: 0.04em; text-transform: uppercase;">{score_label}</div>
             </div>
             <div style="display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.75rem; font-weight: 700; color: var(--text-secondary);">
