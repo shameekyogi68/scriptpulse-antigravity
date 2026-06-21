@@ -69,9 +69,16 @@ def apply_custom_styles():
             background: rgba(155, 81, 224, 0.7); 
         }
 
+        html, body {
+            background: var(--bg-primary) !important;
+        }
+
+        .stApp, select, input, textarea, button, span, p, div, label, li, a {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        }
+
         .stApp {
             background: var(--bg-primary) !important;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
             color: var(--text-primary) !important;
         }
         
@@ -83,7 +90,7 @@ def apply_custom_styles():
         }
 
         /* ===== TYPOGRAPHY ===== */
-        h1, h2, h3, .stTitle {
+        h1, h2, h3, h4, h5, h6, .stTitle, [data-testid="stHeader"] h1, [data-testid="stMetricValue"] {
             font-family: 'Outfit', sans-serif !important;
             font-weight: 700 !important;
             letter-spacing: -0.03em !important;
@@ -97,9 +104,13 @@ def apply_custom_styles():
         p, li, label, .stMarkdown {
             color: var(--text-primary) !important;
             line-height: 1.7 !important;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
         }
         
-        .stCaption, caption { color: var(--text-muted) !important; }
+        .stCaption, caption { 
+            color: var(--text-muted) !important; 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        }
 
         /* ===== HIDE STREAMLIT CHROME ===== */
         #MainMenu {visibility: hidden;}
@@ -596,9 +607,10 @@ def apply_custom_styles():
             cursor: pointer !important;
         }
         
-        [data-baseweb="select"] > div:hover, [data-baseweb="input"] > div:hover, [data-baseweb="textarea"] > div:hover {
+        [data-baseweb="select"] > div:hover, [data-baseweb="input"] > div:hover, [data-baseweb="textarea"] > div:hover,
+        [data-baseweb="select"]:focus-within > div, [data-baseweb="input"]:focus-within > div, [data-baseweb="textarea"]:focus-within > div {
             border-color: var(--accent-primary) !important;
-            box-shadow: 0 0 15px rgba(155, 81, 224, 0.15), inset 0 4px 12px rgba(0, 0, 0, 0.6) !important;
+            box-shadow: 0 0 15px rgba(155, 81, 224, 0.25), inset 0 4px 12px rgba(0, 0, 0, 0.6) !important;
         }
         
         div[data-testid="stSelectbox"] label {
@@ -626,10 +638,52 @@ def apply_custom_styles():
         }
         
         [data-baseweb="popover"] {
-            background: var(--bg-secondary) !important;
-            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            background: rgba(22, 20, 36, 0.98) !important;
+            backdrop-filter: blur(16px) !important;
+            border: 1px solid rgba(155, 81, 224, 0.3) !important;
             border-radius: var(--radius-md) !important;
-            box-shadow: var(--shadow-card) !important;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(155, 81, 224, 0.15) !important;
+        }
+
+        [data-baseweb="popover"] * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        }
+
+        [data-baseweb="popover"] ul {
+            background-color: transparent !important;
+            padding: 8px 0 !important;
+        }
+
+        [data-baseweb="popover"] li,
+        [data-baseweb="menu-item"] {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+            font-size: 0.92rem !important;
+            font-weight: 500 !important;
+            color: rgba(255, 255, 255, 0.85) !important;
+            background-color: transparent !important;
+            padding: 10px 20px !important;
+            margin: 2px 8px !important;
+            border-radius: 8px !important;
+            border-left: 3px solid transparent !important;
+            transition: all 0.2s ease !important;
+            cursor: pointer !important;
+        }
+
+        [data-baseweb="popover"] li:hover,
+        [data-baseweb="menu-item"]:hover {
+            background-color: rgba(155, 81, 224, 0.18) !important;
+            color: #FFFFFF !important;
+            border-left: 3px solid var(--accent-primary) !important;
+            padding-left: 17px !important;
+        }
+
+        [data-baseweb="popover"] li[aria-selected="true"],
+        [data-baseweb="menu-item"][aria-selected="true"] {
+            background-color: rgba(155, 81, 224, 0.25) !important;
+            color: #FFFFFF !important;
+            border-left: 3px solid var(--accent-primary) !important;
+            padding-left: 17px !important;
+            font-weight: 600 !important;
         }
 
         /* ===== STREAMLIT NOTIFICATION / INFO BOX WELL ===== */
