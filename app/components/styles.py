@@ -511,38 +511,19 @@ def apply_custom_styles():
         [data-testid="stFileUploadDropzone"] div[class*="DropzoneInput"] > button {
             display: inline-flex !important;
         }
-        /* Inject custom cloud icon from Tabler Icons using the webfont */
-        [data-testid="stFileUploaderDropzone"] div[data-testid="stFileUploaderDropzoneInput"]::before,
-        [data-testid="stFileUploadDropzone"] div[data-testid="stFileUploadDropzoneInput"]::before,
-        [data-testid="stFileUploaderDropzone"] div[data-testid="stFileUploadDropzoneInput"]::before,
-        [data-testid="stFileUploadDropzone"] div[data-testid="stFileUploaderDropzoneInput"]::before,
-        [data-testid="stFileUploaderDropzone"] div[class*="DropzoneInput"]::before,
-        [data-testid="stFileUploadDropzone"] div[class*="DropzoneInput"]::before {
-            order: 1 !important;
-            content: "\\ea75" !important; /* ti-cloud-upload */
-            font-family: 'tabler-icons' !important;
-            font-weight: normal !important;
-            font-style: normal !important;
-            font-size: 3.5rem !important;
-            color: var(--text-secondary) !important;
-            opacity: 0.4 !important;
-            line-height: 1 !important;
-            margin-bottom: 12px !important;
-            display: inline-block !important;
-        }
-        /* Inject custom instructions prompt */
-        [data-testid="stFileUploaderDropzone"] div[data-testid="stFileUploaderDropzoneInput"]::after,
-        [data-testid="stFileUploadDropzone"] div[data-testid="stFileUploadDropzoneInput"]::after,
-        [data-testid="stFileUploaderDropzone"] div[data-testid="stFileUploadDropzoneInput"]::after,
-        [data-testid="stFileUploadDropzone"] div[data-testid="stFileUploaderDropzoneInput"]::after,
-        [data-testid="stFileUploaderDropzone"] div[class*="DropzoneInput"]::after,
-        [data-testid="stFileUploadDropzone"] div[class*="DropzoneInput"]::after {
-            order: 2 !important;
-            content: "Drop your screenplay here (PDF, TXT, or FDX)" !important;
-            color: var(--text-secondary) !important;
-            font-weight: 500 !important;
-            font-size: 0.95rem !important;
-            margin-bottom: 4px !important;
+        /* Inject custom cloud icon */
+        [data-testid="stFileUploaderDropzone"]::before,
+        [data-testid="stFileUploadDropzone"]::before {
+            content: "" !important;
+            width: 48px !important;
+            height: 48px !important;
+            margin: 0 auto 16px auto !important;
+            display: block !important;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%239B51E0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'/%3E%3Cpolyline points='17 8 12 3 7 8'/%3E%3Cline x1='12' y1='3' x2='12' y2='15'/%3E%3C/svg%3E") !important;
+            background-size: contain !important;
+            background-repeat: no-repeat !important;
+            background-position: center !important;
+            opacity: 0.75 !important;
         }
         [data-testid="stFileUploader"] button[data-testid="stBaseButton-secondary"] {
             order: 3 !important;
@@ -738,14 +719,16 @@ def apply_custom_styles():
 
         /* ===== STREAMLIT NOTIFICATION / INFO BOX WELL ===== */
         div[data-testid="stNotification"], .stAlert {
-            background-color: rgba(59, 130, 246, 0.05) !important;
-            border: 1px solid rgba(59, 130, 246, 0.2) !important;
+            background-color: var(--glass-bg) !important;
+            backdrop-filter: blur(16px) !important;
+            -webkit-backdrop-filter: blur(16px) !important;
+            border: 1px solid var(--glass-border) !important;
             border-radius: var(--radius-md) !important;
-            color: rgba(219, 234, 254, 0.75) !important;
-            box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+            color: var(--text-primary) !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
         }
         div[data-testid="stNotification"] *, .stAlert * {
-            color: rgba(219, 234, 254, 0.75) !important;
+            color: var(--text-primary) !important;
         }
 
         /* ===== UPLOADED FILE — premium theme-aligned row ===== */

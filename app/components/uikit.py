@@ -189,14 +189,11 @@ def render_tooltip_card(content: str):
 def render_empty_state():
     """Renders a premium empty state with compelling CTA and feature highlights."""
     st.markdown(clean_html("""
-    <div style="text-align: center; padding: 2.5rem 2rem; margin: 1rem 0;
-                background: linear-gradient(135deg, rgba(155, 81, 224, 0.04) 0%, rgba(165, 109, 255, 0.02) 50%, rgba(155, 81, 224, 0.04) 100%);
-                border: 1px solid rgba(155, 81, 224, 0.15); border-radius: 20px;
-                position: relative; overflow: hidden; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);">
+    <div class="glass-card hardware-metric" style="text-align: center; padding: 2.5rem 2rem; margin: 1rem 0; position: relative; overflow: hidden;">
         <div style="position: absolute; top: 0; left: 0; right: 0; height: 2px;
                     background: linear-gradient(90deg, transparent, rgba(155, 81, 224, 0.45), transparent);"></div>
         <div style="font-size: 2.5rem; margin-bottom: 12px; filter: drop-shadow(0 0 12px rgba(155, 81, 224, 0.45));">📄</div>
-        <div style="font-size: 1.15rem; font-weight: 600; color: white; margin-bottom: 8px;">
+        <div style="font-size: 1.15rem; font-weight: 600; color: white; margin-bottom: 8px; font-family: 'Outfit', sans-serif;">
             Upload your screenplay to begin
         </div>
         <div style="font-size: 0.88rem; color: rgba(163, 160, 179, 0.9); max-width: 500px; margin: 0 auto 20px auto; line-height: 1.6;">

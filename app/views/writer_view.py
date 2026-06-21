@@ -197,7 +197,7 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
         """), unsafe_allow_html=True)
 
         st.plotly_chart(fig_display, use_container_width=True,
-                       config={'displayModeBar': False}, key=f"pulse_{lens}")
+                       config={'displayModeBar': False}, key=f"pulse_{lens}", theme=None)
 
         # Scene label row — matches template "Scene 1 · Attentional Flow Journey · Scene N"
         scene_count = len(trace)
@@ -649,7 +649,7 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
                     {'Physical': Theme.SEMANTIC_CRITICAL, 'Emotional': Theme.SEMANTIC_WARNING,
                      'Social': Theme.SEMANTIC_GOOD, 'Moral': Theme.ACCENT_PRIMARY,
                      'Existential': Theme.ACCENT_PURPLE}
-                ), use_container_width=True, config={'displayModeBar': False}, key=f"stakes_{lens}")
+                ), use_container_width=True, config={'displayModeBar': False}, key=f"stakes_{lens}", theme=None)
 
     # =====================================================================
     # SECTION: AI COVERAGE MEMO
@@ -740,7 +740,7 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
             )
             df_res = pd.DataFrame(trace)
             st.plotly_chart(charts.get_efficiency_frontier(df_res), use_container_width=True,
-                           config={'displayModeBar': False}, key="res_eff")
+                           config={'displayModeBar': False}, key="res_eff", theme=None)
 
             st.divider()
 

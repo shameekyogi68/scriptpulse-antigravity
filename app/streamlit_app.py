@@ -189,6 +189,8 @@ if script_input:
                     pass
             return None
 
+        logo_b64 = get_logo_base64()
+
         try:
             stage_labels = {
                 "Parsing structure...": "📐 Parsing screenplay structure...",
@@ -200,10 +202,11 @@ if script_input:
             
             def progress_callback(stage_name, pct):
                 label = stage_labels.get(stage_name, f"⚡ {stage_name}")
-                logo_html = ""
+                logo_html = f'<div style="text-align: center; margin-bottom: 12px;"><img src="data:image/png;base64,{logo_b64}" style="width: 48px; height: 48px; filter: drop-shadow(0 0 10px rgba(155, 81, 224, 0.45));" /></div>' if logo_b64 else ""
                 
                 html = f"""
-                <div style="text-align: center; padding: 2.5rem; background: linear-gradient(135deg, rgba(32, 29, 48, 0.85) 0%, rgba(26, 23, 41, 0.95) 100%); border-radius: 20px; border: 1px solid rgba(155, 81, 224, 0.25); box-shadow: 0 15px 40px rgba(0,0,0,0.55); max-width: 550px; margin: 2rem auto;">
+                <div style="text-align: center; padding: 2.5rem; background: rgba(30, 30, 30, 0.95); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); border-radius: var(--radius-lg); border: 1px solid var(--glass-border); box-shadow: 0 15px 40px rgba(0,0,0,0.55); max-width: 550px; margin: 2rem auto; position: relative;">
+                    <div style="position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, rgba(155, 81, 224, 0.5), transparent);"></div>
                     {logo_html}
                     <div style="margin-bottom: 15px;">
                         <span style="font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 1.8rem; color: #FFFFFF;">Script</span>
@@ -212,12 +215,12 @@ if script_input:
                     <div style="display: flex; justify-content: center; margin-bottom: 20px;">
                         <div style="width: 45px; height: 45px; border: 3px solid rgba(255,255,255,0.08); border-top: 3px solid #9B51E0; border-radius: 50%; animation: spin 1s linear infinite; box-shadow: 0 0 15px rgba(155, 81, 224, 0.4);"></div>
                     </div>
-                    <div style="color: #FFFFFF; font-size: 1.05rem; font-weight: 600; margin-bottom: 6px;">{label}</div>
-                    <div style="color: rgba(244, 246, 251, 0.65); font-size: 0.85rem; margin-bottom: 15px;">Stage Progress: {pct}%</div>
+                    <div style="color: #FFFFFF; font-size: 1.05rem; font-weight: 600; margin-bottom: 6px; font-family: 'Inter', sans-serif;">{label}</div>
+                    <div style="color: rgba(244, 246, 251, 0.65); font-size: 0.85rem; margin-bottom: 15px; font-family: 'Inter', sans-serif;">Stage Progress: {pct}%</div>
                     <div style="background-color: rgba(255,255,255,0.08); border-radius: 10px; height: 6px; width: 85%; margin: 0 auto; overflow: hidden; border: 1px solid rgba(255,255,255,0.03);">
                         <div style="background: linear-gradient(90deg, #9B51E0, #A56DFF); height: 100%; width: {pct}%; transition: width 0.3s ease;"></div>
                     </div>
-                    <div style="color: rgba(244, 246, 251, 0.4); font-size: 0.75rem; margin-top: 15px; font-weight: 300;">Analyzing character voice profiles, pacing, and conflict dynamics...</div>
+                    <div style="color: rgba(244, 246, 251, 0.4); font-size: 0.75rem; margin-top: 15px; font-weight: 300; font-family: 'Inter', sans-serif;">Analyzing character voice profiles, pacing, and conflict dynamics...</div>
                 </div>
                 """ + """
                 <style>
@@ -322,6 +325,10 @@ if report and current_input:
         st.error(f"A rendering issue occurred. Your analysis data is safe.")
         with st.expander("Technical Details"):
             st.code(str(e))
+else:
+    st.markdown("---")
+    from app.components.uikit import render_empty_state
+    render_empty_state()
 
 # =============================================================================
 # STEP 4: EXPORT
