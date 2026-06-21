@@ -68,7 +68,7 @@ def apply_custom_styles():
         }
 
         /* Hide Streamlit's default header space */
-        header, [data-testid="stHeader"] {
+        header[data-testid="stHeader"], [data-testid="stHeader"] {
             display: none !important;
             height: 0 !important;
         }
@@ -140,7 +140,7 @@ def apply_custom_styles():
         /* ===== HIDE STREAMLIT CHROME ===== */
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
-        header {visibility: hidden;}
+        header[data-testid="stHeader"] {visibility: hidden;}
 
         /* ===== METRIC CARDS ===== */
         div[data-testid="stMetric"] {
