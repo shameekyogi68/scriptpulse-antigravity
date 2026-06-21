@@ -6,6 +6,11 @@ import plotly.graph_objects as go
 import plotly.express as px
 from app.components.theme import Theme
 
+def hex_to_rgba(hex_str: str, alpha: float) -> str:
+    h = hex_str.lstrip('#')
+    rgb = tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
+    return f"rgba({rgb[0]}, {rgb[1]}, {rgb[2]}, {alpha})"
+
 @st.cache_resource
 def get_engagement_chart(df_trace):
     """Generates the engagement journey chart with color-coded zones."""
@@ -13,17 +18,17 @@ def get_engagement_chart(df_trace):
     
     # Color-coded background zones so the writer instantly knows what the graph means
     # Green zone: Calm / Story Building (0% - 35%)
-    fig.add_hrect(y0=0, y1=0.35, fillcolor="rgba(0, 210, 160, 0.06)", line_width=0,
+    fig.add_hrect(y0=0, y1=0.35, fillcolor=hex_to_rgba(Theme.SEMANTIC_GOOD, 0.04), line_width=0,
                   annotation_text="😌 Calm / Story Building", annotation_position="top left",
-                  annotation_font=dict(size=10, color="rgba(0, 210, 160, 0.5)"))
+                  annotation_font=dict(size=10, color=hex_to_rgba(Theme.SEMANTIC_GOOD, 0.5)))
     # Yellow zone: Rising Action (35% - 65%)
-    fig.add_hrect(y0=0.35, y1=0.65, fillcolor="rgba(245, 121, 70, 0.06)", line_width=0,
+    fig.add_hrect(y0=0.35, y1=0.65, fillcolor=hex_to_rgba(Theme.SEMANTIC_WARNING, 0.04), line_width=0,
                   annotation_text="⚡ Rising Action", annotation_position="top left",
-                  annotation_font=dict(size=10, color="rgba(245, 121, 70, 0.5)"))
+                  annotation_font=dict(size=10, color=hex_to_rgba(Theme.SEMANTIC_WARNING, 0.5)))
     # Red zone: Climax / High Stress (65% - 100%)
-    fig.add_hrect(y0=0.65, y1=1.0, fillcolor="rgba(217, 41, 135, 0.06)", line_width=0,
+    fig.add_hrect(y0=0.65, y1=1.0, fillcolor=hex_to_rgba(Theme.SEMANTIC_CRITICAL, 0.04), line_width=0,
                   annotation_text="🔥 High Tension / Climax", annotation_position="top left",
-                  annotation_font=dict(size=10, color="rgba(217, 41, 135, 0.5)"))
+                  annotation_font=dict(size=10, color=hex_to_rgba(Theme.SEMANTIC_CRITICAL, 0.5)))
     
     # Dynamic Hover text if available
     hover_template = '<b>Scene %{x}</b><br>Tension Level: %{y:.0%}<br>%{customdata[0]}<extra></extra>' if 'Hover_Text' in df_trace.columns else '<b>Scene %{x}</b><br>Tension Level: %{y:.0%}<extra></extra>'
@@ -36,8 +41,8 @@ def get_engagement_chart(df_trace):
         fill='tozeroy',
         mode='lines',
         name='Tension Level',
-        line=dict(color='rgba(106, 72, 187, 0.9)', width=2.5, shape='spline'),
-        fillcolor='rgba(106, 72, 187, 0.12)',
+        line=dict(color=hex_to_rgba(Theme.ACCENT_PRIMARY, 0.9), width=2.5, shape='spline'),
+        fillcolor=hex_to_rgba(Theme.ACCENT_PRIMARY, 0.12),
         customdata=custom_data[0] if custom_data else None,
         hovertemplate=hover_template
     ))
@@ -89,7 +94,7 @@ def get_lab_trace_chart(df):
     fig.add_trace(go.Scatter(
         x=df['T_Index'], y=df['Composite_Attention'], name='Overall Intensity', 
         line=dict(color=Theme.ACCENT_PRIMARY, width=1), fill='tozeroy',
-        fillcolor='rgba(106, 72, 187, 0.15)', mode='lines',
+        fillcolor=hex_to_rgba(Theme.ACCENT_PRIMARY, 0.15), mode='lines',
         hovertemplate='<b>Scene %{x}</b><br>Overall: %{y:.0%}<extra></extra>'
     ))
     

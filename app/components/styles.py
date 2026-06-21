@@ -20,8 +20,8 @@ def apply_custom_styles():
             --bg-secondary: {BG_SECONDARY};
             --bg-card: {BG_CARD};
             --bg-card-hover: {BG_CARD_HOVER};
-            --border-subtle: rgba(106, 72, 187, 0.25);
-            --border-glow: rgba(106, 72, 187, 0.6);
+            --border-subtle: rgba(155, 81, 224, 0.2);
+            --border-glow: rgba(155, 81, 224, 0.5);
             --text-primary: {TEXT_PRIMARY};
             --text-secondary: {TEXT_SECONDARY};
             --text-muted: {TEXT_MUTED};
@@ -32,13 +32,13 @@ def apply_custom_styles():
             --accent-rose: {ACCENT_ROSE};
             --accent-blue: {ACCENT_BLUE};
             --gradient-hero: linear-gradient(135deg, {ACCENT_PRIMARY} 0%, {ACCENT_PURPLE} 50%, {ACCENT_ROSE} 100%);
-            --gradient-subtle: linear-gradient(135deg, rgba(106, 72, 187, 0.08) 0%, rgba(217, 41, 135, 0.05) 100%);
-            --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4);
-            --shadow-glow: 0 0 20px rgba(106, 72, 187, 0.25);
+            --gradient-subtle: linear-gradient(135deg, rgba(155, 81, 224, 0.08) 0%, rgba(255, 112, 67, 0.05) 100%);
+            --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.4);
+            --shadow-glow: 0 0 20px rgba(155, 81, 224, 0.25);
             --radius-sm: 8px;
-            --radius-md: 12px;
-            --radius-lg: 16px;
-            --radius-xl: 20px;
+            --radius-md: 16px;
+            --radius-lg: 24px;
+            --radius-xl: 24px;
         }
 
         /* Hide Streamlit's default header space */
@@ -61,11 +61,11 @@ def apply_custom_styles():
             background: var(--bg-primary); 
         }
         ::-webkit-scrollbar-thumb {
-            background: rgba(106, 72, 187, 0.5); 
+            background: rgba(155, 81, 224, 0.4); 
             border-radius: 4px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: rgba(106, 72, 187, 0.9); 
+            background: rgba(155, 81, 224, 0.7); 
         }
 
         .stApp {
@@ -78,7 +78,7 @@ def apply_custom_styles():
             padding-top: 0rem !important;
             margin-top: -3rem !important; /* Pull content into the header area */
             padding-bottom: 4rem !important;
-            max-width: 1100px !important;
+            max-width: 1360px !important;
         }
 
         /* ===== TYPOGRAPHY ===== */
@@ -107,35 +107,34 @@ def apply_custom_styles():
 
         /* ===== METRIC CARDS ===== */
         div[data-testid="stMetric"] {
-            background: linear-gradient(135deg, rgba(40, 36, 60, 0.8) 0%, rgba(32, 29, 48, 0.95) 100%) !important;
-            backdrop-filter: blur(16px) !important;
+            background: rgba(255, 255, 255, 0.03) !important;
+            backdrop-filter: blur(24px) !important;
+            -webkit-backdrop-filter: blur(24px) !important;
             padding: 24px 28px !important;
             border-radius: var(--radius-lg) !important;
-            border: 1px solid rgba(255, 255, 255, 0.05) !important;
-            border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.05) !important;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+            transition: all 0.3s ease !important;
             position: relative !important;
             overflow: hidden !important;
         }
         
         div[data-testid="stMetric"]::before {
+            display: none !important;
+        }
+        
+        div[data-testid="stMetric"]::after {
             content: '' !important;
             position: absolute !important;
-            top: 0 !important; left: 0 !important; right: 0 !important; height: 3px !important;
-            background: var(--gradient-hero) !important;
-            opacity: 0 !important;
-            transition: opacity 0.4s ease !important;
+            top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 100%) !important;
+            pointer-events: none !important;
         }
         
         div[data-testid="stMetric"]:hover {
-            transform: translateY(-6px) scale(1.02) !important;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7), 0 0 20px rgba(106, 72, 187, 0.4) !important;
+            transform: translateY(-2px) !important;
             border-color: rgba(255, 255, 255, 0.15) !important;
-        }
-        
-        div[data-testid="stMetric"]:hover::before {
-            opacity: 1 !important;
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5) !important;
         }
         
         div[data-testid="stMetric"] label {
@@ -152,7 +151,6 @@ def apply_custom_styles():
             font-family: 'Outfit', sans-serif !important;
             font-weight: 700 !important;
             font-size: 2.6rem !important;
-            text-shadow: 0 2px 15px rgba(255, 255, 255, 0.15) !important;
             letter-spacing: -0.02em !important;
         }
 
@@ -302,7 +300,7 @@ def apply_custom_styles():
             position: absolute;
             top: -40px; left: 50%; transform: translateX(-50%);
             width: 500px; height: 500px;
-            background: radial-gradient(circle, rgba(0, 82, 255, 0.08) 0%, rgba(106, 72, 187, 0.04) 40%, transparent 70%);
+            background: radial-gradient(circle, rgba(155, 81, 224, 0.08) 0%, rgba(155, 81, 224, 0.03) 40%, transparent 70%);
             pointer-events: none;
             animation: heroGlow 6s ease-in-out infinite;
             z-index: 0;
@@ -330,9 +328,11 @@ def apply_custom_styles():
         }
 
         .brand-pulse {
-            color: #0052FF !important;
-            -webkit-text-fill-color: #0052FF !important;
-            text-shadow: 0 0 25px rgba(0, 82, 255, 0.5), 0 0 50px rgba(0, 82, 255, 0.2);
+            background: linear-gradient(135deg, #A56DFF 0%, var(--accent-primary) 100%) !important;
+            -webkit-background-clip: text !important;
+            -webkit-text-fill-color: transparent !important;
+            display: inline-block !important;
+            filter: drop-shadow(0 0 15px rgba(155, 81, 224, 0.45)) !important;
         }
         
         .hero-subtitle {
@@ -346,39 +346,35 @@ def apply_custom_styles():
 
         /* ===== TRUST BAR ===== */
         .trust-bar {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 28px;
-            padding: 14px 24px;
-            margin: 16px auto 0 auto;
-            max-width: 700px;
-            background: linear-gradient(90deg, rgba(0, 82, 255, 0.06) 0%, rgba(106, 72, 187, 0.04) 50%, rgba(0, 82, 255, 0.06) 100%);
-            border: 1px solid rgba(0, 82, 255, 0.12);
-            border-radius: 40px;
-            position: relative;
-            z-index: 1;
+            display: inline-flex !important;
+            gap: 32px !important;
+            padding: 12px 32px !important;
+            border-radius: 50px !important;
+            background: rgba(255, 255, 255, 0.02) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            font-size: 0.75rem !important;
+            font-weight: 600 !important;
+            color: var(--text-secondary) !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.1em !important;
+            margin: 20px auto 0 auto !important;
         }
         .trust-bar .trust-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.72rem;
-            color: rgba(244, 246, 251, 0.65);
-            font-weight: 500;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
         }
         .trust-bar .trust-item .trust-dot {
-            width: 6px; height: 6px;
-            border-radius: 50%;
-            background: #00D2A0;
-            box-shadow: 0 0 6px rgba(0, 210, 160, 0.6);
-            animation: trustPulse 2s ease-in-out infinite;
+            width: 6px !important;
+            height: 6px !important;
+            border-radius: 50% !important;
+            background: var(--accent-teal) !important;
+            box-shadow: 0 0 8px rgba(0, 200, 83, 0.6) !important;
+            animation: trustPulse 2s ease-in-out infinite !important;
         }
         @keyframes trustPulse {
-            0%, 100% { box-shadow: 0 0 6px rgba(0, 210, 160, 0.6); }
-            50% { box-shadow: 0 0 12px rgba(0, 210, 160, 0.9); }
+            0%, 100% { box-shadow: 0 0 6px rgba(0, 200, 83, 0.6); }
+            50% { box-shadow: 0 0 12px rgba(0, 200, 83, 0.9); }
         }
 
         /* ===== FOOTER ===== */
@@ -386,13 +382,13 @@ def apply_custom_styles():
             text-align: center;
             padding: 2.5rem 1rem 1.5rem;
             margin-top: 3rem;
-            border-top: 1px solid rgba(106, 72, 187, 0.15);
-            color: rgba(244, 246, 251, 0.35);
+            border-top: 1px solid rgba(155, 81, 224, 0.15) !important;
+            color: rgba(224, 224, 224, 0.35) !important;
             font-size: 0.78rem;
             letter-spacing: 0.04em;
         }
         .sp-footer a {
-            color: rgba(0, 82, 255, 0.7);
+            color: var(--accent-primary) !important;
             text-decoration: none;
         }
         
@@ -465,58 +461,66 @@ def apply_custom_styles():
 
         /* ===== BUTTONS ===== */
         .stButton > button[kind="primary"] {
-            background: var(--gradient-hero) !important;
-            background-size: 200% auto !important;
-            border: 1px solid rgba(255,255,255,0.1) !important;
-            border-radius: var(--radius-md) !important;
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%) !important;
+            border: none !important;
+            border-radius: 40px !important;
             color: white !important;
             font-weight: 600 !important;
-            font-size: 1.1rem !important;
+            font-size: 1.05rem !important;
             letter-spacing: 0.03em !important;
-            padding: 1rem 2.5rem !important;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
-            box-shadow: 0 4px 20px rgba(106, 72, 187, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.2) !important;
+            padding: 12px 30px !important;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+            box-shadow: 0 4px 15px rgba(155, 81, 224, 0.4) !important;
             text-transform: uppercase !important;
+            cursor: pointer !important;
         }
         
         .stButton > button[kind="primary"]:hover {
-            transform: translateY(-4px) scale(1.02) !important;
-            box-shadow: 0 10px 30px rgba(217, 41, 135, 0.6), inset 0 2px 0 rgba(255, 255, 255, 0.3) !important;
-            background-position: right center !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 8px 25px rgba(155, 81, 224, 0.6) !important;
         }
         
         .stButton > button {
-            border-radius: var(--radius-md) !important;
+            border-radius: 20px !important;
+            border: 1px solid var(--border-subtle) !important;
+            background: var(--bg-card) !important;
+            color: var(--text-primary) !important;
             transition: all 0.3s ease !important;
             font-weight: 500 !important;
+        }
+        
+        .stButton > button:hover {
+            border-color: var(--accent-primary) !important;
+            box-shadow: 0 0 15px rgba(155, 81, 224, 0.25) !important;
+            color: white !important;
         }
 
         /* ===== FILE UPLOADER ===== */
         [data-testid="stFileUploader"] {
-            background: linear-gradient(180deg, rgba(32, 29, 48, 0.4), rgba(32, 29, 48, 0.8)) !important;
-            backdrop-filter: blur(12px) !important;
+            background: rgba(255, 255, 255, 0.01) !important;
+            backdrop-filter: blur(24px) !important;
             border-radius: var(--radius-lg) !important;
-            border: 2px dashed rgba(85, 224, 255, 0.3) !important;
+            border: 2px dashed var(--border-subtle) !important;
             padding: 2.5rem 2rem !important;
             transition: all 0.4s ease !important;
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.2) !important;
+            box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.4) !important;
         }
         
         [data-testid="stFileUploader"]:hover {
-            border-color: #55e0ff !important;
-            background: linear-gradient(180deg, rgba(40, 36, 60, 0.6), rgba(40, 36, 60, 0.9)) !important;
-            box-shadow: 0 0 30px rgba(85, 224, 255, 0.2), inset 0 0 20px rgba(85, 224, 255, 0.1) !important;
+            border-color: var(--accent-primary) !important;
+            background: rgba(255, 255, 255, 0.03) !important;
+            box-shadow: 0 0 30px rgba(155, 81, 224, 0.15), inset 0 4px 12px rgba(0,0,0,0.4) !important;
             transform: translateY(-2px) !important;
         }
 
         /* ===== SELECT BOX / INPUTS ===== */
         [data-baseweb="select"] > div, [data-baseweb="input"] > div, [data-baseweb="textarea"] > div {
-            background: rgba(32, 29, 48, 0.8) !important;
+            background: rgba(0, 0, 0, 0.2) !important;
             border: 1px solid var(--border-subtle) !important;
             border-radius: var(--radius-md) !important;
             transition: all 0.3s ease !important;
             color: var(--text-primary) !important;
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.2) !important;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.5) !important;
         }
         
         [data-baseweb="select"], [data-baseweb="select"] div, [data-baseweb="select"] input {
@@ -524,8 +528,8 @@ def apply_custom_styles():
         }
         
         [data-baseweb="select"] > div:hover, [data-baseweb="input"] > div:hover, [data-baseweb="textarea"] > div:hover {
-            border-color: #55e0ff !important;
-            box-shadow: 0 0 15px rgba(85, 224, 255, 0.15), inset 0 2px 5px rgba(0,0,0,0.2) !important;
+            border-color: var(--accent-primary) !important;
+            box-shadow: 0 0 15px rgba(155, 81, 224, 0.15), inset 0 2px 8px rgba(0,0,0,0.5) !important;
         }
         
         [data-baseweb="popover"] {
@@ -539,17 +543,19 @@ def apply_custom_styles():
         .stDownloadButton > button {
             background: var(--bg-card) !important;
             border: 1px solid var(--border-subtle) !important;
-            border-radius: var(--radius-md) !important;
+            border-radius: 20px !important;
             color: var(--text-primary) !important;
             font-weight: 500 !important;
             padding: 0.6rem 1.5rem !important;
             transition: all 0.3s ease !important;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2) !important;
         }
         
         .stDownloadButton > button:hover {
             border-color: var(--accent-primary) !important;
-            box-shadow: var(--shadow-glow) !important;
+            box-shadow: 0 0 15px rgba(155, 81, 224, 0.25) !important;
             transform: translateY(-1px) !important;
+            color: white !important;
         }
 
         /* ===== TEXT AREA (Script Reader) ===== */
@@ -644,60 +650,107 @@ def apply_custom_styles():
 
         /* ===== BRAND GRADIENT ===== */
         .brand-pulse-gradient {
-            background: linear-gradient(135deg, #55E0FF 0%, #0052FF 100%) !important;
+            background: linear-gradient(135deg, #A56DFF 0%, var(--accent-primary) 100%) !important;
             -webkit-background-clip: text !important;
             -webkit-text-fill-color: transparent !important;
             display: inline-block !important;
-            text-shadow: 0 0 20px rgba(85, 224, 255, 0.35);
+            filter: drop-shadow(0 0 15px rgba(155, 81, 224, 0.45)) !important;
+        }
+
+        /* ===== CUSTOM GLASS CARDS & WELLS ===== */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03) !important;
+            backdrop-filter: blur(24px) !important;
+            -webkit-backdrop-filter: blur(24px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border-radius: var(--radius-lg) !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+            transition: all 0.3s ease !important;
+        }
+        
+        .glass-card:hover {
+            border-color: rgba(255, 255, 255, 0.15) !important;
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5) !important;
+        }
+
+        .well {
+            background: rgba(0, 0, 0, 0.2) !important;
+            box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.6) !important;
+            border-radius: var(--radius-md) !important;
+            border: 1px solid rgba(255, 255, 255, 0.03) !important;
+        }
+
+        /* ===== VERTICAL CONTAINER BORDER WRAPPER ===== */
+        div[data-testid="stVerticalBlockBorderWrapper"] {
+            background: rgba(255, 255, 255, 0.03) !important;
+            backdrop-filter: blur(24px) !important;
+            -webkit-backdrop-filter: blur(24px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border-radius: var(--radius-lg) !important;
+            padding: 30px !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+            transition: all 0.3s ease !important;
+            position: relative !important;
+            overflow: hidden !important;
+        }
+        
+        div[data-testid="stVerticalBlockBorderWrapper"]::after {
+            content: '' !important;
+            position: absolute !important;
+            top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 100%) !important;
+            pointer-events: none !important;
+        }
+        
+        div[data-testid="stVerticalBlockBorderWrapper"]:hover {
+            border-color: rgba(255, 255, 255, 0.15) !important;
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5) !important;
         }
 
         /* ===== CUSTOM METRIC CARDS ===== */
         .custom-metric-card {
-            background: linear-gradient(135deg, rgba(40, 36, 60, 0.65) 0%, rgba(26, 23, 41, 0.9) 100%) !important;
-            border: 1px solid rgba(255,255,255,0.06) !important;
-            border-top: 1px solid rgba(255,255,255,0.12) !important;
-            border-radius: var(--radius-lg) !important;
-            padding: 18px 20px !important;
+            background: rgba(255, 255, 255, 0.03) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border-radius: var(--radius-md) !important;
+            padding: 20px !important;
             text-align: left !important;
-            height: 110px !important;
+            height: 100px !important;
             display: flex !important;
             flex-direction: column !important;
             justify-content: space-between !important;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.3) !important;
-            backdrop-filter: blur(12px) !important;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+            backdrop-filter: blur(24px) !important;
+            -webkit-backdrop-filter: blur(24px) !important;
+            transition: all 0.3s ease !important;
             position: relative !important;
             overflow: visible !important;
+            margin-bottom: 12px !important;
         }
         
         .custom-metric-card:hover {
-            transform: translateY(-6px) scale(1.02) !important;
-            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.5), 0 0 20px rgba(106, 72, 187, 0.35) !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5) !important;
             border-color: rgba(255, 255, 255, 0.15) !important;
         }
 
-        .custom-metric-card::before {
+        .custom-metric-card::after {
             content: '' !important;
             position: absolute !important;
-            top: 0 !important; left: 0 !important; right: 0 !important; height: 3px !important;
-            background: var(--gradient-hero) !important;
-            opacity: 0 !important;
-            border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
-            transition: opacity 0.4s ease !important;
-        }
-
-        .custom-metric-card:hover::before {
-            opacity: 1 !important;
+            top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 100%) !important;
+            pointer-events: none !important;
+            border-radius: var(--radius-md) !important;
         }
 
         /* ===== COMPARABLE FILM CARDS ===== */
         .comp-film-card {
-            background: linear-gradient(135deg, rgba(106, 72, 187, 0.12) 0%, rgba(217, 41, 135, 0.06) 100%) !important;
-            border: 1px solid rgba(106, 72, 187, 0.25) !important;
+            background: rgba(255, 255, 255, 0.03) !important;
+            border: 1px solid var(--border-subtle) !important;
             border-radius: var(--radius-md) !important;
             padding: 12px 18px !important;
             text-align: center !important;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2) !important;
+            backdrop-filter: blur(12px) !important;
             transition: all 0.3s ease !important;
             display: flex !important;
             align-items: center !important;
@@ -706,27 +759,28 @@ def apply_custom_styles():
         }
         
         .comp-film-card:hover {
-            transform: translateY(-3px) !important;
-            box-shadow: 0 10px 25px rgba(106, 72, 187, 0.35) !important;
-            border-color: rgba(106, 72, 187, 0.5) !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 10px 25px rgba(155, 81, 224, 0.35) !important;
+            border-color: var(--accent-primary) !important;
         }
 
         /* ===== MENTOR CARDS ===== */
         .mentor-card {
-            background: linear-gradient(135deg, rgba(85, 224, 255, 0.06) 0%, rgba(106, 72, 187, 0.03) 100%) !important;
-            border: 1px solid rgba(85, 224, 255, 0.15) !important;
-            border-left: 4px solid #55e0ff !important;
+            background: rgba(255, 255, 255, 0.02) !important;
+            border: 1px solid var(--border-subtle) !important;
+            border-left: 4px solid var(--accent-primary) !important;
             border-radius: var(--radius-md) !important;
             padding: 18px 22px !important;
             margin-bottom: 14px !important;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.2) !important;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25) !important;
+            backdrop-filter: blur(12px) !important;
             transition: all 0.3s ease !important;
         }
         
         .mentor-card:hover {
             transform: translateY(-2px) !important;
-            box-shadow: 0 12px 30px rgba(85, 224, 255, 0.25) !important;
-            border-color: rgba(85, 224, 255, 0.4) !important;
+            box-shadow: 0 12px 30px rgba(155, 81, 224, 0.25) !important;
+            border-color: rgba(155, 81, 224, 0.4) !important;
         }
     </style>
     """

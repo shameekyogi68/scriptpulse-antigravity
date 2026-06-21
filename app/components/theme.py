@@ -6,30 +6,30 @@ import plotly.io as pio
 
 class Theme:
     # Core Backgrounds
-    BG_PRIMARY = "#1A1729"
-    BG_SECONDARY = "#221E34"
-    BG_CARD = "rgba(32, 29, 48, 0.65)"
-    BG_CARD_HOVER = "rgba(40, 36, 60, 0.8)"
+    BG_PRIMARY = "#121212"
+    BG_SECONDARY = "#1E1E1E"
+    BG_CARD = "rgba(255, 255, 255, 0.03)"
+    BG_CARD_HOVER = "rgba(255, 255, 255, 0.06)"
     
     # Text
-    TEXT_PRIMARY = "#F4F6FB"
-    TEXT_SECONDARY = "#A3A0B3"
-    TEXT_MUTED = "rgba(244, 246, 251, 0.45)"
+    TEXT_PRIMARY = "#E0E0E0"
+    TEXT_SECONDARY = "#9E9E9E"
+    TEXT_MUTED = "rgba(224, 224, 224, 0.45)"
     
     # Accents & Brand
-    ACCENT_PRIMARY = "#6A48BB"
-    ACCENT_SECONDARY = "#2F48B9"
-    ACCENT_WARM = "#F57946"
-    ACCENT_TEAL = "#00D2A0"
-    ACCENT_ROSE = "#D92987"
-    ACCENT_BLUE = "#8EC5E9"
-    ACCENT_PURPLE = "#A74EC6"
+    ACCENT_PRIMARY = "#9B51E0"
+    ACCENT_SECONDARY = "#7B3FE4"
+    ACCENT_WARM = "#FF7043"
+    ACCENT_TEAL = "#00C853"
+    ACCENT_ROSE = "#FF3366"
+    ACCENT_BLUE = "#55E0FF"
+    ACCENT_PURPLE = "#A56DFF"
     
     # Semantic
-    SEMANTIC_GOOD = "#00D2A0"
-    SEMANTIC_WARNING = "#F57946"
-    SEMANTIC_CRITICAL = "#D92987"
-    SEMANTIC_INFO = "#8EC5E9"
+    SEMANTIC_GOOD = "#00C853"
+    SEMANTIC_WARNING = "#FF7043"
+    SEMANTIC_CRITICAL = "#FF3366"
+    SEMANTIC_INFO = "#55E0FF"
 
 def init_plotly_template():
     """Initializes and registers the custom ScriptPulse Plotly template."""

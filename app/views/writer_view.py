@@ -76,9 +76,9 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
     avg_tension = sum(p.get('attentional_signal', 0) for p in trace) / total_scenes if total_scenes > 0 else 0
 
     # =====================================================================
-    # SECTION: HERO SCORE CARD
+    # SECTION: ASIDE PANEL
     # =====================================================================
-    def render_score_card():
+    def render_aside_panel():
         # --- ScriptPulse Score ---
         sp_score = dashboard.get('scriptpulse_score', 50)
         if sp_score >= 70:
@@ -91,28 +91,26 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
 
         rgb = ','.join(str(int(score_color.lstrip('#')[i:i+2], 16)) for i in (0, 2, 4))
 
+        # We display the Engagement Index in a premium tactile glass card
         st.markdown(uikit.clean_html(f"""
-        <div style="display: flex; align-items: center; gap: 24px; margin-bottom: 24px;">
-            <div style="background: linear-gradient(135deg, rgba({rgb}, 0.15) 0%, rgba({rgb}, 0.05) 100%); 
-                        border: 1px solid rgba({rgb}, 0.3);
-                        box-shadow: 0 4px 20px rgba({rgb}, 0.15), inset 0 2px 5px rgba(255,255,255,0.05);
-                        backdrop-filter: blur(8px);
-                        border-radius: 20px; padding: 18px 32px; text-align: center; min-width: 140px;
-                        position: relative; overflow: hidden;">
-                <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px;
-                            background: linear-gradient(90deg, transparent, {score_color}, transparent);
-                            animation: scoreShimmer 3s ease-in-out infinite;"></div>
-                <div style="font-size: 2.8rem; font-weight: 800; color: {score_color}; text-shadow: 0 0 15px rgba({rgb},0.4);
-                            font-family: 'Outfit', sans-serif; line-height: 1;">{sp_score}</div>
-                <div style="font-size: 0.65rem; color: #FFFFFF; text-transform: uppercase;
-                            letter-spacing: 0.15em; margin-top: 6px; font-weight: 600;">Engagement Index</div>
-                <div style="font-size: 0.8rem; color: {score_color}; font-weight: 700; margin-top: 4px; letter-spacing: 0.03em;">{score_label}</div>
-                <div style="font-size: 0.65rem; color: rgba(255,255,255,0.45); margin-top: 6px; max-width: 140px; line-height: 1.3;">Not a quality rating</div>
-            </div>
-            <div>
-                <h3 style="margin: 0 0 6px 0 !important; padding: 0 !important; font-size: 1.8rem !important;">{config['icon']} {config['score_title']}</h3>
-                <p style="color: rgba(163, 160, 179, 0.9); font-size: 1rem; margin: 0; font-weight: 300; line-height: 1.5;">{config['tagline']}</p>
-            </div>
+        <div style="background: rgba(255, 255, 255, 0.03); 
+                    border: 1px solid rgba(255, 255, 255, 0.08);
+                    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+                    backdrop-filter: blur(24px);
+                    -webkit-backdrop-filter: blur(24px);
+                    border-radius: var(--radius-lg); padding: 24px; text-align: center;
+                    position: relative; overflow: hidden; margin-bottom: 20px;">
+            <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px;
+                        background: linear-gradient(90deg, transparent, {score_color}, transparent);
+                        animation: scoreShimmer 3s ease-in-out infinite;"></div>
+            <div style="font-[0.65rem] font-weight: 700; color: rgba(255,255,255,0.6); text-transform: uppercase;
+                        letter-spacing: 0.12em; margin-bottom: 6px;">Engagement Index</div>
+            <div style="font-size: 3.5rem; font-weight: 800; color: {score_color}; text-shadow: 0 0 15px rgba({rgb},0.4);
+                        font-family: 'Outfit', sans-serif; line-height: 1; margin: 10px 0;">{sp_score}</div>
+            <div style="background: rgba({rgb}, 0.1); color: {score_color}; font-size: 0.72rem; font-weight: 700; 
+                        padding: 4px 12px; border-radius: 12px; display: inline-block; border: 1px solid rgba({rgb}, 0.2); 
+                        letter-spacing: 0.04em; text-transform: uppercase;">{score_label}</div>
+            <div style="font-size: 0.65rem; color: rgba(255,255,255,0.45); margin-top: 10px; line-height: 1.3;">Reference signal only</div>
         </div>
         <style>@keyframes scoreShimmer {{ 0%,100% {{ opacity: 0.3; }} 50% {{ opacity: 1; }} }}</style>
         """), unsafe_allow_html=True)
@@ -120,23 +118,24 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
         # --- Confidence Badge ---
         confidence = report.get('meta', {}).get('confidence_level', 'MEDIUM')
         reasons = report.get('meta', {}).get('confidence_reasons', [])
-        confidence_colors = {'HIGH': '#22C55E', 'MEDIUM': '#F59E0B', 'LOW': '#EF4444'}
+        confidence_colors = {'HIGH': '#00C853', 'MEDIUM': '#FF7043', 'LOW': '#FF3366'}
         conf_icon = {'HIGH': '✅', 'MEDIUM': '⚡', 'LOW': '⚠️'}
+        
         st.markdown(uikit.clean_html(f"""
-        <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba({','.join(str(int(confidence_colors[confidence].lstrip('#')[i:i+2], 16)) for i in (0,2,4))}, 0.1);
-                    border: 1px solid rgba({','.join(str(int(confidence_colors[confidence].lstrip('#')[i:i+2], 16)) for i in (0,2,4))}, 0.3);
-                    border-radius: 20px; padding: 6px 16px; font-size: 0.8rem;">
+        <div style="display: flex; align-items: center; justify-content: center; gap: 8px; 
+                    background: rgba(255, 255, 255, 0.02);
+                    border: 1px solid rgba(255, 255, 255, 0.08);
+                    border-radius: 20px; padding: 6px 16px; font-size: 0.8rem; margin-bottom: 20px; text-align: center;">
             <span>{conf_icon[confidence]}</span>
             <span style="color: {confidence_colors[confidence]}; font-weight: 700;">{confidence} Confidence</span>
         </div>
         """), unsafe_allow_html=True)
         if reasons:
-            st.caption(f"Why: {', '.join(reasons)}")
+            st.caption(f"Reason: {', '.join(reasons)}")
 
-        st.info(f"ℹ️ {SHORT_DISCLAIMER}")
-        st.caption(get_engine_mode_note())
+        st.markdown("<br>", unsafe_allow_html=True)
 
-        # --- Pacing ---
+        # --- Metric Values Calculations ---
         pacing = "Balanced"
         if avg_tension < 0.35: pacing = "Slow Burn 🐢"
         elif avg_tension > 0.65: pacing = "High Octane 🔥"
@@ -146,100 +145,35 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
         readiness = dashboard.get('market_readiness', 50)
         runtime_data = dashboard.get('runtime_estimate', {})
         rt_label = f"{runtime_data.get('estimated_minutes', 0)} min" if isinstance(runtime_data, dict) else "N/A"
-
-        # --- Persona-Specific Metric Cards ---
         loc_profile = dashboard.get('location_profile', {})
         cast_size = len(report.get('voice_fingerprints', {}))
 
+        # --- Render Metric Cards Stacked Vertically ---
         if lens == "Studio Executive":
-            c1, c2, c3, c4, c5, c6 = st.columns(6)
-            with c1: uikit.render_metric_card("Market Signal", f"{readiness}/100", help_text="Structural commercial indicators — reference only, not an approval score.")
-            with c2: uikit.render_metric_card("Budget Tier", dashboard.get('budget_impact', 'Indie'), help_text="Estimated production scale from locations and complexity.")
-            with c3: uikit.render_metric_card("Prod. Complexity", f"{dashboard.get('production_risk_score', 50)}/100", help_text="Production complexity vs narrative payoff — reference signal.")
-            with c4: uikit.render_metric_card("Locations", str(loc_profile.get('unique_locations', '—')), help_text="Total locations.")
-            with c5: uikit.render_metric_card("Cast Size", str(cast_size if cast_size else '—'), help_text="Total speaking roles.")
-            with c6: uikit.render_metric_card("Runtime", rt_label)
+            uikit.render_metric_card("Market Signal", f"{readiness}/100", help_text="Structural commercial indicators — reference only.")
+            uikit.render_metric_card("Budget Tier", dashboard.get('budget_impact', 'Indie'), help_text="Estimated production scale.")
+            uikit.render_metric_card("Prod. Complexity", f"{dashboard.get('production_risk_score', 50)}/100", help_text="Complexity vs narrative payoff.")
+            uikit.render_metric_card("Locations", str(loc_profile.get('unique_locations', '—')), help_text="Total unique locations.")
+            uikit.render_metric_card("Cast Size", str(cast_size if cast_size else '—'), help_text="Total speaking roles.")
+            uikit.render_metric_card("Runtime", rt_label)
 
         elif lens == "Script Coordinator":
-            c1, c2, c3, c4, c5 = st.columns(5)
-            with c1: uikit.render_metric_card("Writing Texture", texture, help_text="Cinematic = lean. Novelistic = dense.")
-            with c2: uikit.render_metric_card("Pacing", pacing)
-            with c3: uikit.render_metric_card("Page-Turner", f"{pti}/100", help_text="Scene-to-scene momentum signal — reference only.")
-            with c4: uikit.render_metric_card("Scenes", str(total_scenes))
-            with c5: uikit.render_metric_card("Runtime", rt_label)
+            uikit.render_metric_card("Writing Texture", texture, help_text="Cinematic = lean. Novelistic = dense.")
+            uikit.render_metric_card("Pacing", pacing)
+            uikit.render_metric_card("Page-Turner", f"{pti}/100", help_text="Scene-to-scene momentum signal.")
+            uikit.render_metric_card("Scenes", str(total_scenes))
+            uikit.render_metric_card("Runtime", rt_label)
 
         else:  # Story Editor
-            c1, c2, c3, c4, c5 = st.columns(5)
-            with c1: uikit.render_metric_card("Page-Turner", f"{pti}/100", help_text="Scene-to-scene momentum signal — reference only.")
-            with c2: uikit.render_metric_card("Pacing", pacing)
-            with c3: uikit.render_metric_card("Midpoint", dashboard.get('midpoint_status', 'N/A'), help_text="Structural health.")
-            with c4: uikit.render_metric_card("Scenes", str(total_scenes))
+            uikit.render_metric_card("Page-Turner", f"{pti}/100", help_text="Scene-to-scene momentum signal.")
+            uikit.render_metric_card("Pacing", pacing)
+            uikit.render_metric_card("Midpoint", dashboard.get('midpoint_status', 'N/A'), help_text="Midpoint structural health.")
+            uikit.render_metric_card("Scenes", str(total_scenes))
             
-            # Runtime with context
             rt_min = runtime_data.get('estimated_minutes', 0)
             rt_context = f"{rt_min} min"
-            rt_help = f"Streaming standard: 90–120m. Feature drama avg: 110–140m. Your script: {rt_min}m."
-            with c5: uikit.render_metric_card("Runtime", rt_context, help_text=rt_help)
-
-        # --- Act Structure & Dialogue Ratio (side by side) ---
-        act = dashboard.get('act_structure', {})
-        dar = dashboard.get('dialogue_action_ratio', {})
-
-        if act or dar:
-            st.markdown("<br>", unsafe_allow_html=True)
-            ac1, ac2 = st.columns(2)
-
-            with ac1:
-                if act and act.get('act1_pct', 0) > 0:
-                    st.markdown(uikit.clean_html(f"""
-                    <div style="background: linear-gradient(135deg, rgba(32, 29, 48, 0.7) 0%, rgba(26, 23, 41, 0.95) 100%); 
-                                backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05);
-                                border-radius: var(--radius-lg); padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
-                        <div style="font-weight: 700; margin-bottom: 15px; font-size: 0.95rem; color: white; letter-spacing: 0.05em; text-transform: uppercase;">🎬 Act Structure</div>
-                        <div style="display: flex; gap: 3px; height: 26px; border-radius: 6px; overflow: hidden; margin-bottom: 8px;">
-                            <div style="width: {max(8, act['act1_pct'])}%; background: {Theme.SEMANTIC_WARNING};
-                                        display: flex; align-items: center; justify-content: center;
-                                        font-size: 0.7rem; font-weight: 700; color: white;">I · {act['act1_pct']}%</div>
-                            <div style="width: {act['act2_pct']}%; background: {Theme.ACCENT_PRIMARY};
-                                        display: flex; align-items: center; justify-content: center;
-                                        font-size: 0.7rem; font-weight: 700; color: white;">II · {act['act2_pct']}%</div>
-                            <div style="width: {max(8, act['act3_pct'])}%; background: {Theme.SEMANTIC_GOOD};
-                                        display: flex; align-items: center; justify-content: center;
-                                        font-size: 0.7rem; font-weight: 700; color: white;">III · {act['act3_pct']}%</div>
-                        </div>
-                        <div style="font-size: 0.75rem; color: {Theme.TEXT_MUTED};">
-                            {act['act1']} + {act['act2']} + {act['act3']} scenes · Balance: <b>{act.get('balance', 'N/A')}</b>
-                        </div>
-                    </div>
-                    """), unsafe_allow_html=True)
-
-            with ac2:
-                if isinstance(dar, dict) and dar.get('global_dialogue_ratio') is not None:
-                    d_pct = round(dar.get('global_dialogue_ratio', 0.5) * 100)
-                    a_pct = 100 - d_pct
-                    bench = round(dar.get('genre_benchmark', 0.5) * 100) if isinstance(dar.get('genre_benchmark'), float) else dar.get('genre_benchmark', 50)
-                    st.markdown(uikit.clean_html(f"""
-                    <div style="background: linear-gradient(135deg, rgba(32, 29, 48, 0.7) 0%, rgba(26, 23, 41, 0.95) 100%); 
-                                backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05);
-                                border-radius: var(--radius-lg); padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
-                        <div style="font-weight: 700; margin-bottom: 15px; font-size: 0.95rem; color: white; letter-spacing: 0.05em; text-transform: uppercase;">💬 Dialogue vs Action</div>
-                        <div style="display: flex; gap: 3px; height: 26px; border-radius: 6px; overflow: hidden; margin-bottom: 8px;">
-                            <div style="width: {max(8, d_pct)}%; background: {Theme.SEMANTIC_INFO};
-                                        display: flex; align-items: center; justify-content: center;
-                                        font-size: 0.7rem; font-weight: 700; color: #1A1729;">💬 {d_pct}%</div>
-                            <div style="width: {max(8, a_pct)}%; background: {Theme.ACCENT_WARM};
-                                        display: flex; align-items: center; justify-content: center;
-                                        font-size: 0.7rem; font-weight: 700; color: white;">🎬 {a_pct}%</div>
-                        </div>
-                        <div style="font-size: 0.75rem; color: {Theme.TEXT_MUTED};">
-                            {genre} range: {bench - 10}–{bench + 10}% dialogue · Your script: <b>{d_pct}%</b> {'✅' if (bench - 12) <= d_pct <= (bench + 12) else '⚠️'}
-                        </div>
-                    </div>
-                    """), unsafe_allow_html=True)
-
-        # --- AI Summary ---
-        if isinstance(summary, dict) and summary.get('summary'):
-            uikit.render_ai_consultant_box(summary['summary'], persona=lens)
+            rt_help = f"Streaming standard: 90–120m. Feature drama avg: 110–140m."
+            uikit.render_metric_card("Runtime", rt_context, help_text=rt_help)
 
     # =====================================================================
     # SECTION: NARRATIVE TENSION MAP
@@ -370,7 +304,7 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
         if not char_arcs:
             return
         st.markdown("<br>", unsafe_allow_html=True)
-        uikit.render_section_header("👥", "Character Arcs", "Agency and transformation tracking.")
+        uikit.render_section_header("👥", "Character Dynamics", "Agency and transformation tracking.")
         sorted_chars = sorted(char_arcs.items(), key=lambda x: x[1].get('scenes_present', 0), reverse=True)
         cols = st.columns(min(len(sorted_chars), 3))
         for i, (name, arc) in enumerate(sorted_chars[:3]):
@@ -553,7 +487,7 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
         for msg in provocations:
             st.markdown(uikit.clean_html(f"""
             <div class="mentor-card">
-                <div style="font-size: 0.75rem; color: #55e0ff; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px;">💡 MENTOR INSIGHT</div>
+                <div style="font-size: 0.75rem; color: var(--accent-blue); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px;">💡 MENTOR INSIGHT</div>
                 <div style="color: rgba(244, 246, 251, 0.9); line-height: 1.7; font-weight: 300;">{msg}</div>
             </div>
             """), unsafe_allow_html=True)
@@ -600,7 +534,7 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
                               file_name="scriptpulse_trace.json", use_container_width=True, key="dl_json")
 
     # =====================================================================
-    # PERSONA-RESPONSIVE FLOW — SHOW ONLY WHAT'S NEEDED
+    # PERSONA-RESPONSIVE FLOW — SHOW ONLY WHAT'S NEEDED IN SIDEBAR GRID
     # =====================================================================
 
     def _safe_render(fn, label):
@@ -612,80 +546,157 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
             with st.expander(f"{label} — Technical Details"):
                 st.code(str(e))
 
-    # Always render score card at the top
-    _safe_render(render_score_card, "Score Card")
-    st.markdown("<br>", unsafe_allow_html=True)
+    # --- Refactored Two-Column Layout ---
+    col_aside, col_main = st.columns([1.1, 2.9], gap="large")
 
-    # Render tabs based on perspective
-    if lens == "Studio Executive":
-        tab_pulse, tab_producer, tab_insights, tab_memo, tab_export = st.tabs([
-            "📈 Pacing & Tension",
-            "🏢 Market & Production",
-            "🧠 Narrative Insights",
-            "📝 AI Executive Memo",
-            "📦 Export & Lab Data"
-        ])
-        with tab_pulse:
-            _safe_render(render_story_pulse, "Tension Map")
-        with tab_producer:
-            _safe_render(render_producer_intel, "Producer Intel")
-        with tab_insights:
-            _safe_render(render_diagnostics, "Diagnostics")
-        with tab_memo:
-            _safe_render(render_coverage_memo, "AI Coverage")
-        with tab_export:
-            _safe_render(render_export, "Export")
+    with col_aside:
+        # Score card and key metrics list stacked vertically on the left
+        _safe_render(render_aside_panel, "Aside Panel")
 
-    elif lens == "Script Coordinator":
-        tab_pulse, tab_prose, tab_insights, tab_memo, tab_export = st.tabs([
-            "📈 Pacing & Tension",
-            "📐 Prose & Pacing Flow",
-            "🧠 Technical Insights",
-            "📝 AI Coordinator Memo",
-            "📦 Export & Lab Data"
-        ])
-        with tab_pulse:
-            _safe_render(render_story_pulse, "Tension Map")
-        with tab_prose:
-            _safe_render(render_scene_economy, "Scene Economy")
-            _safe_render(render_scene_turns, "Scene Turns")
-        with tab_insights:
-            _safe_render(render_diagnostics, "Diagnostics")
-        with tab_memo:
-            _safe_render(render_coverage_memo, "AI Coverage")
-        with tab_export:
-            _safe_render(render_export, "Export")
+    with col_main:
+        # Title of Dashboard with Persona Details
+        st.markdown(uikit.clean_html(f"""
+        <div style="margin-bottom: 20px;">
+            <h3 style="margin: 0 0 6px 0 !important; padding: 0 !important; font-size: 1.8rem !important; color: white;">{config['icon']} {config['score_title']}</h3>
+            <p style="color: rgba(163, 160, 179, 0.9); font-size: 0.95rem; margin: 0; font-weight: 300; line-height: 1.5;">{config['tagline']}</p>
+        </div>
+        """), unsafe_allow_html=True)
+        
+        st.info(f"ℹ️ {SHORT_DISCLAIMER}")
+        st.caption(get_engine_mode_note())
 
-    else:  # Story Editor (Default)
-        tab_pulse, tab_insights, tab_characters, tab_producer, tab_memo, tab_export = st.tabs([
-            "📈 Pacing & Tension",
-            "🧠 Structural Insights",
-            "👥 Character Dynamics",
-            "🏢 Producer Intel",
-            "📝 AI Story Memo",
-            "📦 Export & Lab Data"
-        ])
-        with tab_pulse:
-            _safe_render(render_story_pulse, "Tension Map")
-        with tab_insights:
-            _safe_render(render_diagnostics, "Diagnostics")
-            _safe_render(render_mentor, "Mentor")
-        with tab_characters:
-            _safe_render(render_characters, "Characters")
-            _safe_render(render_scene_turns, "Scene Turns")
-        with tab_producer:
-            _safe_render(render_producer_intel, "Producer Intel")
-        with tab_memo:
-            _safe_render(render_coverage_memo, "AI Coverage")
-        with tab_export:
-            _safe_render(render_export, "Export")
+        # High-level AI Consultant Summary box displayed wide at the top
+        if isinstance(summary, dict) and summary.get('summary'):
+            _safe_render(lambda: uikit.render_ai_consultant_box(summary['summary'], persona=lens), "AI Summary")
+
+        # Act Structure and Dialogue/Action ratio side-by-side above tabs
+        act = dashboard.get('act_structure', {})
+        dar = dashboard.get('dialogue_action_ratio', {})
+
+        if act or dar:
+            st.markdown("<br>", unsafe_allow_html=True)
+            ac1, ac2 = st.columns(2)
+
+            with ac1:
+                if act and act.get('act1_pct', 0) > 0:
+                    st.markdown(uikit.clean_html(f"""
+                    <div style="background: rgba(255, 255, 255, 0.03); 
+                                backdrop-filter: blur(24px); border: 1px solid rgba(255, 255, 255, 0.08);
+                                border-radius: var(--radius-lg); padding: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.4);">
+                        <div style="font-weight: 700; margin-bottom: 15px; font-size: 0.85rem; color: white; letter-spacing: 0.05em; text-transform: uppercase;">🎬 Act Structure</div>
+                        <div style="display: flex; gap: 3px; height: 26px; border-radius: 6px; overflow: hidden; margin-bottom: 8px;">
+                            <div style="width: {max(8, act['act1_pct'])}%; background: {Theme.SEMANTIC_WARNING};
+                                        display: flex; align-items: center; justify-content: center;
+                                        font-size: 0.7rem; font-weight: 700; color: white;">I · {act['act1_pct']}%</div>
+                            <div style="width: {act['act2_pct']}%; background: {Theme.ACCENT_PRIMARY};
+                                        display: flex; align-items: center; justify-content: center;
+                                        font-size: 0.7rem; font-weight: 700; color: white;">II · {act['act2_pct']}%</div>
+                            <div style="width: {max(8, act['act3_pct'])}%; background: {Theme.SEMANTIC_GOOD};
+                                        display: flex; align-items: center; justify-content: center;
+                                        font-size: 0.7rem; font-weight: 700; color: white;">III · {act['act3_pct']}%</div>
+                        </div>
+                        <div style="font-size: 0.75rem; color: {Theme.TEXT_MUTED};">
+                            {act['act1']} + {act['act2']} + {act['act3']} scenes · Balance: <b>{act.get('balance', 'N/A')}</b>
+                        </div>
+                    </div>
+                    """), unsafe_allow_html=True)
+
+            with ac2:
+                if isinstance(dar, dict) and dar.get('global_dialogue_ratio') is not None:
+                    d_pct = round(dar.get('global_dialogue_ratio', 0.5) * 100)
+                    a_pct = 100 - d_pct
+                    bench = round(dar.get('genre_benchmark', 0.5) * 100) if isinstance(dar.get('genre_benchmark'), float) else dar.get('genre_benchmark', 50)
+                    st.markdown(uikit.clean_html(f"""
+                    <div style="background: rgba(255, 255, 255, 0.03); 
+                                backdrop-filter: blur(24px); border: 1px solid rgba(255, 255, 255, 0.08);
+                                border-radius: var(--radius-lg); padding: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.4);">
+                        <div style="font-weight: 700; margin-bottom: 15px; font-size: 0.85rem; color: white; letter-spacing: 0.05em; text-transform: uppercase;">💬 Dialogue vs Action</div>
+                        <div style="display: flex; gap: 3px; height: 26px; border-radius: 6px; overflow: hidden; margin-bottom: 8px;">
+                            <div style="width: {max(8, d_pct)}%; background: {Theme.SEMANTIC_INFO};
+                                        display: flex; align-items: center; justify-content: center;
+                                        font-size: 0.7rem; font-weight: 700; color: #1A1729;">💬 {d_pct}%</div>
+                            <div style="width: {max(8, a_pct)}%; background: {Theme.ACCENT_WARM};
+                                        display: flex; align-items: center; justify-content: center;
+                                        font-size: 0.7rem; font-weight: 700; color: white;">🎬 {a_pct}%</div>
+                        </div>
+                        <div style="font-size: 0.75rem; color: {Theme.TEXT_MUTED};">
+                            {genre} range: {bench - 10}–{bench + 10}% dialogue · Your script: <b>{d_pct}%</b> {'✅' if (bench - 12) <= d_pct <= (bench + 12) else '⚠️'}
+                        </div>
+                    </div>
+                    """), unsafe_allow_html=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # Tab sections inside main content area
+        if lens == "Studio Executive":
+            tab_pulse, tab_producer, tab_insights, tab_memo, tab_export = st.tabs([
+                "📈 Pacing & Tension",
+                "🏢 Market & Production",
+                "🧠 Narrative Insights",
+                "📝 AI Executive Memo",
+                "📦 Export & Lab Data"
+            ])
+            with tab_pulse:
+                _safe_render(render_story_pulse, "Tension Map")
+            with tab_producer:
+                _safe_render(render_producer_intel, "Producer Intel")
+            with tab_insights:
+                _safe_render(render_diagnostics, "Diagnostics")
+            with tab_memo:
+                _safe_render(render_coverage_memo, "AI Coverage")
+            with tab_export:
+                _safe_render(render_export, "Export")
+
+        elif lens == "Script Coordinator":
+            tab_pulse, tab_prose, tab_insights, tab_memo, tab_export = st.tabs([
+                "📈 Pacing & Tension",
+                "📐 Prose & Pacing Flow",
+                "🧠 Technical Insights",
+                "📝 AI Coordinator Memo",
+                "📦 Export & Lab Data"
+            ])
+            with tab_pulse:
+                _safe_render(render_story_pulse, "Tension Map")
+            with tab_prose:
+                _safe_render(render_scene_economy, "Scene Economy")
+                _safe_render(render_scene_turns, "Scene Turns")
+            with tab_insights:
+                _safe_render(render_diagnostics, "Diagnostics")
+            with tab_memo:
+                _safe_render(render_coverage_memo, "AI Coverage")
+            with tab_export:
+                _safe_render(render_export, "Export")
+
+        else:  # Story Editor (Default)
+            tab_pulse, tab_insights, tab_characters, tab_producer, tab_memo, tab_export = st.tabs([
+                "📈 Pacing & Tension",
+                "🧠 Structural Insights",
+                "👥 Character Dynamics",
+                "🏢 Producer Intel",
+                "📝 AI Story Memo",
+                "📦 Export & Lab Data"
+            ])
+            with tab_pulse:
+                _safe_render(render_story_pulse, "Tension Map")
+            with tab_insights:
+                _safe_render(render_diagnostics, "Diagnostics")
+                _safe_render(render_mentor, "Mentor")
+            with tab_characters:
+                _safe_render(render_characters, "Characters")
+                _safe_render(render_scene_turns, "Scene Turns")
+            with tab_producer:
+                _safe_render(render_producer_intel, "Producer Intel")
+            with tab_memo:
+                _safe_render(render_coverage_memo, "AI Coverage")
+            with tab_export:
+                _safe_render(render_export, "Export")
 
     # --- Methodology Footer ---
     st.markdown("<br><br>", unsafe_allow_html=True)
     disclaimer_items = "".join(f"<li>{line}</li>" for line in FULL_DISCLAIMER_LINES)
     st.markdown(uikit.clean_html(f"""
-    <div style="margin-top: 1rem; padding: 20px 24px; background: linear-gradient(90deg, rgba(0, 82, 255, 0.04) 0%, rgba(106, 72, 187, 0.03) 100%);
-                border: 1px solid rgba(0, 82, 255, 0.08); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
+    <div style="margin-top: 1rem; padding: 20px 24px; background: rgba(255, 255, 255, 0.02);
+                border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
         <div style="font-size: 0.72rem; color: rgba(244, 246, 251, 0.5); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; margin-bottom: 10px;">Important — How To Read These Results</div>
         <ul style="font-size: 0.82rem; color: rgba(244, 246, 251, 0.65); line-height: 1.65; margin: 0 0 14px 1.2rem; padding: 0;">
             {disclaimer_items}

@@ -17,8 +17,8 @@ def get_brand_html(size: str = "3.8rem", align: str = "center", margin_bottom: s
         f'<div style="text-align: {align}; margin-bottom: {margin_bottom};">'
         f'<span style="font-family: \'Outfit\', Helvetica, Arial, sans-serif; font-weight: 700; font-size: {size}; '
         f'color: #FFFFFF !important; display: inline;">Script</span>'
-        f'<span class="brand-pulse-gradient" style="font-family: \'Outfit\', Helvetica, Arial, sans-serif; font-weight: 700; font-size: {size}; '
-        f'color: #0052FF !important; display: inline-block;">Pulse</span>'
+        f'<span class="brand-pulse" style="font-family: \'Outfit\', Helvetica, Arial, sans-serif; font-weight: 700; font-size: {size}; '
+        f'display: inline-block;">Pulse</span>'
         f'</div>'
     )
 
@@ -204,20 +204,20 @@ def render_ai_consultant_box(insight_text: str, persona: str = "Script Consultan
     display_title = box_title if box_title else f"{persona} Intelligence"
 
     html = (
-        f'<div style="background: linear-gradient(135deg, rgba(0, 82, 255, 0.06) 0%, rgba(106, 72, 187, 0.04) 50%, rgba(0, 82, 255, 0.06) 100%); '
-        f'border-radius: 16px; padding: 22px 24px; border: 1px solid rgba(0, 82, 255, 0.15); '
+        f'<div style="background: linear-gradient(135deg, rgba(155, 81, 224, 0.06) 0%, rgba(165, 109, 255, 0.03) 50%, rgba(155, 81, 224, 0.06) 100%); '
+        f'border-radius: 16px; padding: 22px 24px; border: 1px solid rgba(155, 81, 224, 0.2); '
         f'backdrop-filter: blur(16px); box-shadow: 0 8px 32px rgba(0,0,0,0.25); margin-top: 20px; '
         f'position: relative; overflow: hidden;">'
         f'<div style="position: absolute; top: 0; left: 0; right: 0; height: 2px; '
-        f'background: linear-gradient(90deg, transparent, rgba(0, 82, 255, 0.6), rgba(106, 72, 187, 0.4), transparent);"></div>'
+        f'background: linear-gradient(90deg, transparent, rgba(155, 81, 224, 0.6), rgba(165, 109, 255, 0.4), transparent);"></div>'
         f'<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">'
         f'<div style="display: flex; align-items: center; gap: 10px;">'
-        f'<span style="font-size: 1.4rem; filter: drop-shadow(0 0 8px rgba(0, 82, 255, 0.5));">🧠</span>'
+        f'<span style="font-size: 1.4rem; filter: drop-shadow(0 0 8px rgba(155, 81, 224, 0.5));">🧠</span>'
         f'<span style="font-weight: 700; color: white; font-size: 0.85rem; letter-spacing: 0.1em; text-transform: uppercase;">'
         f'{display_title}</span>'
         f'</div>'
-        f'<span style="font-size: 0.6rem; color: rgba(0, 210, 160, 0.7); font-weight: 700; letter-spacing: 0.1em; '
-        f'text-transform: uppercase; background: rgba(0, 210, 160, 0.08); border: 1px solid rgba(0, 210, 160, 0.2); '
+        f'<span style="font-size: 0.6rem; color: rgba(0, 200, 83, 0.7); font-weight: 700; letter-spacing: 0.1em; '
+        f'text-transform: uppercase; background: rgba(0, 200, 83, 0.08); border: 1px solid rgba(0, 200, 83, 0.2); '
         f'border-radius: 12px; padding: 3px 10px;">✓ AI-VERIFIED</span>'
         f'</div>'
         f'<div style="color: rgba(244, 246, 251, 0.92); font-size: 0.98rem; line-height: 1.8; font-style: italic; font-weight: 300;">'
