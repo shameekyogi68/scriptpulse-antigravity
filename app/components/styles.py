@@ -471,6 +471,11 @@ def apply_custom_styles():
             border-radius: var(--radius-md) !important;
             padding: 48px 30px !important;
             transition: all 0.3s ease !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 16px !important;
         }
         [data-testid="stFileUploaderDropzone"]:hover,
         [data-testid="stFileUploadDropzone"]:hover {
@@ -481,34 +486,23 @@ def apply_custom_styles():
         [data-testid="stFileUploadDropzone"] svg {
             display: none !important;
         }
-        [data-testid="stFileUploaderDropzone"] div[data-testid="stFileUploaderDropzoneInput"],
-        [data-testid="stFileUploadDropzone"] div[data-testid="stFileUploadDropzoneInput"],
-        [data-testid="stFileUploaderDropzone"] div[data-testid="stFileUploadDropzoneInput"],
-        [data-testid="stFileUploadDropzone"] div[data-testid="stFileUploaderDropzoneInput"],
-        [data-testid="stFileUploaderDropzone"] div[class*="DropzoneInput"],
-        [data-testid="stFileUploadDropzone"] div[class*="DropzoneInput"] {
+        /* Inner container that holds the button */
+        [data-testid="stFileUploaderDropzone"] div:has(> button),
+        [data-testid="stFileUploadDropzone"] div:has(> button) {
             display: flex !important;
             flex-direction: column !important;
             align-items: center !important;
             justify-content: center !important;
-            gap: 0 !important;
+            gap: 16px !important;
         }
-        /* Hide standard help texts and labels inside input wrapper */
-        [data-testid="stFileUploaderDropzone"] div[data-testid="stFileUploaderDropzoneInput"] > *,
-        [data-testid="stFileUploadDropzone"] div[data-testid="stFileUploadDropzoneInput"] > *,
-        [data-testid="stFileUploaderDropzone"] div[data-testid="stFileUploadDropzoneInput"] > *,
-        [data-testid="stFileUploadDropzone"] div[data-testid="stFileUploaderDropzoneInput"] > *,
-        [data-testid="stFileUploaderDropzone"] div[class*="DropzoneInput"] > *,
-        [data-testid="stFileUploadDropzone"] div[class*="DropzoneInput"] > * {
+        /* Hide all standard label texts and limits inside inner wrapper */
+        [data-testid="stFileUploaderDropzone"] div:has(> button) > *:not(button),
+        [data-testid="stFileUploadDropzone"] div:has(> button) > *:not(button) {
             display: none !important;
         }
-        /* Show only the button */
-        [data-testid="stFileUploaderDropzone"] div[data-testid="stFileUploaderDropzoneInput"] > button,
-        [data-testid="stFileUploadDropzone"] div[data-testid="stFileUploadDropzoneInput"] > button,
-        [data-testid="stFileUploaderDropzone"] div[data-testid="stFileUploadDropzoneInput"] > button,
-        [data-testid="stFileUploadDropzone"] div[data-testid="stFileUploaderDropzoneInput"] > button,
-        [data-testid="stFileUploaderDropzone"] div[class*="DropzoneInput"] > button,
-        [data-testid="stFileUploadDropzone"] div[class*="DropzoneInput"] > button {
+        /* Show the button */
+        [data-testid="stFileUploaderDropzone"] div:has(> button) > button,
+        [data-testid="stFileUploadDropzone"] div:has(> button) > button {
             display: inline-flex !important;
         }
         /* Inject custom cloud icon */
@@ -517,7 +511,7 @@ def apply_custom_styles():
             content: "" !important;
             width: 48px !important;
             height: 48px !important;
-            margin: 0 auto 16px auto !important;
+            margin: 0 auto 0 auto !important;
             display: block !important;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%239E9E9E' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 11v9M9 14l3-3 3 3'/%3E%3Cpath d='M17 19.3a5 5 0 0 0-3-9.3c-.3 0-.6 0-.9.1a7 7 0 1 0-11.8 4A5 5 0 0 0 5 19.3'/%3E%3C/svg%3E") !important;
             background-size: contain !important;
@@ -525,19 +519,14 @@ def apply_custom_styles():
             background-position: center !important;
             opacity: 0.4 !important;
         }
-
-        /* Inject dropzone text prompt */
-        [data-testid="stFileUploaderDropzone"] div[data-testid="stFileUploaderDropzoneInput"]::before,
-        [data-testid="stFileUploadDropzone"] div[data-testid="stFileUploadDropzoneInput"]::before,
-        [data-testid="stFileUploaderDropzone"] div[data-testid="stFileUploadDropzoneInput"]::before,
-        [data-testid="stFileUploadDropzone"] div[data-testid="stFileUploaderDropzoneInput"]::before,
-        [data-testid="stFileUploaderDropzone"] div[class*="DropzoneInput"]::before,
-        [data-testid="stFileUploadDropzone"] div[class*="DropzoneInput"]::before {
+        /* Inject dropzone prompt text */
+        [data-testid="stFileUploaderDropzone"] div:has(> button)::before,
+        [data-testid="stFileUploadDropzone"] div:has(> button)::before {
             content: "Drop your screenplay here (PDF, TXT, or FDX)" !important;
             font-size: 0.88rem !important;
             font-weight: 500 !important;
             color: var(--text-secondary) !important;
-            margin-bottom: 24px !important;
+            margin-top: 4px !important;
             display: block !important;
             text-align: center !important;
             font-family: 'Inter', sans-serif !important;
@@ -778,7 +767,7 @@ def apply_custom_styles():
         div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) [data-testid="stFileUploaderDropzone"]::after,
         div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) [data-testid="stFileUploadDropzone"]::before,
         div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) [data-testid="stFileUploadDropzone"]::after { display: none !important; }
-        div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) div[class*="DropzoneInput"]::before { display: none !important; }
+        div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) div:has(> button)::before { display: none !important; }
         div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) [data-testid="stFileUploaderDropzone"] button,
         div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) [data-testid="stFileUploadDropzone"] button { display: none !important; }
         div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) [data-testid="stFileUploaderDropzone"],
