@@ -511,12 +511,6 @@ def apply_custom_styles():
             border: 2px dashed rgba(255, 255, 255, 0.08) !important;
             border-radius: var(--radius-md) !important;
             padding: 48px 30px !important;
-            display: flex !important;
-            flex-direction: column !important;
-            align-items: center !important;
-            justify-content: center !important;
-            text-align: center !important;
-            gap: 0 !important;
             transition: all 0.3s ease !important;
         }
         [data-testid="stFileUploaderDropzone"]:hover {
@@ -530,46 +524,57 @@ def apply_custom_styles():
             display: flex !important;
             flex-direction: column !important;
             align-items: center !important;
+            justify-content: center !important;
+            gap: 0 !important;
         }
-        [data-testid="stFileUploaderDropzone"] div[data-testid="stFileUploaderDropzoneInput"] > span {
+        /* Hide standard help texts and labels inside input wrapper */
+        [data-testid="stFileUploaderDropzone"] div[data-testid="stFileUploaderDropzoneInput"] > * {
             display: none !important;
         }
-        [data-testid="stFileUploaderDropzone"] div[data-testid="stFileUploaderDropzoneInput"] > div {
-            display: none !important;
+        /* Show only the button */
+        [data-testid="stFileUploaderDropzone"] div[data-testid="stFileUploaderDropzoneInput"] > button {
+            display: inline-flex !important;
         }
-        [data-testid="stFileUploaderDropzone"]::before {
+        /* Inject custom cloud icon from Bootstrap Icons */
+        [data-testid="stFileUploaderDropzone"] div[data-testid="stFileUploaderDropzoneInput"]::before {
             order: 1 !important;
-            content: "\ea60" !important; /* ti-cloud-upload */
-            font-family: 'tabler-icons' !important;
-            font-size: 3rem !important;
+            content: "\f2c0" !important; /* bi-cloud-upload */
+            font-family: 'bootstrap-icons' !important;
+            font-size: 3.5rem !important;
             color: var(--text-secondary) !important;
             opacity: 0.4 !important;
-            margin-bottom: 16px !important;
             line-height: 1 !important;
+            margin-bottom: 12px !important;
         }
-        [data-testid="stFileUploaderDropzone"]::after {
+        /* Inject custom instructions prompt */
+        [data-testid="stFileUploaderDropzone"] div[data-testid="stFileUploaderDropzoneInput"]::after {
             order: 2 !important;
             content: "Drop your screenplay here (PDF, TXT, or FDX)" !important;
             color: var(--text-secondary) !important;
-            font-weight: 600 !important;
+            font-weight: 500 !important;
             font-size: 0.95rem !important;
-            margin-bottom: 0px !important;
+            margin-bottom: 4px !important;
         }
         [data-testid="stFileUploader"] button[data-testid="stBaseButton-secondary"] {
             order: 3 !important;
             background: linear-gradient(135deg, var(--accent-primary) 0%, #7B3FE4 100%) !important;
-            color: white !important;
-            font-weight: 600 !important;
-            padding: 12px 28px !important;
+            font-size: 0 !important; /* Hide original button text */
+            color: transparent !important;
+            padding: 12px 32px !important;
             border-radius: 40px !important;
             box-shadow: 0 4px 15px rgba(155, 81, 224, 0.4) !important;
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
             border: none !important;
             cursor: pointer !important;
             text-transform: uppercase !important;
+            margin-top: 12px !important;
+        }
+        [data-testid="stFileUploader"] button[data-testid="stBaseButton-secondary"]::after {
+            content: "SELECT FILE" !important;
             font-size: 0.85rem !important;
+            font-weight: 700 !important;
             letter-spacing: 0.05em !important;
-            margin-top: 16px !important;
+            color: white !important;
         }
         [data-testid="stFileUploader"] button[data-testid="stBaseButton-secondary"]:hover {
             transform: translateY(-2px) !important;
