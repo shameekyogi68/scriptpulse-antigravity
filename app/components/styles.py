@@ -550,19 +550,17 @@ def apply_custom_styles():
         [data-testid="stFileUploaderDropzone"] div[data-testid="stFileUploaderDropzoneInput"] > button {
             display: inline-flex !important;
         }
-        /* Inject custom cloud icon from Tabler Icons using an inline SVG background */
+        /* Inject custom cloud icon from Tabler Icons using the webfont */
         [data-testid="stFileUploaderDropzone"] div[data-testid="stFileUploaderDropzoneInput"]::before {
             order: 1 !important;
-            content: "" !important;
-            display: block !important;
-            width: 70px !important;
-            height: 70px !important;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='70' height='70' viewBox='0 0 24 24' fill='none' stroke='%239E9E9E' stroke-width='1.25' stroke-linecap='round' stroke-linejoin='round' class='icon icon-tabler icons-tabler-outline icon-tabler-cloud-upload'%3E%3Cpath stroke='none' d='M0 0h24v24H0z' fill='none'/%3E%3Cpath d='M7 18a4.6 4.4 0 0 1 0 -9a5 4.5 0 0 1 11 2h1a3.5 3.5 0 0 1 0 7h-1' /%3E%3Cpath d='M9 15l3 -3l3 3' /%3E%3Cpath d='M12 12l0 9' /%3E%3C/svg%3E") !important;
-            background-size: contain !important;
-            background-repeat: no-repeat !important;
-            background-position: center !important;
+            content: "\ea75" !important; /* ti-cloud-upload */
+            font-family: 'tabler-icons' !important;
+            font-size: 3.5rem !important;
+            color: var(--text-secondary) !important;
             opacity: 0.4 !important;
+            line-height: 1 !important;
             margin-bottom: 12px !important;
+            display: inline-block !important;
         }
         /* Inject custom instructions prompt */
         [data-testid="stFileUploaderDropzone"] div[data-testid="stFileUploaderDropzoneInput"]::after {
@@ -673,6 +671,8 @@ def apply_custom_styles():
 
         [data-baseweb="popover"] [role="option"],
         [data-testid="stSelectboxVirtualDropdown"] [role="option"],
+        [data-baseweb="popover"] li,
+        [data-testid="stSelectboxVirtualDropdown"] li,
         [data-baseweb="menu-item"] {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
             font-size: 0.92rem !important;
@@ -680,10 +680,9 @@ def apply_custom_styles():
             color: rgba(255, 255, 255, 0.85) !important;
             background-color: transparent !important;
             
-            /* Absolute positioning overrides for virtualized list items */
-            left: 8px !important;
-            right: 8px !important;
-            width: auto !important;
+            /* Absolute positioning sizing overrides with calc to support margins in virtual list */
+            width: calc(100% - 16px) !important;
+            margin: 2px 8px !important;
             box-sizing: border-box !important;
             
             /* Spacing gaps using transparent borders and padding-box clipping */
@@ -703,6 +702,8 @@ def apply_custom_styles():
 
         [data-baseweb="popover"] [role="option"]:hover,
         [data-testid="stSelectboxVirtualDropdown"] [role="option"]:hover,
+        [data-baseweb="popover"] li:hover,
+        [data-testid="stSelectboxVirtualDropdown"] li:hover,
         [data-baseweb="menu-item"]:hover {
             background-color: rgba(155, 81, 224, 0.15) !important;
             color: #FFFFFF !important;
@@ -711,6 +712,8 @@ def apply_custom_styles():
 
         [data-baseweb="popover"] [role="option"][aria-selected="true"],
         [data-testid="stSelectboxVirtualDropdown"] [role="option"][aria-selected="true"],
+        [data-baseweb="popover"] li[aria-selected="true"],
+        [data-testid="stSelectboxVirtualDropdown"] li[aria-selected="true"],
         [data-baseweb="menu-item"][aria-selected="true"] {
             background-color: rgba(155, 81, 224, 0.22) !important;
             color: #FFFFFF !important;
