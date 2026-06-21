@@ -8,13 +8,6 @@ def render_sidebar(ui_mode, is_cloud, stu):
     from app.components import uikit
     
     with st.sidebar:
-        # Brand Logo
-        import os
-        ICON_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets", "ScriptPulse_Icon.png")
-        _, col_logo, _ = st.columns([0.8, 1.4, 0.8])
-        with col_logo:
-            st.image(ICON_PATH if os.path.exists(ICON_PATH) else "app/assets/ScriptPulse_Icon.png", use_container_width=True)
-        
         # How It Works
         st.markdown("#### How It Works")
         st.markdown("""

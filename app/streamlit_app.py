@@ -223,15 +223,7 @@ if script_input:
             
             def progress_callback(stage_name, pct):
                 label = stage_labels.get(stage_name, f"⚡ {stage_name}")
-                b64_logo = get_logo_base64()
                 logo_html = ""
-                if b64_logo:
-                    logo_html = (
-                        f'<img src="data:image/png;base64,{b64_logo}" '
-                        f'style="width: 65px; height: 65px; object-fit: contain; '
-                        f'margin-bottom: 12px; filter: drop-shadow(0 0 15px rgba(155, 81, 224, 0.55));" '
-                        f'alt="ScriptPulse Logo" /><br/>'
-                    )
                 
                 html = f"""
                 <div style="text-align: center; padding: 2.5rem; background: linear-gradient(135deg, rgba(32, 29, 48, 0.85) 0%, rgba(26, 23, 41, 0.95) 100%); border-radius: 20px; border: 1px solid rgba(155, 81, 224, 0.25); box-shadow: 0 15px 40px rgba(0,0,0,0.55); max-width: 550px; margin: 2rem auto;">

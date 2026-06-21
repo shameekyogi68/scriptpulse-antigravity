@@ -32,15 +32,7 @@ def render_hero_section(title: str, subtitle: str):
     icon_path = os.path.normpath(icon_path)
 
     logo_html = ""
-    if os.path.exists(icon_path):
-        with open(icon_path, "rb") as f:
-            b64 = base64.b64encode(f.read()).decode()
-        logo_html = (
-            f'<img src="data:image/png;base64,{b64}" '
-            f'style="width: 80px; height: 80px; object-fit: contain; '
-            f'margin-bottom: 16px; filter: drop-shadow(0 0 18px rgba(0, 82, 255, 0.55));" '
-            f'alt="ScriptPulse Logo" /><br/>'
-        )
+
 
     brand_html = get_brand_html(size="3.8rem", align="center", margin_bottom="10px")
 
