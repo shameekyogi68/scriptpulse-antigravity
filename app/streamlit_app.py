@@ -108,40 +108,48 @@ with col_setup_left:
             label_visibility="collapsed"
         )
         if uploaded_file and stu.check_upload_size(uploaded_file):
-            with st.spinner("Reading script..."):
-                ext = uploaded_file.name.split('.')[-1].lower()
-                if ext == 'pdf':
-                    try:
-                        from io import BytesIO
-                        import PyPDF2
-                        script_input = "\n".join([
-                            p.extract_text() or "" for p in PyPDF2.PdfReader(BytesIO(uploaded_file.read())).pages
-                        ])
-                        # PDF validation: check that extracted text has at least 300 words
-                        if script_input and len(script_input.strip().split()) < 300:
-                            st.error("This PDF appears to be image-based (scanned). Please convert to a text-based PDF or upload a TXT/FDX file instead.")
+            file_key = f"{uploaded_file.name}_{uploaded_file.size}"
+            if st.session_state.get('parsed_file_key') == file_key:
+                script_input = st.session_state.get('parsed_file_content')
+            else:
+                with st.spinner("Reading script..."):
+                    ext = uploaded_file.name.split('.')[-1].lower()
+                    if ext == 'pdf':
+                        try:
+                            from io import BytesIO
+                            import PyPDF2
+                            script_input = "\n".join([
+                                p.extract_text() or "" for p in PyPDF2.PdfReader(BytesIO(uploaded_file.read())).pages
+                            ])
+                            # PDF validation: check that extracted text has at least 300 words
+                            if script_input and len(script_input.strip().split()) < 300:
+                                st.error("This PDF appears to be image-based (scanned). Please convert to a text-based PDF or upload a TXT/FDX file instead.")
+                                script_input = None
+                        except Exception as e:
+                            st.error("Could not read PDF. The file may be corrupted or protected. Please try a TXT or FDX file.")
                             script_input = None
-                    except Exception as e:
-                        st.error("Could not read PDF. The file may be corrupted or protected. Please try a TXT or FDX file.")
-                        script_input = None
-                elif ext == 'fdx':
-                    try:
-                        from scriptpulse.agents.structure_agent import ImporterAgent
-                        importer = ImporterAgent()
-                        parsed_lines = importer.run(uploaded_file.getvalue().decode("utf-8"))
-                        if isinstance(parsed_lines, list):
-                            script_input = "\n".join([l['text'] for l in parsed_lines])
-                        else:
-                            script_input = parsed_lines
-                    except Exception as e:
-                        st.error("Could not parse FDX formatting. Please ensure it's a valid Final Draft XML file.")
-                        script_input = None
-                else:
-                    try:
-                        script_input = uploaded_file.read().decode('utf-8')
-                    except Exception:
-                        st.error("Could not decode text. Please ensure the file is saved in standard UTF-8 format.")
-                        script_input = None
+                    elif ext == 'fdx':
+                        try:
+                            from scriptpulse.agents.structure_agent import ImporterAgent
+                            importer = ImporterAgent()
+                            parsed_lines = importer.run(uploaded_file.getvalue().decode("utf-8"))
+                            if isinstance(parsed_lines, list):
+                                script_input = "\n".join([l['text'] for l in parsed_lines])
+                            else:
+                                script_input = parsed_lines
+                        except Exception as e:
+                            st.error("Could not parse FDX formatting. Please ensure it's a valid Final Draft XML file.")
+                            script_input = None
+                    else:
+                        try:
+                            script_input = uploaded_file.read().decode('utf-8')
+                        except Exception:
+                            st.error("Could not decode text. Please ensure the file is saved in standard UTF-8 format.")
+                            script_input = None
+                    
+                    if script_input:
+                        st.session_state['parsed_file_key'] = file_key
+                        st.session_state['parsed_file_content'] = script_input
 
 with col_setup_right:
     with st.container(border=True):
@@ -325,30 +333,64 @@ if report and current_input:
 
     c1, c2, c3 = st.columns(3)
     title = st.session_state.get('last_filename', 'Script')
+    run_id = report.get('meta', {}).get('run_id', 'default')
+
+    # Cache Writer Report
+    writer_report_key = f"writer_report_{run_id}_{genre}"
+    if writer_report_key not in st.session_state:
+        try:
+            st.session_state[writer_report_key] = writer_report.generate_writer_report(report, title=title, genre=genre)
+        except Exception:
+            st.session_state[writer_report_key] = None
+
+    # Cache Studio Coverage
+    studio_report_key = f"studio_report_{run_id}_{genre}_{lens}"
+    if studio_report_key not in st.session_state:
+        try:
+            st.session_state[studio_report_key] = studio_report.generate_report(report, script_title=title, lens=lens)
+        except Exception:
+            st.session_state[studio_report_key] = None
+
+    # Cache One-Page Summary
+    print_summary_key = f"print_summary_{run_id}"
+    if print_summary_key not in st.session_state:
+        try:
+            st.session_state[print_summary_key] = print_summary.generate_print_summary(report, script_title=title)
+        except Exception:
+            st.session_state[print_summary_key] = None
 
     with c1:
-        try:
-            st.download_button("📄 Writer Report", 
-                writer_report.generate_writer_report(report, title=title, genre=genre),
+        if st.session_state.get(writer_report_key) is not None:
+            st.download_button(
+                "📄 Writer Report",
+                st.session_state[writer_report_key],
                 f"ScriptPulse_Writer_{genre}.md", "text/markdown",
-                use_container_width=True)
-        except Exception:
+                use_container_width=True,
+                help="Markdown report for the writer — structural notes, priorities, mentor insights."
+            )
+        else:
             st.button("📄 Writer Report", disabled=True, use_container_width=True)
     with c2:
-        try:
-            st.download_button("🎬 Studio Coverage",
-                studio_report.generate_report(report, script_title=title, lens=lens),
+        if st.session_state.get(studio_report_key) is not None:
+            st.download_button(
+                "🎬 Studio Coverage",
+                st.session_state[studio_report_key],
                 f"ScriptPulse_Studio_{genre}.html", "text/html",
-                use_container_width=True)
-        except Exception:
+                use_container_width=True,
+                help="HTML studio coverage memo — market analysis, budget tier, production complexity."
+            )
+        else:
             st.button("🎬 Studio Coverage", disabled=True, use_container_width=True)
     with c3:
-        try:
-            st.download_button("🖨️ One-Page Summary",
-                print_summary.generate_print_summary(report, script_title=title),
+        if st.session_state.get(print_summary_key) is not None:
+            st.download_button(
+                "🖨️ One-Page Summary",
+                st.session_state[print_summary_key],
                 f"ScriptPulse_Summary_{genre}.html", "text/html",
-                use_container_width=True)
-        except Exception:
+                use_container_width=True,
+                help="Printable one-page HTML summary — key scores, priorities, genre benchmarks."
+            )
+        else:
             st.button("🖨️ One-Page Summary", disabled=True, use_container_width=True)
 
 # ============================================================================

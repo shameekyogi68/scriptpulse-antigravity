@@ -310,16 +310,79 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
             return
         st.markdown("<br>", unsafe_allow_html=True)
         uikit.render_section_header("👥", "Character Dynamics", "Agency and transformation tracking.")
+
+        ARC_CONFIG = {
+            'Positive':   ('var(--emerald)',     'ti-trending-up'),
+            'Negative':   ('var(--accent-rose)',  'ti-trending-down'),
+            'Flat':       ('var(--text-secondary)','ti-minus'),
+            'Complex':    ('var(--amethyst)',     'ti-git-branch'),
+            'Redemptive': ('var(--accent-blue)',  'ti-star'),
+            'Tragic':     ('var(--coral)',        'ti-flame'),
+            'Unknown':    ('var(--text-secondary)','ti-help-circle'),
+        }
+
         sorted_chars = sorted(char_arcs.items(), key=lambda x: x[1].get('scenes_present', 0), reverse=True)
         cols = st.columns(min(len(sorted_chars), 3))
+
         for i, (name, arc) in enumerate(sorted_chars[:3]):
             with cols[i]:
-                with st.container(border=True):
-                    arc_type = arc.get('arc_type', 'Unknown')
-                    agency_val = max(0.0, min(1.0, (arc.get('agency_end', 0) + 1) / 2))
-                    st.markdown(f"**{name}**")
-                    st.caption(f"Arc: {arc_type} · Agency: {agency_val:.0%}")
-                    st.progress(agency_val)
+                arc_type   = arc.get('arc_type', 'Unknown')
+                agency_end = arc.get('agency_end', 0)
+                agency_val = max(0.0, min(1.0, (agency_end + 1) / 2))
+                scenes_n   = arc.get('scenes_present', 0)
+                arc_color, arc_icon = ARC_CONFIG.get(arc_type, ARC_CONFIG['Unknown'])
+                bar_pct    = agency_val * 100
+
+                # Agency level label
+                if agency_val >= 0.7:   agency_label, label_color = 'High Agency',  'var(--emerald)'
+                elif agency_val >= 0.4: agency_label, label_color = 'Mid Agency',   'var(--coral)'
+                else:                   agency_label, label_color = 'Low Agency',   'var(--accent-rose)'
+
+                html = (
+                    f'<div class="glass-card hardware-metric" style="padding:24px; position:relative; overflow:hidden; height:100%;">'
+                    f'<div style="position:absolute;top:0;left:0;right:0;height:2px;'
+                    f'background:linear-gradient(90deg,transparent,{arc_color},transparent);"></div>'
+
+                    # Name + arc icon row
+                    f'<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">'
+                    f'<div style="font-family:\'Outfit\',sans-serif; font-size:1.05rem; '
+                    f'font-weight:700; color:white; letter-spacing:-0.01em;">{name}</div>'
+                    f'<div style="width:32px; height:32px; border-radius:8px; '
+                    f'background:rgba(255,255,255,0.05); display:flex; align-items:center; '
+                    f'justify-content:center; color:{arc_color}; font-size:1rem;">'
+                    f'<i class="ti {arc_icon}"></i>'
+                    f'</div>'
+                    f'</div>'
+
+                    # Arc type badge
+                    f'<div style="display:inline-flex; align-items:center; gap:6px; '
+                    f'background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); '
+                    f'border-radius:20px; padding:3px 10px; margin-bottom:16px;">'
+                    f'<span style="font-size:0.65rem; font-weight:700; color:{arc_color}; '
+                    f'text-transform:uppercase; letter-spacing:0.08em;">{arc_type} Arc</span>'
+                    f'</div>'
+
+                    # Agency bar
+                    f'<div style="margin-bottom:8px;">'
+                    f'<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">'
+                    f'<span style="font-size:0.65rem; font-weight:700; color:var(--text-secondary); '
+                    f'text-transform:uppercase; letter-spacing:0.1em;">Character Agency</span>'
+                    f'<span style="font-size:0.7rem; font-weight:700; color:{label_color};">{agency_label}</span>'
+                    f'</div>'
+                    f'<div style="height:6px; width:100%; border-radius:6px; background:rgba(255,255,255,0.07); overflow:hidden;">'
+                    f'<div style="height:100%; width:{bar_pct:.0f}%; border-radius:6px; '
+                    f'background:linear-gradient(90deg,{arc_color},{arc_color}88); '
+                    f'transition:width 0.8s ease;"></div>'
+                    f'</div>'
+                    f'</div>'
+
+                    # Scenes count
+                    f'<div style="font-size:0.72rem; color:var(--text-secondary); margin-top:10px;">'
+                    f'<i class="ti ti-layout-list" style="margin-right:4px; opacity:0.5;"></i>'
+                    f'Appears in <b style="color:white;">{scenes_n}</b> scenes</div>'
+                    f'</div>'
+                )
+                st.markdown(uikit.clean_html(html), unsafe_allow_html=True)
 
     # =====================================================================
     # SECTION: SCENE TURNS
@@ -331,16 +394,113 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
         df_turns = pd.DataFrame(turn_map)
         if 'turn' not in df_turns.columns:
             return
-        turns_only = df_turns[df_turns['turn'] != 'Flat']
+        turns_only = df_turns[df_turns['turn'] != 'Flat'].head(20)
         if turns_only.empty:
             return
         st.markdown("<br>", unsafe_allow_html=True)
         uikit.render_section_header("🎢", "Scene Turns", "Emotional shifts within individual scenes.")
-        display_cols = [c for c in ['scene', 'turn', 'sentiment_delta'] if c in turns_only.columns]
-        st.dataframe(
-            turns_only[display_cols].rename(columns={'turn': 'Shift', 'sentiment_delta': 'Intensity'}),
-            hide_index=True, use_container_width=True
+
+        # --- Premium HTML table instead of plain st.dataframe ---
+        # Config: shift type → icon, color
+        TURN_CONFIG = {
+            'Positive': ('ti-trending-up',   'var(--emerald)',       'rgba(0,200,83,0.12)'),
+            'Negative': ('ti-trending-down',  'var(--accent-rose)',   'rgba(255,51,102,0.12)'),
+            'Reversal': ('ti-arrows-exchange','var(--amethyst)',      'rgba(155,81,224,0.12)'),
+            'Peak':     ('ti-flame',          'var(--coral)',         'rgba(255,112,67,0.12)'),
+            'Drop':     ('ti-arrow-down',     'var(--accent-rose)',   'rgba(255,51,102,0.10)'),
+            'Rise':     ('ti-arrow-up',       'var(--emerald)',       'rgba(0,200,83,0.10)'),
+        }
+
+        rows_html = ''
+        for _, row in turns_only.iterrows():
+            scene_num   = int(row.get('scene', 0))
+            shift_type  = str(row.get('turn', 'Unknown'))
+            delta       = row.get('sentiment_delta', 0.0)
+            if pd.isna(delta): delta = 0.0
+
+            # Pick config or fallback
+            icon_cls, color, bg = TURN_CONFIG.get(
+                shift_type,
+                ('ti-git-branch', 'var(--text-secondary)', 'rgba(255,255,255,0.03)')
+            )
+
+            # Intensity bar width (0–100%)
+            bar_width = min(100, abs(float(delta)) * 100)
+            bar_color  = 'var(--emerald)' if float(delta) >= 0 else 'var(--accent-rose)'
+            delta_sign = '+' if float(delta) >= 0 else ''
+            delta_str  = f"{delta_sign}{float(delta):.2f}"
+
+            rows_html += (
+                f'<div style="display:flex; align-items:center; gap:16px; padding:14px 18px; '
+                f'margin-bottom:6px; border-radius:12px; background:{bg}; '
+                f'border-left:3px solid {color}; '
+                f'border-top:1px solid rgba(255,255,255,0.04); '
+                f'border-right:1px solid rgba(255,255,255,0.03); '
+                f'border-bottom:1px solid rgba(255,255,255,0.03); '
+                f'transition:transform 0.15s ease;" '
+                f'onmouseover="this.style.transform=\'translateX(4px)\'" '
+                f'onmouseout="this.style.transform=\'translateX(0)\'">'
+
+                # Scene number badge
+                f'<div style="min-width:40px; height:40px; border-radius:10px; '
+                f'background:rgba(255,255,255,0.05); display:flex; align-items:center; '
+                f'justify-content:center; flex-direction:column;">'
+                f'<span style="font-size:0.6rem; color:var(--text-secondary); '
+                f'font-weight:700; text-transform:uppercase; letter-spacing:0.08em;">SCN</span>'
+                f'<span style="font-size:0.95rem; font-weight:800; color:white; '
+                f'font-family:\'Outfit\',sans-serif; line-height:1;">{scene_num}</span>'
+                f'</div>'
+
+                # Icon box
+                f'<div style="width:36px; height:36px; border-radius:8px; '
+                f'background:{bg}; display:flex; align-items:center; '
+                f'justify-content:center; color:{color}; font-size:1.1rem; flex-shrink:0;">'
+                f'<i class="ti {icon_cls}"></i>'
+                f'</div>'
+
+                # Shift label + intensity bar
+                f'<div style="flex:1; min-width:0;">'
+                f'<div style="font-size:0.875rem; font-weight:700; color:white; '
+                f'margin-bottom:6px;">{shift_type}</div>'
+                f'<div style="height:4px; width:100%; border-radius:4px; '
+                f'background:rgba(255,255,255,0.06); overflow:hidden;">'
+                f'<div style="height:100%; width:{bar_width:.0f}%; border-radius:4px; '
+                f'background:{bar_color}; transition:width 0.6s ease;"></div>'
+                f'</div>'
+                f'</div>'
+
+                # Delta value
+                f'<div style="min-width:52px; text-align:right;">'
+                f'<span style="font-family:\'JetBrains Mono\',monospace; font-size:0.8rem; '
+                f'font-weight:700; color:{color};">{delta_str}</span>'
+                f'</div>'
+                f'</div>'
+            )
+
+        # Header row
+        header_html = (
+            '<div style="display:flex; align-items:center; gap:16px; padding:8px 18px; '
+            'margin-bottom:10px;">'
+            '<div style="min-width:40px; font-size:0.6rem; font-weight:700; '
+            'color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.1em;">Scene</div>'
+            '<div style="width:36px;"></div>'
+            '<div style="flex:1; font-size:0.6rem; font-weight:700; '
+            'color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.1em;">Emotional Shift</div>'
+            '<div style="min-width:52px; text-align:right; font-size:0.6rem; font-weight:700; '
+            'color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.1em;">Δ Intensity</div>'
+            '</div>'
         )
+
+        full_html = (
+            '<div class="glass-card hardware-metric" style="padding:24px; position:relative; overflow:hidden;">'
+            '<div style="position:absolute;top:0;left:0;right:0;height:2px;'
+            'background:linear-gradient(90deg,transparent,rgba(155,81,224,0.5),transparent);"></div>'
+            + header_html + rows_html
+            + f'<div style="font-size:0.7rem; color:var(--text-secondary); margin-top:12px; '
+            f'text-align:right; opacity:0.6;">Showing {len(turns_only)} non-flat scenes</div>'
+            + '</div>'
+        )
+        st.markdown(uikit.clean_html(full_html), unsafe_allow_html=True)
 
     # =====================================================================
     # SECTION: SCENE ECONOMY (Script Coordinator only)
@@ -360,26 +520,58 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
         ec1, ec2 = st.columns(2)
         with ec1:
             if bloated:
-                st.markdown(f"##### ✂️ Trim Candidates ({len(bloated)})")
+                st.markdown(
+                    f'<div style="font-size:0.7rem; font-weight:700; color:var(--accent-rose); '
+                    f'text-transform:uppercase; letter-spacing:0.1em; margin-bottom:12px; '
+                    f'display:flex; align-items:center; gap:8px;">'
+                    f'<i class="ti ti-scissors" style="font-size:0.9rem;"></i>'
+                    f'Trim Candidates ({len(bloated)})</div>',
+                    unsafe_allow_html=True
+                )
                 for s in bloated[:5]:
-                    st.markdown(f"<div style='background: linear-gradient(90deg, rgba(239,68,68,0.1) 0%, rgba(239,68,68,0.02) 100%); "
-                                f"padding: 12px 16px; border-radius: 10px; margin-bottom: 8px; "
-                                f"border-left: 3px solid {Theme.SEMANTIC_CRITICAL}; font-size: 0.9rem; "
-                                f"box-shadow: 0 4px 12px rgba(0,0,0,0.1); backdrop-filter: blur(8px);'>"
-                                f"<span style='color: white;'>Scene {s['scene']}</span> · <b style='color: {Theme.SEMANTIC_CRITICAL};'>{s.get('label', '⚠️')}</b> · Economy: <span style='font-weight: 700;'>{s.get('score', 0)}%</span>"
-                                f"</div>", unsafe_allow_html=True)
+                    st.markdown(
+                        f'<div style="display:flex; align-items:center; gap:12px; padding:12px 16px; '
+                        f'border-radius:10px; margin-bottom:6px; background:rgba(239,68,68,0.06); '
+                        f'border-left:3px solid {Theme.SEMANTIC_CRITICAL}; '
+                        f'border-top:1px solid rgba(255,255,255,0.03); border-bottom:1px solid rgba(255,255,255,0.03);">'
+                        f'<span style="font-size:0.65rem; font-weight:800; color:var(--accent-rose); '
+                        f'text-transform:uppercase; letter-spacing:0.08em; min-width:28px;">S{s["scene"]}</span>'
+                        f'<span style="font-weight:600; color:white; font-size:0.85rem; flex:1;">{s.get("label","⚠️")}</span>'
+                        f'<span style="font-size:0.72rem; font-weight:700; color:var(--accent-rose);">{s.get("score",0)}%</span>'
+                        f'</div>',
+                        unsafe_allow_html=True
+                    )
             else:
-                st.success("✅ No bloated scenes detected.")
+                st.markdown(
+                    '<div style="padding:16px; border-radius:10px; background:rgba(0,200,83,0.06); '
+                    'border:1px solid rgba(0,200,83,0.2); text-align:center; '
+                    'font-size:0.85rem; color:var(--emerald); font-weight:600;">'
+                    '<i class="ti ti-circle-check" style="margin-right:6px;"></i>No bloated scenes</div>',
+                    unsafe_allow_html=True
+                )
         with ec2:
             if tight:
-                st.markdown(f"##### 💎 Lean Scenes ({len(tight)})")
+                st.markdown(
+                    f'<div style="font-size:0.7rem; font-weight:700; color:var(--emerald); '
+                    f'text-transform:uppercase; letter-spacing:0.1em; margin-bottom:12px; '
+                    f'display:flex; align-items:center; gap:8px;">'
+                    f'<i class="ti ti-diamond" style="font-size:0.9rem;"></i>'
+                    f'Lean Scenes ({len(tight)})</div>',
+                    unsafe_allow_html=True
+                )
                 for s in tight[:5]:
-                    st.markdown(f"<div style='background: linear-gradient(90deg, rgba(16,185,129,0.1) 0%, rgba(16,185,129,0.02) 100%); "
-                                f"padding: 12px 16px; border-radius: 10px; margin-bottom: 8px; "
-                                f"border-left: 3px solid {Theme.SEMANTIC_GOOD}; font-size: 0.9rem; "
-                                f"box-shadow: 0 4px 12px rgba(0,0,0,0.1); backdrop-filter: blur(8px);'>"
-                                f"<span style='color: white;'>Scene {s['scene']}</span> · <b style='color: {Theme.SEMANTIC_GOOD};'>{s.get('label', '✨')}</b> · Economy: <span style='font-weight: 700;'>{s.get('score', 0)}%</span>"
-                                f"</div>", unsafe_allow_html=True)
+                    st.markdown(
+                        f'<div style="display:flex; align-items:center; gap:12px; padding:12px 16px; '
+                        f'border-radius:10px; margin-bottom:6px; background:rgba(16,185,129,0.06); '
+                        f'border-left:3px solid {Theme.SEMANTIC_GOOD}; '
+                        f'border-top:1px solid rgba(255,255,255,0.03); border-bottom:1px solid rgba(255,255,255,0.03);">'
+                        f'<span style="font-size:0.65rem; font-weight:800; color:var(--emerald); '
+                        f'text-transform:uppercase; letter-spacing:0.08em; min-width:28px;">S{s["scene"]}</span>'
+                        f'<span style="font-weight:600; color:white; font-size:0.85rem; flex:1;">{s.get("label","✨")}</span>'
+                        f'<span style="font-size:0.72rem; font-weight:700; color:var(--emerald);">{s.get("score",0)}%</span>'
+                        f'</div>',
+                        unsafe_allow_html=True
+                    )
             else:
                 st.caption("No scenes scored above 70% economy.")
 
@@ -421,16 +613,22 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
         comps = dashboard.get('commercial_comps', [])
         if comps:
             st.markdown("<br>", unsafe_allow_html=True)
-            st.markdown("##### 🎬 Comparable Films")
+            st.markdown(
+                '<div style="font-size:0.7rem; font-weight:700; color:var(--text-secondary); '
+                'text-transform:uppercase; letter-spacing:0.12em; margin-bottom:12px; '
+                'display:flex; align-items:center; gap:8px;">'
+                '<i class="ti ti-movie" style="color:var(--amethyst);"></i>Comparable Films</div>',
+                unsafe_allow_html=True
+            )
             comp_cols = st.columns(len(comps))
             for i, comp in enumerate(comps):
                 with comp_cols[i]:
-                    st.markdown(uikit.clean_html(f"""
-                    <div class="comp-film-card">
-                        <span style="font-size: 1.2rem; margin-right: 8px;">🎥</span>
-                        <span style="font-weight: 600; color: white;">{comp}</span>
-                    </div>
-                    """), unsafe_allow_html=True)
+                    st.markdown(uikit.clean_html(
+                        f'<div class="comp-film-card">'
+                        f'<i class="ti ti-video" style="font-size:1.1rem; color:var(--amethyst); margin-right:8px; opacity:0.7;"></i>'
+                        f'<span style="font-weight:600; color:white; font-size:0.9rem;">{comp}</span>'
+                        f'</div>'
+                    ), unsafe_allow_html=True)
 
         # Stakes Distribution
         stakes_data = dashboard.get('stakes_profile', {})
@@ -439,7 +637,13 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
             stakes = {k: v for k, v in stakes_data.items() if k in valid_stakes and isinstance(v, (int, float)) and v > 0}
             if stakes:
                 st.markdown("<br>", unsafe_allow_html=True)
-                st.markdown("##### 🎯 Stakes Distribution")
+                st.markdown(
+                    '<div style="font-size:0.7rem; font-weight:700; color:var(--text-secondary); '
+                    'text-transform:uppercase; letter-spacing:0.12em; margin-bottom:12px; '
+                    'display:flex; align-items:center; gap:8px;">'
+                    '<i class="ti ti-target" style="color:var(--amethyst);"></i>Stakes Distribution</div>',
+                    unsafe_allow_html=True
+                )
                 st.plotly_chart(charts.get_stakes_chart(
                     list(stakes.keys()), list(stakes.values()),
                     {'Physical': Theme.SEMANTIC_CRITICAL, 'Emotional': Theme.SEMANTIC_WARNING,
@@ -483,13 +687,19 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
                 st.session_state[cache_key], Theme.SEMANTIC_INFO
             )
         else:
-            st.markdown(uikit.clean_html(f"""
-            <div class="well" style="padding: 30px; text-align: center; background: rgba(0,0,0,0.2); border: 1px dashed rgba(255,255,255,0.08); border-radius: var(--radius-md); margin-top: 15px;">
-                <i class="ti ti-brain" style="font-size: 2.5rem; color: var(--accent-primary); opacity: 0.5; margin-bottom: 12px; display: block; line-height: 1;"></i>
-                <div style="color: white; font-weight: 600; font-size: 0.95rem; margin-bottom: 4px;">No AI Memo generated yet</div>
-                <div style="color: var(--text-secondary); font-size: 0.85rem; max-width: 400px; margin: 0 auto;">Click the button above to run the AI story intelligence engine and generate a professional analysis memo.</div>
-            </div>
-            """), unsafe_allow_html=True)
+            st.markdown(uikit.clean_html(
+                '<div style="padding:32px 24px; text-align:center; '
+                'background:rgba(0,0,0,0.2); border:1px dashed rgba(155,81,224,0.2); '
+                'border-radius:var(--radius-md); margin-top:16px;">'
+                '<i class="ti ti-brain" style="font-size:2.5rem; color:var(--amethyst); '
+                'opacity:0.45; display:block; margin-bottom:12px;"></i>'
+                '<div style="color:white; font-weight:600; font-size:0.95rem; margin-bottom:6px;">'
+                'No AI Memo generated yet</div>'
+                '<div style="color:var(--text-secondary); font-size:0.85rem; max-width:380px; '
+                'margin:0 auto; line-height:1.6;">'
+                'Click the button above to generate a professional narrative assessment.</div>'
+                '</div>'
+            ), unsafe_allow_html=True)
 
     # =====================================================================
     # SECTION: MENTOR'S CORNER (Story Editor only)
@@ -514,24 +724,32 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
     def render_export():
         uikit.render_section_header("📦", "Script & Data", "View your original script and export research data.")
 
-        # --- Original Script (full width) ---
         with st.expander("📖 View Original Script", expanded=False):
             st.text_area("Script", value=script_input, height=400, disabled=True, label_visibility="collapsed")
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # --- Research & Data Export (full width) ---
         with st.expander("🧪 Research & Data Export", expanded=False):
             uikit.render_lab_pipeline_header()
 
-            st.markdown("##### Narrative Efficiency Frontier")
+            st.markdown(
+                '<div style="font-size:0.7rem; font-weight:700; color:var(--text-secondary); '
+                'text-transform:uppercase; letter-spacing:0.12em; margin-bottom:12px; margin-top:8px;">'
+                'Narrative Efficiency Frontier</div>',
+                unsafe_allow_html=True
+            )
             df_res = pd.DataFrame(trace)
             st.plotly_chart(charts.get_efficiency_frontier(df_res), use_container_width=True,
                            config={'displayModeBar': False}, key="res_eff")
 
             st.divider()
 
-            st.markdown("##### Research Telemetry")
+            st.markdown(
+                '<div style="font-size:0.7rem; font-weight:700; color:var(--text-secondary); '
+                'text-transform:uppercase; letter-spacing:0.12em; margin-bottom:12px;">'
+                'Research Telemetry</div>',
+                unsafe_allow_html=True
+            )
             t1, t2 = st.columns(2)
             telemetry = [s.get('research_telemetry', {}) for s in trace]
             if telemetry:

@@ -519,7 +519,7 @@ def apply_custom_styles():
         [data-testid="stFileUploaderDropzone"] div[class*="DropzoneInput"]::before,
         [data-testid="stFileUploadDropzone"] div[class*="DropzoneInput"]::before {
             order: 1 !important;
-            content: "\ea75" !important; /* ti-cloud-upload */
+            content: "\\ea75" !important; /* ti-cloud-upload */
             font-family: 'tabler-icons' !important;
             font-weight: normal !important;
             font-style: normal !important;
@@ -578,61 +578,82 @@ def apply_custom_styles():
         }
 
 
-        /* ===== SELECT BOX / INPUTS ===== */
-        [data-baseweb="select"] > div, [data-baseweb="input"] > div, [data-baseweb="textarea"] > div {
-            background: rgba(0, 0, 0, 0.2) !important;
-            border: 1px solid rgba(255, 255, 255, 0.08) !important;
-            border-radius: var(--radius-md) !important;
-            transition: all 0.3s ease !important;
+        /* ===== SELECT BOX / INPUTS — Premium pill trigger ===== */
+        /* Trigger container */
+        [data-baseweb="select"] > div,
+        [data-baseweb="input"] > div,
+        [data-baseweb="textarea"] > div {
+            background: rgba(0, 0, 0, 0.25) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            border-radius: 12px !important;
+            min-height: 48px !important;
+            transition: all 0.25s ease !important;
             color: var(--text-primary) !important;
-            box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.6) !important;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5), 0 1px 0 rgba(255,255,255,0.03) !important;
         }
-        
+
+        /* Selected value text — white + medium weight */
+        [data-baseweb="select"] [data-testid="stMarkdownContainer"] p,
+        [data-baseweb="select"] span,
+        [data-baseweb="select"] input,
+        [data-baseweb="select"] div[class*="ValueContainer"] span {
+            color: white !important;
+            font-weight: 500 !important;
+            font-size: 0.92rem !important;
+        }
+
         [data-baseweb="select"], [data-baseweb="select"] div, [data-baseweb="select"] input {
             cursor: pointer !important;
         }
-        
-        [data-baseweb="select"] > div:hover, [data-baseweb="input"] > div:hover, [data-baseweb="textarea"] > div:hover,
-        [data-baseweb="select"]:focus-within > div, [data-baseweb="input"]:focus-within > div, [data-baseweb="textarea"]:focus-within > div {
-            border-color: var(--accent-primary) !important;
-            box-shadow: 0 0 15px rgba(155, 81, 224, 0.25), inset 0 4px 12px rgba(0, 0, 0, 0.6) !important;
+
+        /* Hover + focus states */
+        [data-baseweb="select"] > div:hover,
+        [data-baseweb="input"] > div:hover,
+        [data-baseweb="textarea"] > div:hover {
+            border-color: rgba(155, 81, 224, 0.5) !important;
+            box-shadow: 0 0 0 3px rgba(155, 81, 224, 0.1), inset 0 2px 8px rgba(0,0,0,0.5) !important;
         }
-        
-        div[data-testid="stSelectbox"] label {
+
+        [data-baseweb="select"]:focus-within > div,
+        [data-baseweb="input"]:focus-within > div,
+        [data-baseweb="textarea"]:focus-within > div {
+            border-color: var(--amethyst) !important;
+            box-shadow: 0 0 0 3px rgba(155, 81, 224, 0.15), inset 0 2px 8px rgba(0, 0, 0, 0.5) !important;
+        }
+
+        /* Chevron icon */
+        [data-baseweb="select"] svg {
+            color: var(--text-secondary) !important;
+            opacity: 0.6 !important;
+            transition: opacity 0.2s ease, transform 0.2s ease !important;
+        }
+        [data-baseweb="select"]:focus-within svg {
+            opacity: 1 !important;
+            color: var(--amethyst) !important;
+        }
+
+        /* Label above selectbox */
+        div[data-testid="stSelectbox"] label,
+        div[data-testid="stSelectbox"] > label {
             font-size: 0.65rem !important;
             font-weight: 700 !important;
             color: var(--text-secondary) !important;
             text-transform: uppercase !important;
             letter-spacing: 0.12em !important;
-            margin-bottom: 8px !important;
+            margin-bottom: 6px !important;
+            display: block !important;
         }
 
-        /* Hide custom uploader dropzone elements when a file is uploaded */
-        div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) [data-testid="stFileUploaderDropzone"]::before,
-        div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) [data-testid="stFileUploaderDropzone"]::after,
-        div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) [data-testid="stFileUploadDropzone"]::before,
-        div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) [data-testid="stFileUploadDropzone"]::after {
-            display: none !important;
-        }
-        div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) [data-testid="stFileUploaderDropzone"] button,
-        div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) [data-testid="stFileUploadDropzone"] button {
-            display: none !important;
-        }
-        div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) [data-testid="stFileUploaderDropzone"],
-        div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) [data-testid="stFileUploadDropzone"] {
-            padding: 12px !important;
-            border: 1px solid rgba(255, 255, 255, 0.08) !important;
-            background: rgba(0,0,0,0.1) !important;
-            box-shadow: none !important;
-        }
-        
+        /* ===== DROPDOWN POPOVER — premium dark panel ===== */
         [data-baseweb="popover"],
         [data-testid="stSelectboxVirtualDropdown"] {
-            background: rgba(22, 20, 36, 0.98) !important;
-            backdrop-filter: blur(16px) !important;
-            border: 1px solid rgba(155, 81, 224, 0.3) !important;
-            border-radius: var(--radius-md) !important;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(155, 81, 224, 0.15) !important;
+            background: rgba(18, 16, 30, 0.98) !important;
+            backdrop-filter: blur(24px) !important;
+            -webkit-backdrop-filter: blur(24px) !important;
+            border: 1px solid rgba(155, 81, 224, 0.25) !important;
+            border-radius: 16px !important;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 30px rgba(155, 81, 224, 0.1) !important;
+            overflow: hidden !important;
         }
 
         [data-baseweb="popover"] *,
@@ -643,7 +664,7 @@ def apply_custom_styles():
         [data-baseweb="popover"] ul,
         [data-testid="stSelectboxVirtualDropdown"] ul {
             background-color: transparent !important;
-            padding: 8px 0 !important;
+            padding: 8px !important;
         }
 
         [data-baseweb="popover"] [role="option"],
@@ -651,26 +672,16 @@ def apply_custom_styles():
         [data-baseweb="popover"] li,
         [data-testid="stSelectboxVirtualDropdown"] li,
         [data-baseweb="menu-item"] {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
-            font-size: 0.92rem !important;
+            font-size: 0.9rem !important;
             font-weight: 500 !important;
-            color: rgba(255, 255, 255, 0.85) !important;
+            color: rgba(255, 255, 255, 0.75) !important;
             background-color: transparent !important;
-            
-            /* Absolute positioning sizing overrides with calc to support margins in virtual list */
-            width: calc(100% - 16px) !important;
-            margin: 2px 8px !important;
+            width: calc(100% - 0px) !important;
+            margin: 2px 0 !important;
             box-sizing: border-box !important;
-            
-            /* Spacing gaps using transparent borders and padding-box clipping */
-            border-top: 3px solid transparent !important;
-            border-bottom: 3px solid transparent !important;
-            border-left: 3px solid transparent !important;
-            border-right: 3px solid transparent !important;
-            background-clip: padding-box !important;
-            border-radius: 8px !important;
-            
-            padding: 8px 16px !important;
+            border: 1px solid transparent !important;
+            border-radius: 10px !important;
+            padding: 10px 14px !important;
             transition: all 0.15s ease !important;
             cursor: pointer !important;
             display: flex !important;
@@ -680,22 +691,33 @@ def apply_custom_styles():
         [data-baseweb="popover"] [role="option"]:hover,
         [data-testid="stSelectboxVirtualDropdown"] [role="option"]:hover,
         [data-baseweb="popover"] li:hover,
-        [data-testid="stSelectboxVirtualDropdown"] li:hover,
-        [data-baseweb="menu-item"]:hover {
-            background-color: rgba(155, 81, 224, 0.15) !important;
-            color: #FFFFFF !important;
-            border-left: 3px solid var(--accent-primary) !important;
+        [data-testid="stSelectboxVirtualDropdown"] li:hover {
+            background-color: rgba(155, 81, 224, 0.12) !important;
+            border-color: rgba(155, 81, 224, 0.2) !important;
+            color: white !important;
         }
 
         [data-baseweb="popover"] [role="option"][aria-selected="true"],
         [data-testid="stSelectboxVirtualDropdown"] [role="option"][aria-selected="true"],
         [data-baseweb="popover"] li[aria-selected="true"],
-        [data-testid="stSelectboxVirtualDropdown"] li[aria-selected="true"],
-        [data-baseweb="menu-item"][aria-selected="true"] {
-            background-color: rgba(155, 81, 224, 0.22) !important;
-            color: #FFFFFF !important;
-            border-left: 3px solid var(--accent-primary) !important;
+        [data-testid="stSelectboxVirtualDropdown"] li[aria-selected="true"] {
+            background-color: rgba(155, 81, 224, 0.18) !important;
+            border-color: rgba(155, 81, 224, 0.3) !important;
+            color: white !important;
             font-weight: 600 !important;
+        }
+
+        /* Selected item checkmark */
+        [data-baseweb="popover"] [role="option"][aria-selected="true"]::after,
+        [data-testid="stSelectboxVirtualDropdown"] [role="option"][aria-selected="true"]::after {
+            content: '' !important;
+            width: 6px !important;
+            height: 6px !important;
+            border-radius: 50% !important;
+            background: var(--amethyst) !important;
+            margin-left: auto !important;
+            display: inline-block !important;
+            box-shadow: 0 0 6px var(--amethyst-glow) !important;
         }
 
         /* ===== STREAMLIT NOTIFICATION / INFO BOX WELL ===== */
@@ -710,6 +732,203 @@ def apply_custom_styles():
             color: rgba(219, 234, 254, 0.75) !important;
         }
 
+        /* ===== UPLOADED FILE — premium emerald pill row ===== */
+        div[data-testid="stUploadedFile"] {
+            background: rgba(0, 200, 83, 0.06) !important;
+            border: 1px solid rgba(0, 200, 83, 0.2) !important;
+            border-radius: 12px !important;
+            padding: 12px 16px !important;
+            margin-top: 12px !important;
+        }
+        div[data-testid="stUploadedFile"] span,
+        div[data-testid="stUploadedFile"] p,
+        div[data-testid="stUploadedFile"] div {
+            color: rgba(255,255,255,0.85) !important;
+            font-size: 0.88rem !important;
+            font-weight: 500 !important;
+        }
+        div[data-testid="stUploadedFile"] svg { color: var(--emerald) !important; }
+
+        /* ===== FILE UPLOADER — collapse when file loaded ===== */
+        div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) [data-testid="stFileUploaderDropzone"]::before,
+        div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) [data-testid="stFileUploaderDropzone"]::after,
+        div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) [data-testid="stFileUploadDropzone"]::before,
+        div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) [data-testid="stFileUploadDropzone"]::after { display: none !important; }
+        div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) [data-testid="stFileUploaderDropzone"] button,
+        div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) [data-testid="stFileUploadDropzone"] button { display: none !important; }
+        div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) [data-testid="stFileUploaderDropzone"],
+        div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) [data-testid="stFileUploadDropzone"] {
+            padding: 12px !important; border: 1px solid rgba(255,255,255,0.06) !important;
+            background: rgba(0,0,0,0.1) !important; box-shadow: none !important;
+        }
+
+        /* ===== EXPANDERS — glass card ===== */
+        [data-testid="stExpander"] {
+            background: var(--glass-bg) !important;
+            border: 1px solid var(--glass-border) !important;
+            border-radius: var(--radius-md) !important;
+            overflow: hidden !important;
+            margin-bottom: 8px !important;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+        }
+        [data-testid="stExpander"]:hover {
+            border-color: rgba(155,81,224,0.3) !important;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important;
+        }
+        .streamlit-expanderHeader,
+        [data-testid="stExpander"] summary {
+            background: transparent !important;
+            border: none !important;
+            padding: 16px 20px !important;
+            color: white !important;
+            font-weight: 600 !important;
+            font-size: 0.9rem !important;
+            cursor: pointer !important;
+        }
+        [data-testid="stExpander"] details[open] > summary {
+            border-bottom: 1px solid var(--glass-border) !important;
+        }
+
+        /* ===== DATAFRAME — dark glass table ===== */
+        [data-testid="stDataFrame"],
+        [data-testid="stDataFrameResizable"] {
+            border-radius: var(--radius-md) !important;
+            overflow: hidden !important;
+            border: 1px solid var(--glass-border) !important;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4) !important;
+        }
+        [data-testid="stDataFrame"] thead th,
+        [data-testid="stDataFrame"] th {
+            background: rgba(155,81,224,0.12) !important;
+            color: white !important;
+            font-size: 0.65rem !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.1em !important;
+            border-bottom: 1px solid rgba(155,81,224,0.2) !important;
+            padding: 12px 16px !important;
+        }
+        [data-testid="stDataFrame"] tbody tr {
+            background: transparent !important;
+            border-bottom: 1px solid rgba(255,255,255,0.04) !important;
+        }
+        [data-testid="stDataFrame"] tbody tr:hover { background: rgba(155,81,224,0.06) !important; }
+        [data-testid="stDataFrame"] tbody tr:nth-child(even) { background: transparent !important; }
+        [data-testid="stDataFrame"] tbody td {
+            color: rgba(255,255,255,0.8) !important;
+            font-size: 0.875rem !important;
+            padding: 10px 16px !important;
+            border: none !important;
+        }
+
+        /* ===== PROGRESS BARS — amethyst gradient ===== */
+        [data-testid="stProgressBar"] > div {
+            background: rgba(255,255,255,0.08) !important;
+            border-radius: 6px !important;
+            height: 6px !important;
+            overflow: hidden !important;
+        }
+        [data-testid="stProgressBar"] > div > div {
+            background: linear-gradient(90deg, var(--amethyst) 0%, #A56DFF 100%) !important;
+            border-radius: 6px !important;
+            box-shadow: 0 0 8px var(--amethyst-glow) !important;
+        }
+
+        /* ===== MENTOR CARD ===== */
+        .mentor-card {
+            background: var(--glass-bg) !important;
+            border: 1px solid var(--glass-border) !important;
+            border-left: 3px solid var(--accent-blue) !important;
+            border-radius: var(--radius-md) !important;
+            padding: 20px 24px !important;
+            margin-bottom: 12px !important;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3), -2px 0 12px rgba(85,224,255,0.08) !important;
+            backdrop-filter: blur(var(--glass-blur)) !important;
+            transition: all 0.3s ease !important;
+            position: relative !important;
+            overflow: hidden !important;
+        }
+        .mentor-card::before {
+            content: '' !important;
+            position: absolute !important; top: 0 !important; left: 0 !important; right: 0 !important;
+            height: 1px !important;
+            background: linear-gradient(90deg, transparent, rgba(85,224,255,0.2), transparent) !important;
+        }
+        .mentor-card:hover {
+            transform: translateX(4px) !important;
+            border-left-color: var(--amethyst) !important;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4), -3px 0 16px rgba(155,81,224,0.15) !important;
+        }
+
+        /* ===== COMPARABLE FILM CARDS ===== */
+        .comp-film-card {
+            background: var(--glass-bg) !important;
+            border: 1px solid var(--glass-border) !important;
+            border-radius: var(--radius-md) !important;
+            padding: 14px 18px !important;
+            text-align: center !important;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important;
+            backdrop-filter: blur(var(--glass-blur)) !important;
+            transition: all 0.25s ease !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            margin-bottom: 8px !important;
+            position: relative !important;
+            overflow: hidden !important;
+        }
+        .comp-film-card::before {
+            content: '' !important;
+            position: absolute !important; top: 0 !important; left: 0 !important; right: 0 !important;
+            height: 2px !important;
+            background: linear-gradient(90deg, transparent, var(--amethyst-glow), transparent) !important;
+        }
+        .comp-film-card:hover {
+            transform: translateY(-3px) !important;
+            box-shadow: 0 12px 30px rgba(155,81,224,0.2) !important;
+            border-color: rgba(155,81,224,0.25) !important;
+        }
+
+        /* ===== SCORE BADGES ===== */
+        .score-badge {
+            display: inline-block; padding: 4px 12px; border-radius: 20px;
+            font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+        }
+        .score-high { background: rgba(0,200,83,0.15); color: var(--emerald); border: 1px solid rgba(0,200,83,0.25); }
+        .score-mid  { background: rgba(255,112,67,0.15); color: var(--coral); border: 1px solid rgba(255,112,67,0.25); }
+        .score-low  { background: rgba(255,51,102,0.15); color: var(--accent-rose); border: 1px solid rgba(255,51,102,0.25); }
+
+        /* ===== TOOLTIP CARD ===== */
+        .tooltip-card {
+            background: var(--glass-bg); backdrop-filter: blur(8px);
+            border: 1px solid var(--glass-border); border-left: 2px solid var(--amethyst);
+            border-radius: var(--radius-sm); padding: 14px 18px;
+            font-size: 0.88rem; color: rgba(244,246,251,0.85);
+            margin-bottom: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); line-height: 1.6;
+        }
+
+        /* ===== SIDEBAR ===== */
+        [data-testid="stSidebar"] {
+            background: var(--bg-secondary) !important;
+            border-right: 1px solid var(--glass-border) !important;
+        }
+        [data-testid="stSidebar"] .stMarkdown { color: var(--text-primary) !important; }
+
+        /* ===== DIVIDER ===== */
+        hr { border-color: var(--glass-border) !important; opacity: 0.6 !important; }
+
+        /* ===== BOOTSTRAP ICONS ===== */
+        .bi { font-size: 1.1em; vertical-align: middle; margin-right: 8px; }
+        .icon-pass { color: var(--emerald); }
+        .icon-fail { color: var(--accent-rose); }
+
+        /* ===== ELEMENT FADE-IN STAGGER ===== */
+        .element-container { animation: fadeInUp 0.45s cubic-bezier(0.23, 1, 0.32, 1) both; }
+        .element-container:nth-child(2) { animation-delay: 0.05s; }
+        .element-container:nth-child(3) { animation-delay: 0.10s; }
+        .element-container:nth-child(4) { animation-delay: 0.15s; }
+        .element-container:nth-child(5) { animation-delay: 0.20s; }
+        .element-container:nth-child(6) { animation-delay: 0.25s; }
 
         /* ===== DOWNLOAD BUTTONS ===== */
         .stDownloadButton > button {
@@ -770,74 +989,13 @@ def apply_custom_styles():
             animation: trustPulse 2s ease-in-out infinite !important;
         }
 
-        .element-container {
-            animation: fadeInUp 0.5s cubic-bezier(0.23, 1, 0.32, 1) both;
-        }
-
-        /* Stagger: each successive element animates slightly later */
-        .element-container:nth-child(2) { animation-delay: 0.05s; }
-        .element-container:nth-child(3) { animation-delay: 0.1s; }
-        .element-container:nth-child(4) { animation-delay: 0.15s; }
-        .element-container:nth-child(5) { animation-delay: 0.2s; }
-        .element-container:nth-child(6) { animation-delay: 0.25s; }
-
-        /* ===== DIVIDER ===== */
-        hr {
-            border-color: var(--border-subtle) !important;
-            opacity: 0.5 !important;
-        }
-
-        /* ===== SIDEBAR ===== */
-        [data-testid="stSidebar"] {
-            background: var(--bg-secondary) !important;
-            border-right: 1px solid var(--border-subtle) !important;
-        }
-        
-        [data-testid="stSidebar"] .stMarkdown { color: var(--text-primary) !important; }
-
-        /* ===== BOOTSTRAP ICON OVERRIDES ===== */
-        .bi { font-size: 1.1em; vertical-align: middle; margin-right: 8px; }
-        .icon-pass { color: var(--accent-teal); }
-        .icon-fail { color: var(--accent-rose); }
-        
-        /* ===== TOOLTIP CARDS ===== */
-        .tooltip-card {
-            background: linear-gradient(135deg, rgba(40, 36, 60, 0.6) 0%, rgba(32, 29, 48, 0.8) 100%);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255,255,255,0.05);
-            border-left: 2px solid var(--accent-primary);
-            border-radius: var(--radius-sm);
-            padding: 14px 18px;
-            font-size: 0.88rem;
-            color: rgba(244, 246, 251, 0.85);
-            margin-bottom: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            line-height: 1.6;
-        }
-        
-        /* ===== SCORE BADGE ===== */
-        .score-badge {
-            display: inline-block;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 700;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
-            backdrop-filter: blur(4px);
-        }
-        .score-high { background: linear-gradient(90deg, rgba(0,210,160,0.2) 0%, rgba(0,210,160,0.05) 100%); color: #00D2A0; border: 1px solid rgba(0,210,160,0.3); box-shadow: 0 0 10px rgba(0,210,160,0.2); }
-        .score-mid { background: linear-gradient(90deg, rgba(245,121,70,0.2) 0%, rgba(245,121,70,0.05) 100%); color: #F57946; border: 1px solid rgba(245,121,70,0.3); box-shadow: 0 0 10px rgba(245,121,70,0.2); }
-        .score-low { background: linear-gradient(90deg, rgba(255,51,102,0.2) 0%, rgba(255,51,102,0.05) 100%); color: #FF3366; border: 1px solid rgba(255,51,102,0.3); box-shadow: 0 0 10px rgba(255,51,102,0.2); }
-
-        /* ===== BRAND GRADIENT ===== */
+        /* ===== BRAND GRADIENT (loading screen) ===== */
         .brand-pulse-gradient {
-            background: linear-gradient(135deg, #A56DFF 0%, var(--accent-primary) 100%) !important;
+            background: linear-gradient(135deg, #A56DFF 0%, var(--amethyst) 100%) !important;
             -webkit-background-clip: text !important;
             -webkit-text-fill-color: transparent !important;
             display: inline-block !important;
-            filter: drop-shadow(0 0 15px rgba(155, 81, 224, 0.45)) !important;
+            filter: drop-shadow(0 0 15px var(--amethyst-glow)) !important;
         }
 
         /* ===== CUSTOM GLASS CARDS & WELLS — Tactile Glass Template ===== */
@@ -985,47 +1143,6 @@ def apply_custom_styles():
             background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 100%) !important;
             pointer-events: none !important;
             border-radius: var(--radius-md) !important;
-        }
-
-        /* ===== COMPARABLE FILM CARDS ===== */
-        .comp-film-card {
-            background: rgba(255, 255, 255, 0.03) !important;
-            border: 1px solid var(--border-subtle) !important;
-            border-radius: var(--radius-md) !important;
-            padding: 12px 18px !important;
-            text-align: center !important;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2) !important;
-            backdrop-filter: blur(12px) !important;
-            transition: all 0.3s ease !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            margin-bottom: 8px !important;
-        }
-        
-        .comp-film-card:hover {
-            transform: translateY(-2px) !important;
-            box-shadow: 0 10px 25px rgba(155, 81, 224, 0.35) !important;
-            border-color: var(--accent-primary) !important;
-        }
-
-        /* ===== MENTOR CARDS ===== */
-        .mentor-card {
-            background: rgba(255, 255, 255, 0.02) !important;
-            border: 1px solid var(--border-subtle) !important;
-            border-left: 4px solid var(--accent-primary) !important;
-            border-radius: var(--radius-md) !important;
-            padding: 18px 22px !important;
-            margin-bottom: 14px !important;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.25) !important;
-            backdrop-filter: blur(12px) !important;
-            transition: all 0.3s ease !important;
-        }
-        
-        .mentor-card:hover {
-            transform: translateY(-2px) !important;
-            box-shadow: 0 12px 30px rgba(155, 81, 224, 0.25) !important;
-            border-color: rgba(155, 81, 224, 0.4) !important;
         }
     </style>
     """
