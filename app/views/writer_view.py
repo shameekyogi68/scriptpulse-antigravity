@@ -291,11 +291,12 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
         cols = st.columns(min(len(sorted_chars), 3))
         for i, (name, arc) in enumerate(sorted_chars[:3]):
             with cols[i]:
-                arc_type = arc.get('arc_type', 'Unknown')
-                agency_val = max(0.0, min(1.0, (arc.get('agency_end', 0) + 1) / 2))
-                st.markdown(f"**{name}**")
-                st.caption(f"Arc: {arc_type} · Agency: {agency_val:.0%}")
-                st.progress(agency_val)
+                with st.container(border=True):
+                    arc_type = arc.get('arc_type', 'Unknown')
+                    agency_val = max(0.0, min(1.0, (arc.get('agency_end', 0) + 1) / 2))
+                    st.markdown(f"**{name}**")
+                    st.caption(f"Arc: {arc_type} · Agency: {agency_val:.0%}")
+                    st.progress(agency_val)
 
     # =====================================================================
     # SECTION: SCENE TURNS
@@ -370,13 +371,15 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
         loc_profile = dashboard.get('location_profile', {})
         cast_size = len(report.get('voice_fingerprints', {}))
 
-        c1, c2, c3, c4, c5, c6 = st.columns(6)
-        with c1: uikit.render_metric_card("Production Complexity", f"{dashboard.get('production_risk_score', 50)}/100", help_text="Complexity vs narrative payoff — reference signal.")
-        with c2: uikit.render_metric_card("Market Signal", f"{dashboard.get('market_readiness', 50)}/100", help_text="Structural commercial indicators — reference only.")
-        with c3: uikit.render_metric_card("Budget Tier", dashboard.get('budget_impact', 'Standard'), help_text="Indie → Studio → Blockbuster.")
-        with c4: uikit.render_metric_card("Locations", str(loc_profile.get('unique_locations', '—')), help_text="Unique locations. More = higher budget.")
-        with c5: uikit.render_metric_card("Cast", str(cast_size if cast_size else '—'), help_text="Total speaking roles.")
-        with c6: uikit.render_metric_card("Midpoint", dashboard.get('midpoint_status', 'N/A'), help_text="Structural health.")
+        p1, p2, p3 = st.columns(3)
+        with p1: uikit.render_metric_card("Production Complexity", f"{dashboard.get('production_risk_score', 50)}/100", help_text="Complexity vs narrative payoff — reference signal.")
+        with p2: uikit.render_metric_card("Market Signal", f"{dashboard.get('market_readiness', 50)}/100", help_text="Structural commercial indicators — reference only.")
+        with p3: uikit.render_metric_card("Budget Tier", dashboard.get('budget_impact', 'Standard'), help_text="Indie → Studio → Blockbuster.")
+        
+        p4, p5, p6 = st.columns(3)
+        with p4: uikit.render_metric_card("Locations", str(loc_profile.get('unique_locations', '—')), help_text="Unique locations. More = higher budget.")
+        with p5: uikit.render_metric_card("Cast Size", str(cast_size if cast_size else '—'), help_text="Total speaking roles.")
+        with p6: uikit.render_metric_card("Midpoint", dashboard.get('midpoint_status', 'N/A'), help_text="Structural health.")
 
         # Location Insight
         if loc_profile.get('unique_locations', 0) > 0:
@@ -456,6 +459,14 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
                 f"{config['icon']} {lens} Coverage", "",
                 st.session_state[cache_key], Theme.SEMANTIC_INFO
             )
+        else:
+            st.markdown(uikit.clean_html(f"""
+            <div class="well" style="padding: 30px; text-align: center; background: rgba(0,0,0,0.2); border: 1px dashed rgba(255,255,255,0.08); border-radius: var(--radius-md); margin-top: 15px;">
+                <i class="ti ti-brain" style="font-size: 2.5rem; color: var(--accent-primary); opacity: 0.5; margin-bottom: 12px; display: block; line-height: 1;"></i>
+                <div style="color: white; font-weight: 600; font-size: 0.95rem; margin-bottom: 4px;">No AI Memo generated yet</div>
+                <div style="color: var(--text-secondary); font-size: 0.85rem; max-width: 400px; margin: 0 auto;">Click the button above to run the AI story intelligence engine and generate a professional analysis memo.</div>
+            </div>
+            """), unsafe_allow_html=True)
 
     # =====================================================================
     # SECTION: MENTOR'S CORNER (Story Editor only)
