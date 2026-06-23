@@ -547,13 +547,24 @@ if report and current_input:
     render_section_header("📥", "Export Reports",
         "Download professional reports to share with collaborators, agents, or studio executives.")
 
+    # Check if Google Chrome / Chromium is available for PDF conversion
+    chrome_available = False
+    try:
+        from app.streamlit_utils import find_chrome_path
+        chrome_available = find_chrome_path() is not None
+    except Exception:
+        pass
+
+    if not chrome_available:
+        st.warning("⚠️ Headless Google Chrome/Chromium is not installed on this server. PDF exports are temporarily disabled, but you can download fully styled HTML reports below (which can be printed/saved as PDF in your browser).")
+
     c1, c2, c3 = st.columns(3)
     title = st.session_state.get('last_filename', 'Script')
     run_id = report.get('meta', {}).get('run_id', 'default')
 
     # Cache Writer Report PDF
     writer_pdf_key = f"writer_pdf_{run_id}_{genre}"
-    if st.session_state.get(writer_pdf_key) is None:
+    if chrome_available and st.session_state.get(writer_pdf_key) is None:
         try:
             md_content = writer_report.generate_writer_report(report, title=title, genre=genre)
             html_content = stu.convert_md_report_to_html(md_content, title=title)
@@ -562,15 +573,12 @@ if report and current_input:
             # Auto-save to workspace root
             with open(os.path.join(ROOT_DIR, f"ScriptPulse_Writer_{genre}.pdf"), "wb") as f:
                 f.write(pdf_bytes)
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
-            st.error(f"Writer PDF Error: {e}")
+        except Exception:
             st.session_state[writer_pdf_key] = None
 
     # Cache Studio Coverage PDF
     studio_pdf_key = f"studio_pdf_{run_id}_{genre}_{lens}"
-    if st.session_state.get(studio_pdf_key) is None:
+    if chrome_available and st.session_state.get(studio_pdf_key) is None:
         try:
             html_content = studio_report.generate_report(report, script_title=title, lens=lens)
             pdf_bytes = stu.convert_html_to_pdf(html_content)
@@ -578,15 +586,12 @@ if report and current_input:
             # Auto-save to workspace root
             with open(os.path.join(ROOT_DIR, f"ScriptPulse_Studio_{genre}.pdf"), "wb") as f:
                 f.write(pdf_bytes)
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
-            st.error(f"Studio PDF Error: {e}")
+        except Exception:
             st.session_state[studio_pdf_key] = None
 
     # Cache One-Page Summary PDF
     summary_pdf_key = f"summary_pdf_{run_id}_{genre}"
-    if st.session_state.get(summary_pdf_key) is None:
+    if chrome_available and st.session_state.get(summary_pdf_key) is None:
         try:
             html_content = print_summary.generate_print_summary(report, script_title=title)
             pdf_bytes = stu.convert_html_to_pdf(html_content)
@@ -594,10 +599,7 @@ if report and current_input:
             # Auto-save to workspace root
             with open(os.path.join(ROOT_DIR, f"ScriptPulse_Summary_{genre}.pdf"), "wb") as f:
                 f.write(pdf_bytes)
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
-            st.error(f"Summary PDF Error: {e}")
+        except Exception:
             st.session_state[summary_pdf_key] = None
 
     # Clean legacy files in workspace root
@@ -629,7 +631,18 @@ if report and current_input:
                     key="dl_writer_btn"
                 )
             else:
-                st.button("Unavailable", disabled=True, use_container_width=True, key="dl_writer_disabled")
+                try:
+                    md_content = writer_report.generate_writer_report(report, title=title, genre=genre)
+                    html_content = stu.convert_md_report_to_html(md_content, title=title)
+                    st.download_button(
+                        "Download HTML",
+                        html_content,
+                        f"ScriptPulse_Writer_{genre}.html", "text/html",
+                        use_container_width=True,
+                        key="dl_writer_html"
+                    )
+                except Exception:
+                    st.button("Unavailable", disabled=True, use_container_width=True, key="dl_writer_disabled")
 
     with c2:
         with st.container(border=True):
@@ -651,7 +664,17 @@ if report and current_input:
                     key="dl_studio_btn"
                 )
             else:
-                st.button("Unavailable", disabled=True, use_container_width=True, key="dl_studio_disabled")
+                try:
+                    html_content = studio_report.generate_report(report, script_title=title, lens=lens)
+                    st.download_button(
+                        "Download HTML",
+                        html_content,
+                        f"ScriptPulse_Studio_{genre}.html", "text/html",
+                        use_container_width=True,
+                        key="dl_studio_html"
+                    )
+                except Exception:
+                    st.button("Unavailable", disabled=True, use_container_width=True, key="dl_studio_disabled")
 
     with c3:
         with st.container(border=True):
@@ -673,7 +696,17 @@ if report and current_input:
                     key="dl_summary_btn"
                 )
             else:
-                st.button("Unavailable", disabled=True, use_container_width=True, key="dl_summary_disabled")
+                try:
+                    html_content = print_summary.generate_print_summary(report, script_title=title)
+                    st.download_button(
+                        "Download HTML",
+                        html_content,
+                        f"ScriptPulse_Summary_{genre}.html", "text/html",
+                        use_container_width=True,
+                        key="dl_summary_html"
+                    )
+                except Exception:
+                    st.button("Unavailable", disabled=True, use_container_width=True, key="dl_summary_disabled")
 
 # ============================================================================
 # FOOTER

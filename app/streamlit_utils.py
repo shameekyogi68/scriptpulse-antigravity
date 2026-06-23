@@ -60,14 +60,70 @@ def inject_scroll_to(selector: str, block: str = "center"):
     components.html(html_scroll, height=0, width=0)
 
 
+def find_chrome_path() -> str:
+    """
+    Dynamically finds the path to the Google Chrome or Chromium executable.
+    Supports macOS, Linux (Streamlit Cloud), and Windows.
+    """
+    import platform
+    import os
+    import shutil
+    
+    # 1. Check PATH binaries
+    for binary in ["google-chrome", "google-chrome-stable", "chromium", "chromium-browser", "chrome"]:
+        path = shutil.which(binary)
+        if path:
+            return path
+            
+    # 2. Check standard OS locations
+    system = platform.system()
+    if system == "Darwin":  # macOS
+        mac_paths = [
+            "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+            "/Applications/Chromium.app/Contents/MacOS/Chromium"
+        ]
+        for p in mac_paths:
+            if os.path.exists(p):
+                return p
+    elif system == "Windows":
+        win_paths = [
+            os.path.expandvars(r"%ProgramFiles%\Google\Chrome\Application\chrome.exe"),
+            os.path.expandvars(r"%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe"),
+            os.path.expandvars(r"%LocalAppData%\Google\Chrome\Application\chrome.exe")
+        ]
+        for p in win_paths:
+            if os.path.exists(p):
+                return p
+    elif system == "Linux":
+        linux_paths = [
+            "/usr/bin/google-chrome",
+            "/usr/bin/google-chrome-stable",
+            "/usr/bin/chromium",
+            "/usr/bin/chromium-browser",
+            "/usr/bin/chrome"
+        ]
+        for p in linux_paths:
+            if os.path.exists(p):
+                return p
+                
+    return None
+
+
 def convert_html_to_pdf(html_content: str) -> bytes:
     """
-    Compiles HTML content into a PDF using headless Google Chrome.
+    Compiles HTML content into a PDF using headless Google Chrome/Chromium.
     """
     import tempfile
     import os
     import subprocess
     
+    chrome_path = find_chrome_path()
+    if not chrome_path:
+        raise FileNotFoundError(
+            "Headless Google Chrome/Chromium executable not found. "
+            "Please install Chrome or Chromium, or verify it is on your PATH."
+        )
+        
     # 1. Create temp files
     with tempfile.NamedTemporaryFile(suffix=".html", delete=False) as html_file:
         html_file.write(html_content.encode("utf-8"))
@@ -77,7 +133,6 @@ def convert_html_to_pdf(html_content: str) -> bytes:
     
     try:
         # 2. Run Google Chrome CLI in headless mode
-        chrome_path = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
         cmd = [
             chrome_path,
             "--headless",
