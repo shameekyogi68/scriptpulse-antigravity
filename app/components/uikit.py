@@ -83,7 +83,7 @@ def render_sidebar_header(title: str, subtitle: str):
 def render_section_header(icon: str, title: str, explainer: str):
     """Renders a section header — matches template h2 (text-2xl font-bold) with icon and explainer."""
     st.markdown(clean_html(
-        f'<div style="margin: 2.5rem 0 1.5rem 0;">'
+        f'<div class="section-header-wrapper" style="margin: 2.5rem 0 1.5rem 0;">'
         f'<div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">'
         f'<i class="ti ti-{_section_icon_map(icon)}" style="font-size:1.5rem; color:var(--amethyst);"></i>'
         f'<h2 style="margin:0 !important; font-size:1.5rem !important; font-weight:700 !important; color:white; letter-spacing:-0.02em;">{title}</h2>'
@@ -160,10 +160,12 @@ def render_insight_card(text: str):
         body_part  = f'<p style="font-size:0.875rem; color:var(--text-secondary); line-height:1.6; margin:0;">{text_html}</p>'
 
     html = (
-        f'<div class="insight-item glass-card" style="display:flex; gap:16px; padding:20px; margin-bottom:12px; '
+        f'<div class="insight-item" style="display:flex; gap:16px; padding:20px; margin-bottom:12px; '
         f'background:{card_bg}; border-left:{border_left}; border-radius:var(--radius-md); '
-        f'border-top:1px solid rgba(255,255,255,0.04); border-right:1px solid rgba(255,255,255,0.04); '
-        f'border-bottom:1px solid rgba(255,255,255,0.04);">'
+        f'border-top:1px solid rgba(255,255,255,0.04); border-right:1px solid rgba(255,255,255,0.03); '
+        f'border-bottom:1px solid rgba(255,255,255,0.03); '
+        f'backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); '
+        f'box-shadow:0 8px 32px rgba(0, 0, 0, 0.4);">'
         f'<div class="insight-icon-box" style="width:40px; height:40px; border-radius:10px; background:{icon_bg}; '
         f'color:{icon_color}; display:flex; align-items:center; justify-content:center; '
         f'font-size:1.2rem; flex-shrink:0;">'

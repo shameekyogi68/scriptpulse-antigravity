@@ -58,6 +58,79 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
     Each persona sees ONLY the sections relevant to their role.
     """
 
+    # Handle pending critique or memo loading states at the top level
+    # to avoid rendering the rest of the dashboard in a duplicate/stale state.
+    if 'pending_critique' in st.session_state:
+        lens_pending, pulse_cache_key_pending = st.session_state['pending_critique']
+        
+        # Render a clean, full-width glass loading card
+        st.markdown(uikit.clean_html(f"""
+        <div style="text-align: center; padding: 4rem 2rem; background: rgba(10, 10, 10, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-radius: var(--radius-lg); border: 1px solid var(--glass-border); box-shadow: 0 15px 40px rgba(0,0,0,0.55); max-width: 600px; margin: 4rem auto; position: relative;">
+            <div style="position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, rgba(155, 81, 224, 0.5), transparent);"></div>
+            <div style="font-size: 2.5rem; margin-bottom: 12px; filter: drop-shadow(0 0 10px rgba(155, 81, 224, 0.45));">🧠</div>
+            <div style="font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 1.5rem; color: white; margin-bottom: 15px;">Consulting {lens_pending}</div>
+            <div style="display: flex; justify-content: center; margin-bottom: 20px;">
+                <div style="width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.08); border-top: 3px solid #9B51E0; border-radius: 50%; animation: spin 1s linear infinite; box-shadow: 0 0 15px rgba(155, 81, 224, 0.4);"></div>
+            </div>
+            <div style="color: white; font-size: 1.05rem; font-weight: 600; margin-bottom: 6px; font-family: 'Inter', sans-serif;">Analyzing screenplay pacing and attention dynamics...</div>
+            <div style="color: rgba(244, 246, 251, 0.55); font-size: 0.82rem; font-family: 'Inter', sans-serif;">This may take a few seconds as the AI reads the narrative beats.</div>
+        </div>
+        <style>
+        @keyframes spin {{
+            0% {{ transform: rotate(0deg); }}
+            100% {{ transform: rotate(360deg); }}
+        }}
+        </style>
+        """), unsafe_allow_html=True)
+        
+        # Run the LLM call
+        from scriptpulse.reporters.llm_translator import generate_section_insight
+        try:
+            insight = generate_section_insight(report, 'pulse', lens=lens_pending)
+            st.session_state[pulse_cache_key_pending] = insight
+        except Exception as e:
+            st.error(f"Failed to generate pacing critique: {e}")
+        finally:
+            del st.session_state['pending_critique']
+            st.rerun()
+
+    if 'pending_memo' in st.session_state:
+        lens_pending, cache_key_pending = st.session_state['pending_memo']
+        
+        # Render a clean, full-width glass loading card
+        st.markdown(uikit.clean_html(f"""
+        <div style="text-align: center; padding: 4rem 2rem; background: rgba(10, 10, 10, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-radius: var(--radius-lg); border: 1px solid var(--glass-border); box-shadow: 0 15px 40px rgba(0,0,0,0.55); max-width: 600px; margin: 4rem auto; position: relative;">
+            <div style="position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, rgba(155, 81, 224, 0.5), transparent);"></div>
+            <div style="font-size: 2.5rem; margin-bottom: 12px; filter: drop-shadow(0 0 10px rgba(155, 81, 224, 0.45));">📝</div>
+            <div style="font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 1.5rem; color: white; margin-bottom: 15px;">Generating {lens_pending} Memo</div>
+            <div style="display: flex; justify-content: center; margin-bottom: 20px;">
+                <div style="width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.08); border-top: 3px solid #9B51E0; border-radius: 50%; animation: spin 1s linear infinite; box-shadow: 0 0 15px rgba(155, 81, 224, 0.4);"></div>
+            </div>
+            <div style="color: white; font-size: 1.05rem; font-weight: 600; margin-bottom: 6px; font-family: 'Inter', sans-serif;">Constructing AI executive assessment...</div>
+            <div style="color: rgba(244, 246, 251, 0.55); font-size: 0.82rem; font-family: 'Inter', sans-serif;">Synthesizing market feasibility, complexity, and character profiles.</div>
+        </div>
+        <style>
+        @keyframes spin {{
+            0% {{ transform: rotate(0deg); }}
+            100% {{ transform: rotate(360deg); }}
+        }}
+        </style>
+        """), unsafe_allow_html=True)
+        
+        # Run the LLM call
+        from scriptpulse.reporters.llm_translator import generate_ai_summary
+        try:
+            result, err = generate_ai_summary(report, lens=lens_pending)
+            if result:
+                st.session_state[cache_key_pending] = result
+            else:
+                st.error(f"AI Error: {err}")
+        except Exception as e:
+            st.error(f"Failed to generate Coverage Memo: {e}")
+        finally:
+            del st.session_state['pending_memo']
+            st.rerun()
+
     trace = report.get('temporal_trace', [])
     writer_intel = report.get('writer_intelligence', {})
     dashboard = writer_intel.get('structural_dashboard', {})
@@ -164,7 +237,6 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
     # SECTION: NARRATIVE TENSION MAP
     # =====================================================================
     def render_story_pulse():
-        st.markdown("<br>", unsafe_allow_html=True)
         uikit.render_section_header("📈", "Narrative Tension Map", config['pulse_desc'])
 
         for p in trace:
@@ -174,59 +246,102 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
             else: p['Hover_Text'] = "<i>⚡ Steady progression.</i>"
 
         df_pulse = pd.DataFrame(trace)
-        fig_display = go.Figure(charts.get_engagement_chart(df_pulse))
+        act_struct = dashboard.get('act_structure', {})
+        fig_display = go.Figure(charts.get_engagement_chart(df_pulse, act_structure=act_struct))
 
         turning_points = dashboard.get('structural_turning_points', {})
         tp_config = {
-            'inciting_incident': (Theme.SEMANTIC_WARNING, '⚡ Inciting Incident'),
-            'act1_break': (Theme.SEMANTIC_CRITICAL, '🚪 Act 1 Break'),
+            'inciting_incident': (Theme.ACCENT_BLUE, '⚡ Inciting Incident'),
+            'act1_break': (Theme.ACCENT_AMBER, '🚪 Act 1 Break'),
             'midpoint': (Theme.ACCENT_PRIMARY, '🎯 Midpoint'),
-            'act2_break': (Theme.SEMANTIC_INFO, '💥 Act 2 Break')
+            'act2_break': (Theme.SEMANTIC_GOOD, '💥 Act 2 Break')
         }
+        
+        # Group by scene to prevent overlapping labels
+        scene_labels = {}
         for tp_key, (color, label) in tp_config.items():
             tp_data = turning_points.get(tp_key, {})
             if isinstance(tp_data, dict) and 'scene' in tp_data:
-                fig_display.add_vline(x=tp_data['scene'], line_width=1.5, line_dash="dot",
-                                     line_color=color, annotation_text=label, annotation_position="top")
+                sc = tp_data['scene']
+                if sc not in scene_labels:
+                    scene_labels[sc] = []
+                scene_labels[sc].append((color, label))
 
-        # Wrap chart in glass-card + chart-container well — matches template section
-        st.markdown(uikit.clean_html("""
-        <div class="glass-card hardware-metric" style="padding: 40px; margin-bottom: 8px; position: relative; overflow: hidden;">
-        """), unsafe_allow_html=True)
+        # Sort scenes to alternate offsets for adjacent scenes
+        sorted_scenes = sorted(scene_labels.keys())
+        for idx, sc in enumerate(sorted_scenes):
+            items = scene_labels[sc]
+            yshift = -18 if idx % 2 == 1 else 0
+            position = "top left" if idx % 2 == 1 else "top right"
+            
+            def get_rgba(hex_str, alpha):
+                h = hex_str.lstrip('#')
+                rgb = tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
+                return f"rgba({rgb[0]}, {rgb[1]}, {rgb[2]}, {alpha})"
+            
+            if len(items) > 1:
+                combined_label = "  |  ".join(item[1] for item in items)
+                color = items[0][0]
+                line_color = get_rgba(color, 0.25)
+                fig_display.add_vline(x=sc, line_width=1.0, line_dash="dash",
+                                     line_color=line_color, annotation_text=f"<b>{combined_label}</b>", 
+                                     annotation_position=position, annotation_yshift=yshift,
+                                     annotation_font=dict(family="'Outfit', sans-serif", size=10, color=color),
+                                     annotation_bgcolor="rgba(18, 18, 18, 0.85)",
+                                     annotation_bordercolor="rgba(255, 255, 255, 0.08)",
+                                     annotation_borderwidth=1,
+                                     annotation_borderpad=4)
+            else:
+                color, label = items[0]
+                line_color = get_rgba(color, 0.25)
+                fig_display.add_vline(x=sc, line_width=1.0, line_dash="dash",
+                                     line_color=line_color, annotation_text=f"<b>{label}</b>", 
+                                     annotation_position=position, annotation_yshift=yshift,
+                                     annotation_font=dict(family="'Outfit', sans-serif", size=10, color=color),
+                                     annotation_bgcolor="rgba(18, 18, 18, 0.85)",
+                                     annotation_bordercolor="rgba(255, 255, 255, 0.08)",
+                                     annotation_borderwidth=1,
+                                     annotation_borderpad=4)
 
-        st.plotly_chart(fig_display, use_container_width=True,
-                       config={'displayModeBar': False}, key=f"pulse_{lens}", theme=None)
+        # Wrap chart in a native Streamlit container with border to leverage our global glass card styles
+        with st.container(border=True):
+            st.plotly_chart(fig_display, use_container_width=True,
+                           config={'displayModeBar': False}, key=f"pulse_{lens}", theme=None)
 
-        # Scene label row — matches template "Scene 1 · Attentional Flow Journey · Scene N"
-        scene_count = len(trace)
-        st.markdown(uikit.clean_html(
-            f'<div style="display:flex; justify-content:space-between; margin-top:4px; padding:0 4px; '
-            f'font-size:0.65rem; font-weight:700; color:var(--text-secondary); '
-            f'text-transform:uppercase; letter-spacing:0.12em;">'
-            f'<span>Scene 1</span>'
-            f'<span>Attentional Flow Journey</span>'
-            f'<span>Scene {scene_count}</span>'
-            f'</div>'
-            f'</div>'  # closes glass-card div
-        ), unsafe_allow_html=True)
+            # Scene label row — matches template "Scene 1 · Attentional Flow Journey · Scene N"
+            scene_count = len(trace)
+            st.markdown(uikit.clean_html(
+                f'<div style="display:flex; justify-content:space-between; margin-top:4px; padding:0 4px; '
+                f'font-size:0.65rem; font-weight:700; color:var(--text-secondary); '
+                f'text-transform:uppercase; letter-spacing:0.12em;">'
+                f'<span>Scene 1</span>'
+                f'<span>Attentional Flow Journey</span>'
+                f'<span>Scene {scene_count}</span>'
+                f'</div>'
+            ), unsafe_allow_html=True)
 
         # AI Pacing Critique
         pulse_cache_key = f'ai_pulse_{lens.lower().replace(" ", "_")}'
         if st.session_state.get(pulse_cache_key):
-            uikit.render_ai_consultant_box(st.session_state[pulse_cache_key], persona=lens, box_title=f"{lens} Pacing Critique")
+            critique_key = f"critique_container_{lens.lower().replace(' ', '_')}"
+            scroll_state_key = f"scrolled_to_critique_{lens.lower().replace(' ', '_')}"
+            if not st.session_state.get(scroll_state_key, False):
+                st.session_state[scroll_state_key] = True
+                from app.streamlit_utils import inject_scroll_to
+                inject_scroll_to(f".st-key-{critique_key}", block='center')
+            
+            with st.container(key=critique_key):
+                uikit.render_ai_consultant_box(st.session_state[pulse_cache_key], persona=lens, box_title=f"{lens} Pacing Critique")
         else:
             if st.button(f"🧠 Ask {lens} for Pacing Critique", key=f"pulse_btn_{lens}", use_container_width=True):
-                with st.spinner("Analyzing..."):
-                    from scriptpulse.reporters.llm_translator import generate_section_insight
-                    insight = generate_section_insight(report, 'pulse', lens=lens)
-                    st.session_state[pulse_cache_key] = insight
-                    st.rerun()
+                st.session_state['pending_critique'] = (lens, pulse_cache_key)
+                st.session_state[f"scrolled_to_critique_{lens.lower().replace(' ', '_')}"] = False
+                st.rerun()
 
     # =====================================================================
     # SECTION: STRUCTURAL DIAGNOSTICS
     # =====================================================================
     def render_diagnostics():
-        st.markdown("<br>", unsafe_allow_html=True)
         uikit.render_section_header("🧠", "Narrative Insights", config['diag_desc'])
 
         diagnoses = writer_intel.get('narrative_diagnosis', [])
@@ -306,17 +421,16 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
     def render_characters():
         if not char_arcs:
             return
-        st.markdown("<br>", unsafe_allow_html=True)
         uikit.render_section_header("👥", "Character Dynamics", "Agency and transformation tracking.")
 
         ARC_CONFIG = {
-            'Positive':   ('var(--emerald)',     'ti-trending-up'),
-            'Negative':   ('var(--accent-rose)',  'ti-trending-down'),
-            'Flat':       ('var(--text-secondary)','ti-minus'),
-            'Complex':    ('var(--amethyst)',     'ti-git-branch'),
-            'Redemptive': ('var(--accent-blue)',  'ti-star'),
-            'Tragic':     ('var(--coral)',        'ti-flame'),
-            'Unknown':    ('var(--text-secondary)','ti-help-circle'),
+            'Positive':   ('#00C853',     'ti-trending-up'),
+            'Negative':   ('#FF3366',     'ti-trending-down'),
+            'Flat':       ('#9E9E9E',     'ti-minus'),
+            'Complex':    ('#A56DFF',     'ti-git-branch'),
+            'Redemptive': ('#55E0FF',     'ti-star'),
+            'Tragic':     ('#FF7043',     'ti-flame'),
+            'Unknown':    ('#9E9E9E',     'ti-help-circle'),
         }
 
         sorted_chars = sorted(char_arcs.items(), key=lambda x: x[1].get('scenes_present', 0), reverse=True)
@@ -332,13 +446,46 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
                 bar_pct    = agency_val * 100
 
                 # Agency level label
-                if agency_val >= 0.7:   agency_label, label_color = 'High Agency',  'var(--emerald)'
-                elif agency_val >= 0.4: agency_label, label_color = 'Mid Agency',   'var(--coral)'
-                else:                   agency_label, label_color = 'Low Agency',   'var(--accent-rose)'
+                if agency_val >= 0.7:   agency_label, label_color = 'High Agency',  '#00C853'
+                elif agency_val >= 0.4: agency_label, label_color = 'Mid Agency',   '#FF7043'
+                else:                   agency_label, label_color = 'Low Agency',   '#FF3366'
+
+                # Helper to convert hex to RGB values for custom transparent glow styles
+                def to_rgb_str(hex_val):
+                    h = hex_val.lstrip('#')
+                    return ", ".join(str(int(h[i:i+2], 16)) for i in (0, 2, 4))
+
+                # Sentiment/Mood Shift calculations
+                s_val = arc.get('sentiment_delta', 0.0)
+                s_formatted = f"+{s_val:.2f}" if s_val >= 0 else f"{s_val:.2f}"
+                s_color = 'var(--emerald)' if s_val >= 0 else 'var(--accent-rose)'
+                s_hex = '#00C853' if s_val >= 0 else '#FF3366'
+                if s_val >= 0:
+                    s_left, s_width = 50, s_val * 50
+                    s_grad = f"{s_hex}; background: linear-gradient(90deg, rgba({to_rgb_str(s_hex)}, 0.15) 0%, {s_hex} 100%)"
+                    s_glow = f"0 0 8px rgba({to_rgb_str(s_hex)}, 0.35)"
+                else:
+                    s_left, s_width = 50 - abs(s_val) * 50, abs(s_val) * 50
+                    s_grad = f"{s_hex}; background: linear-gradient(90deg, {s_hex} 0%, rgba({to_rgb_str(s_hex)}, 0.15) 100%)"
+                    s_glow = f"0 0 8px rgba({to_rgb_str(s_hex)}, 0.35)"
+
+                # Agency/Power Shift calculations
+                a_val = arc.get('agency_delta', 0.0)
+                a_formatted = f"+{a_val:.2f}" if a_val >= 0 else f"{a_val:.2f}"
+                a_color = 'var(--emerald)' if a_val >= 0 else 'var(--coral)'
+                a_hex = '#00C853' if a_val >= 0 else '#FF7043'
+                if a_val >= 0:
+                    a_left, a_width = 50, a_val * 50
+                    a_grad = f"{a_hex}; background: linear-gradient(90deg, rgba({to_rgb_str(a_hex)}, 0.15) 0%, {a_hex} 100%)"
+                    a_glow = f"0 0 8px rgba({to_rgb_str(a_hex)}, 0.35)"
+                else:
+                    a_left, a_width = 50 - abs(a_val) * 50, abs(a_val) * 50
+                    a_grad = f"{a_hex}; background: linear-gradient(90deg, {a_hex} 0%, rgba({to_rgb_str(a_hex)}, 0.15) 100%)"
+                    a_glow = f"0 0 8px rgba({to_rgb_str(a_hex)}, 0.35)"
 
                 html = (
-                    f'<div class="glass-card hardware-metric" style="padding:24px; position:relative; overflow:hidden; height:100%;">'
-
+                    f'<div class="glass-card hardware-metric" style="padding:24px; position:relative; overflow:hidden; height:100%; font-family:\'Inter\', sans-serif; display:flex; flex-direction:column; justify-content:space-between;">'
+                    f'<div>'
                     # Name + arc icon row
                     f'<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">'
                     f'<div style="font-family:\'Outfit\',sans-serif; font-size:1.05rem; '
@@ -353,27 +500,60 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
                     # Arc type badge
                     f'<div style="display:inline-flex; align-items:center; gap:6px; '
                     f'background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); '
-                    f'border-radius:20px; padding:3px 10px; margin-bottom:16px;">'
+                    f'border-radius:20px; padding:3px 10px; margin-bottom:16px; font-family:\'Inter\', sans-serif;">'
                     f'<span style="font-size:0.65rem; font-weight:700; color:{arc_color}; '
                     f'text-transform:uppercase; letter-spacing:0.08em;">{arc_type} Arc</span>'
                     f'</div>'
 
                     # Agency bar
-                    f'<div style="margin-bottom:8px;">'
-                    f'<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">'
-                    f'<span style="font-size:0.65rem; font-weight:700; color:var(--text-secondary); '
-                    f'text-transform:uppercase; letter-spacing:0.1em;">Character Agency</span>'
-                    f'<span style="font-size:0.7rem; font-weight:700; color:{label_color};">{agency_label}</span>'
+                    f'<div style="margin-bottom:20px;">'
+                    f'<div style="display:grid; grid-template-columns:1fr 1fr; width:100%; margin-bottom:6px;">'
+                    f'<div style="font-size:0.65rem; font-weight:700; color:var(--text-secondary); '
+                    f'text-transform:uppercase; letter-spacing:0.1em; text-align:left;">Character Agency</div>'
+                    f'<div style="font-size:0.7rem; font-weight:700; color:{label_color}; text-align:right;">{agency_label} ({bar_pct:.0f}%)</div>'
                     f'</div>'
-                    f'<div style="height:6px; width:100%; border-radius:6px; background:rgba(255,255,255,0.07); overflow:hidden;">'
-                    f'<div style="height:100%; width:{bar_pct:.0f}%; border-radius:6px; '
-                    f'background:linear-gradient(90deg,{arc_color},{arc_color}88); '
-                    f'transition:width 0.8s ease;"></div>'
+                    f'<div style="position:relative; height:6px; width:100%; border-radius:6px; background:rgba(255,255,255,0.07); overflow:visible;">'
+                    f'<div style="position:absolute; top:0; left:0; width:{bar_pct:.0f}%; height:100%; border-radius:6px; '
+                    f'background:{label_color}; background:linear-gradient(90deg, rgba({to_rgb_str(label_color)}, 0.15) 0%, {label_color} 100%); '
+                    f'box-shadow:0 0 6px rgba({to_rgb_str(label_color)}, 0.35); '
+                    f'z-index:1; transition:all 0.5s ease;"></div>'
+                    f'</div>'
+                    f'</div>'
+
+                    # Subtle divider
+                    f'<div style="height:1px; width:100%; background:linear-gradient(90deg, rgba(255,255,255,0.08), transparent); margin-bottom:16px;"></div>'
+
+                    # Mood Shift Meter
+                    f'<div style="margin-bottom:16px;">'
+                    f'<div style="display:grid; grid-template-columns:1fr 1fr; width:100%; margin-bottom:6px;">'
+                    f'<div style="font-size:0.65rem; font-weight:700; color:var(--text-secondary); '
+                    f'text-transform:uppercase; letter-spacing:0.08em; text-align:left;">Mood Shift</div>'
+                    f'<div style="font-size:0.72rem; font-weight:700; color:{s_color}; font-family:\'Outfit\', sans-serif; text-align:right;">{s_formatted}</div>'
+                    f'</div>'
+                    f'<div style="position:relative; height:6px; width:100%; border-radius:6px; background:rgba(255,255,255,0.05); overflow:visible;">'
+                    f'<div style="position:absolute; left:50%; top:-2px; bottom:-2px; width:1px; background:rgba(255,255,255,0.15); z-index:2;"></div>'
+                    f'<div style="position:absolute; top:0; left:{s_left:.1f}%; width:{s_width:.1f}%; height:100%; '
+                    f'background:{s_grad}; border-radius:6px; z-index:1; box-shadow:{s_glow}; transition:all 0.5s ease;"></div>'
+                    f'</div>'
+                    f'</div>'
+
+                    # Power Shift Meter
+                    f'<div style="margin-bottom:16px;">'
+                    f'<div style="display:grid; grid-template-columns:1fr 1fr; width:100%; margin-bottom:6px;">'
+                    f'<div style="font-size:0.65rem; font-weight:700; color:var(--text-secondary); '
+                    f'text-transform:uppercase; letter-spacing:0.08em; text-align:left;">Power Shift</div>'
+                    f'<div style="font-size:0.72rem; font-weight:700; color:{a_color}; font-family:\'Outfit\', sans-serif; text-align:right;">{a_formatted}</div>'
+                    f'</div>'
+                    f'<div style="position:relative; height:6px; width:100%; border-radius:6px; background:rgba(255,255,255,0.05); overflow:visible;">'
+                    f'<div style="position:absolute; left:50%; top:-2px; bottom:-2px; width:1px; background:rgba(255,255,255,0.15); z-index:2;"></div>'
+                    f'<div style="position:absolute; top:0; left:{a_left:.1f}%; width:{a_width:.1f}%; height:100%; '
+                    f'background:{a_grad}; border-radius:6px; z-index:1; box-shadow:{a_glow}; transition:all 0.5s ease;"></div>'
+                    f'</div>'
                     f'</div>'
                     f'</div>'
 
                     # Scenes count
-                    f'<div style="font-size:0.72rem; color:var(--text-secondary); margin-top:10px;">'
+                    f'<div style="font-size:0.72rem; color:var(--text-secondary); margin-top:12px;">'
                     f'<i class="ti ti-layout-list" style="margin-right:4px; opacity:0.5;"></i>'
                     f'Appears in <b style="color:white;">{scenes_n}</b> scenes</div>'
                     f'</div>'
@@ -396,15 +576,30 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
         st.markdown("<br>", unsafe_allow_html=True)
         uikit.render_section_header("🎢", "Scene Turns", "Emotional shifts within individual scenes.")
 
-        # --- Premium HTML table instead of plain st.dataframe ---
-        # Config: shift type → icon, color
+        # Helper to convert hex to RGB values for custom transparent glow styles
+        def to_rgb_str(hex_val):
+            if hex_val.startswith('var('):
+                if 'emerald' in hex_val: hex_val = '#00C853'
+                elif 'rose' in hex_val: hex_val = '#FF3366'
+                elif 'amethyst' in hex_val: hex_val = '#9B51E0'
+                elif 'coral' in hex_val: hex_val = '#FF7043'
+                else: hex_val = '#FFFFFF'
+            h = hex_val.lstrip('#')
+            return ",".join(str(int(h[i:i+2], 16)) for i in (0, 2, 4))
+
+        # Config: shift type → icon, hex color
         TURN_CONFIG = {
-            'Positive': ('ti-trending-up',   'var(--emerald)',       'rgba(0,200,83,0.12)'),
-            'Negative': ('ti-trending-down',  'var(--accent-rose)',   'rgba(255,51,102,0.12)'),
-            'Reversal': ('ti-arrows-exchange','var(--amethyst)',      'rgba(155,81,224,0.12)'),
-            'Peak':     ('ti-flame',          'var(--coral)',         'rgba(255,112,67,0.12)'),
-            'Drop':     ('ti-arrow-down',     'var(--accent-rose)',   'rgba(255,51,102,0.10)'),
-            'Rise':     ('ti-arrow-up',       'var(--emerald)',       'rgba(0,200,83,0.10)'),
+            'Positive Progression': ('ti-trending-up',      '#00C853'),
+            'Negative Progression': ('ti-trending-down',    '#FF3366'),
+            'Positive to Negative': ('ti-arrow-down-right',  '#FF7043'),
+            'Negative to Positive': ('ti-arrow-up-right',    '#9B51E0'),
+            'High Energy':          ('ti-flame',             '#FF7043'),
+            'Flat':                 ('ti-minus',             '#9E9E9E'),
+            'Positive Turn':        ('ti-trending-up',      '#00C853'),
+            'Negative Turn':        ('ti-trending-down',    '#FF3366'),
+            'Flat Turn':            ('ti-minus',             '#9E9E9E'),
+            'Positive':             ('ti-trending-up',      '#00C853'),
+            'Negative':             ('ti-trending-down',    '#FF3366'),
         }
 
         rows_html = ''
@@ -415,75 +610,115 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
             if pd.isna(delta): delta = 0.0
 
             # Pick config or fallback
-            icon_cls, color, bg = TURN_CONFIG.get(
+            config_val = TURN_CONFIG.get(
                 shift_type,
-                ('ti-git-branch', 'var(--text-secondary)', 'rgba(255,255,255,0.03)')
+                ('ti-git-branch', '#9E9E9E')
             )
+            icon_cls, color = config_val[0], config_val[1]
+            bg = "rgba(255, 255, 255, 0.015)"
 
-            # Intensity bar width (0–100%)
-            bar_width = min(100, abs(float(delta)) * 100)
-            bar_color  = 'var(--emerald)' if float(delta) >= 0 else 'var(--accent-rose)'
-            delta_sign = '+' if float(delta) >= 0 else ''
+            # Format signs based on mathematical direction
+            if float(delta) > 0:
+                delta_sign = '+'
+            else:
+                delta_sign = ''
             delta_str  = f"{delta_sign}{float(delta):.2f}"
 
+            # Override icon and color for steady/flat delta turns to show neutral state
+            if abs(float(delta)) < 0.001:
+                icon_cls = 'ti-minus'
+                color = '#9E9E9E'
+
+            # Set text and progress bar color to match the category's theme color
+            bar_hex_color = color
+            math_color = color
+            rgb = to_rgb_str(color)
+
+            # Extra visual clues for starting / ending sentiments
+            start_s = row.get('start_sentiment', 0.0)
+            end_s = row.get('end_sentiment', 0.0)
+            if pd.isna(start_s): start_s = 0.0
+            if pd.isna(end_s): end_s = 0.0
+
+            def get_sent_color(val):
+                if val > 0: return '#00C853'
+                elif val < 0: return '#FF3366'
+                return '#A3A0B3'
+
+            start_formatted = f"+{start_s:.1f}" if start_s > 0 else f"{start_s:.1f}"
+            end_formatted = f"+{end_s:.1f}" if end_s > 0 else f"{end_s:.1f}"
+
+            # Simple explanatory label based on shift direction and values
+            if delta > 0:
+                if start_s < 0 and end_s < 0:
+                    explanation = "mood recovered / became less negative"
+                elif start_s < 0 and end_s >= 0:
+                    explanation = "mood flipped to positive"
+                else:
+                    explanation = "mood improved / became more positive"
+            elif delta < 0:
+                if start_s > 0 and end_s > 0:
+                    explanation = "mood declined / became less positive"
+                elif start_s >= 0 and end_s < 0:
+                    explanation = "mood flipped to negative"
+                else:
+                    explanation = "mood worsened / became more negative"
+            else:
+                explanation = "mood remained steady"
+
             rows_html += (
-                f'<div style="display:flex; align-items:center; gap:16px; padding:14px 18px; '
-                f'margin-bottom:6px; border-radius:12px; background:{bg}; '
+                f'<div style="display:flex; align-items:center; gap:20px; padding:12px 20px; '
+                f'margin-bottom:6px; border-radius:8px; background:{bg}; '
                 f'border-left:3px solid {color}; '
-                f'border-top:1px solid rgba(255,255,255,0.04); '
-                f'border-right:1px solid rgba(255,255,255,0.03); '
-                f'border-bottom:1px solid rgba(255,255,255,0.03); '
-                f'transition:transform 0.15s ease;" '
-                f'onmouseover="this.style.transform=\'translateX(4px)\'" '
-                f'onmouseout="this.style.transform=\'translateX(0)\'">'
+                f'border-top:1px solid rgba(255,255,255,0.02); '
+                f'border-right:1px solid rgba(255,255,255,0.015); '
+                f'border-bottom:1px solid rgba(255,255,255,0.015); '
+                f'transition:transform 0.2s ease, background-color 0.2s ease;" '
+                f'onmouseover="this.style.transform=\'translateX(4px)\'; this.style.backgroundColor=\'rgba(255,255,255,0.04)\';" '
+                f'onmouseout="this.style.transform=\'translateX(0)\'; this.style.backgroundColor=\'{bg}\';">'
 
-                # Scene number badge
-                f'<div style="min-width:40px; height:40px; border-radius:10px; '
-                f'background:rgba(255,255,255,0.05); display:flex; align-items:center; '
-                f'justify-content:center; flex-direction:column;">'
-                f'<span style="font-size:0.6rem; color:var(--text-secondary); '
-                f'font-weight:700; text-transform:uppercase; letter-spacing:0.08em;">SCN</span>'
-                f'<span style="font-size:0.95rem; font-weight:800; color:white; '
-                f'font-family:\'Outfit\',sans-serif; line-height:1;">{scene_num}</span>'
-                f'</div>'
+                # Column 1: Scene
+                f'<div style="width:70px; font-family:\'Outfit\',sans-serif; font-size:0.85rem; '
+                f'font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.05em;">'
+                f'SCENE {scene_num}</div>'
 
-                # Icon box
-                f'<div style="width:36px; height:36px; border-radius:8px; '
-                f'background:{bg}; display:flex; align-items:center; '
-                f'justify-content:center; color:{color}; font-size:1.1rem; flex-shrink:0;">'
-                f'<i class="ti {icon_cls}"></i>'
+                # Column 2: Shift Pattern & Icon
+                f'<div style="width:180px; display:flex; align-items:center; gap:8px;">'
+                f'<i class="ti {icon_cls}" style="color:{color}; font-size:1.1rem; flex-shrink:0;"></i>'
+                f'<span style="font-family:\'Inter\',sans-serif; font-size:0.875rem; font-weight:600; color:white;">{shift_type}</span>'
                 f'</div>'
 
-                # Shift label + intensity bar
-                f'<div style="flex:1; min-width:0;">'
-                f'<div style="font-size:0.875rem; font-weight:700; color:white; '
-                f'margin-bottom:6px;">{shift_type}</div>'
-                f'<div style="height:4px; width:100%; border-radius:4px; '
-                f'background:rgba(255,255,255,0.06); overflow:hidden;">'
-                f'<div style="height:100%; width:{bar_width:.0f}%; border-radius:4px; '
-                f'background:{bar_color}; transition:width 0.6s ease;"></div>'
-                f'</div>'
+                # Column 3: Emotional Details (Start -> End)
+                f'<div style="flex:1; display:flex; align-items:center; gap:8px; font-family:\'Inter\',sans-serif; font-size:0.85rem;">'
+                f'<span style="color:var(--text-muted); font-size:0.75rem; opacity:0.7;">Start:</span>'
+                f'<span style="color:{get_sent_color(start_s)}; font-weight:700;">{start_formatted}</span>'
+                f'<span style="color:var(--text-muted); opacity:0.4; font-size:0.8rem; margin:0 2px;">➔</span>'
+                f'<span style="color:var(--text-muted); font-size:0.75rem; opacity:0.7;">End:</span>'
+                f'<span style="color:{get_sent_color(end_s)}; font-weight:700;">{end_formatted}</span>'
+                f'<span style="color:var(--text-muted); font-size:0.75rem; font-style:italic; margin-left:8px; opacity:0.7;">({explanation})</span>'
                 f'</div>'
 
-                # Delta value
-                f'<div style="min-width:52px; text-align:right;">'
-                f'<span style="font-family:\'JetBrains Mono\',monospace; font-size:0.8rem; '
-                f'font-weight:700; color:{color};">{delta_str}</span>'
+                # Column 4: Delta value badge
+                f'<div style="width:100px; text-align:right;">'
+                f'<span style="display:inline-block; font-family:\'Outfit\',sans-serif; font-size:0.8rem; '
+                f'font-weight:800; color:{math_color}; background:rgba({rgb}, 0.08); '
+                f'border:1px solid rgba({rgb}, 0.2); padding:4px 12px; border-radius:12px; '
+                f'letter-spacing:0.02em; box-shadow:0 2px 8px rgba({rgb}, 0.1);">{delta_str}</span>'
                 f'</div>'
+                
                 f'</div>'
             )
 
         # Header row
         header_html = (
-            '<div style="display:flex; align-items:center; gap:16px; padding:8px 18px; '
-            'margin-bottom:10px;">'
-            '<div style="min-width:40px; font-size:0.6rem; font-weight:700; '
-            'color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.1em;">Scene</div>'
-            '<div style="width:36px;"></div>'
-            '<div style="flex:1; font-size:0.6rem; font-weight:700; '
-            'color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.1em;">Emotional Shift</div>'
-            '<div style="min-width:52px; text-align:right; font-size:0.6rem; font-weight:700; '
-            'color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.1em;">Δ Intensity</div>'
+            '<div style="display:flex; align-items:center; gap:20px; padding:8px 20px; '
+            'margin-bottom:8px; font-size:0.65rem; font-weight:700; color:var(--text-secondary); '
+            'text-transform:uppercase; letter-spacing:0.12em; border-bottom:1px solid rgba(255,255,255,0.06); '
+            'padding-bottom:10px; margin-bottom:12px;">'
+            '<div style="width:70px;">Scene</div>'
+            '<div style="width:180px;">Pattern</div>'
+            '<div style="flex:1;">Emotional Shift</div>'
+            '<div style="width:100px; text-align:right;">Δ Intensity</div>'
             '</div>'
         )
 
@@ -573,7 +808,6 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
     # SECTION: PRODUCER INTELLIGENCE
     # =====================================================================
     def render_producer_intel():
-        st.markdown("<br>", unsafe_allow_html=True)
         uikit.render_section_header("🏢", "Producer Intelligence",
                                     "Commercial viability, budget estimation & marketplace positioning.")
 
@@ -631,25 +865,39 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
             stakes = {k: v for k, v in stakes_data.items() if k in valid_stakes and isinstance(v, (int, float)) and v > 0}
             if stakes:
                 st.markdown("<br>", unsafe_allow_html=True)
+                
+                # Title Row
                 st.markdown(
                     '<div style="font-size:0.7rem; font-weight:700; color:var(--text-secondary); '
-                    'text-transform:uppercase; letter-spacing:0.12em; margin-bottom:12px; '
-                    'display:flex; align-items:center; gap:8px;">'
+                    'text-transform:uppercase; letter-spacing:0.12em; margin-top:6px; '
+                    'display:flex; align-items:center; gap:8px; margin-bottom:12px;">'
                     '<i class="ti ti-target" style="color:var(--amethyst);"></i>Stakes Distribution</div>',
                     unsafe_allow_html=True
                 )
-                st.plotly_chart(charts.get_stakes_chart(
-                    list(stakes.keys()), list(stakes.values()),
-                    {'Physical': Theme.SEMANTIC_CRITICAL, 'Emotional': Theme.SEMANTIC_WARNING,
-                     'Social': Theme.SEMANTIC_GOOD, 'Moral': Theme.ACCENT_PRIMARY,
-                     'Existential': Theme.ACCENT_PURPLE}
-                ), use_container_width=True, config={'displayModeBar': False}, key=f"stakes_{lens}", theme=None)
+                
+                color_map = {
+                    'Physical': Theme.SEMANTIC_CRITICAL,
+                    'Emotional': Theme.SEMANTIC_WARNING,
+                    'Social': Theme.SEMANTIC_GOOD,
+                    'Moral': Theme.ACCENT_PRIMARY,
+                    'Existential': Theme.ACCENT_PURPLE
+                }
+                
+                st.plotly_chart(
+                    charts.get_stakes_donut_chart(
+                        list(stakes.keys()), list(stakes.values()),
+                        color_map
+                    ),
+                    use_container_width=True,
+                    config={'displayModeBar': False},
+                    key=f"stakes_donut_{lens}",
+                    theme=None
+                )
 
     # =====================================================================
     # SECTION: AI COVERAGE MEMO
     # =====================================================================
     def render_coverage_memo():
-        st.markdown("<br>", unsafe_allow_html=True)
         uikit.render_section_header("📝", f"AI {lens} Coverage",
                                     f"Professional narrative assessment from the {lens} perspective.")
 
@@ -666,20 +914,23 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
             if not has_api:
                 st.warning("⚠️ AI is offline. Please add API keys to activate.")
             else:
-                with st.spinner(f"The {lens} is reading your script..."):
-                    from scriptpulse.reporters.llm_translator import generate_ai_summary
-                    result, err = generate_ai_summary(report, lens=lens)
-                    if result:
-                        st.session_state[cache_key] = result
-                        st.rerun()
-                    else:
-                        st.error(f"AI Error: {err}")
+                st.session_state['pending_memo'] = (lens, cache_key)
+                st.session_state[f"scrolled_to_memo_{lens.lower().replace(' ', '_')}"] = False
+                st.rerun()
 
         if st.session_state.get(cache_key):
-            uikit.render_signal_box(
-                f"{config['icon']} {lens} Coverage", "",
-                st.session_state[cache_key], Theme.SEMANTIC_INFO
-            )
+            memo_key = f"memo_container_{lens.lower().replace(' ', '_')}"
+            scroll_state_key = f"scrolled_to_memo_{lens.lower().replace(' ', '_')}"
+            if not st.session_state.get(scroll_state_key, False):
+                st.session_state[scroll_state_key] = True
+                from app.streamlit_utils import inject_scroll_to
+                inject_scroll_to(f".st-key-{memo_key}", block='center')
+            
+            with st.container(key=memo_key):
+                uikit.render_signal_box(
+                    f"{config['icon']} {lens} Coverage", "",
+                    st.session_state[cache_key], Theme.SEMANTIC_INFO
+                )
         else:
             st.markdown(uikit.clean_html(
                 '<div style="padding:32px 24px; text-align:center; '
@@ -716,50 +967,11 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
     # SECTION: EXPORT — STACKED VERTICALLY
     # =====================================================================
     def render_export():
-        uikit.render_section_header("📦", "Script & Data", "View your original script and export research data.")
+        uikit.render_section_header("📖", "Script Viewer", "View your original script.")
 
         with st.expander("📖 View Original Script", expanded=False):
             st.text_area("Script", value=script_input, height=400, disabled=True, label_visibility="collapsed")
 
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        with st.expander("🧪 Research & Data Export", expanded=False):
-            uikit.render_lab_pipeline_header()
-
-            st.markdown(
-                '<div style="font-size:0.7rem; font-weight:700; color:var(--text-secondary); '
-                'text-transform:uppercase; letter-spacing:0.12em; margin-bottom:12px; margin-top:8px;">'
-                'Narrative Efficiency Frontier</div>',
-                unsafe_allow_html=True
-            )
-            df_res = pd.DataFrame(trace)
-            st.plotly_chart(charts.get_efficiency_frontier(df_res), use_container_width=True,
-                           config={'displayModeBar': False}, key="res_eff", theme=None)
-
-            st.divider()
-
-            st.markdown(
-                '<div style="font-size:0.7rem; font-weight:700; color:var(--text-secondary); '
-                'text-transform:uppercase; letter-spacing:0.12em; margin-bottom:12px;">'
-                'Research Telemetry</div>',
-                unsafe_allow_html=True
-            )
-            t1, t2 = st.columns(2)
-            telemetry = [s.get('research_telemetry', {}) for s in trace]
-            if telemetry:
-                avg_conf = sum(t.get('analytical_confidence', 0) for t in telemetry) / len(telemetry)
-                avg_dens = sum(t.get('semantic_density', 0) for t in telemetry) / len(telemetry)
-                t1.metric("Confidence", f"{avg_conf:.0%}", help="ML model confidence.")
-                t2.metric("Semantic Density", f"{avg_dens:.2f}", help="Lexical diversity per token.")
-
-                if any(t.get('heuristic_fallback') for t in telemetry):
-                    st.caption("⚠️ Heuristic fallbacks active for some features.")
-
-            st.divider()
-
-            clean_report = json.loads(json.dumps(report, default=lambda x: list(x) if isinstance(x, set) else str(x)))
-            st.download_button("📥 Download Full JSON Trace", data=json.dumps(clean_report, indent=2),
-                              file_name="scriptpulse_trace.json", use_container_width=True, key="dl_json")
 
     # =====================================================================
     # PERSONA-RESPONSIVE FLOW — SHOW ONLY WHAT'S NEEDED IN SIDEBAR GRID
@@ -859,7 +1071,7 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
                 "🏢 Market & Production",
                 "🧠 Narrative Insights",
                 "📝 AI Executive Memo",
-                "📦 Export & Lab Data"
+                "📖 Script Viewer"
             ])
             with tab_pulse:
                 _safe_render(render_story_pulse, "Tension Map")
@@ -878,7 +1090,7 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
                 "📐 Prose & Pacing Flow",
                 "🧠 Technical Insights",
                 "📝 AI Coordinator Memo",
-                "📦 Export & Lab Data"
+                "📖 Script Viewer"
             ])
             with tab_pulse:
                 _safe_render(render_story_pulse, "Tension Map")
@@ -899,7 +1111,7 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
                 "👥 Character Dynamics",
                 "🏢 Producer Intel",
                 "📝 AI Story Memo",
-                "📦 Export & Lab Data"
+                "📖 Script Viewer"
             ])
             with tab_pulse:
                 _safe_render(render_story_pulse, "Tension Map")

@@ -24,6 +24,7 @@ class Theme:
     ACCENT_ROSE = "#FF3366"
     ACCENT_BLUE = "#55E0FF"
     ACCENT_PURPLE = "#A56DFF"
+    ACCENT_AMBER = "#FFB700"
     
     # Semantic
     SEMANTIC_GOOD = "#00C853"
@@ -37,25 +38,25 @@ def init_plotly_template():
         layout=go.Layout(
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
-            font=dict(color=Theme.TEXT_PRIMARY),
+            font=dict(family="'Inter', sans-serif", color=Theme.TEXT_PRIMARY),
             xaxis=dict(
                 showgrid=True,
-                gridcolor='rgba(106, 72, 187, 0.08)',
+                gridcolor='rgba(255, 255, 255, 0.04)',
                 zeroline=False,
-                title_font=dict(size=12, color=Theme.TEXT_SECONDARY),
-                tickfont=dict(size=10, color=Theme.TEXT_MUTED)
+                title_font=dict(family="'Outfit', sans-serif", size=12, color=Theme.TEXT_SECONDARY),
+                tickfont=dict(family="'Inter', sans-serif", size=10, color=Theme.TEXT_MUTED)
             ),
             yaxis=dict(
                 showgrid=True,
-                gridcolor='rgba(106, 72, 187, 0.08)',
+                gridcolor='rgba(255, 255, 255, 0.04)',
                 zeroline=False,
-                title_font=dict(size=12, color=Theme.TEXT_SECONDARY),
-                tickfont=dict(size=10, color=Theme.TEXT_MUTED)
+                title_font=dict(family="'Outfit', sans-serif", size=12, color=Theme.TEXT_SECONDARY),
+                tickfont=dict(family="'Inter', sans-serif", size=10, color=Theme.TEXT_MUTED)
             ),
             hoverlabel=dict(
-                bgcolor='rgba(26, 23, 41, 0.95)',
-                font_size=12,
-                font_color=Theme.TEXT_PRIMARY
+                bgcolor='rgba(18, 18, 18, 0.95)',
+                bordercolor='rgba(255, 255, 255, 0.08)',
+                font=dict(family="'Inter', sans-serif", size=12, color=Theme.TEXT_PRIMARY)
             )
         )
     )
@@ -78,6 +79,7 @@ def apply_theme_to_css(css_string: str) -> str:
         "{ACCENT_ROSE}": Theme.ACCENT_ROSE,
         "{ACCENT_BLUE}": Theme.ACCENT_BLUE,
         "{ACCENT_PURPLE}": Theme.ACCENT_PURPLE,
+        "{ACCENT_AMBER}": Theme.ACCENT_AMBER,
         "{SEMANTIC_GOOD}": Theme.SEMANTIC_GOOD,
         "{SEMANTIC_WARNING}": Theme.SEMANTIC_WARNING,
         "{SEMANTIC_CRITICAL}": Theme.SEMANTIC_CRITICAL,

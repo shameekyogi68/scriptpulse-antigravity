@@ -253,12 +253,22 @@ def run_pipeline(script_content, genre='drama', story_framework='3_act', progres
         s2 = sum(1 for w in pos if w in s_half) - sum(1 for w in neg if w in s_half) - (sum(1 for w in violence_vibe if w in s_half) * 3)
         
         # Core Scene Turn Mapping
-        label = "Flat"
-        if s1 < 0 and s2 > 0: label = "Negative to Positive"
-        elif s1 > 0 and s2 < 0: label = "Positive to Negative"
-        elif s1 > 6 or s2 > 6: label = "High Energy" 
-        elif s1 < 0 and s2 < 0: label = "Negative Progression"
-        elif s1 > 0 and s2 > 0: label = "Positive Progression"
+        delta = s2 - s1
+        if delta > 0:
+            if s1 < 0 and s2 >= 0:
+                label = "Negative to Positive"
+            else:
+                label = "Positive Progression"
+        elif delta < 0:
+            if s1 >= 0 and s2 < 0:
+                label = "Positive to Negative"
+            else:
+                label = "Negative Progression"
+        else: # delta == 0
+            if s1 > 6 or s2 > 6:
+                label = "High Energy"
+            else:
+                label = "Flat"
         
         # Task 2: Sentiment Post-processing pass for Violence/Death (Rule-based)
         viol_keywords = ['shot', 'killed', 'trap', 'ambush', 'gunfire', 'body', 'murder', 'blast', 'assassin', 'corpse']
@@ -267,13 +277,16 @@ def run_pipeline(script_content, genre='drama', story_framework='3_act', progres
         violence_override = False
         if any(w in scene_text for w in viol_keywords):
             violence_override = True
-            # Force a negative transition label if violence is present
-            label = "Negative Progression" if s1 < 0 else "Positive to Negative"
+            # Force a negative transition label if violence is present and sentiment actually declined or remained flat
+            if delta <= 0:
+                label = "Negative Progression" if s1 < 0 else "Positive to Negative"
 
         s['scene_turn'] = {
             'turn_label': label, 
             'sentiment_delta': s2 - s1, 
-            'violence_override': violence_override
+            'violence_override': violence_override,
+            'start_sentiment': float(s1),
+            'end_sentiment': float(s2)
         }
 
     # --- STAGE 6: Final Assembly ---

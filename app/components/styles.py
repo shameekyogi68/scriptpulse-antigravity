@@ -45,6 +45,7 @@ def apply_custom_styles():
             --accent-teal: {ACCENT_TEAL};
             --accent-rose: {ACCENT_ROSE};
             --accent-blue: {ACCENT_BLUE};
+            --accent-purple: {ACCENT_PURPLE};
 
             /* Semantic (template uses these names directly) */
             --emerald: #00C853;
@@ -98,7 +99,7 @@ def apply_custom_styles():
             background: var(--bg-primary) !important;
         }
 
-        .stApp, select, input, textarea, button, span, p, div, label, li, a {
+        .stApp, select, input, textarea, button, p, label, li {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
         }
 
@@ -110,8 +111,13 @@ def apply_custom_styles():
         .main .block-container {
             padding-top: 0rem !important;
             margin-top: -3rem !important; /* Pull content into the header area */
-            padding-bottom: 4rem !important;
             max-width: 1360px !important;
+        }
+        
+        .main .block-container,
+        .stMainBlockContainer,
+        div[data-testid="stAppViewBlockContainer"] {
+            padding-bottom: 0.5rem !important;
         }
 
         /* ===== TYPOGRAPHY ===== */
@@ -322,8 +328,8 @@ def apply_custom_styles():
         /* ===== FOOTER — Tactile Glass template footer spec ===== */
         .sp-footer {
             text-align: center;
-            padding: 3rem 1rem 1.5rem;
-            margin-top: 6rem;
+            padding: 1rem 1rem;
+            margin-top: 1rem;
             border-top: 1px solid var(--glass-border) !important;
         }
 
@@ -374,14 +380,82 @@ def apply_custom_styles():
         }
 
         /* ===== TABS — Tactile Glass .tab-bar spec ===== */
-        .stTabs [data-baseweb="tab-list"] {
+        .stTabs [data-baseweb="tab-list"],
+        .stTabs [role="tablist"],
+        div[data-testid="stTabs"] > div:first-child > div:first-child {
             gap: 8px !important;
             background: rgba(0, 0, 0, 0.2) !important;
             border-radius: 14px !important;
-            padding: 6px !important;
+            padding: 6px 40px !important;
             backdrop-filter: blur(10px) !important;
             border: 1px solid rgba(255, 255, 255, 0.03) !important;
-            margin-bottom: 32px !important;
+            margin-bottom: 12px !important;
+            position: relative !important;
+        }
+
+        /* Style the tab list scroll buttons to fit the glass theme and position them on the edges */
+        div[data-testid="stTabs"] > div:first-child > div:first-child button:not([role="tab"]):not([data-baseweb="tab"]),
+        div[data-testid="stTabs"] > div:first-child > div:first-child [role="button"]:not([role="tab"]):not([data-baseweb="tab"]) {
+            background: rgba(0, 0, 0, 0.4) !important;
+            border-radius: 50% !important;
+            border: 1px solid rgba(255, 255, 255, 0.05) !important;
+            color: white !important;
+            backdrop-filter: blur(8px) !important;
+            width: 28px !important;
+            height: 28px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            transition: all 0.2s ease !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+            position: absolute !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            margin: 0 !important;
+            cursor: pointer !important;
+            z-index: 10 !important;
+        }
+        div[data-testid="stTabs"] > div:first-child > div:first-child button:not([role="tab"]):not([data-baseweb="tab"]):hover,
+        div[data-testid="stTabs"] > div:first-child > div:first-child [role="button"]:not([role="tab"]):not([data-baseweb="tab"]):hover {
+            background: var(--amethyst) !important;
+            color: white !important;
+            box-shadow: 0 0 10px var(--amethyst-glow) !important;
+            transform: translateY(-50%) scale(1.05) !important;
+        }
+        div[data-testid="stTabs"] > div:first-child > div:first-child button:not([role="tab"]):not([data-baseweb="tab"]):first-of-type,
+        div[data-testid="stTabs"] > div:first-child > div:first-child [role="button"]:not([role="tab"]):not([data-baseweb="tab"]):first-of-type {
+            left: 12px !important;
+        }
+        div[data-testid="stTabs"] > div:first-child > div:first-child button:not([role="tab"]):not([data-baseweb="tab"]):last-of-type,
+        div[data-testid="stTabs"] > div:first-child > div:first-child [role="button"]:not([role="tab"]):not([data-baseweb="tab"]):last-of-type {
+            right: 12px !important;
+        }
+
+        /* Prevent tabs from sliding under the scroll buttons when horizontal scroll is active */
+        div[data-testid="stTabs"] > div:first-child > div:first-child [role="tablist"] > div,
+        div[data-testid="stTabs"] > div:first-child > div:first-child [data-baseweb="tab-list"] > div {
+            margin-left: 44px !important;
+            margin-right: 44px !important;
+        }
+
+        /* Remove default margins/padding from tab panels to remove large gaps */
+        div[data-testid="stTab"],
+        [data-baseweb="tab-panel"] {
+            padding-top: 0px !important;
+            margin-top: 0px !important;
+            padding-left: 0px !important;
+            padding-right: 0px !important;
+        }
+
+        /* Remove top margin of section headers when they are at the top of a tab panel */
+        div[data-testid="stTab"] .section-header-wrapper,
+        [data-baseweb="tab-panel"] .section-header-wrapper {
+            margin-top: 0px !important;
+        }
+
+        /* Pixel-align section header icons with text baselines */
+        .section-header-wrapper i.ti {
+            transform: translateY(11px) !important;
         }
 
         .stTabs [data-baseweb="tab"] {
@@ -456,6 +530,14 @@ def apply_custom_styles():
             color: white !important;
         }
 
+        /* Align the "Analyze New Script" button in the controls row */
+        .st-key-analyze_new_script_btn button,
+        [class*="analyze_new_script_btn"] button,
+        div[data-key="analyze_new_script_btn"] button,
+        div[id="analyze_new_script_btn"] button {
+            transform: translateY(47px) !important;
+        }
+
         /* ===== FILE UPLOADER ===== */
         div.stApp div[data-testid="stFileUploader"] {
             background: transparent !important;
@@ -486,7 +568,6 @@ def apply_custom_styles():
         div.stApp div[data-testid="stFileUploader"] section[data-testid="stFileUploadDropzone"] svg {
             display: none !important;
         }
-        /* Inject custom cloud icon */
         div.stApp div[data-testid="stFileUploader"] section[data-testid="stFileUploaderDropzone"]::before,
         div.stApp div[data-testid="stFileUploader"] section[data-testid="stFileUploadDropzone"]::before {
             content: "" !important;
@@ -494,7 +575,7 @@ def apply_custom_styles():
             height: 48px !important;
             margin: 0 auto 0 auto !important;
             display: block !important;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%239E9E9E' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 11v9M9 14l3-3 3 3'/%3E%3Cpath d='M17 19.3a5 5 0 0 0-3-9.3c-.3 0-.6 0-.9.1a7 7 0 1 0-11.8 4A5 5 0 0 0 5 19.3'/%3E%3C/svg%3E") !important;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%239E9E9E' stroke-width='1.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 18a4.6 4.4 0 0 1 0 -9a5 4.5 0 0 1 11 2h1a3.5 3.5 0 0 1 0 7h-1'/%3E%3Cpath d='M12 17v-9'/%3E%3Cpath d='M9 11l3 -3l3 3'/%3E%3C/svg%3E") !important;
             background-size: contain !important;
             background-repeat: no-repeat !important;
             background-position: center !important;
@@ -528,7 +609,7 @@ def apply_custom_styles():
             background: linear-gradient(135deg, var(--accent-primary) 0%, #7B3FE4 100%) !important;
             padding: 12px 32px !important;
             border-radius: 40px !important;
-            box-shadow: 0 4px 15px rgba(155, 81, 224, 0.4) !important;
+            box-shadow: 0 4px 12px rgba(155, 81, 224, 0.25) !important;
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
             border: none !important;
             cursor: pointer !important;
@@ -553,62 +634,89 @@ def apply_custom_styles():
         }
         div.stApp div[data-testid="stFileUploader"] button[data-testid="stBaseButton-secondary"]:hover {
             transform: translateY(-2px) !important;
-            box-shadow: 0 8px 25px rgba(155, 81, 224, 0.6) !important;
+            box-shadow: 0 6px 18px rgba(155, 81, 224, 0.35) !important;
         }
 
 
         /* ===== SELECT BOX / INPUTS — Premium pill trigger ===== */
-        /* Trigger container */
+        /* Clear all default BaseWeb focus rings, borders, and shadows on select box trigger */
+        [data-baseweb="select"] *,
+        [data-baseweb="select"] *:focus,
+        [data-baseweb="select"] *:focus-within {
+            border-color: transparent !important;
+            outline: none !important;
+            box-shadow: none !important;
+        }
+        
+        /* Clear all default BaseWeb focus rings, borders, and shadows on inputs/textareas */
+        [data-baseweb="input"] *,
+        [data-baseweb="input"] *:focus,
+        [data-baseweb="input"] *:focus-within,
+        [data-baseweb="textarea"] *,
+        [data-baseweb="textarea"] *:focus,
+        [data-baseweb="textarea"] *:focus-within {
+            border-color: transparent !important;
+            outline: none !important;
+            box-shadow: none !important;
+        }
+
+        /* Apply custom well background and borders ONLY to the outer control container */
         [data-baseweb="select"] > div,
         [data-baseweb="input"] > div,
         [data-baseweb="textarea"] > div {
-            background: rgba(0, 0, 0, 0.25) !important;
-            border: 1px solid rgba(255, 255, 255, 0.1) !important;
-            border-radius: 12px !important;
+            background: rgba(0, 0, 0, 0.2) !important;
+            border: 1px solid var(--glass-border) !important;
+            border-radius: var(--radius-md) !important; /* 16px */
             min-height: 48px !important;
+            height: 48px !important;
             transition: all 0.25s ease !important;
             color: var(--text-primary) !important;
-            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5), 0 1px 0 rgba(255,255,255,0.03) !important;
+            box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.6) !important;
+            display: flex !important;
+            align-items: center !important;
         }
 
-        /* Selected value text — white + medium weight */
+        /* Selected value text — white + medium weight, centered vertically, increased size */
         [data-baseweb="select"] [data-testid="stMarkdownContainer"] p,
         [data-baseweb="select"] span,
         [data-baseweb="select"] input,
         [data-baseweb="select"] div[class*="ValueContainer"] span {
             color: white !important;
-            font-weight: 500 !important;
-            font-size: 0.92rem !important;
+            font-weight: 400 !important;
+            font-size: 0.99rem !important;
+            line-height: normal !important;
+            margin: 0 !important;
+            padding: 0 !important;
         }
 
         [data-baseweb="select"], [data-baseweb="select"] div, [data-baseweb="select"] input {
             cursor: pointer !important;
         }
 
-        /* Hover + focus states */
+        /* Hover + focus states for the outer control container */
         [data-baseweb="select"] > div:hover,
         [data-baseweb="input"] > div:hover,
         [data-baseweb="textarea"] > div:hover {
-            border-color: rgba(155, 81, 224, 0.5) !important;
-            box-shadow: 0 0 0 3px rgba(155, 81, 224, 0.1), inset 0 2px 8px rgba(0,0,0,0.5) !important;
+            border-color: rgba(255, 255, 255, 0.18) !important;
+            box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.6) !important;
         }
 
         [data-baseweb="select"]:focus-within > div,
         [data-baseweb="input"]:focus-within > div,
         [data-baseweb="textarea"]:focus-within > div {
-            border-color: var(--amethyst) !important;
-            box-shadow: 0 0 0 3px rgba(155, 81, 224, 0.15), inset 0 2px 8px rgba(0, 0, 0, 0.5) !important;
+            border-color: rgba(255, 255, 255, 0.25) !important;
+            box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.6) !important;
         }
 
         /* Chevron icon */
         [data-baseweb="select"] svg {
             color: var(--text-secondary) !important;
-            opacity: 0.6 !important;
+            opacity: 0.5 !important;
             transition: opacity 0.2s ease, transform 0.2s ease !important;
         }
         [data-baseweb="select"]:focus-within svg {
-            opacity: 1 !important;
-            color: var(--amethyst) !important;
+            opacity: 0.9 !important;
+            color: white !important;
         }
 
         /* Label above selectbox */
@@ -624,15 +732,25 @@ def apply_custom_styles():
         }
 
         /* ===== DROPDOWN POPOVER — premium dark panel ===== */
-        [data-baseweb="popover"],
-        [data-testid="stSelectboxVirtualDropdown"] {
-            background: rgba(18, 16, 30, 0.98) !important;
+        /* Outermost popover container — style as the clean glass panel */
+        [data-baseweb="popover"] {
+            background: #000000 !important; /* Completely black background */
             backdrop-filter: blur(24px) !important;
             -webkit-backdrop-filter: blur(24px) !important;
-            border: 1px solid rgba(155, 81, 224, 0.25) !important;
-            border-radius: 16px !important;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 30px rgba(155, 81, 224, 0.1) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border-radius: var(--radius-md) !important; /* Matches input's 16px radius perfectly */
+            box-shadow: 0 20px 48px rgba(0, 0, 0, 0.9) !important;
+            margin-top: 8px !important; /* Creates a clean 8px gap below the input field */
             overflow: hidden !important;
+        }
+
+        /* Clear Streamlit's inner dropdown styles to prevent double borders / width mismatch */
+        [data-testid="stSelectboxVirtualDropdown"] {
+            background: #000000 !important;
+            border: none !important;
+            box-shadow: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
         }
 
         [data-baseweb="popover"] *,
@@ -640,10 +758,30 @@ def apply_custom_styles():
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
         }
 
+        /* Set inner list container and listbox to completely solid black background */
         [data-baseweb="popover"] ul,
-        [data-testid="stSelectboxVirtualDropdown"] ul {
-            background-color: transparent !important;
-            padding: 8px !important;
+        [data-testid="stSelectboxVirtualDropdown"] ul,
+        [data-baseweb="popover"] [role="listbox"],
+        [data-testid="stSelectboxVirtualDropdown"] [role="listbox"],
+        [data-baseweb="popover"] [role="listbox"] > div {
+            background-color: #000000 !important;
+            padding: 8px 12px 8px 8px !important;
+        }
+
+        /* Black & White Scrollbar overrides inside the dropdown popover */
+        [data-baseweb="popover"] ::-webkit-scrollbar {
+            width: 6px !important;
+            height: 6px !important;
+        }
+        [data-baseweb="popover"] ::-webkit-scrollbar-track {
+            background: #000000 !important;
+        }
+        [data-baseweb="popover"] ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.25) !important;
+            border-radius: 3px !important;
+        }
+        [data-baseweb="popover"] ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.45) !important;
         }
 
         [data-baseweb="popover"] [role="option"],
@@ -653,7 +791,7 @@ def apply_custom_styles():
         [data-baseweb="menu-item"] {
             font-size: 0.9rem !important;
             font-weight: 500 !important;
-            color: rgba(255, 255, 255, 0.75) !important;
+            color: rgba(255, 255, 255, 0.55) !important; /* Muted white for unselected */
             background-color: transparent !important;
             width: calc(100% - 0px) !important;
             margin: 2px 0 !important;
@@ -667,43 +805,53 @@ def apply_custom_styles():
             align-items: center !important;
         }
 
-        /* Hover state: highlight option */
+        /* Clear any nested background/borders/shadows inside the option elements to prevent dynamic double highlights */
+        [data-baseweb="popover"] [role="option"] *,
+        [data-testid="stSelectboxVirtualDropdown"] [role="option"] *,
+        [data-baseweb="popover"] li *,
+        [data-testid="stSelectboxVirtualDropdown"] li * {
+            background-color: transparent !important;
+            border-color: transparent !important;
+            box-shadow: none !important;
+        }
+
+        /* Hover state: highlight option with soft neutral off-white glass */
         [data-baseweb="popover"] [role="option"]:hover,
         [data-testid="stSelectboxVirtualDropdown"] [role="option"]:hover,
         [data-baseweb="popover"] li:hover,
         [data-testid="stSelectboxVirtualDropdown"] li:hover {
-            background-color: rgba(155, 81, 224, 0.15) !important;
-            border-color: rgba(155, 81, 224, 0.25) !important;
+            background-color: rgba(255, 255, 255, 0.06) !important;
+            border-color: rgba(255, 255, 255, 0.05) !important;
             color: white !important;
         }
 
-        /* Selected state (non-hover): no background highlight, just amethyst color + bold */
+        /* Selected state (non-hover): bold white text and white checkmark, subtle transparent highlight */
         [data-baseweb="popover"] [role="option"][aria-selected="true"],
         [data-testid="stSelectboxVirtualDropdown"] [role="option"][aria-selected="true"],
         [data-baseweb="popover"] li[aria-selected="true"],
         [data-testid="stSelectboxVirtualDropdown"] li[aria-selected="true"] {
-            background-color: transparent !important;
+            background-color: rgba(255, 255, 255, 0.03) !important;
             border-color: transparent !important;
-            color: var(--amethyst) !important;
+            color: white !important;
             font-weight: 700 !important;
         }
 
-        /* Hovered selected state: gets highlight background */
+        /* Hovered selected state: gets slightly stronger white highlight */
         [data-baseweb="popover"] [role="option"][aria-selected="true"]:hover,
         [data-testid="stSelectboxVirtualDropdown"] [role="option"][aria-selected="true"]:hover,
         [data-baseweb="popover"] li[aria-selected="true"]:hover,
         [data-testid="stSelectboxVirtualDropdown"] li[aria-selected="true"]:hover {
-            background-color: rgba(155, 81, 224, 0.15) !important;
-            border-color: rgba(155, 81, 224, 0.25) !important;
+            background-color: rgba(255, 255, 255, 0.08) !important;
+            border-color: rgba(255, 255, 255, 0.05) !important;
             color: white !important;
         }
 
-        /* Selected item checkmark */
+        /* Selected item checkmark — white literal checkmark */
         [data-baseweb="popover"] [role="option"][aria-selected="true"]::after,
         [data-testid="stSelectboxVirtualDropdown"] [role="option"][aria-selected="true"]::after {
-            content: '\2713' !important; /* Unicode checkmark */
+            content: "✓" !important;
             font-size: 0.9rem !important;
-            color: var(--amethyst) !important;
+            color: white !important;
             margin-left: auto !important;
             display: inline-block !important;
             font-weight: 700 !important;
@@ -755,22 +903,26 @@ def apply_custom_styles():
         }
 
         /* ===== FILE UPLOADER — collapse when file loaded ===== */
-        div.stApp div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) section[data-testid="stFileUploaderDropzone"]::before,
-        div.stApp div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) section[data-testid="stFileUploaderDropzone"]::after,
-        div.stApp div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) section[data-testid="stFileUploadDropzone"]::before,
-        div.stApp div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) section[data-testid="stFileUploadDropzone"]::after {
+        div.stApp div[data-testid="stFileUploader"]:has([data-testid="stUploadedFile"]) section[data-testid="stFileUploaderDropzone"]::before,
+        div.stApp div[data-testid="stFileUploader"]:has([data-testid="stUploadedFile"]) section[data-testid="stFileUploaderDropzone"]::after,
+        div.stApp div[data-testid="stFileUploader"]:has([data-testid="stUploadedFile"]) section[data-testid="stFileUploadDropzone"]::before,
+        div.stApp div[data-testid="stFileUploader"]:has([data-testid="stUploadedFile"]) section[data-testid="stFileUploadDropzone"]::after {
             display: none !important;
         }
-        div.stApp div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) section[data-testid="stFileUploaderDropzone"] button,
-        div.stApp div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) section[data-testid="stFileUploadDropzone"] button {
+        div.stApp div[data-testid="stFileUploader"]:has([data-testid="stUploadedFile"]) section[data-testid="stFileUploaderDropzone"] button,
+        div.stApp div[data-testid="stFileUploader"]:has([data-testid="stUploadedFile"]) section[data-testid="stFileUploadDropzone"] button {
             display: none !important;
         }
-        div.stApp div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) section[data-testid="stFileUploaderDropzone"],
-        div.stApp div[data-testid="stFileUploader"]:has(div[data-testid="stUploadedFile"]) section[data-testid="stFileUploadDropzone"] {
-            padding: 16px 20px !important;
-            border: 1px solid rgba(155, 81, 224, 0.15) !important;
-            background: rgba(0,0,0,0.2) !important;
-            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5) !important;
+        div.stApp div[data-testid="stFileUploader"]:has([data-testid="stUploadedFile"]) section[data-testid="stFileUploaderDropzone"] [data-testid="stFileUploaderDropzoneInstructions"],
+        div.stApp div[data-testid="stFileUploader"]:has([data-testid="stUploadedFile"]) section[data-testid="stFileUploadDropzone"] [data-testid="stFileUploaderDropzoneInstructions"] {
+            display: none !important;
+        }
+        div.stApp div[data-testid="stFileUploader"]:has([data-testid="stUploadedFile"]) section[data-testid="stFileUploaderDropzone"],
+        div.stApp div[data-testid="stFileUploader"]:has([data-testid="stUploadedFile"]) section[data-testid="stFileUploadDropzone"] {
+            padding: 12px 16px !important;
+            border: none !important;
+            background: transparent !important;
+            box-shadow: none !important;
             height: auto !important;
             min-height: unset !important;
         }
@@ -895,11 +1047,6 @@ def apply_custom_styles():
             position: absolute !important; top: 0 !important; left: 0 !important; right: 0 !important;
             height: 2px !important;
             background: linear-gradient(90deg, transparent, var(--amethyst-glow), transparent) !important;
-        }
-        .comp-film-card:hover {
-            transform: translateY(-3px) !important;
-            box-shadow: 0 12px 30px rgba(155,81,224,0.2) !important;
-            border-color: rgba(155,81,224,0.25) !important;
         }
 
         /* ===== SCORE BADGES ===== */
@@ -1093,6 +1240,12 @@ def apply_custom_styles():
             transition: all 0.3s ease !important;
             position: relative !important;
             overflow: hidden !important;
+        }
+
+        /* Smaller padding for column-nested border wrappers (like export cards) */
+        [data-testid="column"] div[data-testid="stVerticalBlockBorderWrapper"],
+        [data-testid="column"] div[class*="stVerticalBlockBorderWrapper"] {
+            padding: 24px 20px !important;
         }
 
 

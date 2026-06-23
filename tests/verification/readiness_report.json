@@ -16,14 +16,14 @@
     "total_scenes": 5,
     "token_count": 220,
     "elapsed_s": 0.0,
-    "scenes_per_s": 1040.0,
-    "tokens_per_s": 45759.8,
+    "scenes_per_s": 1004.24,
+    "tokens_per_s": 44186.5,
     "agent_timings": {
       "normalization_ms": 0.14,
-      "structural_parsing_ms": 0.24,
-      "feature_extraction_ms": 1.6,
-      "cognitive_simulation_ms": 0.06,
-      "interpretation_ms": 0.29,
+      "structural_parsing_ms": 0.29,
+      "feature_extraction_ms": 1.64,
+      "cognitive_simulation_ms": 0.07,
+      "interpretation_ms": 0.3,
       "ethics_audit_ms": 0.23,
       "assembly_ms": 0.04
     }

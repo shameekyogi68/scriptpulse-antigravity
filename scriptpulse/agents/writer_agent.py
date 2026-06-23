@@ -121,7 +121,7 @@ class WriterAgent:
                     return rank
             return 99
         
-        all_diagnostics_raw = list(set(narrative_health + new_diagnostics + self._diagnose_representation_risks(final_output.get('fairness_audit', {}))))
+        all_diagnostics_raw = sorted(list(set(narrative_health + new_diagnostics + self._diagnose_representation_risks(final_output.get('fairness_audit', {})))))
         all_diagnostics_sorted = sorted(all_diagnostics_raw, key=severity_key)
         
         # 2. Structural Dashboard with Arc Vectors + Scene Map
@@ -875,7 +875,9 @@ class WriterAgent:
             {
                 'scene': s['scene_index'],
                 'turn': s.get('scene_turn', {}).get('turn_label', 'Unknown'),
-                'sentiment_delta': s.get('scene_turn', {}).get('sentiment_delta', 0.0)
+                'sentiment_delta': s.get('scene_turn', {}).get('sentiment_delta', 0.0),
+                'start_sentiment': s.get('scene_turn', {}).get('start_sentiment', 0.0),
+                'end_sentiment': s.get('scene_turn', {}).get('end_sentiment', 0.0)
             }
             for s in trace
         ]
@@ -1625,7 +1627,7 @@ class WriterAgent:
         if not nonlinear_scenes:
             return []
 
-        types = list(set(t for _, t in nonlinear_scenes))
+        types = sorted(list(set(t for _, t in nonlinear_scenes)))
         count = len(nonlinear_scenes)
 
         if count > 5:
@@ -1765,7 +1767,7 @@ class WriterAgent:
                 "In your quietest scene, what is the 'Invisible Conflict' that keeps the audience leaning in?"
             ]
             
-        return list(set(provocations))[:3]
+        return sorted(list(set(provocations)))[:3]
 
 
 

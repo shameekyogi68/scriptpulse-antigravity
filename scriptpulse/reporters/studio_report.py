@@ -3,7 +3,7 @@ ScriptPulse Studio Reporter (Market Professional Layer)
 Gap Solved: "The Screenshot Problem"
 
 Generates a professional "Studio Coverage" style HTML report 
-that can be printed to PDF.
+styled to match the dark cinematic obsidian theme.
 """
 
 import base64
@@ -25,15 +25,16 @@ def generate_report(report_data, script_title="Untitled Script", user_notes="", 
     writer_intel = report_data.get('writer_intelligence', {})
     diagnoses = writer_intel.get('narrative_diagnosis', [])
     priorities = writer_intel.get('rewrite_priorities', [])
+    genre = writer_intel.get('genre_context', 'general')
 
     # ── Pull lens configuration from the master lens registry ──────────────
     try:
         from ..pipeline.lenses import get_lens
         lens_cfg = get_lens(lens)
     except Exception:
-        lens_cfg = {'color': '#3b82f6', 'priority_icons': [], 'priority_keywords': [], 'description': ''}
+        lens_cfg = {'color': '#9B51E0', 'priority_icons': [], 'priority_keywords': [], 'description': ''}
 
-    accent_color   = lens_cfg.get('color', '#3b82f6')
+    accent_color   = lens_cfg.get('color', '#9B51E0')
     priority_icons = set(lens_cfg.get('priority_icons', []))
     priority_kws   = lens_cfg.get('priority_keywords', [])
     lens_desc      = lens_cfg.get('description', '')
@@ -41,8 +42,6 @@ def generate_report(report_data, script_title="Untitled Script", user_notes="", 
     stat_cols      = '5' if lens == 'Studio Executive' else '3'
 
     # --- Perspective-Aware Diagnostic Filtering ---
-    # Each perspective has its own priority icon set — filter accordingly.
-    # If a lens has NO priority_icons defined, it sees everything (Story Editor).
     filtered_diags = []
     for text in diagnoses:
         if not priority_icons:  # Story Editor sees all
@@ -77,7 +76,7 @@ def generate_report(report_data, script_title="Untitled Script", user_notes="", 
     if not filtered_pris and priorities:
         filtered_pris = priorities[:3]
 
-    # Experience framing — not pass/fail coverage verdicts
+    # Experience framing
     rec = "STABLE FLOW — No major attentional strain spikes detected in this version"
     if avg_effort < 0.35:
         rec = "LOW ENGAGEMENT SIGNAL — Consider strengthening hooks where attention dips"
@@ -97,6 +96,134 @@ def generate_report(report_data, script_title="Untitled Script", user_notes="", 
     cast_size = len(char_arcs) if char_arcs else len(report_data.get('voice_fingerprints', {}))
     economy_map = report_data.get('writer_intelligence', {}).get('structural_dashboard', {}).get('scene_economy_map', {}).get('map', [])
 
+    # ── Act Structure html ──────────────────
+    act = report_data.get('writer_intelligence', {}).get('structural_dashboard', {}).get('act_structure', {})
+    act_html = ""
+    if act and act.get('act1_pct', 0) > 0:
+        act_html = f"""
+        <div class="section">
+            <h3>🎬 Act Structure Balance</h3>
+            <div style="display: flex; gap: 4px; height: 26px; border-radius: 6px; overflow: hidden; margin-bottom: 12px; margin-top: 10px;">
+                <div style="width: {act['act1_pct']}%; background: var(--warning); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: white;">Act I · {act['act1_pct']}%</div>
+                <div style="width: {act['act2_pct']}%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: white;">Act II · {act['act2_pct']}%</div>
+                <div style="width: {act['act3_pct']}%; background: var(--success); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #121212;">Act III · {act['act3_pct']}%</div>
+            </div>
+            <p style="font-size: 13px; color: var(--text-muted); margin: 0;">
+                Act I: {act.get('act1', 0)} scenes · Act II: {act.get('act2', 0)} scenes · Act III: {act.get('act3', 0)} scenes | Balance: <b>{act.get('balance', 'N/A')}</b>
+            </p>
+        </div>
+        """
+
+    # ── Dialogue vs Action html ──────────────
+    dar = report_data.get('writer_intelligence', {}).get('structural_dashboard', {}).get('dialogue_action_ratio', {})
+    dar_html = ""
+    if isinstance(dar, dict) and dar.get('global_dialogue_ratio') is not None:
+        d_pct = round(dar.get('global_dialogue_ratio', 0.5) * 100)
+        a_pct = 100 - d_pct
+        bench = round(dar.get('genre_benchmark', 0.5) * 100) if isinstance(dar.get('genre_benchmark'), float) else dar.get('genre_benchmark', 50)
+        dar_html = f"""
+        <div class="section">
+            <h3>💬 Dialogue vs Action split</h3>
+            <div style="display: flex; gap: 4px; height: 26px; border-radius: 6px; overflow: hidden; margin-bottom: 12px; margin-top: 10px;">
+                <div style="width: {d_pct}%; background: #8EC5E9; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #121212;">💬 Dialogue {d_pct}%</div>
+                <div style="width: {a_pct}%; background: var(--warning); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: white;">🎬 Action {a_pct}%</div>
+            </div>
+            <p style="font-size: 13px; color: var(--text-muted); margin: 0;">
+                Genre range: {bench - 10}%–{bench + 10}% dialogue | Script split: <b>{d_pct}%</b> dialogue ({dar.get('assessment', '')}).
+            </p>
+        </div>
+        """
+
+    # ── Stakes Distribution html ─────────────
+    stakes_data = report_data.get('writer_intelligence', {}).get('structural_dashboard', {}).get('stakes_profile', {})
+    stakes_html = ""
+    if stakes_data:
+        valid_stakes = {'Physical', 'Emotional', 'Social', 'Moral', 'Existential'}
+        stakes = {k: v for k, v in stakes_data.items() if k in valid_stakes and isinstance(v, (int, float)) and v > 0}
+        if stakes:
+            sorted_stakes = sorted(stakes.items(), key=lambda x: x[1], reverse=True)
+            total_st_scenes = sum(stakes.values())
+            
+            color_map = {
+                'Physical': 'var(--danger)',
+                'Emotional': 'var(--warning)',
+                'Social': 'var(--success)',
+                'Moral': 'var(--accent)',
+                'Existential': '#A56DFF'
+            }
+            
+            shadow_map = {
+                'Physical': 'rgba(255, 51, 102, 0.3)',
+                'Emotional': 'rgba(255, 112, 67, 0.3)',
+                'Social': 'rgba(0, 200, 83, 0.3)',
+                'Moral': 'rgba(106, 72, 187, 0.3)',
+                'Existential': 'rgba(165, 109, 255, 0.3)'
+            }
+            
+            rows_html = ""
+            for label, val in sorted_stakes:
+                pct = (val / total_st_scenes) * 100
+                color = color_map.get(label, '#8EC5E9')
+                glow = shadow_map.get(label, 'rgba(85, 224, 255, 0.3)')
+                
+                rows_html += f"""
+                <div style="display:flex; align-items:center; gap:16px; margin-bottom:12px;">
+                    <div style="width:110px; font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; text-align:left;">{label}</div>
+                    <div style="flex:1; height:8px; border-radius:4px; background:rgba(255,255,255,0.05); position:relative;">
+                        <div style="position:absolute; top:0; left:0; width:{pct:.1f}%; height:100%; border-radius:4px; background:{color}; box-shadow:0 0 6px {glow};"></div>
+                    </div>
+                    <div style="width:130px; font-size:12px; font-weight:700; color:white; text-align:right; opacity:0.9;">
+                        <b>{val}</b> {"scenes" if val > 1 else "scene"} ({pct:.0f}%)
+                    </div>
+                </div>
+                """
+                
+            stakes_html = f"""
+            <div class="section">
+                <h3>🎯 Stakes Distribution</h3>
+                <div style="margin-top: 15px;">
+                    {rows_html}
+                </div>
+            </div>
+            """
+
+    # ── Narrative Heatmap html ───────────────
+    heatmap_html = ""
+    if trace:
+        boxes_html = ""
+        for i, s in enumerate(trace):
+            val = s.get('attentional_signal', 0.5)
+            if val < 0.25:
+                color = "#2F48B9" # cool blue
+                title = f"Scene {i+1}: {val:.0%} (Breather)"
+            elif val < 0.50:
+                color = "#00D2A0" # mint green
+                title = f"Scene {i+1}: {val:.0%} (Moderate)"
+            elif val < 0.75:
+                color = "#F57946" # amber orange
+                title = f"Scene {i+1}: {val:.0%} (Suspense)"
+            else:
+                color = "#D92987" # rose-crimson
+                title = f"Scene {i+1}: {val:.0%} (Peak Climax)"
+                
+            boxes_html += f'<span title="{title}" style="display:inline-block; width:12px; height:12px; background:{color}; margin:2px; border-radius:2px; box-shadow:0 0 4px {color}33;"></span>'
+            
+        heatmap_html = f"""
+        <div class="section">
+            <h3>🌡️ Attentional Flow Map</h3>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">Visual scene-by-scene tension map across the narrative:</p>
+            <div style="display:flex; flex-wrap:wrap; margin-bottom:14px; background: rgba(0,0,0,0.15); padding:16px; border-radius:8px; border: 1px solid var(--glass-border);">
+                {boxes_html}
+            </div>
+            <div style="display:flex; gap:16px; font-size:11px; color:var(--text-muted); flex-wrap:wrap;">
+                <div style="display:flex; align-items:center; gap:6px;"><span style="display:inline-block; width:10px; height:10px; background:#2F48B9; border-radius:2px;"></span> Breather (&lt;25%)</div>
+                <div style="display:flex; align-items:center; gap:6px;"><span style="display:inline-block; width:10px; height:10px; background:#00D2A0; border-radius:2px;"></span> Moderate (25-50%)</div>
+                <div style="display:flex; align-items:center; gap:6px;"><span style="display:inline-block; width:10px; height:10px; background:#F57946; border-radius:2px;"></span> High (50-75%)</div>
+                <div style="display:flex; align-items:center; gap:6px;"><span style="display:inline-block; width:10px; height:10px; background:#D92987; border-radius:2px;"></span> Peak Climax (&gt;75%)</div>
+            </div>
+        </div>
+        """
+
     # 2. Build HTML
     html = f"""
     <!DOCTYPE html>
@@ -105,31 +232,44 @@ def generate_report(report_data, script_title="Untitled Script", user_notes="", 
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Script Intelligence Coverage ({lens}): {script_title}</title>
-        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
         <style>
             :root {{
-                --primary: #0f172a;
+                --primary: #1E1E1E;
                 --accent: {accent_color};
-                --success: #10b981;
-                --warning: #f59e0b;
-                --danger: #ef4444;
-                --bg: #f8fafc;
-                --card-bg: #ffffff;
-                --text: #1e293b;
-                --text-muted: #64748b;
+                --success: #00C853;
+                --warning: #FF7043;
+                --danger: #FF3366;
+                --bg: #121212;
+                --card-bg: rgba(255, 255, 255, 0.03);
+                --text: #E0E0E0;
+                --text-muted: #9E9E9E;
+                --glass-border: rgba(255, 255, 255, 0.08);
             }}
             
             body {{ 
-                font-family: 'Outfit', sans-serif; 
-                line-height: 1.6; 
+                font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+                line-height: 1.65; 
                 color: var(--text); 
                 background-color: var(--bg);
                 margin: 0; 
                 padding: 0;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }}
+            
+            @media print {{
+                body {{
+                    zoom: 95%;
+                }}
+                tr, .section, .stat-card, .verdict {{
+                    page-break-inside: avoid;
+                    break-inside: avoid;
+                }}
             }}
             
             .container {{
-                max-width: 900px;
+                max-width: 940px;
                 margin: 40px auto;
                 padding: 0 20px;
             }}
@@ -140,42 +280,42 @@ def generate_report(report_data, script_title="Untitled Script", user_notes="", 
                 background: var(--primary);
                 color: white;
                 padding: 40px;
-                border-radius: 12px;
-                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+                border-radius: 16px;
+                border: 1px solid var(--glass-border);
+                box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6);
                 position: relative;
                 overflow: hidden;
             }}
             
-            .header::after {{
-                content: "";
+            .header::before {{
+                content: '';
                 position: absolute;
-                top: -50%;
-                right: -10%;
-                width: 300px;
-                height: 300px;
-                background: rgba(59, 130, 246, 0.1);
-                border-radius: 50%;
-                z-index: 0;
+                top: 0; left: 0; right: 0;
+                height: 3px;
+                background: linear-gradient(90deg, #9B51E0, #A56DFF, #FF3366);
             }}
             
-            .header h1 {{ margin: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 0.2em; opacity: 0.8; position: relative; z-index: 1; }}
-            .header h2 {{ margin: 10px 0 20px 0; font-size: 36px; font-weight: 700; position: relative; z-index: 1; }}
-            .header .meta {{ font-family: 'JetBrains Mono', monospace; font-size: 12px; opacity: 0.7; position: relative; z-index: 1; }}
+            .header h1 {{ margin: 0; font-family: 'Outfit', sans-serif; font-size: 14px; text-transform: uppercase; letter-spacing: 0.25em; color: var(--accent); font-weight: 700; }}
+            .header h2 {{ margin: 12px 0 16px 0; font-family: 'Outfit', sans-serif; font-size: 38px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; }}
+            .header .meta {{ font-family: 'Inter', sans-serif; font-size: 13px; color: var(--text-muted); }}
             
             .verdict {{ 
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
                 background: var(--card-bg);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
                 padding: 24px;
                 border-radius: 12px;
                 margin-bottom: 30px;
-                border-left: 8px solid var(--accent);
-                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+                border: 1px solid var(--glass-border);
+                border-left: 5px solid var(--accent);
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
             }}
             
-            .verdict-label {{ font-size: 14px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; float: left;}}
-            .verdict-value {{ font-size: 24px; font-weight: 700; color: var(--primary); }}
+            .verdict-label {{ font-family: 'Outfit', sans-serif; font-size: 12px; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.1em; }}
+            .verdict-value {{ font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 700; color: white; margin-top: 4px; }}
             
             .stats-grid {{ 
                 display: grid; 
@@ -186,48 +326,57 @@ def generate_report(report_data, script_title="Untitled Script", user_notes="", 
             
             .stat-card {{ 
                 background: var(--card-bg);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
                 padding: 20px 15px;
                 border-radius: 12px;
                 text-align: center;
-                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+                border: 1px solid var(--glass-border);
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
             }}
             
-            .stat-card h4 {{ margin: 0 0 10px 0; font-size: 11px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.1em; }}
-            .stat-card p {{ margin: 0; font-size: 22px; font-weight: 700; color: var(--primary); }}
+            .stat-card h4 {{ margin: 0 0 8px 0; font-family: 'Outfit', sans-serif; font-size: 11px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.12em; }}
+            .stat-card p {{ margin: 0; font-family: 'Outfit', sans-serif; font-size: 24px; font-weight: 700; color: white; }}
             
             .section {{
                 background: var(--card-bg);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
                 padding: 32px;
-                border-radius: 12px;
+                border-radius: 16px;
                 margin-bottom: 30px;
-                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+                border: 1px solid var(--glass-border);
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
             }}
             
             .section h3 {{ 
                 margin-top: 0; 
-                font-size: 18px; 
-                border-bottom: 2px solid #f1f5f9; 
-                padding-bottom: 15px; 
-                margin-bottom: 20px;
-                color: var(--primary);
-                display: flex;
-                align-items: center;
-                gap: 10px;
+                font-family: 'Outfit', sans-serif;
+                font-size: 20px; 
+                font-weight: 700;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.08); 
+                padding-bottom: 14px; 
+                margin-bottom: 22px;
+                color: white;
+                letter-spacing: -0.02em;
             }}
             
             .priority-table {{ width: 100%; border-collapse: collapse; margin-top: 15px; }}
-            .priority-table th {{ text-align: left; padding: 12px; background: #f1f5f9; font-size: 12px; text-transform: uppercase; color: var(--text-muted); }}
-            .priority-table td {{ padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }}
+            .priority-table th {{ text-align: left; padding: 12px; background: rgba(0,0,0,0.25); font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; }}
+            .priority-table td {{ padding: 14px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 14px; color: var(--text); }}
             .tag {{ 
                 display: inline-block; 
-                padding: 2px 8px; 
-                border-radius: 4px; 
-                font-size: 11px; 
+                padding: 4px 10px; 
+                border-radius: 20px; 
+                font-size: 10px; 
                 font-weight: 700; 
                 text-transform: uppercase;
-                background: #e2e8f0;
+                letter-spacing: 0.05em;
+                background: rgba(255, 255, 255, 0.08);
+                color: var(--text-muted);
             }}
-            .tag-high {{ background: #fee2e2; color: #b91c1c; }}
+            .tag-high {{ background: rgba(217, 41, 135, 0.15); color: var(--danger); border: 1px solid rgba(217, 41, 135, 0.3); }}
+            .tag-medium {{ background: rgba(245, 121, 70, 0.15); color: var(--warning); border: 1px solid rgba(245, 121, 70, 0.3); }}
             
             .footer {{ 
                 margin-top: 60px; 
@@ -235,40 +384,35 @@ def generate_report(report_data, script_title="Untitled Script", user_notes="", 
                 text-align: center; 
                 font-size: 12px; 
                 color: var(--text-muted); 
-                border-top: 1px solid #e2e8f0; 
+                border-top: 1px solid rgba(255, 255, 255, 0.06); 
                 font-family: 'JetBrains Mono', monospace;
+                line-height: 1.8;
             }}
             
-            ul {{ padding-left: 20px; }}
-            li {{ margin-bottom: 12px; }}
+            ul {{ padding-left: 20px; margin: 0; }}
+            li {{ margin-bottom: 14px; font-size: 14.5px; color: rgba(244, 246, 251, 0.9); }}
             
             .confidence-pill {{
-                background: #f1f5f9;
-                padding: 4px 12px;
+                background: rgba(255,255,255,0.04);
+                border: 1px solid var(--glass-border);
+                padding: 6px 14px;
                 border-radius: 20px;
                 font-size: 12px;
-                display: inline-flex;
-                align-items: center;
-                gap: 6px;
+                font-weight: 600;
+                color: var(--text-muted);
             }}
             
             .economy-item {{
-                background: #f8fafc;
-                padding: 12px;
-                border-radius: 6px;
-                margin-bottom: 8px;
+                background: rgba(0,0,0,0.15);
+                padding: 14px;
+                border-radius: 8px;
+                margin-bottom: 10px;
                 font-size: 13px;
-                border-left: 4px solid #e2e8f0;
+                border-left: 4px solid rgba(255, 255, 255, 0.15);
+                color: white;
             }}
-            .economy-bloated {{ border-left-color: var(--danger); background: #fff1f2; }}
-            .economy-tight {{ border-left-color: var(--success); background: #f0fdf4; }}
-
-            .indicator {{
-                width: 8px;
-                height: 8px;
-                border-radius: 50%;
-                background: var(--success);
-            }}
+            .economy-bloated {{ border-left-color: var(--danger); background: rgba(217, 41, 135, 0.04); border-top: 1px solid rgba(217, 41, 135, 0.1); border-bottom: 1px solid rgba(217, 41, 135, 0.1); }}
+            .economy-tight {{ border-left-color: var(--success); background: rgba(0, 200, 83, 0.04); border-top: 1px solid rgba(0, 200, 83, 0.1); border-bottom: 1px solid rgba(0, 200, 83, 0.1); }}
         </style>
     </head>
     <body>
@@ -277,17 +421,17 @@ def generate_report(report_data, script_title="Untitled Script", user_notes="", 
         <div class="header">
             <h1>Intelligence Coverage ({lens})</h1>
             <h2>{script_title}</h2>
-            <div class="meta" style="opacity: 0.85; margin-top: 6px; font-size: 13px; letter-spacing: 0.05em;">
+            <div class="meta" style="opacity: 0.9; margin-top: 12px; font-size: 14px; font-weight: 500;">
                 📌 {lens_desc}
             </div>
-            <div class="meta" style="margin-top: 8px;">
-                ENGINE: Script<span style="color: #0052FF; font-weight: bold;">Pulse</span> v1.0 | PERSPECTIVE: {lens}
+            <div class="meta" style="margin-top: 10px; font-size: 12px; opacity: 0.6; font-family: 'JetBrains Mono', monospace;">
+                ENGINE: ScriptPulse v1.0 | PERSPECTIVE: {lens}
             </div>
         </div>
         
         <div class="verdict">
             <div>
-                <div class="verdict-label">Experience Summary</div><br>
+                <div class="verdict-label">Experience Summary</div>
                 <div class="verdict-value">{rec}</div>
             </div>
             <div class="confidence-pill">
@@ -295,8 +439,8 @@ def generate_report(report_data, script_title="Untitled Script", user_notes="", 
             </div>
         </div>
         
-        <div class="section" style="background: #f8fafc; border: 1px solid #e2e8f0; font-size: 13px; color: #475569;">
-            <h3 style="margin-top: 0;">Important — How To Read This Report</h3>
+        <div class="section" style="background: rgba(255, 51, 102, 0.03); border: 1px solid rgba(255, 51, 102, 0.15); font-size: 13.5px; color: var(--text-muted);">
+            <h3 style="margin-top: 0; border-bottom-color: rgba(255,51,102,0.15); color: white;">Important — How To Read This Report</h3>
             {FULL_DISCLAIMER_HTML}
         </div>
         
@@ -324,6 +468,14 @@ def generate_report(report_data, script_title="Untitled Script", user_notes="", 
             </div>
             ''' if lens == 'Studio Executive' else ""}
         </div>
+
+        {heatmap_html}
+
+        {stakes_html}
+
+        {act_html}
+
+        {dar_html}
         
         <div class="section">
             <h3>Narrative Insights</h3>
@@ -338,12 +490,12 @@ def generate_report(report_data, script_title="Untitled Script", user_notes="", 
             <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 15px;">Targeting scenes for page efficiency and production speed:</p>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                 <div>
-                    <h4 style="font-size: 12px; text-transform: uppercase; margin-bottom: 10px;">✂️ Trim Candidates</h4>
-                    {''.join([f'<div class="economy-item economy-bloated">Scene {s["scene"]}: {s["label"]} ({s["score"]}%)</div>' for s in economy_map if s.get('score', 0) < 35][:4]) or '<p style="font-size: 12px; color: var(--text-muted);">None detected.</p>'}
+                    <h4 style="font-size: 12px; text-transform: uppercase; margin-bottom: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.05em;">✂️ Trim Candidates</h4>
+                    {''.join([f'<div class="economy-item economy-bloated"><b>Scene {s["scene"]}</b>: {s["label"]} ({s["score"]}%)</div>' for s in economy_map if s.get('score', 0) < 35][:4]) or '<p style="font-size: 12px; color: var(--text-muted);">None detected.</p>'}
                 </div>
                 <div>
-                    <h4 style="font-size: 12px; text-transform: uppercase; margin-bottom: 10px;">💎 Lean Scenes</h4>
-                    {''.join([f'<div class="economy-item economy-tight">Scene {s["scene"]}: {s["label"]} ({s["score"]}%)</div>' for s in economy_map if s.get('score', 0) > 75][:4]) or '<p style="font-size: 12px; color: var(--text-muted);">No high-efficiency scenes.</p>'}
+                    <h4 style="font-size: 12px; text-transform: uppercase; margin-bottom: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.05em;">💎 Lean Scenes</h4>
+                    {''.join([f'<div class="economy-item economy-tight"><b>Scene {s["scene"]}</b>: {s["label"]} ({s["score"]}%)</div>' for s in economy_map if s.get('score', 0) > 75][:4]) or '<p style="font-size: 12px; color: var(--text-muted);">No high-efficiency scenes.</p>'}
                 </div>
             </div>
         </div>
@@ -355,22 +507,22 @@ def generate_report(report_data, script_title="Untitled Script", user_notes="", 
                 <thead>
                     <tr>
                         <th>Recommended Action</th>
-                        <th>Impact</th>
+                        <th style="width: 140px; text-align: right;">Impact</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {''.join([f"<tr><td>{edit['action']}</td><td><span class='tag tag-high'>{edit['leverage']}</span></td></tr>" for edit in filtered_pris[:5]]) if filtered_pris else '<tr><td colspan="2">No high-priority reflection points surfaced for this version.</td></tr>'}
+                    {''.join([f"<tr><td>{edit['action']}</td><td style='text-align: right;'><span class='tag tag-{'high' if edit['leverage'] == 'High' else 'medium'}'>{edit['leverage']} Impact</span></td></tr>" for edit in filtered_pris[:5]]) if filtered_pris else '<tr><td colspan="2">No high-priority reflection points surfaced for this version.</td></tr>'}
                 </tbody>
             </table>
         </div>
         
-        {f'<div class="section" style="background: #fffbeb; border: 1px solid #fef3c7;"><h3>Reader Perspectives</h3><p>{user_notes}</p></div>' if user_notes else ''}
+        {f'<div class="section" style="background: rgba(245, 121, 70, 0.03); border: 1px solid rgba(245, 121, 70, 0.15);"><h3 style="border-bottom-color: rgba(245, 121, 70, 0.15);">Reader Perspectives</h3><p style="font-size: 14.5px; line-height: 1.7; margin: 0; color: rgba(244,246,251,0.95);">{user_notes}</p></div>' if user_notes else ''}
         
         <div class="section">
             <h3>Character Voice Audit</h3>
             <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px;">Distinctiveness check for lead roles:</p>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                {''.join([f"<div style='background: #f8fafc; padding: 15px; border-radius: 8px;'><div style='font-weight: 700; color: var(--primary);'>{char}</div><div style='font-size: 13px;'>Agency (Action): {metrics.get('agency', 0):.2f} | Sentiment: {metrics.get('sentiment', 0):.2f}</div></div>" for char, metrics in list(report_data.get('voice_fingerprints', {}).items())[:6]]) if report_data.get('voice_fingerprints') else '<p style="font-size: 13px; color: var(--text-muted);">Voice analysis unavailable for this script.</p>'}
+                {''.join([f"<div style='background: rgba(0,0,0,0.25); padding: 18px; border-radius: 10px; border: 1px solid var(--glass-border);'><div style='font-family: \\'Outfit\\', sans-serif; font-weight: 700; color: white; font-size: 16px; margin-bottom: 6px;'>{char}</div><div style='font-size: 12.5px; color: var(--text-muted);'>Agency (Action): <span style='color: white; font-weight: 600;'>{metrics.get('agency', 0):.2f}</span> | Sentiment: <span style='color: white; font-weight: 600;'>{metrics.get('sentiment', 0):.2f}</span></div></div>" for char, metrics in list(report_data.get('voice_fingerprints', {}).items())[:6]]) if report_data.get('voice_fingerprints') else '<p style="font-size: 13px; color: var(--text-muted);">Voice analysis unavailable for this script.</p>'}
             </div>
         </div>
         
