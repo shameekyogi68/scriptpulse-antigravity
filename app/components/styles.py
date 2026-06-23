@@ -676,14 +676,14 @@ def apply_custom_styles():
             align-items: center !important;
         }
 
-        /* Selected value text — white + medium weight, centered vertically, increased size */
+        /* Selected value text — white + medium weight, centered vertically, matching body text size */
         [data-baseweb="select"] [data-testid="stMarkdownContainer"] p,
         [data-baseweb="select"] span,
         [data-baseweb="select"] input,
         [data-baseweb="select"] div[class*="ValueContainer"] span {
             color: white !important;
             font-weight: 400 !important;
-            font-size: 0.99rem !important;
+            font-size: 0.875rem !important;
             line-height: normal !important;
             margin: 0 !important;
             padding: 0 !important;
@@ -722,7 +722,7 @@ def apply_custom_styles():
         /* Label above selectbox */
         div[data-testid="stSelectbox"] label,
         div[data-testid="stSelectbox"] > label {
-            font-size: 0.65rem !important;
+            font-size: 0.72rem !important;
             font-weight: 700 !important;
             color: var(--text-secondary) !important;
             text-transform: uppercase !important;
@@ -789,7 +789,7 @@ def apply_custom_styles():
         [data-baseweb="popover"] li,
         [data-testid="stSelectboxVirtualDropdown"] li,
         [data-baseweb="menu-item"] {
-            font-size: 0.9rem !important;
+            font-size: 0.875rem !important;
             font-weight: 500 !important;
             color: rgba(255, 255, 255, 0.55) !important; /* Muted white for unselected */
             background-color: transparent !important;
