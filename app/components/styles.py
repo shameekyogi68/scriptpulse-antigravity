@@ -380,25 +380,56 @@ def apply_custom_styles():
         }
 
         /* ===== TABS — Tactile Glass .tab-bar spec ===== */
-        .stTabs [data-baseweb="tab-list"],
-        .stTabs [role="tablist"],
+        /* Outer tab header container — cohesive glass design */
         div[data-testid="stTabs"] > div:first-child > div:first-child {
             gap: 8px !important;
-            background: rgba(0, 0, 0, 0.2) !important;
-            border-radius: 14px !important;
+            background: rgba(0, 0, 0, 0.25) !important;
+            border-radius: 16px !important;
             padding: 6px 40px !important;
-            backdrop-filter: blur(10px) !important;
-            border: 1px solid rgba(255, 255, 255, 0.03) !important;
-            margin-bottom: 12px !important;
+            backdrop-filter: blur(12px) !important;
+            -webkit-backdrop-filter: blur(12px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.05) !important;
+            margin-bottom: 16px !important;
             position: relative !important;
+            display: flex !important;
+            align-items: center !important;
+            overflow: hidden !important;
         }
 
-        /* Style the tab list scroll buttons to fit the glass theme and position them on the edges */
+        /* Inner tab lists — completely transparent to prevent double layers */
+        .stTabs [data-baseweb="tab-list"],
+        .stTabs [role="tablist"] {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            gap: 8px !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
+        /* Hide native scrollbars and enable smooth scrolling on the tabs scroller wrapper */
+        div[data-testid="stTabs"] > div:first-child > div:first-child > div {
+            scrollbar-width: none !important; /* Firefox */
+            scroll-behavior: smooth !important;
+        }
+        div[data-testid="stTabs"] > div:first-child > div:first-child > div::-webkit-scrollbar {
+            display: none !important; /* Chrome, Safari, Opera */
+            width: 0 !important;
+            height: 0 !important;
+        }
+
+        /* Apply smooth gradient mask on the scrollable wrapper to fade tabs near edges */
+        div[data-testid="stTabs"] > div:first-child > div:first-child > div {
+            mask-image: linear-gradient(to right, transparent 0%, black 25px, black calc(100% - 25px), transparent 100%) !important;
+            -webkit-mask-image: linear-gradient(to right, transparent 0%, black 25px, black calc(100% - 25px), transparent 100%) !important;
+        }
+
+        /* Style the tab list scroll buttons to fit the glass theme and position them inside the edges */
         div[data-testid="stTabs"] > div:first-child > div:first-child button:not([role="tab"]):not([data-baseweb="tab"]),
         div[data-testid="stTabs"] > div:first-child > div:first-child [role="button"]:not([role="tab"]):not([data-baseweb="tab"]) {
-            background: rgba(0, 0, 0, 0.4) !important;
+            background: rgba(0, 0, 0, 0.45) !important;
             border-radius: 50% !important;
-            border: 1px solid rgba(255, 255, 255, 0.05) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
             color: white !important;
             backdrop-filter: blur(8px) !important;
             width: 28px !important;
@@ -424,18 +455,18 @@ def apply_custom_styles():
         }
         div[data-testid="stTabs"] > div:first-child > div:first-child button:not([role="tab"]):not([data-baseweb="tab"]):first-of-type,
         div[data-testid="stTabs"] > div:first-child > div:first-child [role="button"]:not([role="tab"]):not([data-baseweb="tab"]):first-of-type {
-            left: 12px !important;
+            left: 8px !important;
         }
         div[data-testid="stTabs"] > div:first-child > div:first-child button:not([role="tab"]):not([data-baseweb="tab"]):last-of-type,
         div[data-testid="stTabs"] > div:first-child > div:first-child [role="button"]:not([role="tab"]):not([data-baseweb="tab"]):last-of-type {
-            right: 12px !important;
+            right: 8px !important;
         }
 
-        /* Prevent tabs from sliding under the scroll buttons when horizontal scroll is active */
+        /* Align tabs inside the scroller wrapper cleanly */
         div[data-testid="stTabs"] > div:first-child > div:first-child [role="tablist"] > div,
         div[data-testid="stTabs"] > div:first-child > div:first-child [data-baseweb="tab-list"] > div {
-            margin-left: 44px !important;
-            margin-right: 44px !important;
+            margin-left: 0px !important;
+            margin-right: 0px !important;
         }
 
         /* Remove default margins/padding from tab panels to remove large gaps */
