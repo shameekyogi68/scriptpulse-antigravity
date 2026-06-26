@@ -492,6 +492,18 @@ def apply_custom_styles():
             transform: translateY(-50%) scale(1.08) !important;
         }
 
+        /* Force disabled/inactive scroll buttons to remain visible on both sides by default */
+        div[data-testid="stTabs"] > div:first-child > div:first-child button:not([role="tab"]):not([data-baseweb="tab"]):disabled,
+        div[data-testid="stTabs"] > div:first-child > div:first-child [role="button"]:not([role="tab"]):not([data-baseweb="tab"]):disabled,
+        div[data-testid="stTabs"] > div:first-child > div:first-child button:not([role="tab"]):not([data-baseweb="tab"])[aria-disabled="true"],
+        div[data-testid="stTabs"] > div:first-child > div:first-child [role="button"]:not([role="tab"]):not([data-baseweb="tab"])[aria-disabled="true"] {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 0.25 !important; /* Make it semi-transparent/faded when disabled but still visible */
+            pointer-events: none !important; /* Prevent interaction when disabled */
+            cursor: not-allowed !important;
+        }
+
         /* Align tabs inside the scroller wrapper cleanly */
         div[data-testid="stTabs"] > div:first-child > div:first-child [role="tablist"] > div,
         div[data-testid="stTabs"] > div:first-child > div:first-child [data-baseweb="tab-list"] > div {
@@ -597,6 +609,14 @@ def apply_custom_styles():
                 pointer-events: auto !important;
                 top: 50% !important;
                 transform: translateY(-50%) !important;
+            }
+            div[data-testid="stTabs"] > div:first-child > div:first-child button:not([role="tab"]):not([data-baseweb="tab"]):disabled,
+            div[data-testid="stTabs"] > div:first-child > div:first-child [role="button"]:not([role="tab"]):not([data-baseweb="tab"]):disabled,
+            div[data-testid="stTabs"] > div:first-child > div:first-child button:not([role="tab"]):not([data-baseweb="tab"])[aria-disabled="true"],
+            div[data-testid="stTabs"] > div:first-child > div:first-child [role="button"]:not([role="tab"]):not([data-baseweb="tab"])[aria-disabled="true"] {
+                display: flex !important;
+                visibility: visible !important;
+                opacity: 0.25 !important;
             }
         }
 
