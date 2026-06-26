@@ -380,7 +380,10 @@ def apply_custom_styles():
         }
 
         /* ===== TABS — Tactile Glass .tab-bar spec ===== */
-        /* Force full width on the Streamlit tab list container hierarchy to prevent clipping */
+        /* Force full width on the Streamlit tab list container hierarchy and control spacing */
+        div[data-testid="stTabs"] {
+            margin-top: 28px !important; /* TWEAK THIS: Adjust this value manually to push the entire tabs section down */
+        }
         div[data-testid="stTabs"] > div:first-child {
             width: 100% !important;
             max-width: 100% !important;
@@ -395,7 +398,7 @@ def apply_custom_styles():
             backdrop-filter: blur(12px) !important;
             -webkit-backdrop-filter: blur(12px) !important;
             border: 1px solid rgba(255, 255, 255, 0.05) !important;
-            margin-top: 12px !important;  /* Adjust this value manually to push the navigation bar further down */
+            margin-top: 0px !important;   /* Keep inner header margin reset to prevent flex/height clipping */
             margin-bottom: 16px !important;
             position: relative !important;
             display: flex !important;
