@@ -389,24 +389,25 @@ def apply_custom_styles():
             max-width: 100% !important;
         }
 
-        /* Outer tab header container — cohesive glass design */
+        /* Outer tab header container — cohesive glass capsule design */
         div[data-testid="stTabs"] > div:first-child > div:first-child {
-            gap: 8px !important;
+            gap: 4px !important;
             background: rgba(0, 0, 0, 0.25) !important;
-            border-radius: 16px !important;
-            padding: 6px 44px !important; /* Restored original padding so scroll buttons reside inside the edges and aren't clipped */
+            border-radius: 12px !important;
+            padding: 3px 32px !important; /* Narrow padding to accommodate compact scroll buttons */
             backdrop-filter: blur(12px) !important;
             -webkit-backdrop-filter: blur(12px) !important;
-            border: 1px solid rgba(255, 255, 255, 0.05) !important;
-            margin-top: 0px !important;   /* Keep inner header margin reset to prevent flex/height clipping */
-            margin-bottom: 16px !important;
+            border: 1px solid rgba(255, 255, 255, 0.04) !important;
+            margin-top: 0px !important;
+            margin-bottom: 12px !important; /* Reduced spacing below the navigation bar */
             position: relative !important;
             display: flex !important;
             align-items: center !important;
             overflow: hidden !important;
-            width: 100% !important; /* Force full width on the outer container */
+            width: 100% !important;
             max-width: 100% !important;
             box-sizing: border-box !important;
+            height: 42px !important; /* Sleek, compact height */
         }
 
         /* Inner tab lists — completely transparent to prevent double layers */
@@ -415,8 +416,8 @@ def apply_custom_styles():
             background: transparent !important;
             border: none !important;
             box-shadow: none !important;
-            gap: 8px !important;
-            padding: 0 16px !important; /* Reverted bottom padding since scrollbar is hidden */
+            gap: 4px !important;
+            padding: 0 !important;
             margin: 0 !important;
         }
 
@@ -424,8 +425,11 @@ def apply_custom_styles():
         div[data-testid="stTabs"] > div:first-child > div:first-child > div:not([role="button"]):not([role="tab"]):not(button) {
             scrollbar-width: none !important; /* Firefox */
             scroll-behavior: smooth !important;
-            margin: 0 !important;             /* Let Streamlit's layout engine calculate scroll positions naturally without offsets */
-            width: 100% !important;           /* Revert wrapper width back to 100% of parent's content box */
+            margin: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            display: flex !important;
+            align-items: center !important;
         }
         div[data-testid="stTabs"] > div:first-child > div:first-child > div:not([role="button"]):not([role="tab"]):not(button)::-webkit-scrollbar {
             display: none !important; /* Chrome, Safari, Opera */
@@ -439,27 +443,26 @@ def apply_custom_styles():
             -webkit-mask-image: linear-gradient(to right, transparent 0%, black 12px, black calc(100% - 12px), transparent 100%) !important;
         }
 
-        /* Styled circular scroll buttons inside the container edges, shifted down 6px */
+        /* Discrete, styled circular scroll buttons inside the container edges */
         div[data-testid="stTabs"] > div:first-child > div:first-child button:not([role="tab"]):not([data-baseweb="tab"]),
         div[data-testid="stTabs"] > div:first-child > div:first-child [role="button"]:not([role="tab"]):not([data-baseweb="tab"]) {
-            background: rgba(0, 0, 0, 0.45) !important;
+            background: rgba(18, 18, 18, 0.8) !important;
             border: 1px solid rgba(255, 255, 255, 0.08) !important;
-            color: white !important;
-            backdrop-filter: blur(8px) !important;
-            -webkit-backdrop-filter: blur(8px) !important;
-            width: 28px !important;
-            height: 28px !important;
+            color: rgba(255, 255, 255, 0.6) !important;
+            backdrop-filter: blur(4px) !important;
+            -webkit-backdrop-filter: blur(4px) !important;
+            width: 22px !important;
+            height: 22px !important;
             border-radius: 50% !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
-            transition: all 0.2s ease !important;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5) !important;
             position: absolute !important;
             top: 50% !important;
             transform: translateY(-50%) !important;
             margin: 0 !important;
-            margin-top: 6px !important; /* Shift scroll buttons down by exactly 6px relative to baseline */
             cursor: pointer !important;
             z-index: 10 !important;
         }
@@ -467,13 +470,13 @@ def apply_custom_styles():
         /* Left scroll button specific position */
         div[data-testid="stTabs"] > div:first-child > div:first-child button:not([role="tab"]):not([data-baseweb="tab"]):first-of-type,
         div[data-testid="stTabs"] > div:first-child > div:first-child [role="button"]:not([role="tab"]):not([data-baseweb="tab"]):first-of-type {
-            left: 8px !important;
+            left: 5px !important;
         }
 
         /* Right scroll button specific position */
         div[data-testid="stTabs"] > div:first-child > div:first-child button:not([role="tab"]):not([data-baseweb="tab"]):last-of-type,
         div[data-testid="stTabs"] > div:first-child > div:first-child [role="button"]:not([role="tab"]):not([data-baseweb="tab"]):last-of-type {
-            right: 8px !important;
+            right: 5px !important;
         }
 
         /* Hover states for the circular scroll buttons */
@@ -481,8 +484,9 @@ def apply_custom_styles():
         div[data-testid="stTabs"] > div:first-child > div:first-child [role="button"]:not([role="tab"]):not([data-baseweb="tab"]):hover {
             background: var(--amethyst) !important;
             color: white !important;
-            box-shadow: 0 4px 16px rgba(155, 81, 224, 0.4) !important;
-            transform: translateY(-50%) scale(1.05) !important;
+            border-color: rgba(155, 81, 224, 0.4) !important;
+            box-shadow: 0 0 12px rgba(155, 81, 224, 0.5) !important;
+            transform: translateY(-50%) scale(1.08) !important;
         }
 
         /* Align tabs inside the scroller wrapper cleanly */
@@ -501,6 +505,11 @@ def apply_custom_styles():
             padding-right: 0px !important;
         }
 
+        /* Manage section header wrapper margins globally */
+        .section-header-wrapper {
+            margin: 2.2rem 0 1.25rem 0 !important;
+        }
+
         /* Remove top margin of section headers when they are at the top of a tab panel */
         div[data-testid="stTab"] .section-header-wrapper,
         [data-baseweb="tab-panel"] .section-header-wrapper {
@@ -509,35 +518,40 @@ def apply_custom_styles():
 
         /* Pixel-align section header icons with text baselines */
         .section-header-wrapper i.ti {
-            transform: translateY(11px) !important;
+            transform: translateY(1px) !important; /* Fine tuned icon baseline offset */
         }
 
+        /* Styled Tab Item */
         .stTabs [data-baseweb="tab"] {
-            height: 44px !important;
+            height: 34px !important;
             background-color: transparent !important;
-            border-radius: 10px !important;
+            border-radius: 8px !important;
             color: var(--text-secondary) !important;
-            font-weight: 600 !important;
-            font-size: 0.9rem !important;
-            padding: 10px 20px !important;
-            transition: all 0.2s ease !important;
+            font-weight: 500 !important;
+            font-size: 0.85rem !important;
+            padding: 6px 14px !important;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
             border: 1px solid transparent !important;
             flex-shrink: 0 !important; /* Prevent tabs from shrinking or squeezing together */
-            margin-right: 6px !important; /* Maintain a distinct physical gap between tabs */
+            margin-right: 4px !important; /* Maintain a distinct physical gap between tabs */
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
         }
 
         .stTabs [data-baseweb="tab"]:hover {
             color: white !important;
             background-color: rgba(255, 255, 255, 0.04) !important;
-            border-color: rgba(255, 255, 255, 0.05) !important;
         }
 
+        /* Premium active tab style with soft amethyst glass shine */
         .stTabs [data-baseweb="tab"][aria-selected="true"] {
-            background-color: rgba(255, 255, 255, 0.08) !important; /* Make active tab stand out clearly with brighter glass */
+            background-color: rgba(155, 81, 224, 0.12) !important;
+            border-color: rgba(155, 81, 224, 0.35) !important;
             color: white !important;
-            font-weight: 700 !important; /* Bolder font for active state */
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
-            border: 1px solid rgba(255, 255, 255, 0.15) !important; /* Brighter border to highlight active state */
+            font-weight: 600 !important;
+            text-shadow: 0 0 8px rgba(155, 81, 224, 0.3) !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
         }
 
         /* Hide the default blue underline/highlight bar */
@@ -550,17 +564,18 @@ def apply_custom_styles():
 
         /* Responsive design overrides for tablets and mobile devices */
         @media (max-width: 768px) {
+            div[data-testid="stTabs"] > div:first-child > div:first-child {
+                height: 38px !important;
+                padding: 3px 26px !important;
+            }
             .stTabs [data-baseweb="tab"] {
-                padding: 8px 12px !important;
-                font-size: 0.8rem !important;
+                height: 30px !important;
+                padding: 5px 10px !important;
+                font-size: 0.78rem !important;
             }
             .stTabs [data-baseweb="tab-list"],
             .stTabs [role="tablist"] {
-                padding-left: 12px !important;
-                padding-right: 12px !important;
-            }
-            div[data-testid="stTabs"] > div:first-child > div:first-child {
-                padding: 6px 36px !important; /* Slightly smaller outer padding for mobile viewports */
+                gap: 2px !important;
             }
             div[data-testid="stTabs"] > div:first-child > div:first-child > div:not([role="button"]):not([role="tab"]):not(button) {
                 margin: 0 !important;
@@ -570,12 +585,11 @@ def apply_custom_styles():
             }
             div[data-testid="stTabs"] > div:first-child > div:first-child button:not([role="tab"]):not([data-baseweb="tab"]),
             div[data-testid="stTabs"] > div:first-child > div:first-child [role="button"]:not([role="tab"]):not([data-baseweb="tab"]) {
-                width: 24px !important;
-                height: 24px !important;
+                width: 20px !important;
+                height: 20px !important;
                 border-radius: 50% !important;
                 top: 50% !important;
                 transform: translateY(-50%) !important;
-                margin-top: 6px !important;
             }
         }
 

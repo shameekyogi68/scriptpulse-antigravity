@@ -83,7 +83,7 @@ def render_sidebar_header(title: str, subtitle: str):
 def render_section_header(icon: str, title: str, explainer: str):
     """Renders a section header — matches template h2 (text-2xl font-bold) with icon and explainer."""
     st.markdown(clean_html(
-        f'<div class="section-header-wrapper" style="margin: 2.5rem 0 1.5rem 0;">'
+        f'<div class="section-header-wrapper">'
         f'<div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">'
         f'<i class="ti ti-{_section_icon_map(icon)}" style="font-size:1.5rem; color:var(--amethyst);"></i>'
         f'<h2 style="margin:0 !important; font-size:1.5rem !important; font-weight:700 !important; color:white; letter-spacing:-0.02em;">{title}</h2>'
