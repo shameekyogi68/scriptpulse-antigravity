@@ -439,52 +439,50 @@ def apply_custom_styles():
             -webkit-mask-image: linear-gradient(to right, transparent 0%, black 12px, black calc(100% - 12px), transparent 100%) !important;
         }
 
-        /* Full-height, absolute-positioned scroll buttons inside the container edges */
+        /* Styled circular scroll buttons inside the container edges, shifted down 6px */
         div[data-testid="stTabs"] > div:first-child > div:first-child button:not([role="tab"]):not([data-baseweb="tab"]),
         div[data-testid="stTabs"] > div:first-child > div:first-child [role="button"]:not([role="tab"]):not([data-baseweb="tab"]) {
             background: rgba(0, 0, 0, 0.45) !important;
-            border: none !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
             color: white !important;
             backdrop-filter: blur(8px) !important;
             -webkit-backdrop-filter: blur(8px) !important;
-            width: 40px !important; /* Matches outer padding area */
-            height: 100% !important; /* Force full height of the container to prevent vertical alignment offset */
+            width: 28px !important;
+            height: 28px !important;
+            border-radius: 50% !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
             transition: all 0.2s ease !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
             position: absolute !important;
-            top: 0 !important;
-            bottom: 0 !important;
-            transform: none !important; /* Remove translateY translation */
+            top: 50% !important;
+            transform: translateY(-50%) !important;
             margin: 0 !important;
+            margin-top: 6px !important; /* Shift scroll buttons down by exactly 6px relative to baseline */
             cursor: pointer !important;
             z-index: 10 !important;
         }
 
-        /* Left scroll button specific rounding and border */
+        /* Left scroll button specific position */
         div[data-testid="stTabs"] > div:first-child > div:first-child button:not([role="tab"]):not([data-baseweb="tab"]):first-of-type,
         div[data-testid="stTabs"] > div:first-child > div:first-child [role="button"]:not([role="tab"]):not([data-baseweb="tab"]):first-of-type {
-            left: 0 !important;
-            border-radius: 16px 0 0 16px !important; /* Rounding aligns with the parent container left corners */
-            border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+            left: 8px !important;
         }
 
-        /* Right scroll button specific rounding and border */
+        /* Right scroll button specific position */
         div[data-testid="stTabs"] > div:first-child > div:first-child button:not([role="tab"]):not([data-baseweb="tab"]):last-of-type,
         div[data-testid="stTabs"] > div:first-child > div:first-child [role="button"]:not([role="tab"]):not([data-baseweb="tab"]):last-of-type {
-            right: 0 !important;
-            border-radius: 0 16px 16px 0 !important; /* Rounding aligns with the parent container right corners */
-            border-left: 1px solid rgba(255, 255, 255, 0.08) !important;
+            right: 8px !important;
         }
 
-        /* Hover states for the full-height scroll panels */
+        /* Hover states for the circular scroll buttons */
         div[data-testid="stTabs"] > div:first-child > div:first-child button:not([role="tab"]):not([data-baseweb="tab"]):hover,
         div[data-testid="stTabs"] > div:first-child > div:first-child [role="button"]:not([role="tab"]):not([data-baseweb="tab"]):hover {
             background: var(--amethyst) !important;
             color: white !important;
-            box-shadow: none !important;
-            transform: none !important;
+            box-shadow: 0 4px 16px rgba(155, 81, 224, 0.4) !important;
+            transform: translateY(-50%) scale(1.05) !important;
         }
 
         /* Align tabs inside the scroller wrapper cleanly */
@@ -572,8 +570,12 @@ def apply_custom_styles():
             }
             div[data-testid="stTabs"] > div:first-child > div:first-child button:not([role="tab"]):not([data-baseweb="tab"]),
             div[data-testid="stTabs"] > div:first-child > div:first-child [role="button"]:not([role="tab"]):not([data-baseweb="tab"]) {
-                width: 32px !important;
-                height: 100% !important;
+                width: 24px !important;
+                height: 24px !important;
+                border-radius: 50% !important;
+                top: 50% !important;
+                transform: translateY(-50%) !important;
+                margin-top: 6px !important;
             }
         }
 
