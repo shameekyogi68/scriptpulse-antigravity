@@ -455,7 +455,7 @@ def apply_custom_styles():
             transition: all 0.2s ease !important;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
             position: absolute !important;
-            top: 50% !important;
+            top: 54% !important; /* TWEAK THIS: Increase percentage (e.g., 56%) to move the left/right scroll arrows down */
             transform: translateY(-50%) !important;
             margin: 0 !important;
             cursor: pointer !important;
