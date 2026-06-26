@@ -416,35 +416,21 @@ def apply_custom_styles():
             border: none !important;
             box-shadow: none !important;
             gap: 8px !important;
-            padding: 0 16px 8px 16px !important; /* Bottom padding creates space for the scrollbar */
+            padding: 0 16px !important; /* Reverted bottom padding since scrollbar is hidden */
             margin: 0 !important;
         }
 
         /* Hide native scrollbars and enable smooth scrolling on the tabs scroller wrapper */
         div[data-testid="stTabs"] > div:first-child > div:first-child > div:not([role="button"]):not([role="tab"]):not(button) {
-            scrollbar-width: thin !important; /* Firefox */
-            scrollbar-color: var(--amethyst) rgba(255, 255, 255, 0.02) !important; /* Firefox */
+            scrollbar-width: none !important; /* Firefox */
             scroll-behavior: smooth !important;
             margin: 0 !important;             /* Let Streamlit's layout engine calculate scroll positions naturally without offsets */
             width: 100% !important;           /* Revert wrapper width back to 100% of parent's content box */
         }
-        
-        /* Custom horizontal scrollbar for Webkit browsers (Chrome, Safari) */
         div[data-testid="stTabs"] > div:first-child > div:first-child > div:not([role="button"]):not([role="tab"]):not(button)::-webkit-scrollbar {
-            display: block !important;
-            height: 4px !important; /* Elegant thin scrollbar */
-        }
-        div[data-testid="stTabs"] > div:first-child > div:first-child > div:not([role="button"]):not([role="tab"]):not(button)::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.02) !important;
-            border-radius: 10px !important;
-        }
-        div[data-testid="stTabs"] > div:first-child > div:first-child > div:not([role="button"]):not([role="tab"]):not(button)::-webkit-scrollbar-thumb {
-            background: var(--amethyst) !important; /* Brand Purple */
-            border-radius: 10px !important;
-            box-shadow: 0 0 6px var(--amethyst-glow) !important;
-        }
-        div[data-testid="stTabs"] > div:first-child > div:first-child > div:not([role="button"]):not([role="tab"]):not(button)::-webkit-scrollbar-thumb:hover {
-            background: #B87CF8 !important; /* Lighter hover purple */
+            display: none !important; /* Chrome, Safari, Opera */
+            width: 0 !important;
+            height: 0 !important;
         }
 
         /* Apply smooth gradient mask on the scrollable wrapper to fade tabs near edges */
@@ -453,10 +439,52 @@ def apply_custom_styles():
             -webkit-mask-image: linear-gradient(to right, transparent 0%, black 12px, black calc(100% - 12px), transparent 100%) !important;
         }
 
-        /* Hide the overlapping tab list scroll buttons completely as we use the styled scrollbar */
+        /* Full-height, absolute-positioned scroll buttons inside the container edges */
         div[data-testid="stTabs"] > div:first-child > div:first-child button:not([role="tab"]):not([data-baseweb="tab"]),
         div[data-testid="stTabs"] > div:first-child > div:first-child [role="button"]:not([role="tab"]):not([data-baseweb="tab"]) {
-            display: none !important;
+            background: rgba(0, 0, 0, 0.45) !important;
+            border: none !important;
+            color: white !important;
+            backdrop-filter: blur(8px) !important;
+            -webkit-backdrop-filter: blur(8px) !important;
+            width: 40px !important; /* Matches outer padding area */
+            height: 100% !important; /* Force full height of the container to prevent vertical alignment offset */
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            transition: all 0.2s ease !important;
+            position: absolute !important;
+            top: 0 !important;
+            bottom: 0 !important;
+            transform: none !important; /* Remove translateY translation */
+            margin: 0 !important;
+            cursor: pointer !important;
+            z-index: 10 !important;
+        }
+
+        /* Left scroll button specific rounding and border */
+        div[data-testid="stTabs"] > div:first-child > div:first-child button:not([role="tab"]):not([data-baseweb="tab"]):first-of-type,
+        div[data-testid="stTabs"] > div:first-child > div:first-child [role="button"]:not([role="tab"]):not([data-baseweb="tab"]):first-of-type {
+            left: 0 !important;
+            border-radius: 16px 0 0 16px !important; /* Rounding aligns with the parent container left corners */
+            border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+        }
+
+        /* Right scroll button specific rounding and border */
+        div[data-testid="stTabs"] > div:first-child > div:first-child button:not([role="tab"]):not([data-baseweb="tab"]):last-of-type,
+        div[data-testid="stTabs"] > div:first-child > div:first-child [role="button"]:not([role="tab"]):not([data-baseweb="tab"]):last-of-type {
+            right: 0 !important;
+            border-radius: 0 16px 16px 0 !important; /* Rounding aligns with the parent container right corners */
+            border-left: 1px solid rgba(255, 255, 255, 0.08) !important;
+        }
+
+        /* Hover states for the full-height scroll panels */
+        div[data-testid="stTabs"] > div:first-child > div:first-child button:not([role="tab"]):not([data-baseweb="tab"]):hover,
+        div[data-testid="stTabs"] > div:first-child > div:first-child [role="button"]:not([role="tab"]):not([data-baseweb="tab"]):hover {
+            background: var(--amethyst) !important;
+            color: white !important;
+            box-shadow: none !important;
+            transform: none !important;
         }
 
         /* Align tabs inside the scroller wrapper cleanly */
@@ -544,8 +572,8 @@ def apply_custom_styles():
             }
             div[data-testid="stTabs"] > div:first-child > div:first-child button:not([role="tab"]):not([data-baseweb="tab"]),
             div[data-testid="stTabs"] > div:first-child > div:first-child [role="button"]:not([role="tab"]):not([data-baseweb="tab"]) {
-                width: 24px !important;
-                height: 24px !important;
+                width: 32px !important;
+                height: 100% !important;
             }
         }
 
