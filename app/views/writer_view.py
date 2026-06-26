@@ -1062,7 +1062,8 @@ def render_writer_view(report, script_input, genre="Drama", lens="Story Editor")
                     </div>
                     """), unsafe_allow_html=True)
 
-        st.markdown("<br>", unsafe_allow_html=True)
+        # Adjust the margin-top value in the style string below manually to push the navigation tabs section down
+        st.markdown("<div style='margin-top: 3.5rem;'></div>", unsafe_allow_html=True)
 
         # Tab sections inside main content area
         if lens == "Studio Executive":

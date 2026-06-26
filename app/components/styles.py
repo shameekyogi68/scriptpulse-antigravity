@@ -382,7 +382,7 @@ def apply_custom_styles():
         /* ===== TABS — Tactile Glass .tab-bar spec ===== */
         /* Force full width on the Streamlit tab list container hierarchy and control spacing */
         div[data-testid="stTabs"] {
-            margin-top: 48px !important; /* TWEAK THIS: Adjust this value manually to push the entire tabs section down */
+            margin-top: 0px !important; /* Spacing is now managed cleanly in Python view layouts to avoid parent flex clipping */
         }
         div[data-testid="stTabs"] > div:first-child {
             width: 100% !important;
