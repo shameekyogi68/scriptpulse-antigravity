@@ -502,15 +502,22 @@ def apply_custom_styles():
             padding: 10px 20px !important;
             transition: all 0.2s ease !important;
             border: 1px solid transparent !important;
-            flex-shrink: 1 !important; /* Allow shrinking when space is constrained */
-            min-width: 0 !important;   /* Prevent breaking flexbox layout */
+            flex-shrink: 0 !important; /* Prevent tabs from shrinking or squeezing together */
+            margin-right: 6px !important; /* Maintain a distinct physical gap between tabs */
+        }
+
+        .stTabs [data-baseweb="tab"]:hover {
+            color: white !important;
+            background-color: rgba(255, 255, 255, 0.04) !important;
+            border-color: rgba(255, 255, 255, 0.05) !important;
         }
 
         .stTabs [data-baseweb="tab"][aria-selected="true"] {
-            background-color: var(--glass-bg) !important;
+            background-color: rgba(255, 255, 255, 0.08) !important; /* Make active tab stand out clearly with brighter glass */
             color: white !important;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2) !important;
-            border: 1px solid var(--glass-border) !important;
+            font-weight: 700 !important; /* Bolder font for active state */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important; /* Brighter border to highlight active state */
         }
 
         /* Hide the default blue underline/highlight bar */
