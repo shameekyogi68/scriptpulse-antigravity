@@ -380,6 +380,12 @@ def apply_custom_styles():
         }
 
         /* ===== TABS — Tactile Glass .tab-bar spec ===== */
+        /* Force full width on the Streamlit tab list container hierarchy to prevent clipping */
+        div[data-testid="stTabs"] > div:first-child {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+
         /* Outer tab header container — cohesive glass design */
         div[data-testid="stTabs"] > div:first-child > div:first-child {
             gap: 8px !important;
@@ -394,6 +400,9 @@ def apply_custom_styles():
             display: flex !important;
             align-items: center !important;
             overflow: hidden !important;
+            width: 100% !important; /* Force full width on the outer container */
+            max-width: 100% !important;
+            box-sizing: border-box !important;
         }
 
         /* Inner tab lists — completely transparent to prevent double layers */
