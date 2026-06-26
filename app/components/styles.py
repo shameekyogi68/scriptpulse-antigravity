@@ -395,6 +395,7 @@ def apply_custom_styles():
             backdrop-filter: blur(12px) !important;
             -webkit-backdrop-filter: blur(12px) !important;
             border: 1px solid rgba(255, 255, 255, 0.05) !important;
+            margin-top: 12px !important;  /* Adjust this value manually to push the navigation bar further down */
             margin-bottom: 16px !important;
             position: relative !important;
             display: flex !important;
