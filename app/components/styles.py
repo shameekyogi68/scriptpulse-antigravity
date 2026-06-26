@@ -416,21 +416,35 @@ def apply_custom_styles():
             border: none !important;
             box-shadow: none !important;
             gap: 8px !important;
-            padding: 0 16px !important; /* Safety padding inside the scroll wrapper to clear the fade zone */
+            padding: 0 16px 8px 16px !important; /* Bottom padding creates space for the scrollbar */
             margin: 0 !important;
         }
 
         /* Hide native scrollbars and enable smooth scrolling on the tabs scroller wrapper */
         div[data-testid="stTabs"] > div:first-child > div:first-child > div:not([role="button"]):not([role="tab"]):not(button) {
-            scrollbar-width: none !important; /* Firefox */
+            scrollbar-width: thin !important; /* Firefox */
+            scrollbar-color: var(--amethyst) rgba(255, 255, 255, 0.02) !important; /* Firefox */
             scroll-behavior: smooth !important;
             margin: 0 !important;             /* Let Streamlit's layout engine calculate scroll positions naturally without offsets */
             width: 100% !important;           /* Revert wrapper width back to 100% of parent's content box */
         }
+        
+        /* Custom horizontal scrollbar for Webkit browsers (Chrome, Safari) */
         div[data-testid="stTabs"] > div:first-child > div:first-child > div:not([role="button"]):not([role="tab"]):not(button)::-webkit-scrollbar {
-            display: none !important; /* Chrome, Safari, Opera */
-            width: 0 !important;
-            height: 0 !important;
+            display: block !important;
+            height: 4px !important; /* Elegant thin scrollbar */
+        }
+        div[data-testid="stTabs"] > div:first-child > div:first-child > div:not([role="button"]):not([role="tab"]):not(button)::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02) !important;
+            border-radius: 10px !important;
+        }
+        div[data-testid="stTabs"] > div:first-child > div:first-child > div:not([role="button"]):not([role="tab"]):not(button)::-webkit-scrollbar-thumb {
+            background: var(--amethyst) !important; /* Brand Purple */
+            border-radius: 10px !important;
+            box-shadow: 0 0 6px var(--amethyst-glow) !important;
+        }
+        div[data-testid="stTabs"] > div:first-child > div:first-child > div:not([role="button"]):not([role="tab"]):not(button)::-webkit-scrollbar-thumb:hover {
+            background: #B87CF8 !important; /* Lighter hover purple */
         }
 
         /* Apply smooth gradient mask on the scrollable wrapper to fade tabs near edges */
@@ -439,42 +453,10 @@ def apply_custom_styles():
             -webkit-mask-image: linear-gradient(to right, transparent 0%, black 12px, black calc(100% - 12px), transparent 100%) !important;
         }
 
-        /* Style the tab list scroll buttons to fit the glass theme and position them inside the edges */
+        /* Hide the overlapping tab list scroll buttons completely as we use the styled scrollbar */
         div[data-testid="stTabs"] > div:first-child > div:first-child button:not([role="tab"]):not([data-baseweb="tab"]),
         div[data-testid="stTabs"] > div:first-child > div:first-child [role="button"]:not([role="tab"]):not([data-baseweb="tab"]) {
-            background: rgba(0, 0, 0, 0.45) !important;
-            border-radius: 50% !important;
-            border: 1px solid rgba(255, 255, 255, 0.08) !important;
-            color: white !important;
-            backdrop-filter: blur(8px) !important;
-            width: 28px !important;
-            height: 28px !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            transition: all 0.2s ease !important;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
-            position: absolute !important;
-            top: 54% !important; /* TWEAK THIS: Increase percentage (e.g., 56%) to move the left/right scroll arrows down */
-            transform: translateY(-50%) !important;
-            margin: 0 !important;
-            cursor: pointer !important;
-            z-index: 10 !important;
-        }
-        div[data-testid="stTabs"] > div:first-child > div:first-child button:not([role="tab"]):not([data-baseweb="tab"]):hover,
-        div[data-testid="stTabs"] > div:first-child > div:first-child [role="button"]:not([role="tab"]):not([data-baseweb="tab"]):hover {
-            background: var(--amethyst) !important;
-            color: white !important;
-            box-shadow: 0 0 10px var(--amethyst-glow) !important;
-            transform: translateY(-50%) scale(1.05) !important;
-        }
-        div[data-testid="stTabs"] > div:first-child > div:first-child button:not([role="tab"]):not([data-baseweb="tab"]):first-of-type,
-        div[data-testid="stTabs"] > div:first-child > div:first-child [role="button"]:not([role="tab"]):not([data-baseweb="tab"]):first-of-type {
-            left: 8px !important;
-        }
-        div[data-testid="stTabs"] > div:first-child > div:first-child button:not([role="tab"]):not([data-baseweb="tab"]):last-of-type,
-        div[data-testid="stTabs"] > div:first-child > div:first-child [role="button"]:not([role="tab"]):not([data-baseweb="tab"]):last-of-type {
-            right: 8px !important;
+            display: none !important;
         }
 
         /* Align tabs inside the scroller wrapper cleanly */
