@@ -443,7 +443,7 @@ def apply_custom_styles():
             -webkit-mask-image: linear-gradient(to right, transparent 0%, black 12px, black calc(100% - 12px), transparent 100%) !important;
         }
 
-        /* Discrete, styled circular scroll buttons inside the container edges */
+        /* Discrete, styled circular scroll buttons inside the container edges - forced to be always visible */
         div[data-testid="stTabs"] > div:first-child > div:first-child button:not([role="tab"]):not([data-baseweb="tab"]),
         div[data-testid="stTabs"] > div:first-child > div:first-child [role="button"]:not([role="tab"]):not([data-baseweb="tab"]) {
             background: rgba(18, 18, 18, 0.8) !important;
@@ -455,6 +455,9 @@ def apply_custom_styles():
             height: 22px !important;
             border-radius: 50% !important;
             display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
             align-items: center !important;
             justify-content: center !important;
             transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
@@ -588,6 +591,10 @@ def apply_custom_styles():
                 width: 20px !important;
                 height: 20px !important;
                 border-radius: 50% !important;
+                display: flex !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                pointer-events: auto !important;
                 top: 50% !important;
                 transform: translateY(-50%) !important;
             }
