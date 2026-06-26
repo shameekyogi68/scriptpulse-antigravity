@@ -385,7 +385,7 @@ def apply_custom_styles():
             gap: 8px !important;
             background: rgba(0, 0, 0, 0.25) !important;
             border-radius: 16px !important;
-            padding: 6px 40px !important;
+            padding: 6px 4px !important; /* Reduced padding to give safety margin at the outer edge */
             backdrop-filter: blur(12px) !important;
             -webkit-backdrop-filter: blur(12px) !important;
             border: 1px solid rgba(255, 255, 255, 0.05) !important;
@@ -403,25 +403,28 @@ def apply_custom_styles():
             border: none !important;
             box-shadow: none !important;
             gap: 8px !important;
-            padding: 0 !important;
+            padding: 0 30px !important; /* Padding keeps the first and last tabs from being faded by the gradient mask */
             margin: 0 !important;
         }
 
         /* Hide native scrollbars and enable smooth scrolling on the tabs scroller wrapper */
-        div[data-testid="stTabs"] > div:first-child > div:first-child > div {
+        div[data-testid="stTabs"] > div:first-child > div:first-child > div:not([role="button"]):not([role="tab"]):not(button) {
             scrollbar-width: none !important; /* Firefox */
             scroll-behavior: smooth !important;
+            margin-left: 44px !important;  /* Safety margin to ensure tabs never slide under the left scroll arrow */
+            margin-right: 44px !important; /* Safety margin to ensure tabs never slide under the right scroll arrow */
+            width: auto !important;        /* Constrain wrapper width to respect margins */
         }
-        div[data-testid="stTabs"] > div:first-child > div:first-child > div::-webkit-scrollbar {
+        div[data-testid="stTabs"] > div:first-child > div:first-child > div:not([role="button"]):not([role="tab"]):not(button)::-webkit-scrollbar {
             display: none !important; /* Chrome, Safari, Opera */
             width: 0 !important;
             height: 0 !important;
         }
 
         /* Apply smooth gradient mask on the scrollable wrapper to fade tabs near edges */
-        div[data-testid="stTabs"] > div:first-child > div:first-child > div {
-            mask-image: linear-gradient(to right, transparent 0%, black 25px, black calc(100% - 25px), transparent 100%) !important;
-            -webkit-mask-image: linear-gradient(to right, transparent 0%, black 25px, black calc(100% - 25px), transparent 100%) !important;
+        div[data-testid="stTabs"] > div:first-child > div:first-child > div:not([role="button"]):not([role="tab"]):not(button) {
+            mask-image: linear-gradient(to right, transparent 0%, black 30px, black calc(100% - 30px), transparent 100%) !important;
+            -webkit-mask-image: linear-gradient(to right, transparent 0%, black 30px, black calc(100% - 30px), transparent 100%) !important;
         }
 
         /* Style the tab list scroll buttons to fit the glass theme and position them inside the edges */
@@ -499,6 +502,8 @@ def apply_custom_styles():
             padding: 10px 20px !important;
             transition: all 0.2s ease !important;
             border: 1px solid transparent !important;
+            flex-shrink: 1 !important; /* Allow shrinking when space is constrained */
+            min-width: 0 !important;   /* Prevent breaking flexbox layout */
         }
 
         .stTabs [data-baseweb="tab"][aria-selected="true"] {
@@ -514,6 +519,30 @@ def apply_custom_styles():
             background-color: transparent !important;
             height: 0 !important;
             display: none !important;
+        }
+
+        /* Responsive design overrides for tablets and mobile devices */
+        @media (max-width: 768px) {
+            .stTabs [data-baseweb="tab"] {
+                padding: 8px 12px !important;
+                font-size: 0.8rem !important;
+            }
+            .stTabs [data-baseweb="tab-list"],
+            .stTabs [role="tablist"] {
+                padding-left: 20px !important;
+                padding-right: 20px !important;
+            }
+            div[data-testid="stTabs"] > div:first-child > div:first-child > div:not([role="button"]):not([role="tab"]):not(button) {
+                margin-left: 32px !important;
+                margin-right: 32px !important;
+                mask-image: linear-gradient(to right, transparent 0%, black 20px, black calc(100% - 20px), transparent 100%) !important;
+                -webkit-mask-image: linear-gradient(to right, transparent 0%, black 20px, black calc(100% - 20px), transparent 100%) !important;
+            }
+            div[data-testid="stTabs"] > div:first-child > div:first-child button:not([role="tab"]):not([data-baseweb="tab"]),
+            div[data-testid="stTabs"] > div:first-child > div:first-child [role="button"]:not([role="tab"]):not([data-baseweb="tab"]) {
+                width: 24px !important;
+                height: 24px !important;
+            }
         }
 
         /* ===== EXPANDERS ===== */
