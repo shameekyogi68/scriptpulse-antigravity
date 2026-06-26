@@ -385,7 +385,7 @@ def apply_custom_styles():
             gap: 8px !important;
             background: rgba(0, 0, 0, 0.25) !important;
             border-radius: 16px !important;
-            padding: 6px 4px !important; /* Reduced padding to give safety margin at the outer edge */
+            padding: 6px 44px !important; /* Restored original padding so scroll buttons reside inside the edges and aren't clipped */
             backdrop-filter: blur(12px) !important;
             -webkit-backdrop-filter: blur(12px) !important;
             border: 1px solid rgba(255, 255, 255, 0.05) !important;
@@ -403,7 +403,7 @@ def apply_custom_styles():
             border: none !important;
             box-shadow: none !important;
             gap: 8px !important;
-            padding: 0 30px !important; /* Padding keeps the first and last tabs from being faded by the gradient mask */
+            padding: 0 16px !important; /* Safety padding inside the scroll wrapper to clear the fade zone */
             margin: 0 !important;
         }
 
@@ -411,9 +411,8 @@ def apply_custom_styles():
         div[data-testid="stTabs"] > div:first-child > div:first-child > div:not([role="button"]):not([role="tab"]):not(button) {
             scrollbar-width: none !important; /* Firefox */
             scroll-behavior: smooth !important;
-            margin-left: 44px !important;  /* Safety margin to ensure tabs never slide under the left scroll arrow */
-            margin-right: 44px !important; /* Safety margin to ensure tabs never slide under the right scroll arrow */
-            width: auto !important;        /* Constrain wrapper width to respect margins */
+            margin: 0 !important;             /* Let Streamlit's layout engine calculate scroll positions naturally without offsets */
+            width: 100% !important;           /* Revert wrapper width back to 100% of parent's content box */
         }
         div[data-testid="stTabs"] > div:first-child > div:first-child > div:not([role="button"]):not([role="tab"]):not(button)::-webkit-scrollbar {
             display: none !important; /* Chrome, Safari, Opera */
@@ -423,8 +422,8 @@ def apply_custom_styles():
 
         /* Apply smooth gradient mask on the scrollable wrapper to fade tabs near edges */
         div[data-testid="stTabs"] > div:first-child > div:first-child > div:not([role="button"]):not([role="tab"]):not(button) {
-            mask-image: linear-gradient(to right, transparent 0%, black 30px, black calc(100% - 30px), transparent 100%) !important;
-            -webkit-mask-image: linear-gradient(to right, transparent 0%, black 30px, black calc(100% - 30px), transparent 100%) !important;
+            mask-image: linear-gradient(to right, transparent 0%, black 12px, black calc(100% - 12px), transparent 100%) !important;
+            -webkit-mask-image: linear-gradient(to right, transparent 0%, black 12px, black calc(100% - 12px), transparent 100%) !important;
         }
 
         /* Style the tab list scroll buttons to fit the glass theme and position them inside the edges */
@@ -536,14 +535,17 @@ def apply_custom_styles():
             }
             .stTabs [data-baseweb="tab-list"],
             .stTabs [role="tablist"] {
-                padding-left: 20px !important;
-                padding-right: 20px !important;
+                padding-left: 12px !important;
+                padding-right: 12px !important;
+            }
+            div[data-testid="stTabs"] > div:first-child > div:first-child {
+                padding: 6px 36px !important; /* Slightly smaller outer padding for mobile viewports */
             }
             div[data-testid="stTabs"] > div:first-child > div:first-child > div:not([role="button"]):not([role="tab"]):not(button) {
-                margin-left: 32px !important;
-                margin-right: 32px !important;
-                mask-image: linear-gradient(to right, transparent 0%, black 20px, black calc(100% - 20px), transparent 100%) !important;
-                -webkit-mask-image: linear-gradient(to right, transparent 0%, black 20px, black calc(100% - 20px), transparent 100%) !important;
+                margin: 0 !important;
+                width: 100% !important;
+                mask-image: linear-gradient(to right, transparent 0%, black 10px, black calc(100% - 10px), transparent 100%) !important;
+                -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10px, black calc(100% - 10px), transparent 100%) !important;
             }
             div[data-testid="stTabs"] > div:first-child > div:first-child button:not([role="tab"]):not([data-baseweb="tab"]),
             div[data-testid="stTabs"] > div:first-child > div:first-child [role="button"]:not([role="tab"]):not([data-baseweb="tab"]) {
